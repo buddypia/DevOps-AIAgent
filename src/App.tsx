@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { recommendSquad } from "./agentEngine";
+import type { WinningAutopilotRun } from "./autopilot";
 import type { SquadContract } from "./contracts";
 import type { DemoRunway } from "./demoRunway";
 import type { FinalistSimulation } from "./finalist";
@@ -479,6 +480,155 @@ function StrategyMeter({ label, value }: { label: string; value: number }) {
   );
 }
 
+function WinAutopilotPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [run, setRun] = useState<WinningAutopilotRun | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function runAutopilot() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/win-run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setRun((await response.json()) as WinningAutopilotRun);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="win-autopilot">
+      <div className="autopilot-heading">
+        <div>
+          <span className="eyebrow">Win autopilot</span>
+          <h2>
+            <Rocket size={20} />
+            One-click winning run
+          </h2>
+        </div>
+        <button className="icon-button" onClick={runAutopilot} disabled={loading} title="優勝判定を一括実行">
+          <Play size={17} />
+          {loading ? "Running" : "Run win autopilot"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Win autopilot request failed: {error}</p>}
+
+      {run ? (
+        <div className="autopilot-body">
+          <div className="autopilot-summary">
+            <div>
+              <span className={cx("risk-chip", run.readiness === "finalist-ready" ? "low" : run.readiness === "external-gaps" ? "medium" : "high")}>
+                {run.readiness}
+              </span>
+              <h3>{run.headline}</h3>
+              <p>{run.summary}</p>
+            </div>
+            <div className="autopilot-score">
+              <strong>{run.winScore}</strong>
+              <span>win score</span>
+            </div>
+          </div>
+
+          <div className="autopilot-lanes">
+            {run.lanes.map((lane) => (
+              <article key={lane.id} className={lane.status}>
+                <div>
+                  <strong>{lane.label}</strong>
+                  <span>{lane.score}</span>
+                </div>
+                <p>{lane.proof}</p>
+                <small>{lane.action}</small>
+                <a href={lane.evidenceUrl} target="_blank" rel="noreferrer">
+                  Evidence <ExternalLink size={13} />
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <div className="autopilot-grid">
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Next actions
+              </h3>
+              <div className="autopilot-actions">
+                {run.nextActions.map((action) => (
+                  <article key={action.id} className={action.priority}>
+                    <div>
+                      <strong>{action.label}</strong>
+                      <span>{action.priority}</span>
+                    </div>
+                    <p>{action.command}</p>
+                    <small>{action.owner} / {action.proof}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Workflow size={15} />
+                Autonomy trace
+              </h3>
+              <ol className="autopilot-trace">
+                {run.autonomyTrace.map((trace) => (
+                  <li key={trace.phase}>
+                    <span>{trace.phase}</span>
+                    <strong>{trace.actor}</strong>
+                    <p>{trace.decision}</p>
+                    <small>{trace.proof}</small>
+                  </li>
+                ))}
+              </ol>
+            </section>
+            <section>
+              <h3>
+                <ExternalLink size={15} />
+                Evidence deck
+              </h3>
+              <div className="autopilot-links">
+                {run.evidenceDeck.map((item) => (
+                  <a key={item.id} href={item.url} target="_blank" rel="noreferrer" title={item.proof}>
+                    {item.label}
+                    <ExternalLink size={13} />
+                  </a>
+                ))}
+              </div>
+              <h3>
+                <Terminal size={15} />
+                Judge narrative
+              </h3>
+              <pre>{run.judgeNarrative}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="autopilot-empty">
+          <Rocket size={28} />
+          <strong>Run win autopilotで、競合/SWOT、証拠、最終候補判定、提出、運用を一括判定します。</strong>
+          <p>審査員が見るべき順番と、提出前に残る外部作業を1回で出します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function DemoRunwayPanel({
   recommendation,
   projectBrief
@@ -780,7 +930,7 @@ function JudgeProofBundle({
         <div className="proof-empty">
           <Trophy size={28} />
           <strong>Run judge proofで、Gemini・Cloud Run・A2A・競合/SWOT・Mission・Ops・提出URLを一括検証します。</strong>
-          <p>審査員が最初に押すボタンとして、作品の価値と実装証拠を1つの束にします。</p>
+          <p>Win Autopilotの次に開く証拠束として、作品の価値と実装証拠を1つにまとめます。</p>
         </div>
       )}
     </section>
@@ -1858,6 +2008,7 @@ export default function App() {
         </div>
       </section>
 
+      <WinAutopilotPanel recommendation={recommendation} projectBrief={projectBrief} />
       <DemoRunwayPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeProofBundle recommendation={recommendation} projectBrief={projectBrief} />
       <PitchDirector recommendation={recommendation} projectBrief={projectBrief} />

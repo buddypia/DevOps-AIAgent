@@ -183,7 +183,7 @@ export function buildSquadContract(input: {
     "Run judge proof and confirm CI, Cloud Run, A2A, Strategy, Mission, Ops evidence is present",
     "Open GitHub Actions and confirm the latest main quality gate is success",
     "Run ops drill and confirm rollbackRecommended is false or documented",
-    "Record Pitch Director with Contract Desk visible before ProtoPedia upload"
+    "Run win autopilot, then record Demo Runway with Contract Desk visible before ProtoPedia upload"
   ];
 
   return {

@@ -200,12 +200,12 @@ export function buildMissionRun(recommendation: Recommendation, strategy: Winnin
   ].join("\n");
   const architectureDiagramUrl = "/assets/a2a-marketplace-architecture.svg";
   const videoStoryboard = [
-    "0-5秒: Project Briefに課題を貼り、AI能力市場が即座に候補を並べる",
-    "5-10秒: Winning Strategyで競合/SWOT/審査スコアを確認する",
-    "10-16秒: Mission Controlを実行し、sense -> decide -> delegate -> verify -> shipを表示する",
-    "16-22秒: Ops DrillでCloud Run運用シグナルから継続/ロールバック判断を見せる",
-    "22-27秒: Next hireとGemini分析、Agent Card JSONを開き、AIとA2Aの実装面を見せる",
-    "27-30秒: Cloud Run URL、ProtoPediaタグ、構成図を提出パックとして締める"
+    "0-4秒: Win Autopilotを実行し、win score、残アクション、証拠デッキを表示する",
+    "4-8秒: Judge Proofを実行し、Gemini/Cloud Run/A2A/CIの証拠束を見せる",
+    "8-12秒: Finalist Simulatorで審査員5役の判定と残ギャップを見せる",
+    "12-16秒: Submission PublisherでProtoPedia貼り付け本文と提出チェックリストを見せる",
+    "16-21秒: Demo Runway、Marketplace、Winning Strategyで30秒導線と競合/SWOTを確認する",
+    "21-30秒: Contract、Mission、Ops、Cloud Run URL、GitHub Actions、Agent Card、構成図で締める"
   ];
   const requirements: SubmissionRequirement[] = [
     {

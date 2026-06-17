@@ -203,7 +203,7 @@ export function buildFinalistSimulation(input: {
       decisiveProof: `Pitch Directorが${pitch.totalSeconds}秒/${pitch.scenes.length}シーンの操作順、字幕、証拠リンクを生成する。`,
       concern: externalGaps.length > 0 ? `${externalGaps.map((gap) => gap.label).join(" / ")} が未登録。` : "初見30秒で価値を理解できるか。",
       demoMove: "Build pitchで録画順を出し、トップから順に画面を辿る",
-      nextAction: usability?.nextAction ?? "審査員が押すボタンをJudge Proofから固定する",
+      nextAction: usability?.nextAction ?? "審査員が押すボタンをWin Autopilotから固定する",
       evidenceUrl: pitchUrl
     }),
     panel({
@@ -243,8 +243,8 @@ export function buildFinalistSimulation(input: {
     finalistScore >= 88 && externalGaps.length === 0 && holdCount === 0 ? "finalist-ready" : finalistScore >= 78 && holdCount <= 1 ? "borderline" : "not-mvp";
   const winningMove =
     externalGaps.length > 0
-      ? `${externalGaps[0].label}を埋め、Pitch Directorの30秒リールにJudge ProofとFinalist Simulatorを入れる。`
-      : weakestPanel?.nextAction ?? "Judge Proofを開いて証拠からピッチを始める。";
+      ? `${externalGaps[0].label}を埋め、Win AutopilotとDemo Runwayの30秒リールにJudge ProofとFinalist Simulatorを入れる。`
+      : weakestPanel?.nextAction ?? "Win Autopilotを開いて証拠からピッチを始める。";
   const advanceDecision =
     finalistBand === "finalist-ready"
       ? "最終候補として押し出せる。証拠起点の30秒ピッチを録画する。"

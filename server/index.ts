@@ -5,6 +5,7 @@ import path from "node:path";
 import { z } from "zod";
 import { ipAllowlistMiddleware, ipAllowlistSummary } from "./ipAllowlist.js";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js";
+import { buildWinningAutopilot } from "../src/autopilot.js";
 import { buildSquadContract } from "../src/contracts.js";
 import { buildDemoRunway } from "../src/demoRunway.js";
 import { buildFinalistSimulation } from "../src/finalist.js";
@@ -128,6 +129,12 @@ function agentCard(baseUrl: string) {
         name: "Run the 30-second judge demo runway",
         description: "審査員が最初に見る30秒の画面順、証拠リンク、録画キュー、残リスクを束ねる。",
         tags: ["demo", "judge-experience", "video", "proof", "submission"]
+      },
+      {
+        id: "win.autopilot",
+        name: "Run the one-click winning autopilot",
+        description: "競合/SWOT、証拠、最終候補判定、提出、運用を一括実行し、勝てる状態と残アクションを返す。",
+        tags: ["autopilot", "winning-strategy", "judge-proof", "submission", "cloud-run"]
       },
       {
         id: "ops.drill",
@@ -535,6 +542,101 @@ app.post("/api/demo-run", (req, res) => {
   );
 });
 
+app.post("/api/win-run", async (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "優勝に必要な証拠、審査適合、提出準備、運用性を一括判定する。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const pitch = buildPitchRun({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill
+  });
+  const judgeDrill = buildJudgeDrill({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch
+  });
+  const finalist = buildFinalistSimulation({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    judgeDrill,
+    squadContract
+  });
+  const publisher = buildProtoPediaPublisher({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist
+  });
+  const demoRunway = buildDemoRunway({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist,
+    publisher
+  });
+  const [geminiResult, ciResult] = await Promise.allSettled([
+    runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
+    fetchCiProof()
+  ]);
+  const gemini =
+    geminiResult.status === "fulfilled"
+      ? geminiResult.value
+      : localGeminiRecommendation(
+          recommendation,
+          geminiResult.reason instanceof Error ? geminiResult.reason.message : "Gemini request failed"
+        );
+  const ci = ciResult.status === "fulfilled" ? ciResult.value : ciUnavailable("CI status promise rejected");
+  const proof = buildJudgeProof({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    gemini,
+    ci
+  });
+
+  res.json(
+    buildWinningAutopilot({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy,
+      mission,
+      opsDrill,
+      squadContract,
+      pitch,
+      finalist,
+      publisher,
+      demoRunway,
+      proof
+    })
+  );
+});
+
 app.post("/api/ops-drill", (req, res) => {
   const parsed = OpsDrillSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -771,6 +873,28 @@ app.post("/a2a", (req, res) => {
     finalist,
     publisher
   });
+  const proof = buildJudgeProof({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    gemini: localGeminiRecommendation(recommendation, "A2A synchronous artifact uses /api/proof for live Gemini evidence"),
+    ci: ciUnavailable("A2A synchronous artifact uses /api/proof for live CI evidence")
+  });
+  const winAutopilot = buildWinningAutopilot({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    squadContract,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    proof
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -891,6 +1015,22 @@ app.post("/a2a", (req, res) => {
                     mitigation: risk.mitigation
                   }))
                 },
+                winAutopilot: {
+                  id: winAutopilot.id,
+                  winScore: winAutopilot.winScore,
+                  readiness: winAutopilot.readiness,
+                  blockers: winAutopilot.blockers.map((action) => ({
+                    id: action.id,
+                    priority: action.priority,
+                    command: action.command
+                  })),
+                  lanes: winAutopilot.lanes.map((lane) => ({
+                    id: lane.id,
+                    score: lane.score,
+                    status: lane.status
+                  }))
+                },
+                winRunEndpoint: `${publicBaseUrl(req)}/api/win-run`,
                 demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,
                 proofEndpoint: `${publicBaseUrl(req)}/api/proof`,
                 finalistEndpoint: `${publicBaseUrl(req)}/api/finalist`,

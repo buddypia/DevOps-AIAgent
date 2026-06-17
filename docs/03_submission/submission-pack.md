@@ -43,6 +43,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Finalist Simulatorで、審査員5役の最終候補判定、落選理由、残ギャップ、次の一手を生成する
 - Submission Publisherで、ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
 - Demo Runwayで、Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線に束ねる
+- Win Autopilotで、競合/SWOT、証拠、最終候補判定、提出、運用を一括判定し、win scoreと残アクションを返す
 - Gemini 3.5 Flashで勝ち筋、残リスク、30秒ピッチを生成する
 - Cloud RunでUI、API、Agent Card、A2A endpointを単一サービスとして公開する
 
@@ -61,6 +62,7 @@ React UI
   -> Finalist Simulator
   -> Submission Publisher
   -> Demo Runway
+  -> Win Autopilot
   -> GitHub Actions CI
   -> Gemini 3.5 Flash
   -> A2A Agent Card + JSON-RPC endpoint
@@ -71,11 +73,11 @@ React UI
 
 | Time | Shot |
 | --- | --- |
-| 0-4s | Demo Runwayを実行し、30秒の審査員導線と残リスクを表示する |
+| 0-4s | Win Autopilotを実行し、win score、残アクション、証拠デッキを表示する |
 | 4-8s | Judge Proofを実行し、Gemini/Cloud Run/A2A/CI/DevOps/提出URLの証拠束を見せる |
 | 8-12s | Finalist Simulatorで審査員5役の判定と残ギャップを見せる |
 | 12-16s | Submission PublisherでProtoPedia貼り付け本文と提出チェックリストを見せる |
-| 16-21s | MarketplaceとWinning Strategyで競合/SWOT/審査スコアを確認する |
+| 16-21s | Demo Runway、Marketplace、Winning Strategyで30秒導線と競合/SWOTを確認する |
 | 21-25s | Contract DeskとMission Controlで契約、A2A委任、検証runbookを見せる |
 | 25-28s | Ops DrillでCloud Runの運用判断とrollback基準を見せる |
 | 28-30s | Cloud Run URL、GitHub Actions、Agent Card、構成図で締める |
@@ -93,6 +95,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/strategy \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mission \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/win-run \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/demo-run \

@@ -225,7 +225,7 @@ export function buildJudgeProof(input: {
       label: "A2A Agent Card and JSON-RPC endpoint",
       status: hasMarketBroker ? "passed" : "watch",
       evidence:
-        "Agent Card exposes market.discover, agent.hire, contract.issue, task.delegate, strategy.audit, mission.run, submission.package, submission.publish, demo.runway, ops.drill, ci.verify, pitch.director, judge.drill, finalist.simulate, and judge.proof.",
+        "Agent Card exposes market.discover, agent.hire, contract.issue, task.delegate, strategy.audit, mission.run, submission.package, submission.publish, demo.runway, win.autopilot, ops.drill, ci.verify, pitch.director, judge.drill, finalist.simulate, and judge.proof.",
       url: links.agentCard
     },
     {

@@ -40,7 +40,8 @@ describe("finalist simulator", () => {
     expect(simulation.judgeConsensus).toMatch(/advance|watch/);
     expect(simulation.gaps.map((gap) => gap.id)).toEqual(expect.arrayContaining(["protopedia", "video"]));
     expect(simulation.gaps.find((gap) => gap.id === "protopedia")?.severity).toBe("external");
-    expect(simulation.winningMove).toContain("Pitch Director");
+    expect(simulation.winningMove).toContain("Win Autopilot");
+    expect(simulation.winningMove).toContain("Demo Runway");
     expect(simulation.runbook.join("\n")).toContain("/api/finalist");
     expect(simulation.a2aPayload).toMatchObject({
       method: "message/send",
