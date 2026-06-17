@@ -2040,6 +2040,7 @@ h1 {
   display: grid;
   align-content: start;
   gap: 10px;
+  min-width: 0;
   padding: 14px;
   background: #fffdf3;
 }
@@ -2083,6 +2084,7 @@ h1 {
 }
 
 .launch-grid pre {
+  max-width: 100%;
   max-height: 360px;
   margin: 0;
   overflow: auto;
