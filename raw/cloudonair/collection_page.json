@@ -1,0 +1,40 @@
+{
+  "registration_enabled": false,
+  "published": true,
+  "template": "CLOUD_LANDING",
+  "instance": "000001",
+  "url_slug": "handson-collection-26q2",
+  "oauth_sign_in_only": false,
+  "unlisted": false,
+  "social_metadata": {
+    "description": "生成 AI や AI エージェントをテーマにした「Agentic AI Bootcamp」を開催いたします。Google の最新 AI モデル「Gemini」、AI エージェント管理プラットフォーム「Gemini Enterprise」、開発プラットフォーム「Vertex AI」、など、Google Cloud の最新プロダクトを実際に操作しながら学べるハンズオンです。 Google Cloud のカスタマー エンジニアによる解説に加え、チャットツールでの質疑応答も可能ですので、安心してご参加いただけます。ぜひこの機会に Google の AI ソリューションをご体験ください。",
+    "title": "Agentic AI Bootcamp 2026 Spring",
+    "image_path": "/gs/gweb-gc-gather-production.appspot.com/files/d0914f08-82c9-47f0-aaff-ef3b0a4bd03e"
+  },
+  "private": false,
+  "public_copy": null,
+  "collection": {
+    "name": "2026Q2HandsOnCollection",
+    "published": true,
+    "instance": "000001",
+    "product_id": 105833389,
+    "registration_form": null,
+    "next_event": {
+      "name": "AI エージェント開発 入門編 〜 デザイン パターンとシングル エージェント実装 〜",
+      "start": "2026-06-01T05:30:00+00:00",
+      "end": "2026-06-01T09:00:00+00:00",
+      "url_slug": "gcp-hoq2-0601"
+    },
+    "has_registered": false,
+    "id": "535218"
+  },
+  "default_sort_filter": "FUTURE",
+  "hero": {
+    "description": "生成 AI や AI エージェントをテーマにした「Agentic AI Bootcamp」を開催いたします。Google の最新 AI モデル「Gemini」、AI エージェント管理プラットフォーム「Gemini Enterprise」、開発プラットフォーム「Gemini Enterprise Agent Platform」、など、Google Cloud の最新プロダクトを実際に操作しながら学べるハンズオンです。 Google Cloud のカスタマー エンジニアによる解説に加え、チャットツールでの質疑応答も可能です。ぜひこの機会に Google の AI ソリューションをご体験ください。",
+    "eyebrow": "Google Cloud",
+    "header": "Agentic AI Bootcamp 2026 Spring",
+    "image": "/gs/gweb-gc-gather-production.appspot.com/files/d7cac362-28c0-45ab-951b-dfecf176c8ba",
+    "image_retina": "/gs/gweb-gc-gather-production.appspot.com/files/a45e97bc-f030-4162-b144-05d3837e0df5"
+  },
+  "id": "270a0c"
+}

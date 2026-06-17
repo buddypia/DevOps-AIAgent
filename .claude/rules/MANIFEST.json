@@ -1,0 +1,146 @@
+{
+  "schema_version": "2.0.0",
+  "_note": "brief2dev エコシステムのルール群から、本プロジェクト(Vite + React + Express + npm)に適用可能なコア統治ルールを厳選し、日本語化して移行したもの。brief2dev 生成器の内部運用専用ルール(governance-handoff / rule-enforcement-honesty / learnings-protocol / hook-naming / skill-doc-hygiene / pipeline/* 等)は移行対象外。",
+  "active_hooks": [
+    "secret-leak-guard",
+    "destructive-git-guard",
+    "prompt-injection-guard",
+    "edit-error-recovery"
+  ],
+  "categories": {
+    "common": {
+      "description": "すべてのコードに適用される共通ルール",
+      "loading": "always",
+      "rules": [
+        {
+          "id": "R-CM-001",
+          "file": "common/coding-style.md",
+          "severity": "critical",
+          "summary": "Feature-First ディレクトリ構造(推奨)、命名規約、動的パス解決",
+          "tags": ["structure", "naming"]
+        },
+        {
+          "id": "R-CM-002",
+          "file": "common/testing.md",
+          "severity": "critical",
+          "summary": "TDD 必須、カバレッジ Ratchet(up-only)、テスト隔離",
+          "tags": ["testing", "quality"]
+        },
+        {
+          "id": "R-CM-003",
+          "file": "common/security.md",
+          "severity": "critical",
+          "summary": "シークレット禁止、入力検証(Zod)、XSS/SQLi/CORS、依存セキュリティ",
+          "tags": ["security"],
+          "enforced_by": ["secret-leak-guard"]
+        },
+        {
+          "id": "R-CM-004",
+          "file": "common/performance.md",
+          "severity": "major",
+          "summary": "バンドルサイズ、遅延ロード、メモ化、N+1 防止、キャッシュ戦略",
+          "tags": ["performance"]
+        },
+        {
+          "id": "R-CM-005",
+          "file": "common/patterns.md",
+          "severity": "major",
+          "summary": "アーキテクチャパターン(関心の分離、依存方向)",
+          "tags": ["architecture"]
+        },
+        {
+          "id": "R-CM-008",
+          "file": "common/git-workflow.md",
+          "severity": "critical",
+          "summary": "Conventional Commits、main への force push 禁止、破壊的 git コマンド注意",
+          "tags": ["git", "workflow"],
+          "enforced_by": ["destructive-git-guard"]
+        },
+        {
+          "id": "R-CM-009",
+          "file": "common/command-portability.md",
+          "severity": "critical",
+          "summary": "品質ゲート命令は project-config.json の commands を SSOT として解決(null はスキップ)",
+          "tags": ["portability", "config"]
+        },
+        {
+          "id": "R-CM-010",
+          "file": "common/verification-before-completion.md",
+          "severity": "critical",
+          "summary": "検証証拠なしに完了を主張しない(Generation-Verification Loop、Verification Bundle、Adversarial Self-Check)",
+          "tags": ["verification", "quality"]
+        },
+        {
+          "id": "R-CM-011",
+          "file": "common/testing-anti-patterns.md",
+          "severity": "critical",
+          "summary": "テストの偽陽性/迎合テスト/モック乱用などのアンチパターン禁止",
+          "tags": ["testing", "anti-pattern"]
+        },
+        {
+          "id": "R-CM-012",
+          "file": "common/multi-perspective-review.md",
+          "severity": "major",
+          "summary": "多視点(役割別)レビューと加重スコアによる統合判定",
+          "tags": ["review"]
+        },
+        {
+          "id": "R-CM-016",
+          "file": "common/anti-sycophancy.md",
+          "severity": "major",
+          "summary": "迎合禁止、ポジション明示、根拠に基づく反論",
+          "tags": ["anti-sycophancy", "communication"]
+        },
+        {
+          "id": "R-CM-017",
+          "file": "common/gstack-native-patterns.md",
+          "severity": "major",
+          "summary": "プロセスパターン(Completeness Principle / See Something Say Something / 3-Strike Escalation / Dynamic Scope Lock)",
+          "tags": ["process", "debugging"]
+        }
+      ]
+    },
+    "typescript": {
+      "description": "TypeScript / React / Express コードに適用されるルール",
+      "loading": "conditional",
+      "paths_patterns": ["src/**/*.{ts,tsx}", "server/**/*.ts", "tests/**/*.ts"],
+      "rules": [
+        {
+          "id": "R-TS-001",
+          "file": "typescript/coding-style.md",
+          "severity": "critical",
+          "summary": "TypeScript コーディングスタイル(型安全、any 回避、命名)",
+          "tags": ["typescript", "style"]
+        },
+        {
+          "id": "R-TS-002",
+          "file": "typescript/testing.md",
+          "severity": "critical",
+          "summary": "TypeScript テスト規約(vitest)",
+          "tags": ["typescript", "testing"]
+        },
+        {
+          "id": "R-TS-003",
+          "file": "typescript/patterns.md",
+          "severity": "major",
+          "summary": "TypeScript 設計パターン",
+          "tags": ["typescript", "patterns"]
+        },
+        {
+          "id": "R-TS-004",
+          "file": "typescript/security.md",
+          "severity": "critical",
+          "summary": "TypeScript セキュリティ(入力検証、型による安全性)",
+          "tags": ["typescript", "security"]
+        },
+        {
+          "id": "R-TS-005",
+          "file": "typescript/hooks.md",
+          "severity": "major",
+          "summary": "React Hooks 規約(依存配列、副作用、メモ化)",
+          "tags": ["typescript", "react"]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "title": "DevOps × AI Agent Hackathon 作品提出フォーム",
+  "description": "作品提出期間：2026年7月10日（金）23:59まで\n※期日を過ぎて提出いただいた作品は審査の対象外となります\n※同一作品、同一メンバーでのご応募は1回限りとさせていただきます\n\n◆「利用 / 参加規約」 および 「個人情報の取り扱いについて」\n特設ページ内の該当箇所をご確認ください。\n",
+  "questions": [
+    {
+      "id": 2098390896,
+      "title": "チーム名または個人名",
+      "description": "",
+      "type": 0,
+      "required": true
+    },
+    {
+      "id": 1675272288,
+      "title": "代表者の氏名（フルネーム）",
+      "description": "※個人参加の方はご自身の氏名をご記入ください\n※チーム参加の方はチームの代表者の氏名をご記入ください",
+      "type": 0,
+      "required": true
+    },
+    {
+      "id": 676720429,
+      "title": "チームメンバー全員の氏名（フルネーム）",
+      "description": "※個人で参加される方は「なし」とご記入ください。\n※複数名で参加される方はメンバー全員の氏名を記載ください。複数名の氏名を記入される際はカンマ「,」で区切ってください。",
+      "type": 1,
+      "required": true
+    },
+    {
+      "id": 1643157239,
+      "title": "代表者の連絡先メールアドレス",
+      "description": "※エントリー時に登録したメールアドレスをご記入ください。",
+      "type": 0,
+      "required": true
+    },
+    {
+      "id": 2007430356,
+      "title": "作品タイトル",
+      "description": "",
+      "type": 0,
+      "required": true
+    },
+    {
+      "id": 1338487024,
+      "title": "GitHubリポジトリのURL",
+      "description": "※GitHubリポジトリは公開設定にしてください。",
+      "type": 0,
+      "required": true
+    },
+    {
+      "id": 78820962,
+      "title": "デプロイした作品のURL",
+      "description": "※審査期間である2026年8月19日までの間は、デプロイした上で動作確認できる状態にしておいてください。",
+      "type": 0,
+      "required": true
+    },
+    {
+      "id": 1624635795,
+      "title": "Proto Pediaの作品URL",
+      "description": "※Proto Pedia（https://protopedia.net/）にご登録いただいた作品URLを記載ください。",
+      "type": 0,
+      "required": true
+    }
+  ]
+}

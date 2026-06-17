@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "project_name": "a2a-agent-marketplace",
+  "platform": "web-vite-express",
+  "framework": "Vite + React (frontend) / Express (backend)",
+  "language": "TypeScript",
+  "migrated_from": "brief2dev ecosystem (curated core, 日本語化)",
+  "pipeline_data_root": null,
+  "paths": {
+    "source_root": "src",
+    "server": "server",
+    "tests": "tests",
+    "tests_unit": "tests",
+    "public": "public",
+    "styles": "src",
+    "design_system": null
+  },
+  "conventions": {
+    "component_extension": ".tsx",
+    "style_approach": "plain-css",
+    "barrel_files": false,
+    "test_suffix": ".test.ts",
+    "module_system": "esm"
+  },
+  "commands": {
+    "install": "npm install",
+    "dev": "npm run dev",
+    "build": "npm run build",
+    "start": "npm start",
+    "lint": null,
+    "typecheck": "npm run typecheck",
+    "test": "npm test",
+    "format_check": null,
+    "format_fix": null,
+    "codegen_check": null,
+    "codegen": null,
+    "quality_gate": "make q.check",
+    "quality_check": "make q.check",
+    "check_architecture": "make q.check-architecture"
+  },
+  "quality": {
+    "test_framework": "vitest",
+    "e2e_framework": "playwright",
+    "linter": null,
+    "formatter": null,
+    "typecheck": "tsc"
+  },
+  "runtime": {
+    "node": ">=22",
+    "dev_port": 8080,
+    "deploy_target": "Cloud Run"
+  }
+}

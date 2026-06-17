@@ -1,0 +1,3171 @@
+{
+  "recordMap": {
+    "__version__": 3,
+    "block": {
+      "35304bf5-e7e4-8029-96fc-e30d9c3ca1e3": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "35304bf5-e7e4-8029-96fc-e30d9c3ca1e3",
+            "version": 20,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "クーポンは 2026年10月20日 00:00(JST) までに有効化してください。クーポンの有効化期限を超過した後には、再発行などの対応は行っておりませんのでご注意ください。"
+                ]
+              ]
+            },
+            "created_time": 1777631208817,
+            "last_edited_time": 1777631236915,
+            "parent_id": "35304bf5-e7e4-805f-90ca-d5f2f90e40c0",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "4Alf1VOYYFRb3NALtahZYg,\"start\",\"end\"",
+                "n": {
+                  "4Alf1VOYYFRb3NALtahZYg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "4Alf1VOYYFRb3NALtahZYg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "odgSWLKudXAo",
+                            89
+                          ],
+                          "o": "start",
+                          "l": -88
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "9p9LaxpCIG6-",
+                            1
+                          ],
+                          "o": "start",
+                          "l": -88
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "odgSWLKudXAo",
+                            177
+                          ],
+                          "o": [
+                            "9p9LaxpCIG6-",
+                            88
+                          ],
+                          "l": 88,
+                          "c": "クーポンは 2026年10月20日 00:00(JST) までに有効化してください。クーポンの有効化期限を超過した後には、再発行などの対応は行っておりませんのでご注意ください。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "35304bf5-e7e4-801b-9197-f7a98cd2899d": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "35304bf5-e7e4-801b-9197-f7a98cd2899d",
+            "version": 20,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "配布するクーポンは Google 配下のサービス（Google Maps Platformなど）や、Google Cloud 一部サービスでご利用頂けない場合がありますので、日々課金状況をご確認ください。 また、主催者・スポンサーとも課金状況についてのお問合せにはお答えしかねますのでご了承ください。"
+                ]
+              ]
+            },
+            "created_time": 1777631208819,
+            "last_edited_time": 1777631236915,
+            "parent_id": "35304bf5-e7e4-805f-90ca-d5f2f90e40c0",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "LH40g9lTOFaI7nsDm4PKwg,\"start\",\"end\"",
+                "n": {
+                  "LH40g9lTOFaI7nsDm4PKwg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "LH40g9lTOFaI7nsDm4PKwg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "odgSWLKudXAo",
+                            151
+                          ],
+                          "o": "start",
+                          "l": -150
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "1Bj11rctqNqc",
+                            1
+                          ],
+                          "o": "start",
+                          "l": -150
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "odgSWLKudXAo",
+                            301
+                          ],
+                          "o": [
+                            "1Bj11rctqNqc",
+                            150
+                          ],
+                          "l": 150,
+                          "c": "配布するクーポンは Google 配下のサービス（Google Maps Platformなど）や、Google Cloud 一部サービスでご利用頂けない場合がありますので、日々課金状況をご確認ください。 また、主催者・スポンサーとも課金状況についてのお問合せにはお答えしかねますのでご了承ください。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "35304bf5-e7e4-80f8-96eb-f2261a675811": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "35304bf5-e7e4-80f8-96eb-f2261a675811",
+            "version": 20,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "2026年以降、Google Cloud ハンズオンセミナー等でクーポンコードを申請し、すでに適用されている方は適用できない場合がございます。"
+                ]
+              ]
+            },
+            "created_time": 1777631208821,
+            "last_edited_time": 1777631236915,
+            "parent_id": "35304bf5-e7e4-805f-90ca-d5f2f90e40c0",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "E-BOUCmRj98umRiHvJctKg,\"start\",\"end\"",
+                "n": {
+                  "E-BOUCmRj98umRiHvJctKg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "E-BOUCmRj98umRiHvJctKg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "odgSWLKudXAo",
+                            72
+                          ],
+                          "o": "start",
+                          "l": -71
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "H4rhD-YfJCOW",
+                            1
+                          ],
+                          "o": "start",
+                          "l": -71
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "odgSWLKudXAo",
+                            143
+                          ],
+                          "o": [
+                            "H4rhD-YfJCOW",
+                            71
+                          ],
+                          "l": 71,
+                          "c": "2026年以降、Google Cloud ハンズオンセミナー等でクーポンコードを申請し、すでに適用されている方は適用できない場合がございます。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "35304bf5-e7e4-805b-ad1b-d7cc18041a9a": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "35304bf5-e7e4-805b-ad1b-d7cc18041a9a",
+            "version": 20,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "クーポンコードを利用するにはGoogle Cloudを有料アカウントにアップグレードする必要があります。有料アカウントでも、適用したクレジット分は無料で利用できます。"
+                ]
+              ]
+            },
+            "created_time": 1777631208822,
+            "last_edited_time": 1777631236915,
+            "parent_id": "35304bf5-e7e4-805f-90ca-d5f2f90e40c0",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "yRdCrjt1OpVZXCOUfY6eBg,\"start\",\"end\"",
+                "n": {
+                  "yRdCrjt1OpVZXCOUfY6eBg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "yRdCrjt1OpVZXCOUfY6eBg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "odgSWLKudXAo",
+                            84
+                          ],
+                          "o": "start",
+                          "l": -83
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "LKydQo_XNdLP",
+                            1
+                          ],
+                          "o": "start",
+                          "l": -83
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "odgSWLKudXAo",
+                            167
+                          ],
+                          "o": [
+                            "LKydQo_XNdLP",
+                            83
+                          ],
+                          "l": 83,
+                          "c": "クーポンコードを利用するにはGoogle Cloudを有料アカウントにアップグレードする必要があります。有料アカウントでも、適用したクレジット分は無料で利用できます。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8037-9be6-dc8c42f412b1": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8037-9be6-dc8c42f412b1",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第1条 （本規約への同意）"
+                ]
+              ]
+            },
+            "created_time": 1776738911556,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "bWutov3CG6xvLb2iV-pWSg,\"start\",\"end\"",
+                "n": {
+                  "bWutov3CG6xvLb2iV-pWSg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "bWutov3CG6xvLb2iV-pWSg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "fKXDRu2gRtC4",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 13,
+                          "c": "第1条 （本規約への同意）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8066-b888-f6679a9aeafa": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8066-b888-f6679a9aeafa",
+            "version": 5,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本規約は、ファインディ株式会社（以下「当社」といいます。）が運営する「DevOps x AI Agent Hackathon」（以下「本イベント」といいます。）の参加条件および本イベントにおける遵守事項を定めるものです。本規約に定めのない事項については、当社が別途定める「"
+                ],
+                [
+                  "Findy Tools 利用規約 / Findy Conference 利用規約 （ユーザー向け）",
+                  [
+                    [
+                      "a",
+                      "https://findy-tools.io/terms"
+                    ]
+                  ]
+                ],
+                [
+                  "」が適用されるものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911559,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "jMkZHrbPO63Pm6ztufBZMA,\"start\",\"end\"",
+                "n": {
+                  "jMkZHrbPO63Pm6ztufBZMA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "jMkZHrbPO63Pm6ztufBZMA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "9vNkZhUkxTfm",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 136,
+                          "c": "本規約は、ファインディ株式会社（以下「当社」といいます。）が運営する「DevOps x AI Agent Hackathon」（以下「本イベント」といいます。）の参加条件および本イベントにおける遵守事項を定めるものです。本規約に定めのない事項については、当社が別途定める「"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "9vNkZhUkxTfm",
+                            137
+                          ],
+                          "o": [
+                            "9vNkZhUkxTfm",
+                            136
+                          ],
+                          "l": 49,
+                          "c": "Findy Tools 利用規約 / Findy Conference 利用規約 （ユーザー向け）",
+                          "b": [
+                            {
+                              "t": "a",
+                              "x": "jMkZHrbPO63Pm6ztufBZMA",
+                              "l": "",
+                              "i": [
+                                "9vNkZhUkxTfm",
+                                200
+                              ],
+                              "s": {
+                                "i": [
+                                  "9vNkZhUkxTfm",
+                                  137
+                                ],
+                                "a": "b"
+                              },
+                              "e": {
+                                "i": [
+                                  "9vNkZhUkxTfm",
+                                  185
+                                ],
+                                "a": "a"
+                              },
+                              "a": [
+                                "a",
+                                "https://findy-tools.io/terms"
+                              ]
+                            }
+                          ],
+                          "a": []
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "9vNkZhUkxTfm",
+                            186
+                          ],
+                          "o": [
+                            "9vNkZhUkxTfm",
+                            185
+                          ],
+                          "l": 14,
+                          "c": "」が適用されるものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80a4-b42d-ed95bc41fd5c": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80a4-b42d-ed95bc41fd5c",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "参加者は、本規約の内容について全て同意したうえで本イベントに参加するものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911562,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "RmIOgAs_XSXHMV8vqB06UA,\"start\",\"end\"",
+                "n": {
+                  "RmIOgAs_XSXHMV8vqB06UA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "RmIOgAs_XSXHMV8vqB06UA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "-DM5e_5fmfzI",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 41,
+                          "c": "参加者は、本規約の内容について全て同意したうえで本イベントに参加するものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80f2-85bf-f87baf462c40": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80f2-85bf-f87baf462c40",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "参加者は、（1）本イベントへの参加申込時、および（2）本イベントにおける成果物の提出時の双方において、本規約に同意し、これを遵守するものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911562,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "qpr0vZGFefwqTOZKB8CHxw,\"start\",\"end\"",
+                "n": {
+                  "qpr0vZGFefwqTOZKB8CHxw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "qpr0vZGFefwqTOZKB8CHxw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "dpJOMqhQT_fV",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 73,
+                          "c": "参加者は、（1）本イベントへの参加申込時、および（2）本イベントにおける成果物の提出時の双方において、本規約に同意し、これを遵守するものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8066-ba6a-ee8bd935b3f3": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8066-ba6a-ee8bd935b3f3",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第2条 （定義）"
+                ]
+              ]
+            },
+            "created_time": 1776738911563,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "-AVzBNzmWUb1bchabT3Lpg,\"start\",\"end\"",
+                "n": {
+                  "-AVzBNzmWUb1bchabT3Lpg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "-AVzBNzmWUb1bchabT3Lpg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "V2-36YUYzIHn",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 8,
+                          "c": "第2条 （定義）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8080-ba31-c390bb4fb572": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8080-ba31-c390bb4fb572",
+            "version": 4,
+            "type": "text",
+            "properties": {
+              "title": [
+                [
+                  "本規約における各用語の定義は以下の通りとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911563,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "n58zYNOTKDQ6FtdVbwpimQ,\"start\",\"end\"",
+                "n": {
+                  "n58zYNOTKDQ6FtdVbwpimQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "n58zYNOTKDQ6FtdVbwpimQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "2MXSdD8fyAUQ",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 24,
+                          "c": "本規約における各用語の定義は以下の通りとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-802e-b039-fc86d63dd997": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-802e-b039-fc86d63dd997",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "「本イベント」とは、当社が主催する本ハッカソン企画、およびこれに付随する参加登録、成果物の提出、審査、当社が指定する外部プラットフォーム（ProtoPedia等）の利用、ならびに当社が本イベントのために提供するシステム等の一切の工程を意味します。"
+                ]
+              ]
+            },
+            "created_time": 1776738911564,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "SXlaXfy0AQOq5_7aw2mCEA,\"start\",\"end\"",
+                "n": {
+                  "SXlaXfy0AQOq5_7aw2mCEA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "SXlaXfy0AQOq5_7aw2mCEA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "raO8idMQlUOy",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 123,
+                          "c": "「本イベント」とは、当社が主催する本ハッカソン企画、およびこれに付随する参加登録、成果物の提出、審査、当社が指定する外部プラットフォーム（ProtoPedia等）の利用、ならびに当社が本イベントのために提供するシステム等の一切の工程を意味します。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80ba-9205-ca8179ef9181": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80ba-9205-ca8179ef9181",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "「参加者」とは本規約に同意のうえ、当社が別途定める条件を満たし、本イベントに参加する個人、または複数名で構成されるチームを意味します。"
+                ]
+              ]
+            },
+            "created_time": 1776738911564,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "pAkHYClqOgopMBKZTgWd8A,\"start\",\"end\"",
+                "n": {
+                  "pAkHYClqOgopMBKZTgWd8A,\"start\",\"end\"": {
+                    "s": {
+                      "x": "pAkHYClqOgopMBKZTgWd8A",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "JgI1VgusLyH-",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 67,
+                          "c": "「参加者」とは本規約に同意のうえ、当社が別途定める条件を満たし、本イベントに参加する個人、または複数名で構成されるチームを意味します。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80c5-8252-f5fe5b3b4ac0": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80c5-8252-f5fe5b3b4ac0",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "「スポンサー企業」とは、本イベントに協賛する企業を意味します。"
+                ]
+              ]
+            },
+            "created_time": 1776738911565,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "w9CKSIkwl5nEIlS-X2uXzQ,\"start\",\"end\"",
+                "n": {
+                  "w9CKSIkwl5nEIlS-X2uXzQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "w9CKSIkwl5nEIlS-X2uXzQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "kuf4lRmF-8Lh",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 31,
+                          "c": "「スポンサー企業」とは、本イベントに協賛する企業を意味します。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8048-83ca-c6a9d3a4de74": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8048-83ca-c6a9d3a4de74",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "「チーム」とは、複数名の参加者により構成される集団を意味します。なお、チーム構成にあたっての条件（1チームあたりの構成人数を含みます）は、当社が別途本イベントの公式ウェブサイト等で指定します。"
+                ]
+              ]
+            },
+            "created_time": 1776738911565,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "CkPKrE1_jrRqAxJDNzh55g,\"start\",\"end\"",
+                "n": {
+                  "CkPKrE1_jrRqAxJDNzh55g,\"start\",\"end\"": {
+                    "s": {
+                      "x": "CkPKrE1_jrRqAxJDNzh55g",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "xfv-hFYJieYm",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 96,
+                          "c": "「チーム」とは、複数名の参加者により構成される集団を意味します。なお、チーム構成にあたっての条件（1チームあたりの構成人数を含みます）は、当社が別途本イベントの公式ウェブサイト等で指定します。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80bf-871b-d9c93e456588": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80bf-871b-d9c93e456588",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "「本成果物」とは、参加者が本イベントに関連して作成し、当社に提出したプログラム、ソースコード、図面、ドキュメントその他一切のアウトプットを意味します。"
+                ]
+              ]
+            },
+            "created_time": 1776738911566,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "L6jfbVBPVlWivGj3GCfjfg,\"start\",\"end\"",
+                "n": {
+                  "L6jfbVBPVlWivGj3GCfjfg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "L6jfbVBPVlWivGj3GCfjfg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "EDWhiFg96YG1",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 75,
+                          "c": "「本成果物」とは、参加者が本イベントに関連して作成し、当社に提出したプログラム、ソースコード、図面、ドキュメントその他一切のアウトプットを意味します。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8047-b01a-c95c2ca3cba2": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8047-b01a-c95c2ca3cba2",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第3条 （参加登録と本人確認）"
+                ]
+              ]
+            },
+            "created_time": 1776738911566,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "OhW5wKfZc1hfC-hJTEoXgQ,\"start\",\"end\"",
+                "n": {
+                  "OhW5wKfZc1hfC-hJTEoXgQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "OhW5wKfZc1hfC-hJTEoXgQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "gpL_IYsHiJBr",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 15,
+                          "c": "第3条 （参加登録と本人確認）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80c0-99ba-e787dd41041d": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80c0-99ba-e787dd41041d",
+            "version": 12,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "参加者は、18歳以上の日本居住者である個人に限るものとします。また、本イベントの参加は個人の私的な活動として行われるものとし、所属する企業その他の団体の業務として、または当該団体の代表として参加することはできません。"
+                ]
+              ]
+            },
+            "created_time": 1776738911566,
+            "last_edited_time": 1776834320492,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "WTmLzgyJMINWXICNvvKoYg,\"start\",\"end\"",
+                "n": {
+                  "WTmLzgyJMINWXICNvvKoYg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "WTmLzgyJMINWXICNvvKoYg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "7IART-tYvcgG",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 5,
+                          "c": "参加者は、"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "dPLO0IC-h-Wk",
+                            109
+                          ],
+                          "o": [
+                            "7IART-tYvcgG",
+                            5
+                          ],
+                          "l": 2,
+                          "c": "18"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "7IART-tYvcgG",
+                            6
+                          ],
+                          "o": [
+                            "7IART-tYvcgG",
+                            5
+                          ],
+                          "l": -2
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "7IART-tYvcgG",
+                            8
+                          ],
+                          "o": [
+                            "7IART-tYvcgG",
+                            7
+                          ],
+                          "l": 101,
+                          "c": "歳以上の日本居住者である個人に限るものとします。また、本イベントの参加は個人の私的な活動として行われるものとし、所属する企業その他の団体の業務として、または当該団体の代表として参加することはできません。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8076-bdee-e55e6cc10084": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8076-bdee-e55e6cc10084",
+            "version": 12,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "国家公務員、地方公務員、独立行政法人の役職員、国立大学法人の役職員、その他法令により賞金等の受領に制限がある職務に就く者は参加できません 。"
+                ]
+              ]
+            },
+            "created_time": 1776738911567,
+            "last_edited_time": 1776909750339,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "JTYLELni0PLalfiijnyMxw,\"start\",\"end\"",
+                "n": {
+                  "JTYLELni0PLalfiijnyMxw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "JTYLELni0PLalfiijnyMxw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            21
+                          ],
+                          "o": "start",
+                          "l": -70
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            91
+                          ],
+                          "o": [
+                            "YG0HOwEgm6yl",
+                            90
+                          ],
+                          "l": 70,
+                          "c": "国家公務員、地方公務員、独立行政法人の役職員、国立大学法人の役職員、その他法令により賞金等の受領に制限がある職務に就く者は参加できません 。"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "9qDM_E-KQhX-",
+                            1
+                          ],
+                          "o": "start",
+                          "l": -20
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80b4-b865-ed2ac3948084": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80b4-b865-ed2ac3948084",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "参加者は、本イベントの登録にあたって、当社規定のコンプライアンスチェックの実施、および賞金の振込口座名義との照合のため、必ず本名（フルネーム・漢字）で登録するものとし、ニックネーム等での登録は行わないものとします。チームで参加する場合も、チームを構成する参加者全員が個別に本条に基づく登録を行う必要があります。"
+                ]
+              ]
+            },
+            "created_time": 1776738911567,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "s06ALkgH5OsVJjEQ5ZIyGw,\"start\",\"end\"",
+                "n": {
+                  "s06ALkgH5OsVJjEQ5ZIyGw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "s06ALkgH5OsVJjEQ5ZIyGw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4lmFULXCLrw8",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 155,
+                          "c": "参加者は、本イベントの登録にあたって、当社規定のコンプライアンスチェックの実施、および賞金の振込口座名義との照合のため、必ず本名（フルネーム・漢字）で登録するものとし、ニックネーム等での登録は行わないものとします。チームで参加する場合も、チームを構成する参加者全員が個別に本条に基づく登録を行う必要があります。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-807a-b21c-df91cdf42b0e": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-807a-b21c-df91cdf42b0e",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "参加者は、登録情報に変更が生じた場合、速やかに当社に届け出るものとします。登録情報に虚偽、誤り、または記載漏れがあったことにより参加者に生じた損害について、当社は一切の責任を負いません。"
+                ]
+              ]
+            },
+            "created_time": 1776738911567,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "WjFxN3pYHI7AVEcQl924YA,\"start\",\"end\"",
+                "n": {
+                  "WjFxN3pYHI7AVEcQl924YA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "WjFxN3pYHI7AVEcQl924YA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "a299PrhfoWIQ",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 93,
+                          "c": "参加者は、登録情報に変更が生じた場合、速やかに当社に届け出るものとします。登録情報に虚偽、誤り、または記載漏れがあったことにより参加者に生じた損害について、当社は一切の責任を負いません。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-802c-9902-e1c750518232": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-802c-9902-e1c750518232",
+            "version": 12,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社は、参加登録をしたものが以下の各号のいずれかに該当すると判断した場合、参加を承認せず、また賞金の支払いを行わないことができるものとします。なお、当社はその理由について一切開示義務を負わないものとします。"
+                ]
+              ]
+            },
+            "content": [
+              "34904bf5-e7e4-8016-884b-ef3d74553d98",
+              "34904bf5-e7e4-80a6-839f-d82bb6b5e57a",
+              "34904bf5-e7e4-80b5-98f6-f063b6ca367b",
+              "34904bf5-e7e4-8033-aaae-c876466ed15a"
+            ],
+            "created_time": 1776738911568,
+            "last_edited_time": 1776738928757,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "1NSgn7NtNEJKlFkbI3l7cQ,\"start\",\"end\"",
+                "n": {
+                  "1NSgn7NtNEJKlFkbI3l7cQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "1NSgn7NtNEJKlFkbI3l7cQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "64wwK32alBCh",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 103,
+                          "c": "当社は、参加登録をしたものが以下の各号のいずれかに該当すると判断した場合、参加を承認せず、また賞金の支払いを行わないことができるものとします。なお、当社はその理由について一切開示義務を負わないものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8040-ae30-f40380d08126": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8040-ae30-f40380d08126",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "登録情報に虚偽があった場合、または本規約の規定に違反したことが判明した場合、当社は当該参加者の参加資格を取り消し、賞金の授与を行わないものとします。既に賞金を授与している場合には、当社は当該賞金の返還を請求できるものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911569,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "X3zOfwH8c-UrCxvt37JqWw,\"start\",\"end\"",
+                "n": {
+                  "X3zOfwH8c-UrCxvt37JqWw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "X3zOfwH8c-UrCxvt37JqWw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "-Ajv2E7F0S0T",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 113,
+                          "c": "登録情報に虚偽があった場合、または本規約の規定に違反したことが判明した場合、当社は当該参加者の参加資格を取り消し、賞金の授与を行わないものとします。既に賞金を授与している場合には、当社は当該賞金の返還を請求できるものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80e0-a6a8-c502e2e5af1e": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80e0-a6a8-c502e2e5af1e",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第4条 （参加者の責任）"
+                ]
+              ]
+            },
+            "created_time": 1776738911569,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "HtycQobqbV_35eI-LXrWBQ,\"start\",\"end\"",
+                "n": {
+                  "HtycQobqbV_35eI-LXrWBQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "HtycQobqbV_35eI-LXrWBQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "jX4yz2Iq70Vw",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 12,
+                          "c": "第4条 （参加者の責任）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-808b-8c96-d609e5ba5e50": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-808b-8c96-d609e5ba5e50",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "参加者は、登録情報に誤りを発見した場合または変更が生じた場合、ただちに登録情報を当社所定の方法により修正または変更するものとします。登録情報の不備・齟齬により発生した事項については、当社は、当社の故意又は重過失による場合を除き、一切責任を負いません。"
+                ]
+              ]
+            },
+            "created_time": 1776738911570,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "chzNE-mloyFhZPHaqol2Hw,\"start\",\"end\"",
+                "n": {
+                  "chzNE-mloyFhZPHaqol2Hw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "chzNE-mloyFhZPHaqol2Hw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "_iB6tdQL3NR3",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 125,
+                          "c": "参加者は、登録情報に誤りを発見した場合または変更が生じた場合、ただちに登録情報を当社所定の方法により修正または変更するものとします。登録情報の不備・齟齬により発生した事項については、当社は、当社の故意又は重過失による場合を除き、一切責任を負いません。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-808f-a749-d5ade5c2bbd7": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-808f-a749-d5ade5c2bbd7",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "参加者は本イベントで利用するアカウントを自らの責任において管理および保管するものとし、これを第三者に利用させ、これを第三者に供与、貸与もしくは譲渡し、またはこれを第三者との間で名義変更または売買等をしてはならないものとします。3. また、本アカウント等が盗まれ、またはアカウントが第三者に不正に使用されていることが判明した場合、ただちにその旨を当社に通知するとともに、当社からの指示に従うものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911570,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "B1nuFQEhacqBfGnooWQ2kQ,\"start\",\"end\"",
+                "n": {
+                  "B1nuFQEhacqBfGnooWQ2kQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "B1nuFQEhacqBfGnooWQ2kQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "ItjEK8DIIRH-",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 201,
+                          "c": "参加者は本イベントで利用するアカウントを自らの責任において管理および保管するものとし、これを第三者に利用させ、これを第三者に供与、貸与もしくは譲渡し、またはこれを第三者との間で名義変更または売買等をしてはならないものとします。3. また、本アカウント等が盗まれ、またはアカウントが第三者に不正に使用されていることが判明した場合、ただちにその旨を当社に通知するとともに、当社からの指示に従うものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80d9-bfc3-e25a0f342ae5": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80d9-bfc3-e25a0f342ae5",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本イベントの参加にあたって第三者（本イベントの他参加者を含みます）との間で紛争を生じた場合、参加者は、自己の責任と費用をもって処理ならびに解決するものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911571,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "ppvgsqaHRcxeXOb6IgdqXA,\"start\",\"end\"",
+                "n": {
+                  "ppvgsqaHRcxeXOb6IgdqXA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "ppvgsqaHRcxeXOb6IgdqXA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "_AZ8Sa2q4v2y",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 80,
+                          "c": "本イベントの参加にあたって第三者（本イベントの他参加者を含みます）との間で紛争を生じた場合、参加者は、自己の責任と費用をもって処理ならびに解決するものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80c2-bfeb-d008d9521f1f": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80c2-bfeb-d008d9521f1f",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "参加者は、当社または第三者に対して損害を与えないよう善良な管理者の注意義務をもって本イベントに参加するものとします。本イベントの参加にあたって参加者が当社または第三者に対して損害を与えた場合、当社または第三者が被った一切の損害（当社において紛争の解決のために費用を支出した場合、当該費用を含みます。）を賠償するものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911571,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "jGAmBxjgCOHS8KrQrz0ZvQ,\"start\",\"end\"",
+                "n": {
+                  "jGAmBxjgCOHS8KrQrz0ZvQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "jGAmBxjgCOHS8KrQrz0ZvQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "Ir_2Lc53vNgt",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 162,
+                          "c": "参加者は、当社または第三者に対して損害を与えないよう善良な管理者の注意義務をもって本イベントに参加するものとします。本イベントの参加にあたって参加者が当社または第三者に対して損害を与えた場合、当社または第三者が被った一切の損害（当社において紛争の解決のために費用を支出した場合、当該費用を含みます。）を賠償するものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-802f-b4a9-eb9c90482292": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-802f-b4a9-eb9c90482292",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第5条 （参加者登録の抹消）"
+                ]
+              ]
+            },
+            "created_time": 1776738911571,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "DmaBy5ZpVLlRqRpeMy9g2w,\"start\",\"end\"",
+                "n": {
+                  "DmaBy5ZpVLlRqRpeMy9g2w,\"start\",\"end\"": {
+                    "s": {
+                      "x": "DmaBy5ZpVLlRqRpeMy9g2w",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "1PmXv794VT-7",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 14,
+                          "c": "第5条 （参加者登録の抹消）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80cd-8fad-d192cb60848e": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80cd-8fad-d192cb60848e",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "参加者は、当社所定の方法によって当社に申請することにより、参加者登録およびアカウントを抹消することができます。"
+                ]
+              ]
+            },
+            "created_time": 1776738911572,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "t8rEXA0g-7y6cdSHxQipZQ,\"start\",\"end\"",
+                "n": {
+                  "t8rEXA0g-7y6cdSHxQipZQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "t8rEXA0g-7y6cdSHxQipZQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "WUZTKL-P_-AU",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 55,
+                          "c": "参加者は、当社所定の方法によって当社に申請することにより、参加者登録およびアカウントを抹消することができます。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8020-8410-f3deaba85610": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8020-8410-f3deaba85610",
+            "version": 12,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "参加者が次の各号のいずれかに該当する場合、当社は、当該参加者に対する催告なく、当社は当該参加者について参加者登録およびアカウントを抹消することができます。"
+                ]
+              ]
+            },
+            "content": [
+              "34904bf5-e7e4-807a-84e8-ddb40588eb00",
+              "34904bf5-e7e4-8046-aa6d-ee1624e2abbc",
+              "34904bf5-e7e4-80fa-a04f-d767c97fe766",
+              "34904bf5-e7e4-80b9-9e2b-fe760ba7c87d"
+            ],
+            "created_time": 1776738911572,
+            "last_edited_time": 1776738937490,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "_wbB-Gbxw2Pm70sgoHIjYQ,\"start\",\"end\"",
+                "n": {
+                  "_wbB-Gbxw2Pm70sgoHIjYQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "_wbB-Gbxw2Pm70sgoHIjYQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "-rfCkBq6FQlq",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 77,
+                          "c": "参加者が次の各号のいずれかに該当する場合、当社は、当該参加者に対する催告なく、当社は当該参加者について参加者登録およびアカウントを抹消することができます。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80c3-94e3-c5581d831bc3": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80c3-94e3-c5581d831bc3",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "その理由にかかわらず参加者登録が抹消された場合、参加者は、参加者に関するデータについて一切の権利を放棄し、当社の裁量によって削除、保存または利用すること、また当社に対して開示もしくは訂正等を求めることができないことについてあらかじめ同意します。ただし、参加者の個人情報については本規約、当社が定めるプライバシーポリシーおよび法令に従って取り扱われるものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911573,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "PveoCAL-n6Ax1McOAF3QRA,\"start\",\"end\"",
+                "n": {
+                  "PveoCAL-n6Ax1McOAF3QRA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "PveoCAL-n6Ax1McOAF3QRA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "8dTcW823wSnQ",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 181,
+                          "c": "その理由にかかわらず参加者登録が抹消された場合、参加者は、参加者に関するデータについて一切の権利を放棄し、当社の裁量によって削除、保存または利用すること、また当社に対して開示もしくは訂正等を求めることができないことについてあらかじめ同意します。ただし、参加者の個人情報については本規約、当社が定めるプライバシーポリシーおよび法令に従って取り扱われるものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-804c-8f67-c577867723e4": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-804c-8f67-c577867723e4",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第6条 （秘密保持義務）"
+                ]
+              ]
+            },
+            "created_time": 1776738911574,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "JhTUyXeAsnEqvRTUDLUyyw,\"start\",\"end\"",
+                "n": {
+                  "JhTUyXeAsnEqvRTUDLUyyw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "JhTUyXeAsnEqvRTUDLUyyw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "NrPvehfgN8M_",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 12,
+                          "c": "第6条 （秘密保持義務）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8026-a4cd-ddeeeeaf9193": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8026-a4cd-ddeeeeaf9193",
+            "version": 4,
+            "type": "text",
+            "properties": {
+              "title": [
+                [
+                  "参加者は、本イベントに関連して知得した非公開情報（技術情報、審査過程、審査結果、他の参加者の情報、並びに当社またはスポンサー企業から提供された課題の内容、提供データ、クーポンコード、アカウント、有償ツールの利用権限等）を第三者に開示または漏洩してはなりません。"
+                ]
+              ]
+            },
+            "created_time": 1776738911574,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "uEzce0VoyEbR2plCwj7hhQ,\"start\",\"end\"",
+                "n": {
+                  "uEzce0VoyEbR2plCwj7hhQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "uEzce0VoyEbR2plCwj7hhQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "ZdLin4181RTf",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 130,
+                          "c": "参加者は、本イベントに関連して知得した非公開情報（技術情報、審査過程、審査結果、他の参加者の情報、並びに当社またはスポンサー企業から提供された課題の内容、提供データ、クーポンコード、アカウント、有償ツールの利用権限等）を第三者に開示または漏洩してはなりません。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-803a-9856-ea51c4c2322d": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-803a-9856-ea51c4c2322d",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第7条 （個人情報の取り扱い）"
+                ]
+              ]
+            },
+            "created_time": 1776738911574,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "PMzuR95aaGe0eQAfXoNuwg,\"start\",\"end\"",
+                "n": {
+                  "PMzuR95aaGe0eQAfXoNuwg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "PMzuR95aaGe0eQAfXoNuwg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "_xFgnK7MwuBw",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 15,
+                          "c": "第7条 （個人情報の取り扱い）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-802d-8544-df03f587e7e1": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-802d-8544-df03f587e7e1",
+            "version": 16,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社は、本イベントに関連して取得した参加者の個人情報（氏名、フリガナ、勤務先、所属部署、役職、業種、従業員規模、メールアドレス、電話番号、キャリア年数、技術スタック、利用メディア、プロフィール画像、提出された本成果物、本イベントにおける活動履歴その他申込時に取得する情報）および提出された本成果物を、以下の目的で利用します。"
+                ]
+              ]
+            },
+            "content": [
+              "34b04bf5-e7e4-80c1-b443-ca3d46e4077a",
+              "34b04bf5-e7e4-8018-9939-dd8c7bc399ec",
+              "34b04bf5-e7e4-80fc-b7cc-e0812ca7f315",
+              "34b04bf5-e7e4-80e1-b7f7-e14b2d990908",
+              "34b04bf5-e7e4-8046-baeb-fe9512905565",
+              "34b04bf5-e7e4-80e6-857a-d51373c9118f"
+            ],
+            "created_time": 1776909254491,
+            "last_edited_time": 1776909271665,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "V_nvAHkzqLSM4YtdqpoTCw,\"start\",\"end\"",
+                "n": {
+                  "V_nvAHkzqLSM4YtdqpoTCw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "V_nvAHkzqLSM4YtdqpoTCw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "u-KCprU1u1tN",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 162,
+                          "c": "当社は、本イベントに関連して取得した参加者の個人情報（氏名、フリガナ、勤務先、所属部署、役職、業種、従業員規模、メールアドレス、電話番号、キャリア年数、技術スタック、利用メディア、プロフィール画像、提出された本成果物、本イベントにおける活動履歴その他申込時に取得する情報）および提出された本成果物を、以下の目的で利用します。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-80ca-811e-f5fe4111bfa2": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-80ca-811e-f5fe4111bfa2",
+            "version": 10,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社は、本イベントの運営のため、以下の第三者に対し、前項の情報の全部または一部を提供することがあります。参加者はこれにあらかじめ同意するものとします。"
+                ]
+              ]
+            },
+            "content": [
+              "34b04bf5-e7e4-8093-a024-eff3aa90fe3d",
+              "34b04bf5-e7e4-8074-aad8-da3624af4e87",
+              "34b04bf5-e7e4-80b3-9f3d-c5160148eee3"
+            ],
+            "created_time": 1776909254521,
+            "last_edited_time": 1776909274247,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "tIieA46PgbF4IDz8eV7XKg,\"start\",\"end\"",
+                "n": {
+                  "tIieA46PgbF4IDz8eV7XKg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "tIieA46PgbF4IDz8eV7XKg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "bJWyy1lf7LQu",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 75,
+                          "c": "当社は、本イベントの運営のため、以下の第三者に対し、前項の情報の全部または一部を提供することがあります。参加者はこれにあらかじめ同意するものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-804b-94b2-c4cbcc7af487": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-804b-94b2-c4cbcc7af487",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第8条 （チーム参加）"
+                ]
+              ]
+            },
+            "created_time": 1776738911577,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "Kn8Mi6iXK9MhC9lc-fe7jg,\"start\",\"end\"",
+                "n": {
+                  "Kn8Mi6iXK9MhC9lc-fe7jg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "Kn8Mi6iXK9MhC9lc-fe7jg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "iflq9-LyRm3t",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 11,
+                          "c": "第8条 （チーム参加）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-802c-af32-cae8d045d9f1": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-802c-af32-cae8d045d9f1",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "チームで参加する場合、参加者は代表者を１名定めるものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911577,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "XlcHJKeFOyykShki8CNH_A,\"start\",\"end\"",
+                "n": {
+                  "XlcHJKeFOyykShki8CNH_A,\"start\",\"end\"": {
+                    "s": {
+                      "x": "XlcHJKeFOyykShki8CNH_A",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "dApKwFwaV483",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 31,
+                          "c": "チームで参加する場合、参加者は代表者を１名定めるものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80ab-ab26-eaf325ed1d5b": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80ab-ab26-eaf325ed1d5b",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "代表者はチームを構成する参加者全員に本規約を遵守させる責任を負い、チームを構成する参加者のいずれかによる規約違反はチーム全体の違反とみなします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911577,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "QPow3cPgAY5T6o6TR2e9oQ,\"start\",\"end\"",
+                "n": {
+                  "QPow3cPgAY5T6o6TR2e9oQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "QPow3cPgAY5T6o6TR2e9oQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "qFmLIvNORYcY",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 72,
+                          "c": "代表者はチームを構成する参加者全員に本規約を遵守させる責任を負い、チームを構成する参加者のいずれかによる規約違反はチーム全体の違反とみなします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80ab-b921-cb72c325ca65": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80ab-b921-cb72c325ca65",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社から代表者に対して行われた連絡および賞金の支払いは、チームを構成する参加者全員に対して行われたものとみなします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911578,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "8xR2nnziBnnuq8QXlMNVXg,\"start\",\"end\"",
+                "n": {
+                  "8xR2nnziBnnuq8QXlMNVXg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "8xR2nnziBnnuq8QXlMNVXg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "m33Vp3FOiMuR",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 58,
+                          "c": "当社から代表者に対して行われた連絡および賞金の支払いは、チームを構成する参加者全員に対して行われたものとみなします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80cc-a541-ffabd5eb433c": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80cc-a541-ffabd5eb433c",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第9条 （賞金）"
+                ]
+              ]
+            },
+            "created_time": 1776738911578,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "WbZfe3BgMS_29WLUqCthXw,\"start\",\"end\"",
+                "n": {
+                  "WbZfe3BgMS_29WLUqCthXw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "WbZfe3BgMS_29WLUqCthXw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "hgKMD7JPQH7D",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 8,
+                          "c": "第9条 （賞金）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8007-85ed-e3d5b57d42b0": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8007-85ed-e3d5b57d42b0",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社は、本イベントで入賞した参加者に対し、賞金を支払います。"
+                ]
+              ]
+            },
+            "created_time": 1776738911578,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "f40T-QoBEUXad6Cj7rEfOA,\"start\",\"end\"",
+                "n": {
+                  "f40T-QoBEUXad6Cj7rEfOA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "f40T-QoBEUXad6Cj7rEfOA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "xSYGhXicf0KA",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 30,
+                          "c": "当社は、本イベントで入賞した参加者に対し、賞金を支払います。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8073-a3f9-dc2419bbd36e": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8073-a3f9-dc2419bbd36e",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "チームが入賞した場合、その賞金は、チームの代表者１名の指定口座に対し一括して支払うものとし、チーム内での分配等について当社は一切関与せず、責任を負いません。"
+                ]
+              ]
+            },
+            "created_time": 1776738911578,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "r245niNLI9JiUK8ISGOGbw,\"start\",\"end\"",
+                "n": {
+                  "r245niNLI9JiUK8ISGOGbw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "r245niNLI9JiUK8ISGOGbw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "YD5toId-Vujb",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 78,
+                          "c": "チームが入賞した場合、その賞金は、チームの代表者１名の指定口座に対し一括して支払うものとし、チーム内での分配等について当社は一切関与せず、責任を負いません。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80c9-9874-e95b7a372805": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80c9-9874-e95b7a372805",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "賞金の支払いは2026年8月末日（予定）とし、参加者は受領にあたり必要な手続きに協力するものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911579,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "VnlxBD5jWrka06wZYfiheA,\"start\",\"end\"",
+                "n": {
+                  "VnlxBD5jWrka06wZYfiheA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "VnlxBD5jWrka06wZYfiheA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "oQklioEQ5dMa",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 51,
+                          "c": "賞金の支払いは2026年8月末日（予定）とし、参加者は受領にあたり必要な手続きに協力するものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80a9-a591-f04946c01dc6": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80a9-a591-f04946c01dc6",
+            "version": 7,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第10条 （本成果物の知的財産権等）"
+                ]
+              ]
+            },
+            "created_time": 1776738911579,
+            "last_edited_time": 1776909302278,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "QHhC9vjbl7R9c0dKjtXxLA,\"start\",\"end\"",
+                "n": {
+                  "QHhC9vjbl7R9c0dKjtXxLA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "QHhC9vjbl7R9c0dKjtXxLA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "z2ii0XrCG7pL",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 6,
+                          "c": "第10条 （"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            18
+                          ],
+                          "o": [
+                            "z2ii0XrCG7pL",
+                            6
+                          ],
+                          "l": 11,
+                          "c": "本成果物の知的財産権等"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "z2ii0XrCG7pL",
+                            7
+                          ],
+                          "o": [
+                            "z2ii0XrCG7pL",
+                            6
+                          ],
+                          "l": -10
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "z2ii0XrCG7pL",
+                            17
+                          ],
+                          "o": [
+                            "z2ii0XrCG7pL",
+                            16
+                          ],
+                          "l": 1,
+                          "c": "）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80b9-9d40-e6fcc2843ba7": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80b9-9d40-e6fcc2843ba7",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本成果物に関する知的財産権（著作権法第27条および第28条の権利を含みます。）は、当該参加者に帰属します。"
+                ]
+              ]
+            },
+            "created_time": 1776738911579,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "krrr35TqHyE5Bev7YQy88w,\"start\",\"end\"",
+                "n": {
+                  "krrr35TqHyE5Bev7YQy88w,\"start\",\"end\"": {
+                    "s": {
+                      "x": "krrr35TqHyE5Bev7YQy88w",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "qOJtwsxNcxEu",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 53,
+                          "c": "本成果物に関する知的財産権（著作権法第27条および第28条の権利を含みます。）は、当該参加者に帰属します。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8059-94d6-e46cc4302efa": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8059-94d6-e46cc4302efa",
+            "version": 8,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "参加者は、当社および本イベントのスポンサーに対し、本イベントの運営・結果発表、および広報（開催レポート、プレスリリース、SNS等への掲載）の目的に限り、本成果物ならびに本イベントにおける参加者の氏名、肖像、音声、映像、発表内容およびインタビュー・コメント等を無償かつ無制限で利用（複製、翻案、編集、配信、公衆送信等）することを許諾するものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911579,
+            "last_edited_time": 1776909309781,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "LhpfQqlO5DbETT9eVfkXig,\"start\",\"end\"",
+                "n": {
+                  "LhpfQqlO5DbETT9eVfkXig,\"start\",\"end\"": {
+                    "s": {
+                      "x": "LhpfQqlO5DbETT9eVfkXig",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            116
+                          ],
+                          "o": "start",
+                          "l": 174,
+                          "c": "参加者は、当社および本イベントのスポンサーに対し、本イベントの運営・結果発表、および広報（開催レポート、プレスリリース、SNS等への掲載）の目的に限り、本成果物ならびに本イベントにおける参加者の氏名、肖像、音声、映像、発表内容およびインタビュー・コメント等を無償かつ無制限で利用（複製、翻案、編集、配信、公衆送信等）することを許諾するものとします。"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "gjSp9W7aSi9N",
+                            1
+                          ],
+                          "o": "start",
+                          "l": -115
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": [
+                      "Nud5zsXdkj8-_jPDvV9gog,[\"YG0HOwEgm6yl\",62],\"end\""
+                    ]
+                  },
+                  "Nud5zsXdkj8-_jPDvV9gog,[\"YG0HOwEgm6yl\",62],\"end\"": {
+                    "s": {
+                      "x": "Nud5zsXdkj8-_jPDvV9gog",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            62
+                          ],
+                          "o": "start"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nMCbzW9HuEqG",
+                            1
+                          ],
+                          "o": "start",
+                          "l": -41
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": "l"
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8055-a4ba-fbd86ad7ab67": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8055-a4ba-fbd86ad7ab67",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第11条 （禁止事項）"
+                ]
+              ]
+            },
+            "created_time": 1776738911580,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "zvNAk9kslq9gqoUkcKZ1LQ,\"start\",\"end\"",
+                "n": {
+                  "zvNAk9kslq9gqoUkcKZ1LQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "zvNAk9kslq9gqoUkcKZ1LQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "xSgro_h4cKQU",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 11,
+                          "c": "第11条 （禁止事項）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80d1-b946-ed7e12c73eee": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80d1-b946-ed7e12c73eee",
+            "version": 4,
+            "type": "text",
+            "properties": {
+              "title": [
+                [
+                  "参加者は本イベントに参加するにあたって、以下の行為を行ってはならないものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911580,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "rOQUYSelT4cjifvRyguJbw,\"start\",\"end\"",
+                "n": {
+                  "rOQUYSelT4cjifvRyguJbw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "rOQUYSelT4cjifvRyguJbw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "iDtaSJR6VDE5",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 41,
+                          "c": "参加者は本イベントに参加するにあたって、以下の行為を行ってはならないものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-809b-a065-d65ee596f260": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-809b-a065-d65ee596f260",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社および第三者の著作権、商標権等の知的財産権、肖像権等の人格権その他法律上の権利もしくは保護に値する利益を侵害する行為、または侵害するおそれのある行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911580,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "67I2uF41TdXN5E6jJeAqHg,\"start\",\"end\"",
+                "n": {
+                  "67I2uF41TdXN5E6jJeAqHg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "67I2uF41TdXN5E6jJeAqHg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4uqir5SKIquB",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 77,
+                          "c": "当社および第三者の著作権、商標権等の知的財産権、肖像権等の人格権その他法律上の権利もしくは保護に値する利益を侵害する行為、または侵害するおそれのある行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      }
+    }
+  }
+}

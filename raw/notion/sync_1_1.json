@@ -1,0 +1,3644 @@
+{
+  "recordMap": {
+    "__version__": 3,
+    "block": {
+      "34904bf5-e7e4-8051-9f17-dabf7d98ec14": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8051-9f17-dabf7d98ec14",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社および第三者の名誉の侵害、特定の個人や団体を誹謗中傷する行為。あるいは第三者に不快感を与える行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911581,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "fShgWyTCY-qRQWLVCskf1w,\"start\",\"end\"",
+                "n": {
+                  "fShgWyTCY-qRQWLVCskf1w,\"start\",\"end\"": {
+                    "s": {
+                      "x": "fShgWyTCY-qRQWLVCskf1w",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "AVAVrtU0SiGX",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 51,
+                          "c": "当社および第三者の名誉の侵害、特定の個人や団体を誹謗中傷する行為。あるいは第三者に不快感を与える行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8054-b8c7-d87c640dbb77": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8054-b8c7-d87c640dbb77",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本規約、法令、条例、公序良俗に違反する行為、または違反するおそれのある行為。あるいはこれらに違反する行為を助長するおそれのある行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911581,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "CXcRcT6B1GUIUsuHlGsaTQ,\"start\",\"end\"",
+                "n": {
+                  "CXcRcT6B1GUIUsuHlGsaTQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "CXcRcT6B1GUIUsuHlGsaTQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "UugA2po-gU4Z",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 66,
+                          "c": "本規約、法令、条例、公序良俗に違反する行為、または違反するおそれのある行為。あるいはこれらに違反する行為を助長するおそれのある行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-803a-adf7-d716e46371dd": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-803a-adf7-d716e46371dd",
+            "version": 27,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本イベントに関連し、以下に該当し、または該当すると当社が合理的に判断する情報を当社または他の参加者に送信する行為。"
+                ]
+              ]
+            },
+            "content": [
+              "34904bf5-e7e4-8013-9fa2-ef3072ca52ef",
+              "34904bf5-e7e4-8080-b228-ea5587d1491d",
+              "34904bf5-e7e4-80a5-a923-c0749396a120",
+              "34904bf5-e7e4-80b6-b952-fd0158e4393b",
+              "34904bf5-e7e4-8059-b30a-dbd628e96964",
+              "34904bf5-e7e4-80d8-ba7e-fb615c69d8e2",
+              "34904bf5-e7e4-8035-8615-dda0b18788f0",
+              "34904bf5-e7e4-805c-a544-e1865fe7e99c",
+              "34904bf5-e7e4-80f2-8ac2-e43f5485e260"
+            ],
+            "created_time": 1776738911581,
+            "last_edited_time": 1776738961599,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "_bFm12KamEXKTEzaN7lGGw,\"start\",\"end\"",
+                "n": {
+                  "_bFm12KamEXKTEzaN7lGGw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "_bFm12KamEXKTEzaN7lGGw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "kuo176qU4bp7",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 57,
+                          "c": "本イベントに関連し、以下に該当し、または該当すると当社が合理的に判断する情報を当社または他の参加者に送信する行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8055-84de-ec85df8a0e8c": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8055-84de-ec85df8a0e8c",
+            "version": 11,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "第三者のメールアドレスを用いて本イベントに関連する当社システム等を利用する行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911584,
+            "last_edited_time": 1776738961599,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "bUZYQ4b99O5ptjhnWC16vA,\"start\",\"end\"",
+                "n": {
+                  "bUZYQ4b99O5ptjhnWC16vA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "bUZYQ4b99O5ptjhnWC16vA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "hWAHSgjGlZKh",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 40,
+                          "c": "第三者のメールアドレスを用いて本イベントに関連する当社システム等を利用する行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-807a-99f0-f1df6935d696": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-807a-99f0-f1df6935d696",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "プロフィールその他の本イベントの登録に伴い当社に開示する情報について、虚偽または不正確な情報を開示する行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911584,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "uveLLmItz44exQIjnCuzFQ,\"start\",\"end\"",
+                "n": {
+                  "uveLLmItz44exQIjnCuzFQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "uveLLmItz44exQIjnCuzFQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "yHYNT3IzD1MN",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 54,
+                          "c": "プロフィールその他の本イベントの登録に伴い当社に開示する情報について、虚偽または不正確な情報を開示する行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8023-8e31-de09e95d44f8": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8023-8e31-de09e95d44f8",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本イベントに参加する権利の一部または全部を商用または営利目的で第三者に提供する行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911584,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "N5CgZ4Pb0-APFhZ9vUr5FA,\"start\",\"end\"",
+                "n": {
+                  "N5CgZ4Pb0-APFhZ9vUr5FA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "N5CgZ4Pb0-APFhZ9vUr5FA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "edmluNxzIfPp",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 42,
+                          "c": "本イベントに参加する権利の一部または全部を商用または営利目的で第三者に提供する行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-809d-8a63-c6d3c7a27ad2": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-809d-8a63-c6d3c7a27ad2",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本イベント専用のアカウントを第三者に利用させる行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911585,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "kKyAJIX5kkqxICPOiVw04A,\"start\",\"end\"",
+                "n": {
+                  "kKyAJIX5kkqxICPOiVw04A,\"start\",\"end\"": {
+                    "s": {
+                      "x": "kKyAJIX5kkqxICPOiVw04A",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "b3rAOkBOlXT5",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 26,
+                          "c": "本イベント専用のアカウントを第三者に利用させる行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8092-a5d4-f5fba5bbe803": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8092-a5d4-f5fba5bbe803",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本イベントの運営において使用するサーバに過度な負荷をかける行為、または過度な負荷がかかるおそれのある行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911585,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "VH0uhUghzu0dgdo0q16Gtg,\"start\",\"end\"",
+                "n": {
+                  "VH0uhUghzu0dgdo0q16Gtg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "VH0uhUghzu0dgdo0q16Gtg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "-0_mxpdVzuJA",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 53,
+                          "c": "本イベントの運営において使用するサーバに過度な負荷をかける行為、または過度な負荷がかかるおそれのある行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80e1-8252-fe66be0312b4": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80e1-8252-fe66be0312b4",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本イベントに関連して提供されるソフトウェア等に対するリバースエンジニアリング、逆コンパイル、逆アセンブル、スクレイピングおよびその他方法、態様の如何を問わず解析する行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911585,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "NATqPviHYoMN5-Kp7bqWIw,\"start\",\"end\"",
+                "n": {
+                  "NATqPviHYoMN5-Kp7bqWIw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "NATqPviHYoMN5-Kp7bqWIw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "56Ss6hkj3C0o",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 85,
+                          "c": "本イベントに関連して提供されるソフトウェア等に対するリバースエンジニアリング、逆コンパイル、逆アセンブル、スクレイピングおよびその他方法、態様の如何を問わず解析する行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80cd-a807-caa32f9c6aa2": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80cd-a807-caa32f9c6aa2",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社が表示する広告を不正に移動、改変、削除または不正表示させる行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911586,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "QU9vTEUUwQdHZbYzR6_BBA,\"start\",\"end\"",
+                "n": {
+                  "QU9vTEUUwQdHZbYzR6_BBA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "QU9vTEUUwQdHZbYzR6_BBA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "MyDC_eHLffgz",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 34,
+                          "c": "当社が表示する広告を不正に移動、改変、削除または不正表示させる行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80b4-90ac-ca51cfafd3ea": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80b4-90ac-ca51cfafd3ea",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "無限連鎖講（ねずみ講）、ネットワーク・ビジネスの勧誘を目的として本イベントの場を利用する行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911587,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "udY0CeTP8OJr3HCDIKkFIA,\"start\",\"end\"",
+                "n": {
+                  "udY0CeTP8OJr3HCDIKkFIA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "udY0CeTP8OJr3HCDIKkFIA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "Z5YCm4xDUR_s",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 47,
+                          "c": "無限連鎖講（ねずみ講）、ネットワーク・ビジネスの勧誘を目的として本イベントの場を利用する行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8076-aca3-f168c2418cad": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8076-aca3-f168c2418cad",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本規約に基づき当社に報告または開示する情報について、虚偽または不正確な情報を報告または開示する行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911587,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "zz7c-u5vvj4lCT9ezRmxvg,\"start\",\"end\"",
+                "n": {
+                  "zz7c-u5vvj4lCT9ezRmxvg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "zz7c-u5vvj4lCT9ezRmxvg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "z508iMyp8Q_b",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 50,
+                          "c": "本規約に基づき当社に報告または開示する情報について、虚偽または不正確な情報を報告または開示する行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80cf-9c4b-ebd5509ea0d4": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80cf-9c4b-ebd5509ea0d4",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社の承諾を得ずに、本イベントと同様の企画を提供する行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911588,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "vW_oe4KEDSIjZ5FXgNTUyA,\"start\",\"end\"",
+                "n": {
+                  "vW_oe4KEDSIjZ5FXgNTUyA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "vW_oe4KEDSIjZ5FXgNTUyA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "qTOYpjVfwxMQ",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 29,
+                          "c": "当社の承諾を得ずに、本イベントと同様の企画を提供する行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-804f-bd25-cc8ef8448c07": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-804f-bd25-cc8ef8448c07",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "前各号の行為を直接または間接に惹起し、または容易にする行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911588,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "5Pzu2Slex0TpS_HUaHXZvQ,\"start\",\"end\"",
+                "n": {
+                  "5Pzu2Slex0TpS_HUaHXZvQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "5Pzu2Slex0TpS_HUaHXZvQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "8DtbBnzTVU-f",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 30,
+                          "c": "前各号の行為を直接または間接に惹起し、または容易にする行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80cc-aa7d-d421f9be072c": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80cc-aa7d-d421f9be072c",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本イベントの参加者のみが閲覧可能であるウェブページ等を第三者に閲覧させる行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911588,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "2uVckesDzlHz0ZLAeel84w,\"start\",\"end\"",
+                "n": {
+                  "2uVckesDzlHz0ZLAeel84w,\"start\",\"end\"": {
+                    "s": {
+                      "x": "2uVckesDzlHz0ZLAeel84w",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "JBhTPE8iy2cO",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 39,
+                          "c": "本イベントの参加者のみが閲覧可能であるウェブページ等を第三者に閲覧させる行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80c1-9bd5-d7f80cba6963": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80c1-9bd5-d7f80cba6963",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社システムに対する不正アクセス行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911588,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "onmS1TX7QErtlgY9xA6fLA,\"start\",\"end\"",
+                "n": {
+                  "onmS1TX7QErtlgY9xA6fLA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "onmS1TX7QErtlgY9xA6fLA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "n2VUjKOwFC1U",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 19,
+                          "c": "当社システムに対する不正アクセス行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8057-8523-fca3d4696374": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8057-8523-fca3d4696374",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社またはスポンサー企業が提供するクーポンコード、アカウント、有償ツールの利用権限等を、第三者に譲渡、転売または開示する行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911589,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "IV8jmLapP2W8XsE_2iLlWA,\"start\",\"end\"",
+                "n": {
+                  "IV8jmLapP2W8XsE_2iLlWA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "IV8jmLapP2W8XsE_2iLlWA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "BWkMsmEd0WvZ",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 63,
+                          "c": "当社またはスポンサー企業が提供するクーポンコード、アカウント、有償ツールの利用権限等を、第三者に譲渡、転売または開示する行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80b5-b33e-c6cae12f5009": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80b5-b33e-c6cae12f5009",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本イベントの他の参加者に対し、不適切な接触、引き抜き、ハラスメント、勧誘等を行う行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911589,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "VomxNenmm5fj5r2xMHmGeA,\"start\",\"end\"",
+                "n": {
+                  "VomxNenmm5fj5r2xMHmGeA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "VomxNenmm5fj5r2xMHmGeA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "vX5xcr5Hy13g",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 43,
+                          "c": "本イベントの他の参加者に対し、不適切な接触、引き抜き、ハラスメント、勧誘等を行う行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8057-b996-c8212111e062": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8057-b996-c8212111e062",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "その他、当社が不適切と合理的に判断する行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911589,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "lDe-3HLweZcfOduytik6bA,\"start\",\"end\"",
+                "n": {
+                  "lDe-3HLweZcfOduytik6bA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "lDe-3HLweZcfOduytik6bA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "M6E6IuIpTZeH",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 22,
+                          "c": "その他、当社が不適切と合理的に判断する行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-808d-8547-c765c9940f4d": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-808d-8547-c765c9940f4d",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第12条 （権利義務の譲渡等の禁止）"
+                ]
+              ]
+            },
+            "created_time": 1776738911590,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "51dxJ9GUJRWVl8sonZ5yCQ,\"start\",\"end\"",
+                "n": {
+                  "51dxJ9GUJRWVl8sonZ5yCQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "51dxJ9GUJRWVl8sonZ5yCQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "dzqXYdDFiIgy",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 18,
+                          "c": "第12条 （権利義務の譲渡等の禁止）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80ad-b778-d95a731aeb09": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80ad-b778-d95a731aeb09",
+            "version": 4,
+            "type": "text",
+            "properties": {
+              "title": [
+                [
+                  "参加者は、当社が別途定める方法により、当社の事前の承諾を得ないかぎり、第三者に対し、本イベントにかかる契約上の地位、権利および義務について、これを譲渡し、継承させ、または担保に供してはならないものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911590,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "5oJ8ScW3V-nutLDT1ldPeg,\"start\",\"end\"",
+                "n": {
+                  "5oJ8ScW3V-nutLDT1ldPeg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "5oJ8ScW3V-nutLDT1ldPeg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "vfxeQufNM4Hz",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 103,
+                          "c": "参加者は、当社が別途定める方法により、当社の事前の承諾を得ないかぎり、第三者に対し、本イベントにかかる契約上の地位、権利および義務について、これを譲渡し、継承させ、または担保に供してはならないものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-804e-bb48-de97d193beed": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-804e-bb48-de97d193beed",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第13条 （本イベントに関する知的財産権）"
+                ]
+              ]
+            },
+            "created_time": 1776738911590,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "5ng1L1MCSpHVJIWbubr6Cw,\"start\",\"end\"",
+                "n": {
+                  "5ng1L1MCSpHVJIWbubr6Cw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "5ng1L1MCSpHVJIWbubr6Cw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "jcakIYKIO31I",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 21,
+                          "c": "第13条 （本イベントに関する知的財産権）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80a0-9ace-ff44b7ddd8d8": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80a0-9ace-ff44b7ddd8d8",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本イベントに関する特許、実用新案登録、意匠登録を受ける権利その他登録を受ける権利および特許権、実用新案権、意匠権、著作権、商標権その他の法律上保護される権利ならびに秘匿可能な財産的価値のある技術情報（ノウハウ等）その他一切の知的財産権は、当社または当社に使用を許諾した第三者に帰属し、本規約に定める場合を除き、参加者に使用を許諾するものではありません。"
+                ]
+              ]
+            },
+            "created_time": 1776738911590,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "zsMrkobWfL4tu0EndHZJ5Q,\"start\",\"end\"",
+                "n": {
+                  "zsMrkobWfL4tu0EndHZJ5Q,\"start\",\"end\"": {
+                    "s": {
+                      "x": "zsMrkobWfL4tu0EndHZJ5Q",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "mB3aaKZ2P60R",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 176,
+                          "c": "本イベントに関する特許、実用新案登録、意匠登録を受ける権利その他登録を受ける権利および特許権、実用新案権、意匠権、著作権、商標権その他の法律上保護される権利ならびに秘匿可能な財産的価値のある技術情報（ノウハウ等）その他一切の知的財産権は、当社または当社に使用を許諾した第三者に帰属し、本規約に定める場合を除き、参加者に使用を許諾するものではありません。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8071-bf63-ec16936c83e0": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8071-bf63-ec16936c83e0",
+            "version": 16,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "参加者は、当社の事前の書面による承諾なく、本成果物を一般に公表（GitHub等での公開を含みます）してはならないものとします。ただし、以下の各号のいずれかに該当する場合はこの限りではありません。"
+                ]
+              ]
+            },
+            "content": [
+              "34b04bf5-e7e4-80eb-9eb5-e62d97c7a7c9",
+              "34b04bf5-e7e4-801a-bd4c-df833bdaeb87",
+              "34b04bf5-e7e4-8092-a240-fa4d3846a7cc",
+              "34b04bf5-e7e4-8014-bf1a-cc2afb961c39"
+            ],
+            "created_time": 1776738911591,
+            "last_edited_time": 1776909365807,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "IFKLzLEUO4xS8KG55uilTQ,\"start\",\"end\"",
+                "n": {
+                  "IFKLzLEUO4xS8KG55uilTQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "IFKLzLEUO4xS8KG55uilTQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "Df-qqqCFfSjJ",
+                            1
+                          ],
+                          "o": "start",
+                          "l": -60
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": [
+                      "uVhrI_PPxENgqOntxXkI0w,[\"YG0HOwEgm6yl\",102],\"end\""
+                    ]
+                  },
+                  "uVhrI_PPxENgqOntxXkI0w,[\"YG0HOwEgm6yl\",102],\"end\"": {
+                    "s": {
+                      "x": "uVhrI_PPxENgqOntxXkI0w",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            102
+                          ],
+                          "o": "start"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "sATEgkQHCOnX",
+                            1
+                          ],
+                          "o": "start",
+                          "l": -81
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": "l"
+                    },
+                    "c": [
+                      "089snUEZ3MPkkr2u1AcEqQ,[\"YG0HOwEgm6yl\",118],\"end\""
+                    ]
+                  },
+                  "089snUEZ3MPkkr2u1AcEqQ,[\"YG0HOwEgm6yl\",118],\"end\"": {
+                    "s": {
+                      "x": "089snUEZ3MPkkr2u1AcEqQ",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            118
+                          ],
+                          "o": "start"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "zEAYzTKTBVHk",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 97,
+                          "c": "参加者は、当社の事前の書面による承諾なく、本成果物を一般に公表（GitHub等での公開を含みます）してはならないものとします。ただし、以下の各号のいずれかに該当する場合はこの限りではありません。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": "l"
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-807a-9f90-f9285d79fba0": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-807a-9f90-f9285d79fba0",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本成果物について、本イベントのスポンサー企業から知的財産権の譲渡またはライセンス許諾の希望があった場合、参加者は当該スポンサー企業と誠実に協議を行うものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776909343711,
+            "last_edited_time": 1776909343722,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "sg0ipsRV3YFm5EbX2QqWQg,\"start\",\"end\"",
+                "n": {
+                  "sg0ipsRV3YFm5EbX2QqWQg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "sg0ipsRV3YFm5EbX2QqWQg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "3hz_9k7o-aew",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 81,
+                          "c": "本成果物について、本イベントのスポンサー企業から知的財産権の譲渡またはライセンス許諾の希望があった場合、参加者は当該スポンサー企業と誠実に協議を行うものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80bb-b4f9-dd39226a5ca9": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80bb-b4f9-dd39226a5ca9",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第14条 （本イベントの中断）"
+                ]
+              ]
+            },
+            "created_time": 1776738911591,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "adu-IOgYdDqFkPvOV2vOpw,\"start\",\"end\"",
+                "n": {
+                  "adu-IOgYdDqFkPvOV2vOpw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "adu-IOgYdDqFkPvOV2vOpw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4zMnbMMc0j1X",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 15,
+                          "c": "第14条 （本イベントの中断）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-800b-a958-d951a5a5248f": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-800b-a958-d951a5a5248f",
+            "version": 4,
+            "type": "text",
+            "properties": {
+              "title": [
+                [
+                  "当社は、本イベントについて、以下の各号のいずれかの事由が発生した場合、参加者に事前に通知することなく、当該事由の解消に至るまで、本イベントの全部もしくは一部を中断することができるものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911592,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "NBWeiQvG3srI4jU0cXWR-g,\"start\",\"end\"",
+                "n": {
+                  "NBWeiQvG3srI4jU0cXWR-g,\"start\",\"end\"": {
+                    "s": {
+                      "x": "NBWeiQvG3srI4jU0cXWR-g",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "8zoFoVKyfZs9",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 96,
+                          "c": "当社は、本イベントについて、以下の各号のいずれかの事由が発生した場合、参加者に事前に通知することなく、当該事由の解消に至るまで、本イベントの全部もしくは一部を中断することができるものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80f0-aacd-c08ee6cd7fdf": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80f0-aacd-c08ee6cd7fdf",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "通信環境の障害、天災、火災、ストライキ、洪水、疫病、暴動、戦争、テロ行為など、またはそれらに関連する要因により、本イベントの全部または一部の提供が困難になった場合。"
+                ]
+              ]
+            },
+            "created_time": 1776738911592,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "cx6qEMbuLQM8gxVzpuvlpA,\"start\",\"end\"",
+                "n": {
+                  "cx6qEMbuLQM8gxVzpuvlpA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "cx6qEMbuLQM8gxVzpuvlpA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "D0r-CPIP6S-B",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 82,
+                          "c": "通信環境の障害、天災、火災、ストライキ、洪水、疫病、暴動、戦争、テロ行為など、またはそれらに関連する要因により、本イベントの全部または一部の提供が困難になった場合。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80e9-a956-f883e687aa24": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80e9-a956-f883e687aa24",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "第三者による不正アクセス、情報漏洩その他情報セキュリティ上の問題が生じた場合、またはそのおそれがある場合。"
+                ]
+              ]
+            },
+            "created_time": 1776738911592,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "dZmFg0IuOwNIFq2ZeYWRjg,\"start\",\"end\"",
+                "n": {
+                  "dZmFg0IuOwNIFq2ZeYWRjg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "dZmFg0IuOwNIFq2ZeYWRjg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "cqH6Xl-3b6v-",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 53,
+                          "c": "第三者による不正アクセス、情報漏洩その他情報セキュリティ上の問題が生じた場合、またはそのおそれがある場合。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80e1-b38f-d401609d12a8": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80e1-b38f-d401609d12a8",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "改善、維持または管理のため必要な場合。"
+                ]
+              ]
+            },
+            "created_time": 1776738911592,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "v9UDDVs4zVEW7nEArnkPLg,\"start\",\"end\"",
+                "n": {
+                  "v9UDDVs4zVEW7nEArnkPLg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "v9UDDVs4zVEW7nEArnkPLg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "k-o2DUtFvrH1",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 19,
+                          "c": "改善、維持または管理のため必要な場合。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8093-8783-c440e6eaa352": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8093-8783-c440e6eaa352",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "用いるサーバーコンピュータ等において、システム処理能力を超える負荷が生じるなどして本イベントの正常な提供が困難になった場合、またはそのおそれがある場合。"
+                ]
+              ]
+            },
+            "created_time": 1776738911593,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "m562_N_OLWZPIaAtB8wq7g,\"start\",\"end\"",
+                "n": {
+                  "m562_N_OLWZPIaAtB8wq7g,\"start\",\"end\"": {
+                    "s": {
+                      "x": "m562_N_OLWZPIaAtB8wq7g",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "Pv-guAsk-1Zu",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 76,
+                          "c": "用いるサーバーコンピュータ等において、システム処理能力を超える負荷が生じるなどして本イベントの正常な提供が困難になった場合、またはそのおそれがある場合。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80e8-a2a3-fa0f5e413058": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80e8-a2a3-fa0f5e413058",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "第三者による権利主張があった場合。"
+                ]
+              ]
+            },
+            "created_time": 1776738911593,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "fN1GRBmSExdO_m2n_xIiDg,\"start\",\"end\"",
+                "n": {
+                  "fN1GRBmSExdO_m2n_xIiDg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "fN1GRBmSExdO_m2n_xIiDg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "oeEeYLslh7GC",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 17,
+                          "c": "第三者による権利主張があった場合。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80ea-9ab0-c5a847c7635f": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80ea-9ab0-c5a847c7635f",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第15条 （免責）"
+                ]
+              ]
+            },
+            "created_time": 1776738911593,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "oXzKuIYKutgHuGa2stii6w,\"start\",\"end\"",
+                "n": {
+                  "oXzKuIYKutgHuGa2stii6w,\"start\",\"end\"": {
+                    "s": {
+                      "x": "oXzKuIYKutgHuGa2stii6w",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "sd_JynvgIe-U",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 9,
+                          "c": "第15条 （免責）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8037-84c4-dd05f0c75a47": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8037-84c4-dd05f0c75a47",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社は、本イベントの運営にあたり、参加者に対し、本成果物の正確性、完全性、有用性、および第三者の権利を侵害していないこと等について、何ら保証しないものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911593,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "oBaxfBeqLvSAIln68KM0bw,\"start\",\"end\"",
+                "n": {
+                  "oBaxfBeqLvSAIln68KM0bw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "oBaxfBeqLvSAIln68KM0bw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "rK0wT9-yh3Gt",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 80,
+                          "c": "当社は、本イベントの運営にあたり、参加者に対し、本成果物の正確性、完全性、有用性、および第三者の権利を侵害していないこと等について、何ら保証しないものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80ef-8649-d953db5539f0": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80ef-8649-d953db5539f0",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社は、当社の故意または重過失による場合を除き、本イベントの運営または参加者同士もしくは第三者とのトラブルに関連して参加者に生じたいかなる損害についても、賠償する責任を負わないものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911594,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "VIsMJqrotmiWsUCH5ER31A,\"start\",\"end\"",
+                "n": {
+                  "VIsMJqrotmiWsUCH5ER31A,\"start\",\"end\"": {
+                    "s": {
+                      "x": "VIsMJqrotmiWsUCH5ER31A",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "FJ3iWYxMGnAs",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 95,
+                          "c": "当社は、当社の故意または重過失による場合を除き、本イベントの運営または参加者同士もしくは第三者とのトラブルに関連して参加者に生じたいかなる損害についても、賠償する責任を負わないものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8045-a19a-dc09867c9774": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8045-a19a-dc09867c9774",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "参加者が本イベントへの参加に関連して第三者の権利を侵害した場合、参加者は自己の責任と費用において解決するものとし、当社は一切責任を負いません。"
+                ]
+              ]
+            },
+            "created_time": 1776738911594,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "w06qJteRoWUUoqM3v-7ZHw,\"start\",\"end\"",
+                "n": {
+                  "w06qJteRoWUUoqM3v-7ZHw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "w06qJteRoWUUoqM3v-7ZHw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "0-W3DSWc-R6T",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 71,
+                          "c": "参加者が本イベントへの参加に関連して第三者の権利を侵害した場合、参加者は自己の責任と費用において解決するものとし、当社は一切責任を負いません。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8007-8fba-e1a151d7cb7c": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8007-8fba-e1a151d7cb7c",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第16条 （反社会的勢力の排除）"
+                ]
+              ]
+            },
+            "created_time": 1776738911594,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "4bUxOmkANYw4YDwUO9i0gg,\"start\",\"end\"",
+                "n": {
+                  "4bUxOmkANYw4YDwUO9i0gg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "4bUxOmkANYw4YDwUO9i0gg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "KXAR3-z2nh5v",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 16,
+                          "c": "第16条 （反社会的勢力の排除）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8082-a186-e26a3bee754c": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8082-a186-e26a3bee754c",
+            "version": 17,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "参加者は、当社に対し、自己が、現在、暴力団、暴力団員、暴力団員でなくなった時から５年を経過しない者、暴力団準構成員、暴力団関係企業、総会屋等、社会運動等標ぼうゴロまたは特殊知能暴力集団等、その他これらに準ずる者（以下「暴力団員等」という。）に該当しないこと、および次の各号のいずれにも該当しないことを表明し、かつ将来にわたっても該当しないことを確約します。"
+                ]
+              ]
+            },
+            "content": [
+              "34904bf5-e7e4-80d6-8863-ce44b0493c9f",
+              "34904bf5-e7e4-80f6-9d71-fb570c311b46",
+              "34904bf5-e7e4-8082-9554-dc7a426ec374",
+              "34904bf5-e7e4-80e4-9a5c-c7da9c5cc097"
+            ],
+            "created_time": 1776738911594,
+            "last_edited_time": 1776739020146,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "7mCBjIKssmDyo-w-7MX39w,\"start\",\"end\"",
+                "n": {
+                  "7mCBjIKssmDyo-w-7MX39w,\"start\",\"end\"": {
+                    "s": {
+                      "x": "7mCBjIKssmDyo-w-7MX39w",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "MZPyOI0C1lt_",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 178,
+                          "c": "参加者は、当社に対し、自己が、現在、暴力団、暴力団員、暴力団員でなくなった時から５年を経過しない者、暴力団準構成員、暴力団関係企業、総会屋等、社会運動等標ぼうゴロまたは特殊知能暴力集団等、その他これらに準ずる者（以下「暴力団員等」という。）に該当しないこと、および次の各号のいずれにも該当しないことを表明し、かつ将来にわたっても該当しないことを確約します。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80f3-997f-dd335be615d2": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80f3-997f-dd335be615d2",
+            "version": 17,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "参加者は、自らまたは第三者を利用して次の各号に該当する行為を行わないことを確約します。"
+                ]
+              ]
+            },
+            "content": [
+              "34904bf5-e7e4-80ef-937d-e2be88b7ce09",
+              "34904bf5-e7e4-80c4-a221-de1686222ccf",
+              "34904bf5-e7e4-80f5-8c82-fd500baa1d33"
+            ],
+            "created_time": 1776738911596,
+            "last_edited_time": 1776739023000,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "nd5LLyB4yNJtPw5FiFi90A,\"start\",\"end\"",
+                "n": {
+                  "nd5LLyB4yNJtPw5FiFi90A,\"start\",\"end\"": {
+                    "s": {
+                      "x": "nd5LLyB4yNJtPw5FiFi90A",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "jj0lPLW9kpTO",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 43,
+                          "c": "参加者は、自らまたは第三者を利用して次の各号に該当する行為を行わないことを確約します。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80d1-a6c2-fc16eb29f433": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80d1-a6c2-fc16eb29f433",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社は、参加者が前各項の確約に反し、または反していると合理的に疑われる場合、催告その他何らの手続きを要することなく、直ちに当該参加者の登録を抹消し、本イベントへの参加を禁止（会場からの退場、賞金の剥奪および返還請求等を含みます）することができるものとします。なお、当社はかかる判断の根拠を説明する義務を負わず、これにより参加者に損害が生じても一切の責任を負いません。"
+                ]
+              ]
+            },
+            "created_time": 1776738911597,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "jFYtxeeMZ53mLaFwwFN2EQ,\"start\",\"end\"",
+                "n": {
+                  "jFYtxeeMZ53mLaFwwFN2EQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "jFYtxeeMZ53mLaFwwFN2EQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nSvA0jQfKSFI",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 183,
+                          "c": "当社は、参加者が前各項の確約に反し、または反していると合理的に疑われる場合、催告その他何らの手続きを要することなく、直ちに当該参加者の登録を抹消し、本イベントへの参加を禁止（会場からの退場、賞金の剥奪および返還請求等を含みます）することができるものとします。なお、当社はかかる判断の根拠を説明する義務を負わず、これにより参加者に損害が生じても一切の責任を負いません。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80ae-a8d5-dfc8981008c3": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80ae-a8d5-dfc8981008c3",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本規約に定めのない事項については、第1条に定める共通規約の規定が適用されるものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911597,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "Qqg9Zdp0Kgv8IuvUEcOCkQ,\"start\",\"end\"",
+                "n": {
+                  "Qqg9Zdp0Kgv8IuvUEcOCkQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "Qqg9Zdp0Kgv8IuvUEcOCkQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "VC0b_WuWEO5c",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 44,
+                          "c": "本規約に定めのない事項については、第1条に定める共通規約の規定が適用されるものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8053-9a7f-e9a6d5bbc6b3": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8053-9a7f-e9a6d5bbc6b3",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第17条 （存続条項）"
+                ]
+              ]
+            },
+            "created_time": 1776738911597,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "wtvTuuwOR1h7lomBS_lhyw,\"start\",\"end\"",
+                "n": {
+                  "wtvTuuwOR1h7lomBS_lhyw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "wtvTuuwOR1h7lomBS_lhyw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "N9DdffNasTyb",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 11,
+                          "c": "第17条 （存続条項）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80e1-90ca-ce54dce2c950": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80e1-90ca-ce54dce2c950",
+            "version": 4,
+            "type": "text",
+            "properties": {
+              "title": [
+                [
+                  "本規約第５条第２項、第６条、第7条、第10条、第13条、第15条および第16条の各規定は、本イベント終了後又は参加登録の抹消後も有効に存続するものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911597,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "FiS-gMsh85JjalKj0sKCTg,\"start\",\"end\"",
+                "n": {
+                  "FiS-gMsh85JjalKj0sKCTg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "FiS-gMsh85JjalKj0sKCTg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "ydHr_FQmEd07",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 78,
+                          "c": "本規約第５条第２項、第６条、第7条、第10条、第13条、第15条および第16条の各規定は、本イベント終了後又は参加登録の抹消後も有効に存続するものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80b7-a5c9-f0309729a62c": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80b7-a5c9-f0309729a62c",
+            "version": 4,
+            "type": "sub_sub_header",
+            "properties": {
+              "title": [
+                [
+                  "第18条 （共通事項）"
+                ]
+              ]
+            },
+            "created_time": 1776738911598,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "bnPh_Yu3g-JohypoTfxD5g,\"start\",\"end\"",
+                "n": {
+                  "bnPh_Yu3g-JohypoTfxD5g,\"start\",\"end\"": {
+                    "s": {
+                      "x": "bnPh_Yu3g-JohypoTfxD5g",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "MUQyqnljDCZF",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 11,
+                          "c": "第18条 （共通事項）"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-805a-b682-e71c44658de3": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-805a-b682-e71c44658de3",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本規約に明示的な定めのない事項（規約変更、反社会的勢力の排除、分離可能性、準拠法および合意管轄等）については、「Findy Tools 利用規約 / Findy Conference 利用規約 （ユーザー向け）」の規定が適用されるものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911598,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "-y8lRcWDzM1OaxmgBLxoag,\"start\",\"end\"",
+                "n": {
+                  "-y8lRcWDzM1OaxmgBLxoag,\"start\",\"end\"": {
+                    "s": {
+                      "x": "-y8lRcWDzM1OaxmgBLxoag",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "FApSWYXjaUOG",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 122,
+                          "c": "本規約に明示的な定めのない事項（規約変更、反社会的勢力の排除、分離可能性、準拠法および合意管轄等）については、「Findy Tools 利用規約 / Findy Conference 利用規約 （ユーザー向け）」の規定が適用されるものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-808a-afa7-fbfccad96848": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-808a-afa7-fbfccad96848",
+            "version": 4,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社は、参加者が反社会的勢力等に該当する場合、または本規約の各条項のいずれかに違反した場合、第1条に定める共通規約の規定にかかわらず、本規約に基づく措置（登録抹消、本イベント会場からの退場、賞金の剝奪等）を優先して適用できるものとします。"
+                ]
+              ]
+            },
+            "created_time": 1776738911598,
+            "last_edited_time": 1776738911661,
+            "parent_id": "34904bf5-e7e4-8060-abb3-da33d7172089",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "W1upDsOIkh_p74ZqXw9GSQ,\"start\",\"end\"",
+                "n": {
+                  "W1upDsOIkh_p74ZqXw9GSQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "W1upDsOIkh_p74ZqXw9GSQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "w_lt62a5LoWi",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 119,
+                          "c": "当社は、参加者が反社会的勢力等に該当する場合、または本規約の各条項のいずれかに違反した場合、第1条に定める共通規約の規定にかかわらず、本規約に基づく措置（登録抹消、本イベント会場からの退場、賞金の剝奪等）を優先して適用できるものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80fa-80f3-cf342db93917": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80fa-80f3-cf342db93917",
+            "version": 107,
+            "type": "text",
+            "properties": {
+              "title": [
+                [
+                  "本イベントへの参加に当たり、ご本人の個人情報（氏名、フリガナ、勤務先、所属部署、役職、業種、従業員規模、メールアドレス、電話番号、キャリア年数、技術スタック、利用メディア、プロフィール画像、提出された本成果物、本イベントにおける活動履歴その他申込時に取得する情報）および提出された本成果物を、以下の目的で利用します。"
+                ]
+              ]
+            },
+            "created_time": 1776738219566,
+            "last_edited_time": 1776909477569,
+            "parent_id": "34904bf5-e7e4-807c-97c9-f7f4d831aa92",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "cuTGR7qmt5zrKfwOL_C6vg,\"start\",[\"4wnq0j4gII--\",803]",
+                "n": {
+                  "cuTGR7qmt5zrKfwOL_C6vg,\"start\",[\"4wnq0j4gII--\",803]": {
+                    "s": {
+                      "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 18,
+                          "c": "本イベントへの参加に当たり、ご本人の"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            804
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            18
+                          ],
+                          "l": -26
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            830
+                          ],
+                          "o": [
+                            "YG0HOwEgm6yl",
+                            829
+                          ],
+                          "l": 140,
+                          "c": "個人情報（氏名、フリガナ、勤務先、所属部署、役職、業種、従業員規模、メールアドレス、電話番号、キャリア年数、技術スタック、利用メディア、プロフィール画像、提出された本成果物、本イベントにおける活動履歴その他申込時に取得する情報）および提出された本成果物を、以下の目的で利用します。"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            19
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            18
+                          ],
+                          "l": -72
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            799
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            90
+                          ],
+                          "l": -2
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            91
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            90
+                          ],
+                          "l": -7
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            802
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            97
+                          ],
+                          "l": -1
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            98
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            97
+                          ],
+                          "l": -1
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            801
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            98
+                          ],
+                          "l": -1
+                        },
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            803
+                          ],
+                          "o": [
+                            "4wnq0j4gII--",
+                            801
+                          ]
+                        }
+                      ],
+                      "l": "L"
+                    },
+                    "c": [
+                      "6oa-_JwT8VU1JFfHvWz5_Q,[\"4wnq0j4gII--\",21],\"end\""
+                    ]
+                  },
+                  "6oa-_JwT8VU1JFfHvWz5_Q,[\"4wnq0j4gII--\",21],\"end\"": {
+                    "s": {
+                      "x": "6oa-_JwT8VU1JFfHvWz5_Q",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            21
+                          ],
+                          "o": "start"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": "l"
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8037-889b-d06f7d785299": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8037-889b-d06f7d785299",
+            "version": 51,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本件個人情報は、以下の目的で利用します。"
+                ]
+              ]
+            },
+            "content": [
+              "34b04bf5-e7e4-803c-b51f-dee7b610fe28",
+              "34b04bf5-e7e4-8001-952a-c6de955736b0",
+              "34b04bf5-e7e4-807c-9e7d-e1fd8797a26b",
+              "34b04bf5-e7e4-80a6-8242-c7cd40776bf9",
+              "34b04bf5-e7e4-80fe-9fd7-d5a1f3868b0a",
+              "34b04bf5-e7e4-803f-bf8a-e5c128c5ff08"
+            ],
+            "created_time": 1776738242672,
+            "last_edited_time": 1776909503016,
+            "parent_id": "34904bf5-e7e4-807c-97c9-f7f4d831aa92",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "t76XpWGDP8lIB7RDs-j_ew,\"start\",\"end\"",
+                "n": {
+                  "t76XpWGDP8lIB7RDs-j_ew,\"start\",\"end\"": {
+                    "s": {
+                      "x": "t76XpWGDP8lIB7RDs-j_ew",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": [
+                      "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",803],[\"4wnq0j4gII--\",804]"
+                    ]
+                  },
+                  "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",803],[\"4wnq0j4gII--\",804]": {
+                    "s": {
+                      "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            803
+                          ],
+                          "o": [
+                            "4wnq0j4gII--",
+                            801
+                          ]
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            99
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            98
+                          ],
+                          "l": 20,
+                          "c": "本件個人情報は、以下の目的で利用します。"
+                        },
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            804
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            118
+                          ]
+                        }
+                      ],
+                      "l": "d"
+                    },
+                    "c": [
+                      "r33fyNEVT2UDqZiGcHUlnw,[\"YG0HOwEgm6yl\",21],\"end\""
+                    ]
+                  },
+                  "r33fyNEVT2UDqZiGcHUlnw,[\"YG0HOwEgm6yl\",21],\"end\"": {
+                    "s": {
+                      "x": "r33fyNEVT2UDqZiGcHUlnw",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            21
+                          ],
+                          "o": "start"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": "l"
+                    },
+                    "c": [
+                      "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",804],[\"4wnq0j4gII--\",805]"
+                    ]
+                  },
+                  "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",804],[\"4wnq0j4gII--\",805]": {
+                    "s": {
+                      "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            804
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            118
+                          ]
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            119
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            118
+                          ],
+                          "l": -21
+                        },
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            805
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            139
+                          ]
+                        }
+                      ],
+                      "l": "p"
+                    },
+                    "c": [
+                      "sRibq6myIuiYU6LNkt5DzA,[\"YG0HOwEgm6yl\",21],\"end\""
+                    ]
+                  },
+                  "sRibq6myIuiYU6LNkt5DzA,[\"YG0HOwEgm6yl\",21],\"end\"": {
+                    "s": {
+                      "x": "sRibq6myIuiYU6LNkt5DzA",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            21
+                          ],
+                          "o": "start"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": "l"
+                    },
+                    "c": [
+                      "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",805],[\"4wnq0j4gII--\",806]"
+                    ]
+                  },
+                  "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",805],[\"4wnq0j4gII--\",806]": {
+                    "s": {
+                      "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            805
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            139
+                          ]
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            140
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            139
+                          ],
+                          "l": -32
+                        },
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            806
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            171
+                          ]
+                        }
+                      ],
+                      "l": "v"
+                    },
+                    "c": [
+                      "bKJU2ed0DNT0H-JsdTAXkA,[\"YG0HOwEgm6yl\",21],\"end\""
+                    ]
+                  },
+                  "bKJU2ed0DNT0H-JsdTAXkA,[\"YG0HOwEgm6yl\",21],\"end\"": {
+                    "s": {
+                      "x": "bKJU2ed0DNT0H-JsdTAXkA",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            21
+                          ],
+                          "o": "start"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": "l"
+                    },
+                    "c": [
+                      "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",806],[\"4wnq0j4gII--\",807]"
+                    ]
+                  },
+                  "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",806],[\"4wnq0j4gII--\",807]": {
+                    "s": {
+                      "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            806
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            171
+                          ]
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            172
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            171
+                          ],
+                          "l": -66
+                        },
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            807
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            237
+                          ]
+                        }
+                      ],
+                      "l": "y"
+                    },
+                    "c": [
+                      "Zk1qoLwSHO_efLwZR51m2A,[\"YG0HOwEgm6yl\",21],\"end\""
+                    ]
+                  },
+                  "Zk1qoLwSHO_efLwZR51m2A,[\"YG0HOwEgm6yl\",21],\"end\"": {
+                    "s": {
+                      "x": "Zk1qoLwSHO_efLwZR51m2A",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            21
+                          ],
+                          "o": "start"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": "l"
+                    },
+                    "c": [
+                      "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",807],[\"4wnq0j4gII--\",808]"
+                    ]
+                  },
+                  "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",807],[\"4wnq0j4gII--\",808]": {
+                    "s": {
+                      "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            807
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            237
+                          ]
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            238
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            237
+                          ],
+                          "l": -21
+                        },
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            808
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            258
+                          ]
+                        }
+                      ],
+                      "l": "{L"
+                    },
+                    "c": [
+                      "lLTRbWElqXy8aZb79anecQ,[\"YG0HOwEgm6yl\",21],\"end\""
+                    ]
+                  },
+                  "lLTRbWElqXy8aZb79anecQ,[\"YG0HOwEgm6yl\",21],\"end\"": {
+                    "s": {
+                      "x": "lLTRbWElqXy8aZb79anecQ",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            21
+                          ],
+                          "o": "start"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": "l"
+                    },
+                    "c": [
+                      "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",808],[\"4wnq0j4gII--\",809]"
+                    ]
+                  },
+                  "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",808],[\"4wnq0j4gII--\",809]": {
+                    "s": {
+                      "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            808
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            258
+                          ]
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            259
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            258
+                          ],
+                          "l": -24
+                        },
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            809
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            282
+                          ]
+                        }
+                      ],
+                      "l": "{d"
+                    },
+                    "c": [
+                      "qlLJC10wOmdmNdbjf3jpGw,[\"YG0HOwEgm6yl\",21],\"end\""
+                    ]
+                  },
+                  "qlLJC10wOmdmNdbjf3jpGw,[\"YG0HOwEgm6yl\",21],\"end\"": {
+                    "s": {
+                      "x": "qlLJC10wOmdmNdbjf3jpGw",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            21
+                          ],
+                          "o": "start"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": "l"
+                    },
+                    "c": [
+                      "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",809],[\"4wnq0j4gII--\",810]"
+                    ]
+                  },
+                  "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",809],[\"4wnq0j4gII--\",810]": {
+                    "s": {
+                      "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            809
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            282
+                          ]
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            283
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            282
+                          ],
+                          "l": -14
+                        },
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            810
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            296
+                          ]
+                        }
+                      ],
+                      "l": "{p"
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-8046-8626-e3d9fc1f4f4d": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-8046-8626-e3d9fc1f4f4d",
+            "version": 22,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社は、本イベントの運営のため、以下の第三者に対し、前項の情報の全部または一部を提供することがあります。参加者はこれにあらかじめ同意するものとします。"
+                ]
+              ]
+            },
+            "content": [
+              "34b04bf5-e7e4-80fe-923c-ef2a05db7458",
+              "34b04bf5-e7e4-8097-aeee-d9911d88dd87",
+              "34b04bf5-e7e4-809a-8d9b-f744d94d437e"
+            ],
+            "created_time": 1776909534840,
+            "last_edited_time": 1776909551045,
+            "parent_id": "34904bf5-e7e4-807c-97c9-f7f4d831aa92",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "y3UsQgIuIWtzEAbq75wxvA,\"start\",\"end\"",
+                "n": {
+                  "y3UsQgIuIWtzEAbq75wxvA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "y3UsQgIuIWtzEAbq75wxvA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            1
+                          ],
+                          "o": "start",
+                          "l": -4
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            5
+                          ],
+                          "o": [
+                            "YG0HOwEgm6yl",
+                            4
+                          ],
+                          "l": 75,
+                          "c": "当社は、本イベントの運営のため、以下の第三者に対し、前項の情報の全部または一部を提供することがあります。参加者はこれにあらかじめ同意するものとします。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": [
+                      "LUMR2M7PibxETnnda76Oug,[\"YG0HOwEgm6yl\",21],\"end\""
+                    ]
+                  },
+                  "LUMR2M7PibxETnnda76Oug,[\"YG0HOwEgm6yl\",21],\"end\"": {
+                    "s": {
+                      "x": "LUMR2M7PibxETnnda76Oug",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "YG0HOwEgm6yl",
+                            21
+                          ],
+                          "o": "start"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": "l"
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8068-a887-dd21b76baca5": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8068-a887-dd21b76baca5",
+            "version": 64,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "個人情報は、メールまたはビジネスチャットツール等の安全な手段により、必要な範囲で共有いたします"
+                ]
+              ]
+            },
+            "created_time": 1776738272290,
+            "last_edited_time": 1776738790601,
+            "parent_id": "34904bf5-e7e4-807c-97c9-f7f4d831aa92",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "topkGaYmGuQbA5cFcGcZVA,\"start\",\"end\"",
+                "n": {
+                  "topkGaYmGuQbA5cFcGcZVA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "topkGaYmGuQbA5cFcGcZVA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": [
+                      "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",810],[\"4wnq0j4gII--\",811]"
+                    ]
+                  },
+                  "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",810],[\"4wnq0j4gII--\",811]": {
+                    "s": {
+                      "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            810
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            296
+                          ]
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            297
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            296
+                          ],
+                          "l": -8
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            305
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            304
+                          ],
+                          "l": 46,
+                          "c": "個人情報は、メールまたはビジネスチャットツール等の安全な手段により、必要な範囲で共有いたしま"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            813
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            350
+                          ],
+                          "l": 1,
+                          "c": "す"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            812
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            350
+                          ],
+                          "l": -1
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            351
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            350
+                          ],
+                          "l": -2
+                        },
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            811
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            352
+                          ]
+                        }
+                      ],
+                      "l": "{v"
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      }
+    }
+  }
+}
