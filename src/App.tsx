@@ -41,6 +41,7 @@ import type { OpsDrill } from "./ops";
 import type { PitchRun } from "./pitch";
 import type { JudgeProof } from "./proof";
 import type { ProtoPediaPublisher } from "./publisher";
+import type { SubmissionDossier } from "./dossier";
 import { buildWinningStrategy } from "./strategy";
 import type { SwotQuadrant, WinningStrategy } from "./strategy";
 import type { CapabilityKey, GeminiRecommendation, MarketAgent, Recommendation } from "./types";
@@ -623,6 +624,157 @@ function WinAutopilotPanel({
           <Rocket size={28} />
           <strong>Run win autopilotで、競合/SWOT、証拠、最終候補判定、提出、運用を一括判定します。</strong>
           <p>審査員が見るべき順番と、提出前に残る外部作業を1回で出します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SubmissionDossierPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [dossier, setDossier] = useState<SubmissionDossier | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildDossier() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/dossier", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setDossier((await response.json()) as SubmissionDossier);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="submission-dossier">
+      <div className="dossier-heading">
+        <div>
+          <span className="eyebrow">Submission dossier</span>
+          <h2>
+            <FileText size={20} />
+            Final paste-and-record packet
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildDossier} disabled={loading} title="提出ドシエを生成">
+          <ClipboardCheck size={17} />
+          {loading ? "Packaging" : "Run submission dossier"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Submission dossier request failed: {error}</p>}
+
+      {dossier ? (
+        <div className="dossier-body">
+          <div className="dossier-summary">
+            <div>
+              <span className={cx("risk-chip", dossier.readiness === "ready-to-submit" ? "low" : "medium")}>{dossier.readiness}</span>
+              <h3>{dossier.title}</h3>
+              <p>{dossier.executiveMemo}</p>
+            </div>
+            <div className="dossier-score">
+              <strong>{dossier.dossierScore}</strong>
+              <span>dossier score</span>
+            </div>
+          </div>
+
+          <div className="dossier-copy">
+            {dossier.copyBlocks.map((block) => (
+              <article key={block.id} className={block.status}>
+                <div>
+                  <strong>{block.label}</strong>
+                  <span>{block.target}</span>
+                </div>
+                <pre>{block.value}</pre>
+              </article>
+            ))}
+          </div>
+
+          <div className="dossier-grid">
+            <section>
+              <h3>
+                <ExternalLink size={15} />
+                Submission links
+              </h3>
+              <div className="dossier-links">
+                {dossier.links.map((link) => (
+                  <article key={link.id} className={link.status}>
+                    <div>
+                      <strong>{link.label}</strong>
+                      <span>{link.status}</span>
+                    </div>
+                    <p>{link.proof}</p>
+                    {link.url && (
+                      <a href={link.url} target="_blank" rel="noreferrer">
+                        Open <ExternalLink size={13} />
+                      </a>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Film size={15} />
+                Recording plan
+              </h3>
+              <ol className="dossier-recording">
+                {dossier.recordingPlan.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+              <h3>
+                <ClipboardCheck size={15} />
+                Final checks
+              </h3>
+              <div className="dossier-checks">
+                {dossier.finalChecks.map((check) => (
+                  <article key={check.id} className={check.status}>
+                    <div>
+                      <strong>{check.label}</strong>
+                      <span>{check.status}</span>
+                    </div>
+                    <p>{check.action}</p>
+                    <small>{check.proof}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                Markdown dossier
+              </h3>
+              <pre>{dossier.markdown}</pre>
+              <h3>
+                <ShieldCheck size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(dossier.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="dossier-empty">
+          <FileText size={28} />
+          <strong>Run submission dossierで、ProtoPedia本文、動画録画順、提出リンク、最終チェックを1つに束ねます。</strong>
+          <p>外部提出URLが未発行でも、貼る本文と録る順番を固定できます。</p>
         </div>
       )}
     </section>
@@ -2009,6 +2161,7 @@ export default function App() {
       </section>
 
       <WinAutopilotPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <SubmissionDossierPanel recommendation={recommendation} projectBrief={projectBrief} />
       <DemoRunwayPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeProofBundle recommendation={recommendation} projectBrief={projectBrief} />
       <PitchDirector recommendation={recommendation} projectBrief={projectBrief} />

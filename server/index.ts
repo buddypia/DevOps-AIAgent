@@ -8,6 +8,7 @@ import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js
 import { buildWinningAutopilot } from "../src/autopilot.js";
 import { buildSquadContract } from "../src/contracts.js";
 import { buildDemoRunway } from "../src/demoRunway.js";
+import { buildSubmissionDossier } from "../src/dossier.js";
 import { buildFinalistSimulation } from "../src/finalist.js";
 import { buildJudgeDrill } from "../src/judgeDrill.js";
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market.js";
@@ -135,6 +136,12 @@ function agentCard(baseUrl: string) {
         name: "Run the one-click winning autopilot",
         description: "競合/SWOT、証拠、最終候補判定、提出、運用を一括実行し、勝てる状態と残アクションを返す。",
         tags: ["autopilot", "winning-strategy", "judge-proof", "submission", "cloud-run"]
+      },
+      {
+        id: "submission.dossier",
+        name: "Build the final submission dossier",
+        description: "ProtoPedia本文、動画録画順、提出リンク、証拠デッキ、最終チェックを1つのドシエに束ねる。",
+        tags: ["submission", "protopedia", "dossier", "video", "judge-proof"]
       },
       {
         id: "ops.drill",
@@ -637,6 +644,112 @@ app.post("/api/win-run", async (req, res) => {
   );
 });
 
+app.post("/api/dossier", async (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "ProtoPedia提出本文、動画録画順、証拠リンク、残ギャップを1つの提出ドシエに束ねる。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const pitch = buildPitchRun({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill
+  });
+  const judgeDrill = buildJudgeDrill({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch
+  });
+  const finalist = buildFinalistSimulation({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    judgeDrill,
+    squadContract
+  });
+  const publisher = buildProtoPediaPublisher({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist
+  });
+  const demoRunway = buildDemoRunway({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist,
+    publisher
+  });
+  const [geminiResult, ciResult] = await Promise.allSettled([
+    runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
+    fetchCiProof()
+  ]);
+  const gemini =
+    geminiResult.status === "fulfilled"
+      ? geminiResult.value
+      : localGeminiRecommendation(
+          recommendation,
+          geminiResult.reason instanceof Error ? geminiResult.reason.message : "Gemini request failed"
+        );
+  const ci = ciResult.status === "fulfilled" ? ciResult.value : ciUnavailable("CI status promise rejected");
+  const proof = buildJudgeProof({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    gemini,
+    ci
+  });
+  const autopilot = buildWinningAutopilot({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    squadContract,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    proof
+  });
+
+  res.json(
+    buildSubmissionDossier({
+      recommendation,
+      strategy,
+      mission,
+      pitch,
+      finalist,
+      publisher,
+      demoRunway,
+      autopilot,
+      proof
+    })
+  );
+});
+
 app.post("/api/ops-drill", (req, res) => {
   const parsed = OpsDrillSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -895,6 +1008,17 @@ app.post("/a2a", (req, res) => {
     demoRunway,
     proof
   });
+  const dossier = buildSubmissionDossier({
+    recommendation,
+    strategy,
+    mission,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    autopilot: winAutopilot,
+    proof
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -1030,6 +1154,18 @@ app.post("/a2a", (req, res) => {
                     status: lane.status
                   }))
                 },
+                dossier: {
+                  id: dossier.id,
+                  dossierScore: dossier.dossierScore,
+                  readiness: dossier.readiness,
+                  copyBlocks: dossier.copyBlocks.map((block) => block.id),
+                  missingLinks: dossier.links.filter((link) => link.status === "watch").map((link) => link.id),
+                  finalChecks: dossier.finalChecks.map((check) => ({
+                    id: check.id,
+                    status: check.status
+                  }))
+                },
+                dossierEndpoint: `${publicBaseUrl(req)}/api/dossier`,
                 winRunEndpoint: `${publicBaseUrl(req)}/api/win-run`,
                 demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,
                 proofEndpoint: `${publicBaseUrl(req)}/api/proof`,

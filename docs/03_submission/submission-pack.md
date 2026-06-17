@@ -44,6 +44,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Submission Publisherで、ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
 - Demo Runwayで、Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線に束ねる
 - Win Autopilotで、競合/SWOT、証拠、最終候補判定、提出、運用を一括判定し、win scoreと残アクションを返す
+- Submission Dossierで、ProtoPedia本文、動画録画順、提出リンク、最終チェック、Markdownを1つに束ねる
 - Gemini 3.5 Flashで勝ち筋、残リスク、30秒ピッチを生成する
 - Cloud RunでUI、API、Agent Card、A2A endpointを単一サービスとして公開する
 
@@ -63,6 +64,7 @@ React UI
   -> Submission Publisher
   -> Demo Runway
   -> Win Autopilot
+  -> Submission Dossier
   -> GitHub Actions CI
   -> Gemini 3.5 Flash
   -> A2A Agent Card + JSON-RPC endpoint
@@ -98,6 +100,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mission \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/win-run \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/dossier \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/demo-run \

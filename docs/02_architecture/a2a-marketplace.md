@@ -18,9 +18,10 @@
 10. `src/publisher.ts` がProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
 11. `src/demoRunway.ts` が証拠、最終候補判定、提出本文、AI市場、運用判断を30秒の審査員導線に束ねる
 12. `src/autopilot.ts` が全証拠を一括判定し、win score、残ブロッカー、証拠デッキを返す
-13. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
-14. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-15. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+13. `src/dossier.ts` がProtoPedia本文、動画録画順、提出リンク、最終チェックを1つのドシエに束ねる
+14. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
+15. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+16. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -34,6 +35,7 @@
   - `strategy.audit`
   - `mission.run`
   - `submission.publish`
+  - `submission.dossier`
   - `demo.runway`
   - `win.autopilot`
   - `ops.drill`
@@ -70,6 +72,7 @@
 - `POST /api/judge-drill`: 審査5項目ごとの厳しめ質問、回答、証拠リンク、デモ画面を返す
 - `POST /api/finalist`: 審査員5役の最終候補判定、落選理由、残ギャップ、次の一手を返す
 - `POST /api/publisher`: ProtoPediaに貼る本文、タグ、URL、動画台本、提出チェックリストを返す
+- `POST /api/dossier`: ProtoPedia本文、動画録画順、提出リンク、証拠デッキ、最終チェックを返す
 - `POST /api/demo-run`: Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線にする
 - `POST /api/win-run`: 競合/SWOT、証拠、最終候補判定、提出、運用を一括実行し、勝てる状態と残アクションを返す
 - Release gate: Cloud Run SREが公開継続かrollbackかを判断する
@@ -88,6 +91,7 @@
 - Judge drill: `judge.drill` skillとして、審査員の反論に対する回答と証拠リンクをA2A payloadにも含める
 - Finalist proof: `finalist.simulate` skillとして、最終候補スコア、judge consensus、残ギャップをA2A payloadにも含める
 - Publisher proof: `submission.publish` skillとして、ProtoPedia貼り付け本文、メディアURL、未完了外部作業をA2A payloadにも含める
+- Dossier proof: `submission.dossier` skillとして、提出コピー欄、録画順、提出リンク、MarkdownドシエをA2A payloadにも含める
 - Demo runway proof: `demo.runway` skillとして、30秒デモ順、証拠リンク、録画キュー、外部残リスクをA2A payloadにも含める
 - Win autopilot proof: `win.autopilot` skillとして、win score、lane scorecards、残ブロッカー、証拠デッキをA2A payloadにも含める
 
@@ -105,6 +109,7 @@
 - Ops drill: `/api/ops-drill`
 - Contracts: `/api/contracts`
 - Publisher: `/api/publisher`
+- Submission dossier: `/api/dossier`
 - Demo runway: `/api/demo-run`
 - Win autopilot: `/api/win-run`
 - Pitch director: `/api/pitch`

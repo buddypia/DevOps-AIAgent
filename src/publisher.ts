@@ -108,7 +108,7 @@ export function buildProtoPediaPublisher(input: {
     "Cloud RunでReact UI、Express API、Agent Card、A2A endpointを単一サービスとして公開",
     "Gemini 3.5 Flashで勝ち筋、リスク、30秒ピッチをJSON生成",
     "GitHub Actionsでtypecheck、test、build、architecture checkを公開実行",
-    "A2A skillとしてmarket、contract、mission、ops、pitch、judge、finalist、demo、win autopilotを公開"
+    "A2A skillとしてmarket、contract、mission、ops、pitch、judge、finalist、demo、win autopilot、submission dossierを公開"
   ];
   const pasteFields: PublisherField[] = [
     field("title", "作品タイトル", mission.submissionPack.protopediaTitle, "ProtoPediaの作品タイトルへ貼る"),
