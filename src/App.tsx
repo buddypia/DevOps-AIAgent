@@ -31,6 +31,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { recommendSquad } from "./agentEngine";
 import type { SquadContract } from "./contracts";
+import type { DemoRunway } from "./demoRunway";
 import type { FinalistSimulation } from "./finalist";
 import type { JudgeDrill } from "./judgeDrill";
 import { CAPABILITY_LABELS, DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "./market";
@@ -475,6 +476,157 @@ function StrategyMeter({ label, value }: { label: string; value: number }) {
         <span style={{ width: `${value}%` }} />
       </div>
     </div>
+  );
+}
+
+function DemoRunwayPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [runway, setRunway] = useState<DemoRunway | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function runDemo() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/demo-run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setRunway((await response.json()) as DemoRunway);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="demo-runway">
+      <div className="demo-heading">
+        <div>
+          <span className="eyebrow">Demo runway</span>
+          <h2>
+            <Workflow size={20} />
+            30-second judge route
+          </h2>
+        </div>
+        <button className="icon-button" onClick={runDemo} disabled={loading} title="30秒デモ導線を生成">
+          <Play size={17} />
+          {loading ? "Routing" : "Run demo runway"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Demo runway request failed: {error}</p>}
+
+      {runway ? (
+        <div className="demo-body">
+          <div className="demo-summary">
+            <div>
+              <span className={cx("risk-chip", runway.readiness === "recording-ready" ? "low" : "medium")}>{runway.readiness}</span>
+              <h3>{runway.headline}</h3>
+              <p>{runway.summary}</p>
+            </div>
+            <div className="demo-score">
+              <strong>{runway.demoScore}</strong>
+              <span>{runway.totalSeconds}s route</span>
+            </div>
+          </div>
+
+          <div className="demo-steps">
+            {runway.steps.map((step) => (
+              <article key={step.id} className={step.status}>
+                <div>
+                  <span>{step.timeRange}</span>
+                  <strong>{step.screen}</strong>
+                </div>
+                <p>{step.action}</p>
+                <small>{step.narration}</small>
+                <a href={step.evidenceUrl} target="_blank" rel="noreferrer">
+                  Evidence <ExternalLink size={13} />
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <div className="demo-grid">
+            <section>
+              <h3>
+                <ExternalLink size={15} />
+                Proof links
+              </h3>
+              <div className="demo-links">
+                {runway.proofLinks.map((link) => (
+                  <a key={link.id} href={link.url} target="_blank" rel="noreferrer" title={link.proof}>
+                    {link.label}
+                    <ExternalLink size={13} />
+                  </a>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Film size={15} />
+                Recording cues
+              </h3>
+              <ol className="demo-cues">
+                {runway.recordingCues.map((cue) => (
+                  <li key={cue}>{cue}</li>
+                ))}
+              </ol>
+            </section>
+            <section>
+              <h3>
+                <AlertTriangle size={15} />
+                External risks
+              </h3>
+              <div className="demo-risks">
+                {runway.risks.length > 0 ? (
+                  runway.risks.map((risk) => (
+                    <article key={risk.id} className={risk.severity}>
+                      <div>
+                        <strong>{risk.label}</strong>
+                        <span>{risk.severity}</span>
+                      </div>
+                      <p>{risk.mitigation}</p>
+                    </article>
+                  ))
+                ) : (
+                  <article className="ready">
+                    <div>
+                      <strong>Ready to record</strong>
+                      <span>ready</span>
+                    </div>
+                    <p>外部URLの残リスクはありません。</p>
+                  </article>
+                )}
+              </div>
+              <h3>
+                <ShieldCheck size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(runway.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="demo-empty">
+          <Workflow size={28} />
+          <strong>Run demo runwayで、審査員が30秒で見る順番、証拠リンク、録画キューを生成します。</strong>
+          <p>ばらばらの証拠を、提出動画と初見デモの一本道にします。</p>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -1706,6 +1858,7 @@ export default function App() {
         </div>
       </section>
 
+      <DemoRunwayPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeProofBundle recommendation={recommendation} projectBrief={projectBrief} />
       <PitchDirector recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeDrillPanel recommendation={recommendation} projectBrief={projectBrief} />

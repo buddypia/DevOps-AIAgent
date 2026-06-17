@@ -42,6 +42,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Judge Drillで、審査5項目ごとの厳しい質問、回答、証拠リンク、デモで開く画面を生成する
 - Finalist Simulatorで、審査員5役の最終候補判定、落選理由、残ギャップ、次の一手を生成する
 - Submission Publisherで、ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
+- Demo Runwayで、Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線に束ねる
 - Gemini 3.5 Flashで勝ち筋、残リスク、30秒ピッチを生成する
 - Cloud RunでUI、API、Agent Card、A2A endpointを単一サービスとして公開する
 
@@ -59,6 +60,7 @@ React UI
   -> Judge Drill
   -> Finalist Simulator
   -> Submission Publisher
+  -> Demo Runway
   -> GitHub Actions CI
   -> Gemini 3.5 Flash
   -> A2A Agent Card + JSON-RPC endpoint
@@ -69,14 +71,14 @@ React UI
 
 | Time | Shot |
 | --- | --- |
-| 0-5s | Project Briefに課題を貼り、AI能力市場が候補を並べる |
-| 5-10s | Judge Proofを実行し、Gemini/Cloud Run/A2A/CI/DevOps/提出URLの証拠束を見せる |
-| 10-14s | Finalist Simulatorで審査員5役の判定と残ギャップを見せる |
-| 14-18s | Submission PublisherでProtoPedia貼り付け本文と提出チェックリストを見せる |
-| 18-22s | Winning Strategyで競合/SWOT/審査スコアを確認する |
-| 22-26s | Contract Desk、Mission Control、Ops Drillで契約、A2A委任、運用判断を見せる |
-| 26-27s | Pitch DirectorとJudge Drillで録画順、字幕、想定問答を見せる |
-| 27-30s | Cloud Run URL、GitHub Actions、ProtoPediaタグ、構成図を提出パックとして締める |
+| 0-4s | Demo Runwayを実行し、30秒の審査員導線と残リスクを表示する |
+| 4-8s | Judge Proofを実行し、Gemini/Cloud Run/A2A/CI/DevOps/提出URLの証拠束を見せる |
+| 8-12s | Finalist Simulatorで審査員5役の判定と残ギャップを見せる |
+| 12-16s | Submission PublisherでProtoPedia貼り付け本文と提出チェックリストを見せる |
+| 16-21s | MarketplaceとWinning Strategyで競合/SWOT/審査スコアを確認する |
+| 21-25s | Contract DeskとMission Controlで契約、A2A委任、検証runbookを見せる |
+| 25-28s | Ops DrillでCloud Runの運用判断とrollback基準を見せる |
+| 28-30s | Cloud Run URL、GitHub Actions、Agent Card、構成図で締める |
 
 ## Verification Runbook
 
@@ -91,6 +93,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/strategy \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mission \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/demo-run \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/publisher \

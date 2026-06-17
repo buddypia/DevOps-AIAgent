@@ -210,10 +210,11 @@ export function buildJudgeDrill(input: {
     readinessScore,
     hardestQuestion: hardest?.question ?? "審査員に最初に何を聞かれても証拠を開けますか？",
     openingRebuttal: "この作品はAIエージェントを作るだけでなく、必要能力の発見、購入判断、A2A委任、Cloud Run運用、提出証跡までをAIの判断ループとして閉じています。",
-    closingLine: "審査では、最初にJudge Proof、次にPitch Director、最後にGitHub ActionsとAgent Cardを開けば、価値と実装の両方を確認できます。",
+    closingLine: "審査では、最初にDemo Runway、次にJudge Proof、最後にGitHub ActionsとAgent Cardを開けば、価値と実装の両方を確認できます。",
     objections,
     evidenceLinks,
     crossExamRunbook: [
+      "Run demo runwayで30秒の審査員導線、証拠リンク、外部残リスクを見せる",
       "Run judge proofでGemini/Cloud Run/A2A/CI receiptを見せる",
       "Build pitchで30秒録画順と残リスクを見せる",
       "Winning Strategyで競合/SWOTと差別化を説明する",

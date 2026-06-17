@@ -202,7 +202,7 @@ export function buildPitchRun(input: {
       id: "video",
       label: "Video URL",
       status: checklistStatus(hasSubmissionUrl(SUBMISSION_PROOF.videoUrl)),
-      proof: "このPitch Directorの30秒構成を録画して貼る。",
+      proof: "Demo RunwayとPitch Directorの30秒構成を録画して貼る。",
       url: SUBMISSION_PROOF.videoUrl || undefined
     }
   ];

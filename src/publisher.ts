@@ -153,7 +153,7 @@ export function buildProtoPediaPublisher(input: {
     asset("architecture", "システム構成図", `${baseUrl.replace(/\/$/, "")}${mission.submissionPack.architectureDiagramUrl}`, "ProtoPediaに貼れる構成図"),
     asset("story", "提出ストーリーMarkdown", `${baseUrl.replace(/\/$/, "")}${mission.submissionPack.storyMarkdownPath}`, "ProtoPedia本文の下書き"),
     asset("protopedia", "ProtoPedia作品URL", SUBMISSION_PROOF.protopediaUrl, "外部登録後に提出フォームへ貼る"),
-    asset("video", "動画URL", SUBMISSION_PROOF.videoUrl, "Pitch Directorの30秒構成を録画して貼る")
+    asset("video", "動画URL", SUBMISSION_PROOF.videoUrl, "Demo Runwayの30秒構成を録画して貼る")
   ];
   const finalChecklist: PublisherStep[] = [
     {
@@ -174,7 +174,7 @@ export function buildProtoPediaPublisher(input: {
       id: "record-video",
       label: "30秒動画を録画する",
       status: statusFromUrl(SUBMISSION_PROOF.videoUrl),
-      action: "Pitch Directorの順番で Judge Proof -> Finalist Simulator -> Marketplace -> Strategy -> Ops を録画する",
+      action: "Demo Runwayの順番で Judge Proof -> Finalist Simulator -> Submission Publisher -> Marketplace -> Strategy -> Contract/Mission -> Ops を録画する",
       proof: pitch.voiceoverScript
     },
     {

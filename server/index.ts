@@ -6,6 +6,7 @@ import { z } from "zod";
 import { ipAllowlistMiddleware, ipAllowlistSummary } from "./ipAllowlist.js";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js";
 import { buildSquadContract } from "../src/contracts.js";
+import { buildDemoRunway } from "../src/demoRunway.js";
 import { buildFinalistSimulation } from "../src/finalist.js";
 import { buildJudgeDrill } from "../src/judgeDrill.js";
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market.js";
@@ -121,6 +122,12 @@ function agentCard(baseUrl: string) {
         name: "Prepare paste-ready ProtoPedia publication",
         description: "ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージとして返す。",
         tags: ["protopedia", "publishing", "video", "submission", "findy_hackathon"]
+      },
+      {
+        id: "demo.runway",
+        name: "Run the 30-second judge demo runway",
+        description: "審査員が最初に見る30秒の画面順、証拠リンク、録画キュー、残リスクを束ねる。",
+        tags: ["demo", "judge-experience", "video", "proof", "submission"]
       },
       {
         id: "ops.drill",
@@ -467,6 +474,67 @@ app.post("/api/publisher", (req, res) => {
   );
 });
 
+app.post("/api/demo-run", (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "審査員が30秒で価値、証拠、提出準備、運用性を理解できる順番を生成する。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const pitch = buildPitchRun({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill
+  });
+  const judgeDrill = buildJudgeDrill({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch
+  });
+  const finalist = buildFinalistSimulation({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    judgeDrill,
+    squadContract
+  });
+  const publisher = buildProtoPediaPublisher({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist
+  });
+
+  res.json(
+    buildDemoRunway({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy,
+      mission,
+      opsDrill,
+      pitch,
+      finalist,
+      publisher
+    })
+  );
+});
+
 app.post("/api/ops-drill", (req, res) => {
   const parsed = OpsDrillSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -693,6 +761,16 @@ app.post("/a2a", (req, res) => {
     pitch,
     finalist
   });
+  const demoRunway = buildDemoRunway({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist,
+    publisher
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -798,6 +876,22 @@ app.post("/a2a", (req, res) => {
                   pasteFields: publisher.pasteFields.map((field) => field.id),
                   missingExternal: publisher.missingExternal.map((item) => item.id)
                 },
+                demoRunway: {
+                  id: demoRunway.id,
+                  demoScore: demoRunway.demoScore,
+                  readiness: demoRunway.readiness,
+                  totalSeconds: demoRunway.totalSeconds,
+                  steps: demoRunway.steps.map((step) => ({
+                    id: step.id,
+                    status: step.status,
+                    evidenceUrl: step.evidenceUrl
+                  })),
+                  risks: demoRunway.risks.map((risk) => ({
+                    id: risk.id,
+                    mitigation: risk.mitigation
+                  }))
+                },
+                demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,
                 proofEndpoint: `${publicBaseUrl(req)}/api/proof`,
                 finalistEndpoint: `${publicBaseUrl(req)}/api/finalist`,
                 publisherEndpoint: `${publicBaseUrl(req)}/api/publisher`,
