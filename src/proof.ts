@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { GeminiRecommendation, Recommendation } from "./types.js";
 import type { MissionRun } from "./mission.js";
 import type { OpsDrill } from "./ops.js";
@@ -11,6 +12,27 @@ export type ProofItem = {
   status: ProofStatus;
   evidence: string;
   url?: string;
+};
+
+export type ProofReceiptPayload = {
+  proofId: string;
+  issuedAt: string;
+  overallScore: number;
+  scores: JudgeProof["scores"];
+  links: JudgeProof["links"];
+  geminiSource: GeminiRecommendation["source"];
+  geminiModel: string;
+  proofItemStatuses: Array<{ id: string; status: ProofStatus }>;
+  missionId: string;
+  opsDrillId: string;
+  rollbackRecommended: boolean;
+};
+
+export type ProofReceipt = {
+  algorithm: "sha256";
+  digest: string;
+  payload: ProofReceiptPayload;
+  verification: string;
 };
 
 export type JudgeProof = {
@@ -35,6 +57,7 @@ export type JudgeProof = {
     story: string;
   };
   proofItems: ProofItem[];
+  receipt: ProofReceipt;
   runbook: string[];
   gemini: GeminiRecommendation;
   strategy: {
@@ -80,6 +103,22 @@ function statusFromScore(value: number): ProofStatus {
 function absoluteUrl(baseUrl: string, path: string) {
   if (path.startsWith("https://")) return path;
   return `${baseUrl.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+function canonicalize(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map((item) => canonicalize(item));
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, item]) => [key, canonicalize(item)])
+    );
+  }
+  return value;
+}
+
+export function proofDigest(payload: ProofReceiptPayload) {
+  return createHash("sha256").update(JSON.stringify(canonicalize(payload))).digest("hex");
 }
 
 export function buildJudgeProof(input: {
@@ -166,18 +205,42 @@ export function buildJudgeProof(input: {
     }
   ];
 
+  const generatedAt = new Date().toISOString();
+  const id = `proof-${overallScore}-${mission.id}`;
+  const receiptPayload: ProofReceiptPayload = {
+    proofId: id,
+    issuedAt: generatedAt,
+    overallScore,
+    scores,
+    links,
+    geminiSource: gemini.source,
+    geminiModel: gemini.model,
+    proofItemStatuses: proofItems.map((item) => ({ id: item.id, status: item.status })),
+    missionId: mission.id,
+    opsDrillId: opsDrill.id,
+    rollbackRecommended: opsDrill.rollbackRecommended
+  };
+  const receipt: ProofReceipt = {
+    algorithm: "sha256",
+    digest: proofDigest(receiptPayload),
+    payload: receiptPayload,
+    verification: "Recompute sha256 over the canonical JSON of receipt.payload and compare it with receipt.digest."
+  };
+
   return {
-    id: `proof-${overallScore}-${mission.id}`,
-    generatedAt: new Date().toISOString(),
+    id,
+    generatedAt,
     summary: `Judge proof bundle scored ${overallScore}: Gemini ${scores.ai}, Cloud Run ${scores.cloudRun}, A2A ${scores.a2a}, strategy ${scores.strategy}, DevOps ${scores.devops}, submission ${scores.submission}.`,
     overallScore,
     scores,
     links,
     proofItems,
+    receipt,
     runbook: [
       `curl -s ${absoluteUrl(baseUrl, "/api/healthz")}`,
       `curl -s ${links.agentCard}`,
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/proof")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
+      `curl -s -X POST ${absoluteUrl(baseUrl, "/api/proof")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}' | jq '.receipt'`,
       ...mission.verificationCommands,
       ...opsDrill.runbookCommands
     ],

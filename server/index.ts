@@ -220,6 +220,18 @@ async function runGemini(projectBrief: string, selectedAgentIds: string[]): Prom
   };
 }
 
+async function runGeminiWithRetry(projectBrief: string, selectedAgentIds: string[], attempts = 2): Promise<GeminiRecommendation> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      return await runGemini(projectBrief, selectedAgentIds);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Gemini request failed");
+}
+
 app.disable("x-powered-by");
 app.use(express.json({ limit: "256kb" }));
 app.use(ipAllowlistMiddleware);
@@ -318,7 +330,7 @@ app.post("/api/proof", async (req, res) => {
   let gemini: GeminiRecommendation;
 
   try {
-    gemini = await runGemini(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+    gemini = await runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds);
   } catch (error) {
     gemini = localGeminiRecommendation(recommendation, error instanceof Error ? error.message : "Gemini request failed");
   }
@@ -343,7 +355,7 @@ app.post("/api/recommend", async (req, res) => {
   }
 
   try {
-    const result = await runGemini(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+    const result = await runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds);
     res.json(result);
   } catch (error) {
     const fallback = localGeminiRecommendation(

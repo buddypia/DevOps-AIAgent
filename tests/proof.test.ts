@@ -3,7 +3,7 @@ import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine";
 import { DEFAULT_PROJECT_BRIEF } from "../src/market";
 import { buildMissionRun } from "../src/mission";
 import { buildOpsDrill } from "../src/ops";
-import { buildJudgeProof } from "../src/proof";
+import { buildJudgeProof, proofDigest } from "../src/proof";
 import { buildWinningStrategy } from "../src/strategy";
 
 describe("judge proof bundle", () => {
@@ -32,6 +32,12 @@ describe("judge proof bundle", () => {
     expect(proof.links.agentCard).toBe("https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app/.well-known/agent-card.json");
     expect(proof.links.github).toBe("https://github.com/buddypia/DevOps-AIAgent");
     expect(proof.runbook.join("\n")).toContain("/api/proof");
+    expect(proof.runbook.join("\n")).toContain(".receipt");
+    expect(proof.receipt.algorithm).toBe("sha256");
+    expect(proof.receipt.digest).toMatch(/^[a-f0-9]{64}$/);
+    expect(proof.receipt.digest).toBe(proofDigest(proof.receipt.payload));
+    expect(proof.receipt.payload.proofId).toBe(proof.id);
+    expect(proof.receipt.payload.proofItemStatuses.length).toBe(7);
     expect(proof.strategy.topCompetitor).toContain("Google");
     expect(proof.mission.submissionScore).toBeGreaterThanOrEqual(80);
     expect(proof.opsDrill.nextOpsAgent).toBe("Observability Oracle");

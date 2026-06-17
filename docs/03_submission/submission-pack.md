@@ -36,7 +36,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Winning Strategyで競合分析、SWOT、審査5項目、MVP proof、次に雇うべきAIを表示する
 - Mission Controlで、AIが弱点を検出し、A2A委任、検証runbook、提出パックを生成した証跡を見せる
 - Ops Drillで、Cloud Run公開デモの稼働シグナルから継続・ロールバック・追加雇用を判断する
-- Judge Proofで、Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを1クリックの証拠束にする
+- Judge Proofで、Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを1クリックの証拠束にし、sha256 receiptで照合できるようにする
 - Gemini 3.5 Flashで勝ち筋、残リスク、30秒ピッチを生成する
 - Cloud RunでUI、API、Agent Card、A2A endpointを単一サービスとして公開する
 

@@ -56,7 +56,7 @@
 ## Proof Surface
 
 - `POST /api/proof`: Gemini実行、Cloud Run公開、A2A、競合/SWOT、Mission、Ops、提出URLを1つの審査証拠束にまとめる
-- UI: `Run judge proof` ボタンでoverall proof score、6カテゴリスコア、live links、proof runbookを表示する
+- UI: `Run judge proof` ボタンでoverall proof score、6カテゴリスコア、live links、proof runbook、sha256 receiptを表示する
 - A2A skill: `judge.proof` としてAgent Cardにも公開する
 
 ## Submission Surface

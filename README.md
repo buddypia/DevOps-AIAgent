@@ -64,7 +64,7 @@
 
 - API: `POST /api/proof`
 - App UI: `Run judge proof`
-- Output: overall proof score、6カテゴリスコア、live links、proof runbook
+- Output: overall proof score、6カテゴリスコア、live links、proof runbook、sha256 receipt
 
 ## Local Development
 

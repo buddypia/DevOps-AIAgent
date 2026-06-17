@@ -772,7 +772,8 @@ h1 {
 
 .proof-items,
 .proof-links,
-.proof-snapshot {
+.proof-snapshot,
+.proof-receipt {
   display: grid;
   gap: 8px;
 }
@@ -868,6 +869,40 @@ h1 {
 
 .proof-snapshot strong {
   overflow-wrap: anywhere;
+}
+
+.proof-receipt {
+  margin-top: 4px;
+  padding: 11px;
+  border: 1px solid #f0c46e;
+  border-radius: 8px;
+  background: #fff8e6;
+}
+
+.proof-receipt span {
+  width: fit-content;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: #76511a;
+  background: #ffe7bf;
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.proof-receipt strong {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.proof-receipt p {
+  color: #6f3f18;
+  line-height: 1.4;
 }
 
 .proof-empty {

@@ -459,6 +459,11 @@ function JudgeProofBundle({
                   <strong>{proof.strategy.nextBestAgent ?? proof.opsDrill.nextOpsAgent ?? "none"}</strong>
                 </div>
               </div>
+              <div className="proof-receipt">
+                <span>{proof.receipt.algorithm}</span>
+                <strong>{proof.receipt.digest}</strong>
+                <p>{proof.receipt.verification}</p>
+              </div>
             </section>
             <section>
               <h3>
