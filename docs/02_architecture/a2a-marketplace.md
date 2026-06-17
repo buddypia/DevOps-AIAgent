@@ -22,8 +22,9 @@
 14. `src/autopilot.ts` が全証拠を一括判定し、win score、残ブロッカー、証拠デッキを返す
 15. `src/dossier.ts` がProtoPedia本文、動画録画順、提出リンク、最終チェックを1つのドシエに束ねる
 16. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
-17. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-18. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+17. `src/judgeBrief.ts` が競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員向け1ページに圧縮する
+18. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+19. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -45,6 +46,7 @@
   - `ops.drill`
   - `finalist.simulate`
   - `judge.proof`
+  - `judge.brief`
 
 ## Strategy Surface
 
@@ -69,6 +71,14 @@
 - Judge lanes: 審査5項目のスコア、証拠、次アクションを監査結果に含める
 - Blockers: 未発行のProtoPedia作品URLと動画URLをwatchとして残し、外部作業を合格扱いしない
 - A2A payload: `mvp.audit` skillとしてMVP score、band、gate statuses、blockersを返す
+
+## Judge Brief Surface
+
+- `POST /api/judge-brief`: Market Intel、MVP Audit、Win Autopilot、Judge Proof、Finalist、Submission Dossierを審査員向け1ページに束ねる
+- Key metrics: brief、MVP、market、win、proof、finalistの6指標を横断表示する
+- Proof ladder: 競合差別化、MVP判定、実行証拠、次アクション、提出ドシエを証拠URL付きで並べる
+- Risk register: ProtoPedia作品URLと動画URLなど、外部作業の未完了を提出完了扱いせず明示する
+- A2A payload: `judge.brief` skillとしてbrief score、readiness、metrics、risksを返す
 
 ## Contract Surface
 
@@ -116,6 +126,7 @@
 - Dossier proof: `submission.dossier` skillとして、提出コピー欄、録画順、提出リンク、MarkdownドシエをA2A payloadにも含める
 - Demo runway proof: `demo.runway` skillとして、30秒デモ順、証拠リンク、録画キュー、外部残リスクをA2A payloadにも含める
 - Win autopilot proof: `win.autopilot` skillとして、win score、lane scorecards、残ブロッカー、証拠デッキをA2A payloadにも含める
+- Judge brief proof: `judge.brief` skillとして、審査員の初見用にkey metrics、proof ladder、30秒route、risk registerをA2A payloadにも含める
 
 ## Submission Surface
 
@@ -130,6 +141,7 @@
 - Health check: `/api/healthz` (`/healthz` もローカル互換で提供)
 - Market intel: `/api/market-intel`
 - MVP audit: `/api/mvp-audit`
+- Judge brief: `/api/judge-brief`
 - Ops drill: `/api/ops-drill`
 - Contracts: `/api/contracts`
 - Publisher: `/api/publisher`

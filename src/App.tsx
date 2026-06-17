@@ -34,6 +34,7 @@ import type { WinningAutopilotRun } from "./autopilot";
 import type { SquadContract } from "./contracts";
 import type { DemoRunway } from "./demoRunway";
 import type { FinalistSimulation } from "./finalist";
+import type { JudgeBrief } from "./judgeBrief";
 import type { JudgeDrill } from "./judgeDrill";
 import { CAPABILITY_LABELS, DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "./market";
 import type { MarketIntelReport } from "./marketIntel";
@@ -480,6 +481,176 @@ function StrategyMeter({ label, value }: { label: string; value: number }) {
         <span style={{ width: `${value}%` }} />
       </div>
     </div>
+  );
+}
+
+function JudgeBriefPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [brief, setBrief] = useState<JudgeBrief | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildBrief() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/judge-brief", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setBrief((await response.json()) as JudgeBrief);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="judge-brief">
+      <div className="brief-heading">
+        <div>
+          <span className="eyebrow">Judge brief</span>
+          <h2>
+            <FileText size={20} />
+            One-page judge briefing
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildBrief} disabled={loading} title="審査員向けブリーフを生成">
+          <BadgeCheck size={17} />
+          {loading ? "Briefing" : "Build judge brief"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Judge brief request failed: {error}</p>}
+
+      {brief ? (
+        <div className="brief-body">
+          <div className="brief-summary">
+            <div>
+              <span className={cx("risk-chip", brief.readiness === "demo-ready" ? "low" : brief.readiness === "external-gaps" ? "medium" : "high")}>
+                {brief.readiness}
+              </span>
+              <h3>{brief.title}</h3>
+              <p>{brief.openingClaim}</p>
+              <strong>{brief.oneLineVerdict}</strong>
+              <small>{brief.hardTruth}</small>
+            </div>
+            <div className="brief-score">
+              <strong>{brief.briefScore}</strong>
+              <span>brief score</span>
+            </div>
+          </div>
+
+          <div className="brief-metrics">
+            {brief.keyMetrics.map((metric) => (
+              <article key={metric.id} className={metric.tone}>
+                <span>{metric.label}</span>
+                <strong>{metric.value}</strong>
+              </article>
+            ))}
+          </div>
+
+          <div className="brief-grid">
+            <section>
+              <h3>
+                <ShieldCheck size={15} />
+                Proof ladder
+              </h3>
+              <div className="brief-proof">
+                {brief.proofLadder.map((proof) => (
+                  <article key={proof.id} className={proof.tone}>
+                    <div>
+                      <strong>{proof.label}</strong>
+                      <span>{proof.tone}</span>
+                    </div>
+                    <p>{proof.proof}</p>
+                    <a href={proof.url} target="_blank" rel="noreferrer">
+                      Evidence <ExternalLink size={13} />
+                    </a>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Film size={15} />
+                30-second route
+              </h3>
+              <ol className="brief-route">
+                {brief.demoRoute.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+              <h3>
+                <AlertTriangle size={15} />
+                Risks
+              </h3>
+              <div className="brief-risks">
+                {brief.riskRegister.map((risk) => (
+                  <article key={risk.id} className={risk.tone}>
+                    <div>
+                      <strong>{risk.label}</strong>
+                      <span>{risk.tone}</span>
+                    </div>
+                    <p>{risk.action}</p>
+                    <small>{risk.owner}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Trophy size={15} />
+                Judge answers
+              </h3>
+              <div className="brief-answers">
+                {brief.judgeAnswers.map((answer) => (
+                  <article key={answer.id}>
+                    <strong>{answer.label}</strong>
+                    <p>{answer.answer}</p>
+                    <small>{answer.evidence}</small>
+                  </article>
+                ))}
+              </div>
+              <h3>
+                <ExternalLink size={15} />
+                Links
+              </h3>
+              <div className="brief-links">
+                {brief.links.map((link) => (
+                  <a key={link.id} href={link.url} target="_blank" rel="noreferrer">
+                    {link.label}
+                    <ExternalLink size={13} />
+                  </a>
+                ))}
+              </div>
+              <h3>
+                <Terminal size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(brief.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="brief-empty">
+          <FileText size={28} />
+          <strong>Build judge briefで、競合差別化、MVP監査、証拠、30秒導線、残リスクを1枚に束ねます。</strong>
+          <p>審査員が最初に読むビューとして、機能の多さを短い判断材料に圧縮します。</p>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -2475,6 +2646,7 @@ export default function App() {
         </div>
       </section>
 
+      <JudgeBriefPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MarketIntelPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MvpAuditPanel recommendation={recommendation} projectBrief={projectBrief} />
       <WinAutopilotPanel recommendation={recommendation} projectBrief={projectBrief} />

@@ -37,6 +37,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Winning Strategyで競合分析、SWOT、審査5項目、MVP proof、次に雇うべきAIを表示する
 - Market Intel Boardで、Gemini Enterprise、Google ADK、A2A、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較、差別化仮説、審査回答を表示する
 - MVP Auditで、必須技術、審査5項目、DevOps証拠、提出3点をpass/watch/failで監査し、外部未発行URLを合格扱いにしない
+- Judge Briefで、競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページにまとめる
 - Mission Controlで、AIが弱点を検出し、A2A委任、検証runbook、提出パックを生成した証跡を見せる
 - Ops Drillで、Cloud Run公開デモの稼働シグナルから継続・ロールバック・追加雇用を判断する
 - Judge Proofで、Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1クリックの証拠束にし、sha256 receiptで照合できるようにする
@@ -60,6 +61,7 @@ React UI
   -> Recommendation / Contract / Strategy / Mission engines
   -> Market Intel source-backed competitor board
   -> MVP Audit hard gates
+  -> Judge Brief one-page judge readout
   -> Ops Drill / Cloud Run runbook
   -> Judge Proof bundle
   -> Pitch Director
@@ -81,11 +83,11 @@ React UI
 | --- | --- |
 | 0-4s | Market Intelを実行し、公式ソース付き競合比較と「作る基盤ではなくAI能力調達で勝つ」仮説を見せる |
 | 4-8s | MVP Auditで必須技術、審査5項目、DevOps証拠、提出3点のwatch/failを見せる |
-| 8-12s | Win Autopilotを実行し、win score、残アクション、証拠デッキを表示する |
-| 12-16s | Judge Proofを実行し、Gemini/Cloud Run/A2A/CI/DevOps/提出URLの証拠束を見せる |
-| 16-20s | Submission DossierでProtoPedia本文、提出リンク、録画順、最終チェックを見せる |
-| 20-24s | MarketplaceとWinning Strategyで必要能力の推薦、SWOT、次に雇うAIを確認する |
-| 24-28s | Contract Desk、Mission Control、Ops Drillで契約、A2A委任、Cloud Run運用判断を見せる |
+| 8-12s | Judge Briefでkey metrics、hard truth、proof ladder、risk registerを1画面で見せる |
+| 12-16s | Win Autopilotを実行し、win score、残アクション、証拠デッキを表示する |
+| 16-21s | Judge Proofを実行し、Gemini/Cloud Run/A2A/CI/DevOps/提出URLの証拠束を見せる |
+| 21-25s | Submission DossierでProtoPedia本文、提出リンク、録画順、最終チェックを見せる |
+| 25-28s | Marketplace、Winning Strategy、Mission、Opsで必要能力、SWOT、A2A委任、運用判断を見せる |
 | 28-30s | Cloud Run URL、GitHub Actions、Agent Card、構成図で締める |
 
 ## Verification Runbook
@@ -104,6 +106,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/market-intel \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mvp-audit \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/judge-brief \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mission \

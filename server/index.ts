@@ -10,6 +10,7 @@ import { buildSquadContract } from "../src/contracts.js";
 import { buildDemoRunway } from "../src/demoRunway.js";
 import { buildSubmissionDossier } from "../src/dossier.js";
 import { buildFinalistSimulation } from "../src/finalist.js";
+import { buildJudgeBrief } from "../src/judgeBrief.js";
 import { buildJudgeDrill } from "../src/judgeDrill.js";
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market.js";
 import { buildMarketIntelReport } from "../src/marketIntel.js";
@@ -120,6 +121,12 @@ function agentCard(baseUrl: string) {
         name: "Audit MVP readiness with hard gates",
         description: "必須技術、審査5項目、DevOps証拠、提出3点をハードゲートで判定し、未達をwatch/failとして返す。",
         tags: ["mvp", "audit", "hard-gates", "judge-score", "submission"]
+      },
+      {
+        id: "judge.brief",
+        name: "Build the one-page judge brief",
+        description: "競合差別化、MVP監査、証拠、30秒導線、残リスクを審査員向けの1枚に束ねる。",
+        tags: ["judge-brief", "demo", "mvp", "market-intelligence", "submission"]
       },
       {
         id: "mission.run",
@@ -905,6 +912,140 @@ app.post("/api/mvp-audit", async (req, res) => {
   );
 });
 
+app.post("/api/judge-brief", async (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const marketIntel = buildMarketIntelReport({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy
+  });
+  const mission = buildMissionRun(recommendation, strategy, "審査員が30秒で価値、証拠、MVP状態、残リスクを理解できる1枚を生成する。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const pitch = buildPitchRun({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill
+  });
+  const judgeDrill = buildJudgeDrill({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch
+  });
+  const finalist = buildFinalistSimulation({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    judgeDrill,
+    squadContract
+  });
+  const publisher = buildProtoPediaPublisher({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist
+  });
+  const demoRunway = buildDemoRunway({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist,
+    publisher
+  });
+  const [geminiResult, ciResult] = await Promise.allSettled([
+    runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
+    fetchCiProof()
+  ]);
+  const gemini =
+    geminiResult.status === "fulfilled"
+      ? geminiResult.value
+      : localGeminiRecommendation(
+          recommendation,
+          geminiResult.reason instanceof Error ? geminiResult.reason.message : "Gemini request failed"
+        );
+  const ci = ciResult.status === "fulfilled" ? ciResult.value : ciUnavailable("CI status promise rejected");
+  const proof = buildJudgeProof({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    gemini,
+    ci
+  });
+  const autopilot = buildWinningAutopilot({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    squadContract,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    proof
+  });
+  const dossier = buildSubmissionDossier({
+    recommendation,
+    strategy,
+    mission,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    autopilot,
+    proof
+  });
+  const mvpAudit = buildMvpAudit({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    finalist,
+    autopilot,
+    dossier,
+    proof,
+    marketIntel
+  });
+
+  res.json(
+    buildJudgeBrief({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy,
+      marketIntel,
+      mvpAudit,
+      autopilot,
+      dossier,
+      proof,
+      finalist
+    })
+  );
+});
+
 app.post("/api/ops-drill", (req, res) => {
   const parsed = OpsDrillSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -1191,6 +1332,17 @@ app.post("/a2a", (req, res) => {
     proof,
     marketIntel
   });
+  const judgeBrief = buildJudgeBrief({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    marketIntel,
+    mvpAudit,
+    autopilot: winAutopilot,
+    dossier,
+    proof,
+    finalist
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -1258,6 +1410,22 @@ app.post("/a2a", (req, res) => {
                     id: action.id,
                     priority: action.priority,
                     action: action.action
+                  }))
+                },
+                judgeBrief: {
+                  id: judgeBrief.id,
+                  briefScore: judgeBrief.briefScore,
+                  readiness: judgeBrief.readiness,
+                  oneLineVerdict: judgeBrief.oneLineVerdict,
+                  metrics: judgeBrief.keyMetrics.map((metric) => ({
+                    id: metric.id,
+                    value: metric.value,
+                    tone: metric.tone
+                  })),
+                  risks: judgeBrief.riskRegister.map((risk) => ({
+                    id: risk.id,
+                    tone: risk.tone,
+                    action: risk.action
                   }))
                 },
                 mission: {
@@ -1372,6 +1540,7 @@ app.post("/a2a", (req, res) => {
                 dossierEndpoint: `${publicBaseUrl(req)}/api/dossier`,
                 marketIntelEndpoint: `${publicBaseUrl(req)}/api/market-intel`,
                 mvpAuditEndpoint: `${publicBaseUrl(req)}/api/mvp-audit`,
+                judgeBriefEndpoint: `${publicBaseUrl(req)}/api/judge-brief`,
                 winRunEndpoint: `${publicBaseUrl(req)}/api/win-run`,
                 demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,
                 proofEndpoint: `${publicBaseUrl(req)}/api/proof`,
