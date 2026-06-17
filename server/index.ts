@@ -8,6 +8,7 @@ import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market.js";
 import { buildMissionRun } from "../src/mission.js";
 import { buildOpsDrill } from "../src/ops.js";
+import { buildPitchRun } from "../src/pitch.js";
 import { buildJudgeProof } from "../src/proof.js";
 import { SUBMISSION_PROOF } from "../src/submission.js";
 import type { CiProof } from "../src/proof.js";
@@ -118,10 +119,16 @@ function agentCard(baseUrl: string) {
         tags: ["github-actions", "ci", "quality-gate", "devops"]
       },
       {
+        id: "pitch.director",
+        name: "Direct the 30-second submission pitch",
+        description: "審査員が30秒で価値を理解できる録画順、字幕、証拠リンク、提出残リスクを生成する。",
+        tags: ["pitch", "video", "protopedia", "judge-experience", "submission"]
+      },
+      {
         id: "judge.proof",
         name: "Build one-click judge proof bundle",
-        description: "Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、CI、提出URLを1つの審査証拠束として返す。",
-        tags: ["judge-proof", "gemini", "cloud-run", "a2a", "ci", "submission"]
+        description: "Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、CI、Pitch、提出URLを1つの審査証拠束として返す。",
+        tags: ["judge-proof", "gemini", "cloud-run", "a2a", "ci", "pitch", "submission"]
       }
     ],
     supportsAuthenticatedExtendedCard: false
@@ -393,6 +400,28 @@ app.post("/api/ops-drill", (req, res) => {
   res.json(buildOpsDrill(recommendation, strategy, parsed.data.observed));
 });
 
+app.post("/api/pitch", (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "30秒で審査員に価値、AI自律性、DevOps証跡、提出準備を伝える。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  res.json(
+    buildPitchRun({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy,
+      mission,
+      opsDrill
+    })
+  );
+});
+
 app.post("/api/proof", async (req, res) => {
   const parsed = RecommendSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -464,6 +493,13 @@ app.post("/a2a", (req, res) => {
   const strategy = buildWinningStrategy(recommendation);
   const mission = buildMissionRun(recommendation, strategy, String(text));
   const opsDrill = buildOpsDrill(recommendation, strategy);
+  const pitch = buildPitchRun({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -516,6 +552,18 @@ app.post("/a2a", (req, res) => {
                   rollbackRecommended: opsDrill.rollbackRecommended,
                   nextOpsAgent: opsDrill.nextOpsAgent?.name ?? null,
                   runbookCommands: opsDrill.runbookCommands
+                },
+                pitch: {
+                  id: pitch.id,
+                  readinessScore: pitch.readinessScore,
+                  totalSeconds: pitch.totalSeconds,
+                  scenes: pitch.scenes.map((scene) => ({
+                    id: scene.id,
+                    timeRange: scene.timeRange,
+                    screen: scene.screen,
+                    proof: scene.proof
+                  })),
+                  warnings: pitch.submissionWarnings.map((item) => item.id)
                 },
                 proofEndpoint: `${publicBaseUrl(req)}/api/proof`,
                 ciWorkflowUrl: SUBMISSION_PROOF.ciWorkflowUrl

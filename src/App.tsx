@@ -33,6 +33,7 @@ import { recommendSquad } from "./agentEngine";
 import { CAPABILITY_LABELS, DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "./market";
 import type { MissionRun } from "./mission";
 import type { OpsDrill } from "./ops";
+import type { PitchRun } from "./pitch";
 import type { JudgeProof } from "./proof";
 import { buildWinningStrategy } from "./strategy";
 import type { SwotQuadrant, WinningStrategy } from "./strategy";
@@ -485,6 +486,152 @@ function JudgeProofBundle({
           <Trophy size={28} />
           <strong>Run judge proofで、Gemini・Cloud Run・A2A・競合/SWOT・Mission・Ops・提出URLを一括検証します。</strong>
           <p>審査員が最初に押すボタンとして、作品の価値と実装証拠を1つの束にします。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function PitchDirector({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [pitch, setPitch] = useState<PitchRun | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function runPitch() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/pitch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setPitch((await response.json()) as PitchRun);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="pitch-director">
+      <div className="pitch-heading">
+        <div>
+          <span className="eyebrow">Pitch director</span>
+          <h2>
+            <Film size={20} />
+            30-second submission reel
+          </h2>
+        </div>
+        <button className="icon-button" onClick={runPitch} disabled={loading} title="30秒ピッチ構成を生成">
+          <Play size={17} />
+          {loading ? "Building" : "Build pitch"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Pitch request failed: {error}</p>}
+
+      {pitch ? (
+        <div className="pitch-body">
+          <div className="pitch-summary">
+            <div>
+              <span className="event-pill">
+                <Film size={15} />
+                {pitch.totalSeconds}s / {pitch.scenes.length} scenes
+              </span>
+              <h3>{pitch.heroLine}</h3>
+              <p>{pitch.thesis}</p>
+            </div>
+            <div className="pitch-score">
+              <strong>{pitch.readinessScore}</strong>
+              <span>recording ready</span>
+            </div>
+          </div>
+
+          <div className="pitch-scene-rail">
+            {pitch.scenes.map((scene) => (
+              <article key={scene.id}>
+                <div>
+                  <span>{scene.timeRange}</span>
+                  <strong>{scene.title}</strong>
+                </div>
+                <p>{scene.screen}</p>
+                <small>{scene.caption}</small>
+                <em>{scene.voiceover}</em>
+                <a href={scene.evidenceUrl} target="_blank" rel="noreferrer">
+                  Evidence <ExternalLink size={13} />
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <div className="pitch-grid">
+            <section>
+              <h3>
+                <Terminal size={15} />
+                Voiceover
+              </h3>
+              <pre>{pitch.voiceoverScript}</pre>
+            </section>
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Recording checklist
+              </h3>
+              <div className="pitch-checklist">
+                {pitch.recordingChecklist.map((item) => (
+                  <article key={item.id} className={item.status}>
+                    <div>
+                      <strong>{item.label}</strong>
+                      <span>{item.status}</span>
+                    </div>
+                    <p>{item.proof}</p>
+                    {item.url && (
+                      <a href={item.url} target="_blank" rel="noreferrer">
+                        Open <ExternalLink size={13} />
+                      </a>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <FileText size={15} />
+                Lower thirds
+              </h3>
+              <div className="pitch-lower-thirds">
+                {pitch.lowerThirds.map((line) => (
+                  <span key={line}>{line}</span>
+                ))}
+              </div>
+              <div className="pitch-warnings">
+                {pitch.submissionWarnings.map((item) => (
+                  <div key={item.id}>
+                    <strong>{item.label}</strong>
+                    <p>{item.proof}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="pitch-empty">
+          <Film size={28} />
+          <strong>Build pitchで、審査員に見せる30秒の録画順、字幕、証拠リンクを生成します。</strong>
+          <p>ProtoPedia動画URLが未確定でも、今すぐ録画できる提出リールに変換します。</p>
         </div>
       )}
     </section>
@@ -998,6 +1145,7 @@ export default function App() {
       </section>
 
       <JudgeProofBundle recommendation={recommendation} projectBrief={projectBrief} />
+      <PitchDirector recommendation={recommendation} projectBrief={projectBrief} />
 
       <section className="workbench">
         <aside className="panel brief-panel">

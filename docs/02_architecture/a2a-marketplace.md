@@ -48,6 +48,7 @@
 ## Operations Surface
 
 - `POST /api/ops-drill`: Cloud Run health、p95 latency、5xx率、Gemini fallback、予算余力、外部提出URLの状態を評価する
+- `POST /api/pitch`: 30秒動画のshot list、voiceover、lower thirds、recording checklist、提出残リスクを返す
 - Release gate: Cloud Run SREが公開継続かrollbackかを判断する
 - Rebuy loop: A2A Market BrokerがObservability Oracle / Test Forge / Security Sentinelの買い足しを推薦する
 - Runbook: healthz、ops drill、Cloud Run describe、Cloud Logging、traffic updateコマンドを提示する
@@ -59,6 +60,7 @@
 - UI: `Run judge proof` ボタンでoverall proof score、7カテゴリスコア、live links、proof runbook、sha256 receiptを表示する
 - A2A skill: `judge.proof` としてAgent Cardにも公開する
 - CI proof: `.github/workflows/ci.yml` が `npm run typecheck`、`npm test`、`npm run build`、`make q.check-architecture` を公開repo上で実行し、Proof APIが最新main runを取り込む
+- Pitch proof: `pitch.director` skillとして、審査員に見せる順番と提出動画の残作業をA2A payloadにも含める
 
 ## Submission Surface
 
@@ -72,6 +74,7 @@
 - Cloud Run service: `a2a-agent-marketplace`
 - Health check: `/api/healthz` (`/healthz` もローカル互換で提供)
 - Ops drill: `/api/ops-drill`
+- Pitch director: `/api/pitch`
 - Judge proof: `/api/proof`
 - Build: `cloudbuild.yaml`
 - Secret boundary: `GEMINI_API_KEY` は環境変数のみ
