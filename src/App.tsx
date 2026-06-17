@@ -35,6 +35,7 @@ import type { WinningAutopilotRun } from "./autopilot";
 import type { SquadContract } from "./contracts";
 import type { DemoRunway } from "./demoRunway";
 import type { FinalistSimulation } from "./finalist";
+import type { ImpactCase } from "./impact";
 import type { JudgeBrief } from "./judgeBrief";
 import type { JudgeDrill } from "./judgeDrill";
 import { CAPABILITY_LABELS, DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "./market";
@@ -951,6 +952,182 @@ function SecurityReviewPanel({
           <ShieldCheck size={28} />
           <strong>Run security reviewで、Secret、IP allowlist、入力制限、A2A信頼境界、CIを審査用の証拠にします。</strong>
           <p>公開デモの安全性を、口頭ではなくSecurity Sentinelの監査ログとして見せます。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ImpactCasePanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [impact, setImpact] = useState<ImpactCase | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function runImpactCase() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/impact-case", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setImpact((await response.json()) as ImpactCase);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="impact-case">
+      <div className="impact-heading">
+        <div>
+          <span className="eyebrow">Practical value</span>
+          <h2>
+            <TrendingUp size={20} />
+            Impact Case
+          </h2>
+        </div>
+        <button className="icon-button" onClick={runImpactCase} disabled={loading} title="実用性と体験価値を定量化">
+          <Activity size={17} />
+          {loading ? "Quantifying" : "Run impact case"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Impact case request failed: {error}</p>}
+
+      {impact ? (
+        <div className="impact-body">
+          <div className="impact-summary">
+            <div>
+              <span className={cx("risk-chip", impact.posture === "pilot-ready" ? "low" : impact.posture === "needs-pilot-proof" ? "medium" : "high")}>
+                {impact.posture}
+              </span>
+              <h3>{impact.verdict}</h3>
+              <p>{impact.hardTruth}</p>
+            </div>
+            <div className="impact-score">
+              <strong>{impact.impactScore}</strong>
+              <span>impact score</span>
+            </div>
+          </div>
+
+          <div className="impact-metrics">
+            {impact.metrics.map((metric) => (
+              <article key={metric.id} className={metric.direction}>
+                <div>
+                  <strong>{metric.label}</strong>
+                  <span>{metric.delta > 0 ? "+" : ""}{metric.delta}</span>
+                </div>
+                <p>{metric.before} {"->"} {metric.after} {metric.unit}</p>
+                <small>{metric.evidence}</small>
+              </article>
+            ))}
+          </div>
+
+          <div className="impact-grid">
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Users and KPIs
+              </h3>
+              <div className="impact-personas">
+                {impact.personas.map((persona) => (
+                  <article key={persona.id}>
+                    <div>
+                      <strong>{persona.persona}</strong>
+                      <span>{persona.kpi}</span>
+                    </div>
+                    <p>{persona.pain}</p>
+                    <small>{persona.workflowWin}</small>
+                    <b>{persona.proof}</b>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Workflow size={15} />
+                Before / After workflow
+              </h3>
+              <div className="impact-workflow">
+                {impact.workflow.map((step) => (
+                  <article key={step.id}>
+                    <span>{step.phase}</span>
+                    <strong>{step.owner}</strong>
+                    <p>{step.before}</p>
+                    <small>{step.after}</small>
+                    <b>{step.evidence}</b>
+                  </article>
+                ))}
+              </div>
+              <h3>
+                <Rocket size={15} />
+                Adoption plan
+              </h3>
+              <div className="impact-adoption">
+                {impact.adoptionPlan.map((step) => (
+                  <article key={step.id}>
+                    <strong>{step.horizon}</strong>
+                    <p>{step.action}</p>
+                    <small>{step.acceptance}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <AlertTriangle size={15} />
+                Risks and judge answers
+              </h3>
+              <div className="impact-risks">
+                {impact.risks.map((risk) => (
+                  <article key={risk.id} className={risk.severity}>
+                    <div>
+                      <strong>{risk.label}</strong>
+                      <span>{risk.severity}</span>
+                    </div>
+                    <p>{risk.mitigation}</p>
+                  </article>
+                ))}
+              </div>
+              <div className="impact-answers">
+                {impact.judgeAnswers.map((answer) => (
+                  <article key={answer.id}>
+                    <strong>{answer.question}</strong>
+                    <p>{answer.answer}</p>
+                    <small>{answer.evidence}</small>
+                  </article>
+                ))}
+              </div>
+              {impact.nextImpactHire && (
+                <div className="impact-next">
+                  <span>Next impact hire</span>
+                  <strong>{impact.nextImpactHire.name}</strong>
+                  <p>{impact.nextImpactHire.reason}</p>
+                </div>
+              )}
+              <pre>{JSON.stringify(impact.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="impact-empty">
+          <TrendingUp size={28} />
+          <strong>Run impact caseで、対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を定量化します。</strong>
+          <p>「面白い」から「現場で何がどれだけ良くなるか」へ、審査員の実用性質問に答える証拠へ変換します。</p>
         </div>
       )}
     </section>
@@ -3104,6 +3281,7 @@ export default function App() {
       <JudgeBriefPanel recommendation={recommendation} projectBrief={projectBrief} />
       <AutonomyLedgerPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SecurityReviewPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <ImpactCasePanel recommendation={recommendation} projectBrief={projectBrief} />
       <MarketIntelPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MvpAuditPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SubmissionLaunchPanel recommendation={recommendation} projectBrief={projectBrief} />

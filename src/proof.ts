@@ -225,7 +225,7 @@ export function buildJudgeProof(input: {
       label: "A2A Agent Card and JSON-RPC endpoint",
       status: hasMarketBroker ? "passed" : "watch",
       evidence:
-        "Agent Card exposes market.discover, agent.hire, contract.issue, task.delegate, strategy.audit, market.intel, mvp.audit, judge.brief, autonomy.ledger, mission.run, submission.package, submission.publish, submission.dossier, submission.launch, security.review, demo.runway, win.autopilot, ops.drill, ci.verify, pitch.director, judge.drill, finalist.simulate, and judge.proof.",
+        "Agent Card exposes market.discover, agent.hire, contract.issue, task.delegate, strategy.audit, market.intel, mvp.audit, judge.brief, autonomy.ledger, mission.run, submission.package, submission.publish, submission.dossier, submission.launch, security.review, impact.case, demo.runway, win.autopilot, ops.drill, ci.verify, pitch.director, judge.drill, finalist.simulate, and judge.proof.",
       url: links.agentCard
     },
     {
@@ -306,6 +306,7 @@ export function buildJudgeProof(input: {
       `curl -s ${absoluteUrl(baseUrl, "/api/healthz")}`,
       `curl -s ${links.agentCard}`,
       `curl -s ${links.ci}`,
+      `curl -s -X POST ${absoluteUrl(baseUrl, "/api/impact-case")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/proof")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/proof")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}' | jq '.receipt'`,
       ...mission.verificationCommands,

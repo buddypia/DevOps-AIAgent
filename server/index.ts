@@ -11,6 +11,7 @@ import { buildSquadContract } from "../src/contracts.js";
 import { buildDemoRunway } from "../src/demoRunway.js";
 import { buildSubmissionDossier } from "../src/dossier.js";
 import { buildFinalistSimulation } from "../src/finalist.js";
+import { buildImpactCase } from "../src/impact.js";
 import { buildJudgeBrief } from "../src/judgeBrief.js";
 import { buildJudgeDrill } from "../src/judgeDrill.js";
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market.js";
@@ -188,6 +189,12 @@ function agentCard(baseUrl: string) {
         name: "Review public demo security boundaries",
         description: "Secret Manager、IP allowlist、Zod入力制限、A2A信頼境界、CIを審査員向けの安全性証拠に変換する。",
         tags: ["security", "trust-boundary", "secret-manager", "a2a", "cloud-run"]
+      },
+      {
+        id: "impact.case",
+        name: "Build practical value impact case",
+        description: "対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性・体験価値の証拠へ変換する。",
+        tags: ["impact", "practicality", "user-value", "roi", "judge-score"]
       },
       {
         id: "ops.drill",
@@ -1287,6 +1294,28 @@ app.post("/api/security-review", async (req, res) => {
   );
 });
 
+app.post("/api/impact-case", async (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const ci = await fetchCiProof();
+  const securityReview = buildSecurityReview({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    allowlist: ipAllowlistSummary,
+    ci,
+    geminiSecretConfigured: geminiSecretConfigured()
+  });
+  res.json(buildImpactCase({ recommendation, strategy, opsDrill, securityReview }));
+});
+
 app.post("/api/contracts", (req, res) => {
   const parsed = RecommendSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -1595,6 +1624,12 @@ app.post("/a2a", (req, res) => {
     ci: ciUnavailable("A2A synchronous artifact uses /api/security-review for live CI evidence"),
     geminiSecretConfigured: geminiSecretConfigured()
   });
+  const impactCase = buildImpactCase({
+    recommendation,
+    strategy,
+    opsDrill,
+    securityReview
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -1722,6 +1757,24 @@ app.post("/a2a", (req, res) => {
                   })),
                   nextSecurityHire: securityReview.nextSecurityHire?.name ?? null
                 },
+                impactCase: {
+                  id: impactCase.id,
+                  impactScore: impactCase.impactScore,
+                  posture: impactCase.posture,
+                  verdict: impactCase.verdict,
+                  metrics: impactCase.metrics.map((metric) => ({
+                    id: metric.id,
+                    before: metric.before,
+                    after: metric.after,
+                    delta: metric.delta,
+                    unit: metric.unit
+                  })),
+                  personas: impactCase.personas.map((persona) => ({
+                    id: persona.id,
+                    kpi: persona.kpi
+                  })),
+                  nextImpactHire: impactCase.nextImpactHire?.name ?? null
+                },
                 mission: {
                   id: mission.id,
                   summary: mission.summary,
@@ -1838,6 +1891,7 @@ app.post("/a2a", (req, res) => {
                 autonomyLedgerEndpoint: `${publicBaseUrl(req)}/api/autonomy-ledger`,
                 submissionLaunchEndpoint: `${publicBaseUrl(req)}/api/submission-launch`,
                 securityReviewEndpoint: `${publicBaseUrl(req)}/api/security-review`,
+                impactCaseEndpoint: `${publicBaseUrl(req)}/api/impact-case`,
                 winRunEndpoint: `${publicBaseUrl(req)}/api/win-run`,
                 demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,
                 proofEndpoint: `${publicBaseUrl(req)}/api/proof`,

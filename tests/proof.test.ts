@@ -31,9 +31,11 @@ describe("judge proof bundle", () => {
     expect(proof.proofItems.find((item) => item.id === "gemini")?.status).toBe("watch");
     expect(proof.proofItems.find((item) => item.id === "ci")?.status).toBe("watch");
     expect(proof.scores.ci).toBeGreaterThanOrEqual(70);
+    expect(proof.proofItems.find((item) => item.id === "a2a")?.evidence).toContain("impact.case");
     expect(proof.links.agentCard).toBe("https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app/.well-known/agent-card.json");
     expect(proof.links.github).toBe("https://github.com/buddypia/DevOps-AIAgent");
     expect(proof.links.ci).toBe("https://github.com/buddypia/DevOps-AIAgent/actions/workflows/ci.yml");
+    expect(proof.runbook.join("\n")).toContain("/api/impact-case");
     expect(proof.runbook.join("\n")).toContain("/api/proof");
     expect(proof.runbook.join("\n")).toContain("actions/workflows/ci.yml");
     expect(proof.runbook.join("\n")).toContain(".receipt");

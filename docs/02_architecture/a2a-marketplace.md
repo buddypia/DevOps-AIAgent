@@ -25,9 +25,10 @@
 17. `src/judgeBrief.ts` が競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員向け1ページに圧縮する
 18. `src/autonomyLedger.ts` が市場探索、判断、契約、A2A委任、検証、運用、提出をAI自律性台帳にする
 19. `src/security.ts` がSecret Manager、IP allowlist、入力制限、A2A信頼境界、CIを審査用セキュリティ証拠にする
-20. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
-21. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-22. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+20. `src/impact.ts` が対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性証拠にする
+21. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
+22. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+23. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -47,6 +48,7 @@
   - `submission.dossier`
   - `submission.launch`
   - `security.review`
+  - `impact.case`
   - `demo.runway`
   - `win.autopilot`
   - `ops.drill`
@@ -110,6 +112,14 @@
 - Judge answers: Gemini APIキー、A2A権限、公開URL運用に関する厳しい質問へ短く答える
 - A2A payload: `security.review` skillとしてsecurity score、posture、controls、threats、next security hireを返す
 
+## Impact Case Surface
+
+- `POST /api/impact-case`: 対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性・体験価値の証拠に変換する
+- Metrics: AI能力選定時間、提出証拠づくり、委任の手戻り、公開デモ運用リスク、提出信頼度、体験価値をbefore/afterで返す
+- Personas: 開発リード、Platform/SRE、ハッカソン提出者ごとのpain、workflow win、KPI、proofを返す
+- Workflow: sense -> buy -> delegate -> operate -> submit のbefore/afterを、A2A Market Broker、Contract Desk、Autonomy Ledger、Cloud Run SRE、Gemini Strategistへ割り当てる
+- A2A payload: `impact.case` skillとしてimpact score、posture、saved hours、runtime risk、submission confidence、next impact hireを返す
+
 ## Contract Surface
 
 - `POST /api/contracts`: 選択済みAIの契約、受入条件、SLA、検証runbook、A2A payloadを返す
@@ -137,6 +147,7 @@
 - `POST /api/dossier`: ProtoPedia本文、動画録画順、提出リンク、証拠デッキ、最終チェックを返す
 - `POST /api/demo-run`: Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線にする
 - `POST /api/win-run`: 競合/SWOT、証拠、最終候補判定、提出、運用を一括実行し、勝てる状態と残アクションを返す
+- `POST /api/impact-case`: 実用性のbefore/after、ユーザー別KPI、導入計画、審査回答を返す
 - Release gate: Cloud Run SREが公開継続かrollbackかを判断する
 - Rebuy loop: A2A Market BrokerがObservability Oracle / Test Forge / Security Sentinelの買い足しを推薦する
 - Runbook: healthz、ops drill、Cloud Run describe、Cloud Logging、traffic updateコマンドを提示する
@@ -160,6 +171,7 @@
 - Autonomy ledger proof: `autonomy.ledger` skillとして、AIの判断連鎖、agent handoff、検証endpoint、sha256 receiptをA2A payloadにも含める
 - Submission launch proof: `submission.launch` skillとして、外部URL入力後のsubmit-ready判定と提出フォーム用packetをA2A payloadにも含める
 - Security review proof: `security.review` skillとして、Secret/IP/input/A2A/CIの安全境界をA2A payloadにも含める
+- Impact proof: `impact.case` skillとして、実用性の定量指標、ユーザー別KPI、導入計画をA2A payloadにも含める
 
 ## Submission Surface
 
@@ -178,6 +190,7 @@
 - Autonomy ledger: `/api/autonomy-ledger`
 - Submission launch: `/api/submission-launch`
 - Security review: `/api/security-review`
+- Impact case: `/api/impact-case`
 - Ops drill: `/api/ops-drill`
 - Contracts: `/api/contracts`
 - Publisher: `/api/publisher`
@@ -196,5 +209,5 @@
 - AIエージェントが価値の中心: 市場探索、購入判断、A2A委任、自律ミッション、運用ドリル、Gemini分析が体験の中心
 - 課題アプローチ: AIを作るだけでなく、必要なAI能力を発見・調達・運用する問題を扱う
 - ユーザビリティ: 数値・価格・改善量・競合/SWOTで意思決定できる
-- 実用性: 開発現場のエージェント選定、DevOps改善、公開後の異常検知とrollback判断に転用可能
+- 実用性: 開発現場のエージェント選定、DevOps改善、公開後の異常検知とrollback判断に加え、Impact Caseで時間短縮、提出信頼度、ユーザー別KPIを説明可能
 - 実装力: React、Gemini API、A2A Agent Card、Cloud Run、戦略API、ミッションAPI、フォールバック、テストを含む
