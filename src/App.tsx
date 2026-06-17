@@ -36,6 +36,7 @@ import type { DemoRunway } from "./demoRunway";
 import type { FinalistSimulation } from "./finalist";
 import type { JudgeDrill } from "./judgeDrill";
 import { CAPABILITY_LABELS, DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "./market";
+import type { MarketIntelReport } from "./marketIntel";
 import type { MissionRun } from "./mission";
 import type { OpsDrill } from "./ops";
 import type { PitchRun } from "./pitch";
@@ -478,6 +479,156 @@ function StrategyMeter({ label, value }: { label: string; value: number }) {
         <span style={{ width: `${value}%` }} />
       </div>
     </div>
+  );
+}
+
+function MarketIntelPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [intel, setIntel] = useState<MarketIntelReport | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function runMarketIntel() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/market-intel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setIntel((await response.json()) as MarketIntelReport);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="market-intel">
+      <div className="intel-heading">
+        <div>
+          <span className="eyebrow">Market intel</span>
+          <h2>
+            <Radar size={20} />
+            Source-backed competitive moat
+          </h2>
+        </div>
+        <button className="icon-button" onClick={runMarketIntel} disabled={loading} title="公式ソース付き競合分析を生成">
+          <Crosshair size={17} />
+          {loading ? "Reading" : "Run market intel"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Market intel request failed: {error}</p>}
+
+      {intel ? (
+        <div className="intel-body">
+          <div className="intel-summary">
+            <div>
+              <span className={cx("risk-chip", intel.status === "lead" ? "low" : intel.status === "parity" ? "medium" : "high")}>
+                {intel.status}
+              </span>
+              <h3>{intel.headline}</h3>
+              <p>{intel.thesis}</p>
+            </div>
+            <div className="intel-score">
+              <strong>{intel.marketScore}</strong>
+              <span>market score</span>
+            </div>
+          </div>
+
+          <div className="intel-source-strip">
+            {intel.sourceChecklist.map((source) => (
+              <a key={source.id} href={source.url} target="_blank" rel="noreferrer">
+                {source.label}
+                <ExternalLink size={12} />
+              </a>
+            ))}
+          </div>
+
+          <div className="intel-grid">
+            <section>
+              <h3>
+                <Crosshair size={15} />
+                Competitor cuts
+              </h3>
+              <div className="intel-comparisons">
+                {intel.comparisons.map((comparison) => (
+                  <article key={comparison.id} className={comparison.threatLevel}>
+                    <div>
+                      <strong>{comparison.competitor}</strong>
+                      <span>{comparison.threatLevel}</span>
+                    </div>
+                    <p>{comparison.theyWinAt}</p>
+                    <small>{comparison.exposedGap}</small>
+                    <em>{comparison.ourCounter}</em>
+                    <b>{comparison.demoProof}</b>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Trophy size={15} />
+                Judge answers
+              </h3>
+              <div className="intel-answers">
+                {intel.judgeAnswers.map((answer) => (
+                  <article key={answer.criterionId}>
+                    <div>
+                      <strong>{answer.label}</strong>
+                      <span>{answer.score}</span>
+                    </div>
+                    <p>{answer.answer}</p>
+                    <small>{answer.evidence}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Lightbulb size={15} />
+                Moves
+              </h3>
+              <div className="intel-moves">
+                {intel.moves.map((move) => (
+                  <article key={move.id} className={move.priority}>
+                    <div>
+                      <strong>{move.owner}</strong>
+                      <span>{move.priority}</span>
+                    </div>
+                    <p>{move.action}</p>
+                    <small>{move.proof}</small>
+                  </article>
+                ))}
+              </div>
+              <h3>
+                <ShieldCheck size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(intel.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="intel-empty">
+          <Radar size={28} />
+          <strong>Run market intelで、公式ソース付き競合比較、差別化仮説、審査回答を生成します。</strong>
+          <p>ADKやLangGraphと正面衝突せず、AI能力を調達する体験として勝つ理由を1画面にします。</p>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -2160,6 +2311,7 @@ export default function App() {
         </div>
       </section>
 
+      <MarketIntelPanel recommendation={recommendation} projectBrief={projectBrief} />
       <WinAutopilotPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SubmissionDossierPanel recommendation={recommendation} projectBrief={projectBrief} />
       <DemoRunwayPanel recommendation={recommendation} projectBrief={projectBrief} />

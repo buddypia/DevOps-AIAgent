@@ -35,6 +35,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - 各エージェントを価格、能力値、MCP成熟度、A2Aスキルで比較できる
 - Contract Deskで、選択したAIの成果物、受入条件、SLA、検証コマンドを発行する
 - Winning Strategyで競合分析、SWOT、審査5項目、MVP proof、次に雇うべきAIを表示する
+- Market Intel Boardで、Gemini Enterprise、Google ADK、A2A、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較、差別化仮説、審査回答を表示する
 - Mission Controlで、AIが弱点を検出し、A2A委任、検証runbook、提出パックを生成した証跡を見せる
 - Ops Drillで、Cloud Run公開デモの稼働シグナルから継続・ロールバック・追加雇用を判断する
 - Judge Proofで、Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1クリックの証拠束にし、sha256 receiptで照合できるようにする
@@ -56,6 +57,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 React UI
   -> Express API
   -> Recommendation / Contract / Strategy / Mission engines
+  -> Market Intel source-backed competitor board
   -> Ops Drill / Cloud Run runbook
   -> Judge Proof bundle
   -> Pitch Director
@@ -75,13 +77,13 @@ React UI
 
 | Time | Shot |
 | --- | --- |
-| 0-4s | Win Autopilotを実行し、win score、残アクション、証拠デッキを表示する |
-| 4-8s | Judge Proofを実行し、Gemini/Cloud Run/A2A/CI/DevOps/提出URLの証拠束を見せる |
-| 8-12s | Finalist Simulatorで審査員5役の判定と残ギャップを見せる |
-| 12-16s | Submission PublisherでProtoPedia貼り付け本文と提出チェックリストを見せる |
-| 16-21s | Demo Runway、Marketplace、Winning Strategyで30秒導線と競合/SWOTを確認する |
-| 21-25s | Contract DeskとMission Controlで契約、A2A委任、検証runbookを見せる |
-| 25-28s | Ops DrillでCloud Runの運用判断とrollback基準を見せる |
+| 0-4s | Market Intelを実行し、公式ソース付き競合比較と「作る基盤ではなくAI能力調達で勝つ」仮説を見せる |
+| 4-8s | Win Autopilotを実行し、win score、残アクション、証拠デッキを表示する |
+| 8-12s | Judge Proofを実行し、Gemini/Cloud Run/A2A/CI/DevOps/提出URLの証拠束を見せる |
+| 12-16s | Finalist Simulatorで審査員5役の判定と残ギャップを見せる |
+| 16-20s | Submission DossierでProtoPedia本文、提出リンク、録画順、最終チェックを見せる |
+| 20-24s | MarketplaceとWinning Strategyで必要能力の推薦、SWOT、次に雇うAIを確認する |
+| 24-28s | Contract Desk、Mission Control、Ops Drillで契約、A2A委任、Cloud Run運用判断を見せる |
 | 28-30s | Cloud Run URL、GitHub Actions、Agent Card、構成図で締める |
 
 ## Verification Runbook
@@ -94,6 +96,9 @@ make q.check-architecture
 curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/api/healthz
 curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/.well-known/agent-card.json
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/strategy \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/market-intel \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mission \

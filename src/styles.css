@@ -872,6 +872,221 @@ h1 {
   margin-top: 14px;
 }
 
+.market-intel {
+  margin-top: 14px;
+  border: 1px solid #26383b;
+  border-radius: 8px;
+  background: #f8fbfb;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.intel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px;
+  border-bottom: 1px solid #c7d6d7;
+  background:
+    linear-gradient(90deg, #e9f4f4, #fbf8ef);
+}
+
+.intel-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 1.28rem;
+}
+
+.intel-body {
+  display: grid;
+  gap: 1px;
+  background: #c7d6d7;
+}
+
+.intel-summary {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(200px, 0.26fr);
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  background: #f8fbfb;
+}
+
+.intel-summary h3 {
+  margin-top: 10px;
+  font-size: 1.38rem;
+  line-height: 1.24;
+}
+
+.intel-summary p {
+  margin-top: 8px;
+  color: #374548;
+  line-height: 1.55;
+}
+
+.intel-score {
+  min-height: 132px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  border-radius: 8px;
+  color: #f8fbfb;
+  background: #26383b;
+}
+
+.intel-score strong {
+  font-size: 3.7rem;
+  line-height: 0.96;
+}
+
+.intel-score span {
+  color: rgba(248, 251, 251, 0.74);
+  font-size: 0.76rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.intel-source-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #eef7f7;
+}
+
+.intel-source-strip a {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid #c7d6d7;
+  border-radius: 999px;
+  color: #24515a;
+  background: #f8fbfb;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.intel-grid {
+  display: grid;
+  grid-template-columns: minmax(380px, 1.08fr) minmax(340px, 0.88fr) minmax(340px, 0.88fr);
+  gap: 1px;
+  background: #c7d6d7;
+}
+
+.intel-grid > section {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 14px;
+  background: #f8fbfb;
+}
+
+.intel-grid h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.intel-comparisons,
+.intel-answers,
+.intel-moves {
+  display: grid;
+  gap: 8px;
+}
+
+.intel-comparisons article,
+.intel-answers article,
+.intel-moves article {
+  display: grid;
+  gap: 7px;
+  padding: 11px;
+  border: 1px solid #c7d6d7;
+  border-left: 4px solid var(--teal);
+  border-radius: 8px;
+  background: #fffdf9;
+}
+
+.intel-comparisons article.high,
+.intel-moves article.now {
+  border-left-color: var(--rose);
+  background: #fff5f5;
+}
+
+.intel-comparisons article.medium,
+.intel-moves article.next {
+  border-left-color: var(--amber);
+  background: #fff9e9;
+}
+
+.intel-comparisons article > div,
+.intel-answers article > div,
+.intel-moves article > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.intel-comparisons span,
+.intel-answers span,
+.intel-moves span {
+  color: var(--teal);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.intel-comparisons p,
+.intel-comparisons small,
+.intel-comparisons em,
+.intel-comparisons b,
+.intel-answers p,
+.intel-answers small,
+.intel-moves p,
+.intel-moves small,
+.intel-empty p {
+  color: #374548;
+  line-height: 1.42;
+}
+
+.intel-comparisons em,
+.intel-comparisons b {
+  font-style: normal;
+}
+
+.intel-comparisons b {
+  color: #24515a;
+  font-weight: 900;
+}
+
+.intel-grid pre {
+  max-height: 360px;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.intel-empty {
+  min-height: 190px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 22px;
+  text-align: center;
+}
+
 .win-autopilot {
   margin-top: 14px;
   border: 1px solid #232b2f;
@@ -3785,6 +4000,7 @@ pre {
   }
 
   .autopilot-grid,
+  .intel-grid,
   .dossier-grid,
   .demo-grid,
   .pitch-grid,
@@ -3828,6 +4044,8 @@ pre {
     .contract-grid,
     .strategy-briefing,
     .strategy-grid,
+    .intel-summary,
+    .intel-grid,
     .autopilot-summary,
     .autopilot-lanes,
     .autopilot-grid,
@@ -3902,6 +4120,7 @@ pre {
 
   .contract-heading,
   .strategy-kpis,
+  .intel-heading,
   .autopilot-heading,
   .dossier-heading,
   .demo-heading,
@@ -3916,6 +4135,7 @@ pre {
   }
 
   .contract-heading,
+  .intel-heading,
   .autopilot-heading,
   .dossier-heading,
   .demo-heading,

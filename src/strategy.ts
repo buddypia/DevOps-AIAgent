@@ -86,7 +86,7 @@ export const COMPETITORS: Competitor[] = [
     threatLevel: "high",
     counterPosition: "大企業向け販売導線より前段の、チームが必要能力を見極める意思決定を狙う。",
     counterMove: "価格、MCP成熟度、審査スコア改善を組み合わせたハッカソン特化の購買体験にする。",
-    sourceUrl: "https://cloud.google.com/blog/products/ai-machine-learning/agent2agent-protocol-is-getting-an-upgrade"
+    sourceUrl: "https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/"
   },
   {
     id: "langgraph",
@@ -97,7 +97,7 @@ export const COMPETITORS: Competitor[] = [
     threatLevel: "medium",
     counterPosition: "LangGraphは作る人の制御面、こちらは選ぶ人の意思決定面を持つ。",
     counterMove: "A2A委任タイムラインと改善スコアを、非実装者にも読める事業UIとして提示する。",
-    sourceUrl: "https://docs.langchain.com/oss/python/langgraph/workflows-agents"
+    sourceUrl: "https://github.com/langchain-ai/langgraph"
   },
   {
     id: "crewai",
@@ -108,7 +108,7 @@ export const COMPETITORS: Competitor[] = [
     threatLevel: "medium",
     counterPosition: "CrewAIはcrewを作る。こちらはcrewを市場から雇うストーリーを見せる。",
     counterMove: "エージェントの価格、希少性、能力値、成果物を比較できる市場表現に集中する。",
-    sourceUrl: "https://crewai.com/open-source"
+    sourceUrl: "https://docs.crewai.com/"
   },
   {
     id: "dify",
@@ -119,7 +119,7 @@ export const COMPETITORS: Competitor[] = [
     threatLevel: "medium",
     counterPosition: "Difyはアプリを速く作る。こちらはDevOps改善に足りないAI能力を発見する。",
     counterMove: "審査基準、提出物、Cloud Run運用までを市場の購買結果として可視化する。",
-    sourceUrl: "https://github.com/langgenius/dify"
+    sourceUrl: "https://docs.dify.ai/en/use-dify/getting-started/introduction"
   },
   {
     id: "agentops",
@@ -130,7 +130,7 @@ export const COMPETITORS: Competitor[] = [
     threatLevel: "medium",
     counterPosition: "AgentOpsは動いた後を見る。こちらは何を雇えば勝てるかを事前に判断する。",
     counterMove: "運用観測エージェントを編成に入れ、ログから次の買い足しへ戻すループを示す。",
-    sourceUrl: "https://docs.agentops.ai/v2/introduction"
+    sourceUrl: "https://www.agentops.ai/"
   }
 ];
 

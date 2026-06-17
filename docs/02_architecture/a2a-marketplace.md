@@ -12,16 +12,17 @@
 4. 選択されたエージェントから改善スコアとA2A委任タイムラインを作る
 5. `src/contracts.ts` が選択済みAIの成果物、受入条件、SLA、検証コマンドを契約化する
 6. `src/strategy.ts` が競合、SWOT、審査5項目、MVP提出準備、次に雇うべきAIを算出する
-7. `src/mission.ts` が弱点補強、A2A委任、検証runbook、ProtoPedia提出パックを生成する
-8. `src/ops.ts` がCloud Run公開デモのシグナルから継続・ロールバック・追加雇用を判断する
-9. `src/finalist.ts` が審査員5役の模擬判定、落選理由、残ギャップ、次の一手を生成する
-10. `src/publisher.ts` がProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
-11. `src/demoRunway.ts` が証拠、最終候補判定、提出本文、AI市場、運用判断を30秒の審査員導線に束ねる
-12. `src/autopilot.ts` が全証拠を一括判定し、win score、残ブロッカー、証拠デッキを返す
-13. `src/dossier.ts` がProtoPedia本文、動画録画順、提出リンク、最終チェックを1つのドシエに束ねる
-14. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
-15. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-16. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+7. `src/marketIntel.ts` が公式ソース付き競合比較、差別化仮説、審査回答、次アクションを生成する
+8. `src/mission.ts` が弱点補強、A2A委任、検証runbook、ProtoPedia提出パックを生成する
+9. `src/ops.ts` がCloud Run公開デモのシグナルから継続・ロールバック・追加雇用を判断する
+10. `src/finalist.ts` が審査員5役の模擬判定、落選理由、残ギャップ、次の一手を生成する
+11. `src/publisher.ts` がProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
+12. `src/demoRunway.ts` が証拠、最終候補判定、提出本文、AI市場、運用判断を30秒の審査員導線に束ねる
+13. `src/autopilot.ts` が全証拠を一括判定し、win score、残ブロッカー、証拠デッキを返す
+14. `src/dossier.ts` がProtoPedia本文、動画録画順、提出リンク、最終チェックを1つのドシエに束ねる
+15. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
+16. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+17. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -33,6 +34,7 @@
   - `contract.issue`
   - `task.delegate`
   - `strategy.audit`
+  - `market.intel`
   - `mission.run`
   - `submission.publish`
   - `submission.dossier`
@@ -49,6 +51,14 @@
 - Judge scorecard: 審査5項目ごとのスコア、証拠、次アクションを表示
 - MVP proof: Cloud Run、Gemini、A2A、公開GitHub、ProtoPediaの提出準備を分離
 - Next hire: 最も弱い審査項目に効くエージェントを推薦
+
+## Market Intel Surface
+
+- `POST /api/market-intel`: Gemini Enterprise、Google ADK、A2A、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較を返す
+- Source checklist: 審査員に見せられる一次情報URLを固定する
+- Competitor cuts: 競合ごとに「相手が強い点」「露出する隙」「こちらの反撃」「デモ証拠」を分ける
+- Judge answers: 審査5項目へそのまま返せる短い回答と証拠を生成する
+- A2A payload: `market.intel` skillとしてmarket score、source ids、next movesを返す
 
 ## Contract Surface
 
@@ -68,6 +78,7 @@
 
 - `POST /api/ops-drill`: Cloud Run health、p95 latency、5xx率、Gemini fallback、予算余力、外部提出URLの状態を評価する
 - `POST /api/contracts`: AI契約、受入条件、SLA、検証コマンド、支払い条件を評価する
+- `POST /api/market-intel`: ソース付き競合比較、審査回答、差別化次アクションを評価する
 - `POST /api/pitch`: 30秒動画のshot list、voiceover、lower thirds、recording checklist、提出残リスクを返す
 - `POST /api/judge-drill`: 審査5項目ごとの厳しめ質問、回答、証拠リンク、デモ画面を返す
 - `POST /api/finalist`: 審査員5役の最終候補判定、落選理由、残ギャップ、次の一手を返す
@@ -106,6 +117,7 @@
 
 - Cloud Run service: `a2a-agent-marketplace`
 - Health check: `/api/healthz` (`/healthz` もローカル互換で提供)
+- Market intel: `/api/market-intel`
 - Ops drill: `/api/ops-drill`
 - Contracts: `/api/contracts`
 - Publisher: `/api/publisher`

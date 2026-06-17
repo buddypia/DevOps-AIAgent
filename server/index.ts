@@ -12,6 +12,7 @@ import { buildSubmissionDossier } from "../src/dossier.js";
 import { buildFinalistSimulation } from "../src/finalist.js";
 import { buildJudgeDrill } from "../src/judgeDrill.js";
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market.js";
+import { buildMarketIntelReport } from "../src/marketIntel.js";
 import { buildMissionRun } from "../src/mission.js";
 import { buildOpsDrill } from "../src/ops.js";
 import { buildPitchRun } from "../src/pitch.js";
@@ -106,6 +107,12 @@ function agentCard(baseUrl: string) {
         name: "Audit competitive strategy",
         description: "競合、SWOT、審査スコア、提出準備を評価し、次に雇うべきAI能力を返す。",
         tags: ["competitive-analysis", "swot", "judge-score", "submission"]
+      },
+      {
+        id: "market.intel",
+        name: "Build source-backed market intelligence",
+        description: "公式ソース付き競合比較、差別化仮説、審査回答、次アクションを提出向けに返す。",
+        tags: ["market-intelligence", "competitive-analysis", "sources", "swot", "judge-score"]
       },
       {
         id: "mission.run",
@@ -401,6 +408,24 @@ app.post("/api/strategy", (req, res) => {
 
   const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
   res.json(buildWinningStrategy(recommendation));
+});
+
+app.post("/api/market-intel", (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  res.json(
+    buildMarketIntelReport({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy
+    })
+  );
 });
 
 app.post("/api/mission", (req, res) => {
@@ -1019,6 +1044,11 @@ app.post("/a2a", (req, res) => {
     autopilot: winAutopilot,
     proof
   });
+  const marketIntel = buildMarketIntelReport({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -1055,6 +1085,22 @@ app.post("/a2a", (req, res) => {
                   moatScore: strategy.moatScore,
                   nextBestAgent: strategy.nextBestAgent?.agent.name ?? null,
                   swot: strategy.swot
+                },
+                marketIntel: {
+                  id: marketIntel.id,
+                  marketScore: marketIntel.marketScore,
+                  status: marketIntel.status,
+                  sourceCount: marketIntel.sources.length,
+                  competitors: marketIntel.comparisons.map((comparison) => ({
+                    id: comparison.id,
+                    sourceIds: comparison.sourceIds,
+                    threatLevel: comparison.threatLevel
+                  })),
+                  moves: marketIntel.moves.map((move) => ({
+                    id: move.id,
+                    priority: move.priority,
+                    action: move.action
+                  }))
                 },
                 mission: {
                   id: mission.id,
@@ -1166,6 +1212,7 @@ app.post("/a2a", (req, res) => {
                   }))
                 },
                 dossierEndpoint: `${publicBaseUrl(req)}/api/dossier`,
+                marketIntelEndpoint: `${publicBaseUrl(req)}/api/market-intel`,
                 winRunEndpoint: `${publicBaseUrl(req)}/api/win-run`,
                 demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,
                 proofEndpoint: `${publicBaseUrl(req)}/api/proof`,
