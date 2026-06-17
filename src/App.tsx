@@ -46,6 +46,7 @@ import type { PitchRun } from "./pitch";
 import type { JudgeProof } from "./proof";
 import type { ProtoPediaPublisher } from "./publisher";
 import type { SubmissionDossier } from "./dossier";
+import type { SubmissionLaunchGate } from "./submissionLaunch";
 import { buildWinningStrategy } from "./strategy";
 import type { SwotQuadrant, WinningStrategy } from "./strategy";
 import type { CapabilityKey, GeminiRecommendation, MarketAgent, Recommendation } from "./types";
@@ -1108,6 +1109,158 @@ function MvpAuditPanel({
           <Gauge size={28} />
           <strong>Run MVP auditで、必須技術、審査5項目、DevOps証拠、提出3点をハードゲート判定します。</strong>
           <p>未発行のProtoPedia作品URLと動画URLは、合格扱いにせずwatchとして残します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SubmissionLaunchPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [gate, setGate] = useState<SubmissionLaunchGate | null>(null);
+  const [protopediaUrl, setProtopediaUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function runLaunchGate() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/submission-launch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+          protopediaUrl,
+          videoUrl
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setGate((await response.json()) as SubmissionLaunchGate);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="submission-launch">
+      <div className="launch-heading">
+        <div>
+          <span className="eyebrow">Final launch gate</span>
+          <h2>
+            <ClipboardCheck size={20} />
+            Submission Launch Gate
+          </h2>
+        </div>
+        <button className="icon-button" onClick={runLaunchGate} disabled={loading} title="提出直前ゲートを検証">
+          <BadgeCheck size={17} />
+          {loading ? "Checking" : "Check launch gate"}
+        </button>
+      </div>
+
+      <div className="launch-inputs">
+        <label>
+          <span>ProtoPedia work URL</span>
+          <input value={protopediaUrl} onChange={(event) => setProtopediaUrl(event.target.value)} placeholder="https://protopedia.net/prototype/..." />
+        </label>
+        <label>
+          <span>Video URL</span>
+          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://vimeo.com/..." />
+        </label>
+      </div>
+
+      {error && <p className="error-text">Submission launch request failed: {error}</p>}
+
+      {gate ? (
+        <div className="launch-body">
+          <div className="launch-summary">
+            <div>
+              <span className={cx("risk-chip", gate.readiness === "submit-ready" ? "low" : gate.readiness === "needs-external-urls" ? "medium" : "high")}>
+                {gate.readiness}
+              </span>
+              <h3>{gate.verdict}</h3>
+              <p>{gate.hardTruth}</p>
+            </div>
+            <div className="launch-score">
+              <strong>{gate.launchScore}</strong>
+              <span>launch score</span>
+            </div>
+          </div>
+
+          <div className="launch-url-grid">
+            {gate.urlStatuses.map((item) => (
+              <article key={item.id} className={item.status}>
+                <div>
+                  <strong>{item.label}</strong>
+                  <span>{item.status}</span>
+                </div>
+                <p>{item.proof}</p>
+                <small>{item.action}</small>
+                {item.url && (
+                  <a href={item.url} target="_blank" rel="noreferrer">
+                    Open <ExternalLink size={13} />
+                  </a>
+                )}
+              </article>
+            ))}
+          </div>
+
+          <div className="launch-grid">
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Final checklist
+              </h3>
+              <div className="launch-checklist">
+                {gate.checklist.map((item) => (
+                  <article key={item.id} className={item.status}>
+                    <div>
+                      <strong>{item.label}</strong>
+                      <span>{item.status}</span>
+                    </div>
+                    <p>{item.proof}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <ExternalLink size={15} />
+                Copy actions
+              </h3>
+              <div className="launch-actions">
+                {gate.copyActions.map((action) => (
+                  <article key={action.id} className={action.status}>
+                    <strong>{action.label}</strong>
+                    <p>{action.target}</p>
+                    <small>{action.value || "needs external URL"}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                Submit packet
+              </h3>
+              <pre>{JSON.stringify({ submitPacket: gate.submitPacket, a2aPayload: gate.a2aPayload }, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="launch-empty">
+          <ClipboardCheck size={28} />
+          <strong>Check launch gateで、ProtoPedia作品URLと動画URLが揃った瞬間に提出可能かを判定します。</strong>
+          <p>未入力や形式不正は提出完了扱いにせず、GitHub、Cloud Run、タグ、本文、CI、証拠receiptと一緒に最終確認します。</p>
         </div>
       )}
     </section>
@@ -2797,6 +2950,7 @@ export default function App() {
       <AutonomyLedgerPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MarketIntelPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MvpAuditPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <SubmissionLaunchPanel recommendation={recommendation} projectBrief={projectBrief} />
       <WinAutopilotPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SubmissionDossierPanel recommendation={recommendation} projectBrief={projectBrief} />
       <DemoRunwayPanel recommendation={recommendation} projectBrief={projectBrief} />

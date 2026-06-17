@@ -21,6 +21,7 @@ import { buildOpsDrill } from "../src/ops.js";
 import { buildPitchRun } from "../src/pitch.js";
 import { buildJudgeProof } from "../src/proof.js";
 import { buildProtoPediaPublisher } from "../src/publisher.js";
+import { buildSubmissionLaunchGate } from "../src/submissionLaunch.js";
 import { SUBMISSION_PROOF } from "../src/submission.js";
 import type { CiProof } from "../src/proof.js";
 import { buildWinningStrategy } from "../src/strategy.js";
@@ -50,6 +51,10 @@ const OpsDrillSchema = RecommendSchema.extend({
       submissionUrlsReady: z.boolean().optional()
     })
     .optional()
+});
+const LaunchSchema = RecommendSchema.extend({
+  protopediaUrl: z.string().optional(),
+  videoUrl: z.string().optional()
 });
 
 function publicBaseUrl(req: express.Request) {
@@ -170,6 +175,12 @@ function agentCard(baseUrl: string) {
         name: "Build the final submission dossier",
         description: "ProtoPedia本文、動画録画順、提出リンク、証拠デッキ、最終チェックを1つのドシエに束ねる。",
         tags: ["submission", "protopedia", "dossier", "video", "judge-proof"]
+      },
+      {
+        id: "submission.launch",
+        name: "Validate final submission launch gate",
+        description: "ProtoPedia作品URLと動画URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する。",
+        tags: ["submission", "launch-gate", "protopedia", "video", "mvp"]
       },
       {
         id: "ops.drill",
@@ -1100,6 +1111,137 @@ app.post("/api/autonomy-ledger", async (req, res) => {
   );
 });
 
+app.post("/api/submission-launch", async (req, res) => {
+  const parsed = LaunchSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const marketIntel = buildMarketIntelReport({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy
+  });
+  const mission = buildMissionRun(recommendation, strategy, "ProtoPedia作品URLと動画URLを受け取り、提出可能かを最終判定する。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const pitch = buildPitchRun({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill
+  });
+  const judgeDrill = buildJudgeDrill({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch
+  });
+  const finalist = buildFinalistSimulation({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    judgeDrill,
+    squadContract
+  });
+  const publisher = buildProtoPediaPublisher({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist
+  });
+  const demoRunway = buildDemoRunway({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist,
+    publisher
+  });
+  const [geminiResult, ciResult] = await Promise.allSettled([
+    runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
+    fetchCiProof()
+  ]);
+  const gemini =
+    geminiResult.status === "fulfilled"
+      ? geminiResult.value
+      : localGeminiRecommendation(
+          recommendation,
+          geminiResult.reason instanceof Error ? geminiResult.reason.message : "Gemini request failed"
+        );
+  const ci = ciResult.status === "fulfilled" ? ciResult.value : ciUnavailable("CI status promise rejected");
+  const proof = buildJudgeProof({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    gemini,
+    ci
+  });
+  const autopilot = buildWinningAutopilot({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    squadContract,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    proof
+  });
+  const dossier = buildSubmissionDossier({
+    recommendation,
+    strategy,
+    mission,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    autopilot,
+    proof
+  });
+  const mvpAudit = buildMvpAudit({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    finalist,
+    autopilot,
+    dossier,
+    proof,
+    marketIntel
+  });
+
+  res.json(
+    buildSubmissionLaunchGate({
+      protopediaUrl: parsed.data.protopediaUrl,
+      videoUrl: parsed.data.videoUrl,
+      mvpAudit,
+      dossier,
+      proof,
+      publisher
+    })
+  );
+});
+
 app.post("/api/ops-drill", (req, res) => {
   const parsed = OpsDrillSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -1406,6 +1548,12 @@ app.post("/a2a", (req, res) => {
     squadContract,
     proof
   });
+  const submissionLaunch = buildSubmissionLaunchGate({
+    mvpAudit,
+    dossier,
+    proof,
+    publisher
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -1505,6 +1653,16 @@ app.post("/a2a", (req, res) => {
                     status: handoff.status
                   })),
                   receipt: autonomyLedger.receipt.digest
+                },
+                submissionLaunch: {
+                  id: submissionLaunch.id,
+                  launchScore: submissionLaunch.launchScore,
+                  readiness: submissionLaunch.readiness,
+                  verdict: submissionLaunch.verdict,
+                  urls: submissionLaunch.urlStatuses.map((item) => ({
+                    id: item.id,
+                    status: item.status
+                  }))
                 },
                 mission: {
                   id: mission.id,
@@ -1620,6 +1778,7 @@ app.post("/a2a", (req, res) => {
                 mvpAuditEndpoint: `${publicBaseUrl(req)}/api/mvp-audit`,
                 judgeBriefEndpoint: `${publicBaseUrl(req)}/api/judge-brief`,
                 autonomyLedgerEndpoint: `${publicBaseUrl(req)}/api/autonomy-ledger`,
+                submissionLaunchEndpoint: `${publicBaseUrl(req)}/api/submission-launch`,
                 winRunEndpoint: `${publicBaseUrl(req)}/api/win-run`,
                 demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,
                 proofEndpoint: `${publicBaseUrl(req)}/api/proof`,

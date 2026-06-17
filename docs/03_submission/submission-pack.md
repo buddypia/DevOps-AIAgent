@@ -39,6 +39,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - MVP Auditで、必須技術、審査5項目、DevOps証拠、提出3点をpass/watch/failで監査し、外部未発行URLを合格扱いにしない
 - Judge Briefで、競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページにまとめる
 - Autonomy Ledgerで、市場探索、判断、契約、A2A委任、検証、運用、提出を検収可能なAI自律性台帳として見せる
+- Submission Launch Gateで、ProtoPedia作品URLと動画URLを入力し、提出3点、タグ、本文、CI、証拠receiptを最終判定する
 - Mission Controlで、AIが弱点を検出し、A2A委任、検証runbook、提出パックを生成した証跡を見せる
 - Ops Drillで、Cloud Run公開デモの稼働シグナルから継続・ロールバック・追加雇用を判断する
 - Judge Proofで、Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1クリックの証拠束にし、sha256 receiptで照合できるようにする
@@ -64,6 +65,7 @@ React UI
   -> MVP Audit hard gates
   -> Judge Brief one-page judge readout
   -> Autonomy Ledger agent centrality audit
+  -> Submission Launch Gate
   -> Ops Drill / Cloud Run runbook
   -> Judge Proof bundle
   -> Pitch Director
@@ -87,7 +89,7 @@ React UI
 | 4-8s | MVP Auditで必須技術、審査5項目、DevOps証拠、提出3点のwatch/failを見せる |
 | 8-12s | Judge Briefでkey metrics、hard truth、proof ladder、risk registerを1画面で見せる |
 | 12-16s | Autonomy LedgerでAIがsense -> decide -> contract -> delegate -> verify -> operate -> submitした台帳を見せる |
-| 16-21s | Win AutopilotとJudge Proofでwin score、残アクション、Gemini/Cloud Run/A2A/CI/DevOpsの証拠束を見せる |
+| 16-21s | Submission Launch GateとJudge Proofで外部URLの最終状態、Gemini/Cloud Run/A2A/CI/DevOpsの証拠束を見せる |
 | 21-25s | Submission DossierでProtoPedia本文、提出リンク、録画順、最終チェックを見せる |
 | 25-28s | Marketplace、Winning Strategy、Mission、Opsで必要能力、SWOT、A2A委任、運用判断を見せる |
 | 28-30s | Cloud Run URL、GitHub Actions、Agent Card、構成図で締める |
@@ -116,6 +118,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/judge-brief \
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/autonomy-ledger \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/submission-launch \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"protopediaUrl":"https://protopedia.net/prototype/999999","videoUrl":"https://youtu.be/demo1234567"}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mission \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'

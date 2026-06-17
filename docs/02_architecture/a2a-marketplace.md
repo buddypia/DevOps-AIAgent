@@ -24,8 +24,9 @@
 16. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
 17. `src/judgeBrief.ts` が競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員向け1ページに圧縮する
 18. `src/autonomyLedger.ts` が市場探索、判断、契約、A2A委任、検証、運用、提出をAI自律性台帳にする
-19. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-20. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+19. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
+20. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+21. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -43,6 +44,7 @@
   - `autonomy.ledger`
   - `submission.publish`
   - `submission.dossier`
+  - `submission.launch`
   - `demo.runway`
   - `win.autopilot`
   - `ops.drill`
@@ -89,6 +91,14 @@
 - Handoffs: Contract Deskのagent contractsからscope、acceptance、verification proofを抽出する
 - Judge challenges: 「単なるダッシュボードではないか」「なぜAIが必然か」「DevOpsサイクルが閉じているか」への反証を返す
 - A2A payload: `autonomy.ledger` skillとしてledger score、verdict、phases、handoffs、receiptを返す
+
+## Submission Launch Surface
+
+- `POST /api/submission-launch`: ProtoPedia作品URLと動画URLを受け取り、最終提出可否を判定する
+- URL gate: ProtoPediaは `protopedia.net`、動画はYouTube/Vimeo/Google Driveのhttps URL形式を検証する
+- Final checklist: GitHub、Cloud Run、ProtoPedia、動画、findy_hackathonタグ、CI、MVP hard gates、本文、Judge Proof receiptを並べる
+- Submit packet: Findy提出フォームに貼るGitHub URL、デプロイ済みURL、ProtoPedia URL、動画URL、タグを返す
+- A2A payload: `submission.launch` skillとしてlaunch score、readiness、URL status、checklist、submit packetを返す
 
 ## Contract Surface
 
@@ -138,6 +148,7 @@
 - Win autopilot proof: `win.autopilot` skillとして、win score、lane scorecards、残ブロッカー、証拠デッキをA2A payloadにも含める
 - Judge brief proof: `judge.brief` skillとして、審査員の初見用にkey metrics、proof ladder、30秒route、risk registerをA2A payloadにも含める
 - Autonomy ledger proof: `autonomy.ledger` skillとして、AIの判断連鎖、agent handoff、検証endpoint、sha256 receiptをA2A payloadにも含める
+- Submission launch proof: `submission.launch` skillとして、外部URL入力後のsubmit-ready判定と提出フォーム用packetをA2A payloadにも含める
 
 ## Submission Surface
 
@@ -154,6 +165,7 @@
 - MVP audit: `/api/mvp-audit`
 - Judge brief: `/api/judge-brief`
 - Autonomy ledger: `/api/autonomy-ledger`
+- Submission launch: `/api/submission-launch`
 - Ops drill: `/api/ops-drill`
 - Contracts: `/api/contracts`
 - Publisher: `/api/publisher`
