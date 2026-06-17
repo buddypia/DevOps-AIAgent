@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { recommendSquad } from "./agentEngine";
+import type { JudgeDrill } from "./judgeDrill";
 import { CAPABILITY_LABELS, DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "./market";
 import type { MissionRun } from "./mission";
 import type { OpsDrill } from "./ops";
@@ -638,6 +639,136 @@ function PitchDirector({
   );
 }
 
+function JudgeDrillPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [drill, setDrill] = useState<JudgeDrill | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function runDrill() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/judge-drill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setDrill((await response.json()) as JudgeDrill);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="judge-drill">
+      <div className="judge-heading">
+        <div>
+          <span className="eyebrow">Judge drill</span>
+          <h2>
+            <Crosshair size={20} />
+            Skeptical Q&A board
+          </h2>
+        </div>
+        <button className="icon-button" onClick={runDrill} disabled={loading} title="審査員想定問答を生成">
+          <Activity size={17} />
+          {loading ? "Drilling" : "Run judge drill"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Judge drill request failed: {error}</p>}
+
+      {drill ? (
+        <div className="judge-body">
+          <div className="judge-summary">
+            <div>
+              <span className="event-pill">
+                <AlertTriangle size={15} />
+                hardest question
+              </span>
+              <h3>{drill.hardestQuestion}</h3>
+              <p>{drill.openingRebuttal}</p>
+            </div>
+            <div className="judge-score">
+              <strong>{drill.readinessScore}</strong>
+              <span>rebuttal ready</span>
+            </div>
+          </div>
+
+          <div className="judge-objections">
+            {drill.objections.map((objection) => (
+              <article key={objection.id} className={objection.risk}>
+                <div>
+                  <span>{objection.risk}</span>
+                  <strong>{objection.criterion}</strong>
+                </div>
+                <h3>{objection.question}</h3>
+                <p>{objection.answer}</p>
+                <small>{objection.evidence}</small>
+                <a href={objection.evidenceUrl} target="_blank" rel="noreferrer">
+                  Evidence <ExternalLink size={13} />
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <div className="judge-grid">
+            <section>
+              <h3>
+                <Terminal size={15} />
+                Cross-exam runbook
+              </h3>
+              <ol>
+                {drill.crossExamRunbook.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+            </section>
+            <section>
+              <h3>
+                <ExternalLink size={15} />
+                Evidence links
+              </h3>
+              <div className="judge-links">
+                {drill.evidenceLinks.map((link) => (
+                  <a key={link.id} href={link.url} target="_blank" rel="noreferrer" title={link.proof}>
+                    {link.label}
+                    <ExternalLink size={13} />
+                  </a>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Lightbulb size={15} />
+                Closing line
+              </h3>
+              <p>{drill.closingLine}</p>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="judge-empty">
+          <Crosshair size={28} />
+          <strong>Run judge drillで、審査員の厳しい質問に対する回答と証拠リンクを生成します。</strong>
+          <p>5つの審査基準ごとに、聞かれそうな疑問を先に潰します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function StrategyWarRoom({
   strategy,
   onHire
@@ -1146,6 +1277,7 @@ export default function App() {
 
       <JudgeProofBundle recommendation={recommendation} projectBrief={projectBrief} />
       <PitchDirector recommendation={recommendation} projectBrief={projectBrief} />
+      <JudgeDrillPanel recommendation={recommendation} projectBrief={projectBrief} />
 
       <section className="workbench">
         <aside className="panel brief-panel">

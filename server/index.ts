@@ -5,6 +5,7 @@ import path from "node:path";
 import { z } from "zod";
 import { ipAllowlistMiddleware, ipAllowlistSummary } from "./ipAllowlist.js";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js";
+import { buildJudgeDrill } from "../src/judgeDrill.js";
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market.js";
 import { buildMissionRun } from "../src/mission.js";
 import { buildOpsDrill } from "../src/ops.js";
@@ -125,10 +126,16 @@ function agentCard(baseUrl: string) {
         tags: ["pitch", "video", "protopedia", "judge-experience", "submission"]
       },
       {
+        id: "judge.drill",
+        name: "Prepare skeptical judge rebuttals",
+        description: "審査5項目ごとの厳しめ質問、短い回答、証拠リンク、次アクションを生成する。",
+        tags: ["judge-drill", "qa", "rebuttal", "evidence", "scorecard"]
+      },
+      {
         id: "judge.proof",
         name: "Build one-click judge proof bundle",
-        description: "Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、CI、Pitch、提出URLを1つの審査証拠束として返す。",
-        tags: ["judge-proof", "gemini", "cloud-run", "a2a", "ci", "pitch", "submission"]
+        description: "Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、CI、Pitch、Judge Drill、提出URLを1つの審査証拠束として返す。",
+        tags: ["judge-proof", "gemini", "cloud-run", "a2a", "ci", "pitch", "judge-drill", "submission"]
       }
     ],
     supportsAuthenticatedExtendedCard: false
@@ -422,6 +429,36 @@ app.post("/api/pitch", (req, res) => {
   );
 });
 
+app.post("/api/judge-drill", (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "審査員からの厳しい質問に、短い回答と証拠リンクで反証する。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const pitch = buildPitchRun({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill
+  });
+  res.json(
+    buildJudgeDrill({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy,
+      mission,
+      opsDrill,
+      pitch
+    })
+  );
+});
+
 app.post("/api/proof", async (req, res) => {
   const parsed = RecommendSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -500,6 +537,14 @@ app.post("/a2a", (req, res) => {
     mission,
     opsDrill
   });
+  const judgeDrill = buildJudgeDrill({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -564,6 +609,16 @@ app.post("/a2a", (req, res) => {
                     proof: scene.proof
                   })),
                   warnings: pitch.submissionWarnings.map((item) => item.id)
+                },
+                judgeDrill: {
+                  id: judgeDrill.id,
+                  readinessScore: judgeDrill.readinessScore,
+                  hardestQuestion: judgeDrill.hardestQuestion,
+                  objections: judgeDrill.objections.map((objection) => ({
+                    criterionId: objection.criterionId,
+                    risk: objection.risk,
+                    question: objection.question
+                  }))
                 },
                 proofEndpoint: `${publicBaseUrl(req)}/api/proof`,
                 ciWorkflowUrl: SUBMISSION_PROOF.ciWorkflowUrl

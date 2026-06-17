@@ -38,6 +38,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Ops Drillで、Cloud Run公開デモの稼働シグナルから継続・ロールバック・追加雇用を判断する
 - Judge Proofで、Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1クリックの証拠束にし、sha256 receiptで照合できるようにする
 - Pitch Directorで、30秒動画の録画順、読み上げ台詞、字幕、証拠リンク、提出残リスクを生成する
+- Judge Drillで、審査5項目ごとの厳しい質問、回答、証拠リンク、デモで開く画面を生成する
 - Gemini 3.5 Flashで勝ち筋、残リスク、30秒ピッチを生成する
 - Cloud RunでUI、API、Agent Card、A2A endpointを単一サービスとして公開する
 
@@ -52,6 +53,7 @@ React UI
   -> Ops Drill / Cloud Run runbook
   -> Judge Proof bundle
   -> Pitch Director
+  -> Judge Drill
   -> GitHub Actions CI
   -> Gemini 3.5 Flash
   -> A2A Agent Card + JSON-RPC endpoint
@@ -66,7 +68,7 @@ React UI
 | 5-10s | Judge Proofを実行し、Gemini/Cloud Run/A2A/CI/DevOps/提出URLの証拠束を見せる |
 | 10-16s | Winning Strategyで競合/SWOT/審査スコアを確認する |
 | 16-22s | Mission ControlとOps Drillで自律判断、A2A委任、運用判断を見せる |
-| 22-27s | Pitch Directorのvoiceover、字幕、recording checklistを見せる |
+| 22-27s | Pitch DirectorとJudge Drillで録画順、字幕、想定問答を見せる |
 | 27-30s | Cloud Run URL、GitHub Actions、ProtoPediaタグ、構成図を提出パックとして締める |
 
 ## Verification Runbook
@@ -88,6 +90,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/ops-drill \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/pitch \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/judge-drill \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/proof \
