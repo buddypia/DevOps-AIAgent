@@ -53,6 +53,7 @@ import type { SubmissionLaunchGate } from "./submissionLaunch";
 import { buildWinningStrategy } from "./strategy";
 import type { SwotQuadrant, WinningStrategy } from "./strategy";
 import type { CapabilityKey, GeminiRecommendation, MarketAgent, Recommendation } from "./types";
+import type { UserPilotLab } from "./userPilot";
 import "./styles.css";
 
 const STAGE_LABELS: Record<string, string> = {
@@ -662,6 +663,175 @@ function JudgeTourPanel({
           <Play size={28} />
           <strong>Build judge tourで、審査員が開く順番、話す台詞、反論、証拠リンク、残ブロッカーを90秒導線に束ねます。</strong>
           <p>Judge Brief、Market Intel、Impact Case、Security Review、Judge Proof、Submission Launch Gateを一つの審査ルートとして確認します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function UserPilotPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [pilot, setPilot] = useState<UserPilotLab | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function runPilot() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/user-pilot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setPilot((await response.json()) as UserPilotLab);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="user-pilot">
+      <div className="pilot-heading">
+        <div>
+          <span className="eyebrow">User pilot lab</span>
+          <h2>
+            <Crosshair size={20} />
+            First-run usability pilot
+          </h2>
+        </div>
+        <button className="icon-button" onClick={runPilot} disabled={loading} title="対象ユーザーの初回利用導線を検証">
+          <Radar size={17} />
+          {loading ? "Piloting" : "Run user pilot"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">User pilot request failed: {error}</p>}
+
+      {pilot ? (
+        <div className="pilot-body">
+          <div className="pilot-summary">
+            <div>
+              <span className={cx("risk-chip", pilot.readiness === "pilot-ready" ? "low" : pilot.readiness === "needs-guidance" ? "medium" : "high")}>
+                {pilot.readiness}
+              </span>
+              <h3>{pilot.headline}</h3>
+              <p>{pilot.hardTruth}</p>
+              <strong>{pilot.timeToValueSeconds}s max time-to-value / +{pilot.usabilityLift} usability lift to chase</strong>
+            </div>
+            <div className="pilot-score">
+              <strong>{pilot.pilotScore}</strong>
+              <span>pilot score</span>
+            </div>
+          </div>
+
+          <div className="pilot-paths">
+            {pilot.paths.map((path) => (
+              <article key={path.id}>
+                <div>
+                  <span>{path.timeToValueSeconds}s</span>
+                  <strong>{path.persona}</strong>
+                </div>
+                <h3>{path.goal}</h3>
+                <p>{path.successMetric}</p>
+                <small>{path.proof}</small>
+                <ol>
+                  {path.tasks.map((task) => (
+                    <li key={task.id} className={task.status}>
+                      <b>{task.screen}</b>
+                      <span>{task.action}</span>
+                      <small>{task.successSignal}</small>
+                    </li>
+                  ))}
+                </ol>
+              </article>
+            ))}
+          </div>
+
+          <div className="pilot-grid">
+            <section>
+              <h3>
+                <AlertTriangle size={15} />
+                Frictions
+              </h3>
+              <div className="pilot-frictions">
+                {pilot.frictions.length > 0 ? (
+                  pilot.frictions.map((friction) => (
+                    <article key={friction.id} className={friction.severity}>
+                      <div>
+                        <strong>{friction.label}</strong>
+                        <span>{friction.severity}</span>
+                      </div>
+                      <p>{friction.evidence}</p>
+                      <small>{friction.owner}: {friction.fix}</small>
+                    </article>
+                  ))
+                ) : (
+                  <article className="clear">
+                    <strong>No first-run friction</strong>
+                    <p>3つの対象ユーザー導線に、重大な摩擦はありません。</p>
+                  </article>
+                )}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Play size={15} />
+                Next clicks
+              </h3>
+              <div className="pilot-clicks">
+                {pilot.nextClicks.map((click) => (
+                  <article key={click.id}>
+                    <div>
+                      <strong>{click.button}</strong>
+                      <span>{click.screen}</span>
+                    </div>
+                    <p>{click.reason}</p>
+                    <small>{click.expectedEvidence}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Validation
+              </h3>
+              <div className="pilot-checks">
+                {pilot.validationChecklist.map((item) => (
+                  <article key={item.id} className={item.status}>
+                    <div>
+                      <strong>{item.label}</strong>
+                      <span>{item.status}</span>
+                    </div>
+                    <p>{item.proof}</p>
+                  </article>
+                ))}
+              </div>
+              <h3>
+                <Terminal size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(pilot.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="pilot-empty">
+          <Crosshair size={28} />
+          <strong>Run user pilotで、開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証します。</strong>
+          <p>ユーザビリティの弱点を、対象ユーザー別のクリック順、摩擦、成功条件、次アクションに変換します。</p>
         </div>
       )}
     </section>
@@ -3459,6 +3629,7 @@ export default function App() {
       </section>
 
       <JudgeTourPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <UserPilotPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeBriefPanel recommendation={recommendation} projectBrief={projectBrief} />
       <AutonomyLedgerPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SecurityReviewPanel recommendation={recommendation} projectBrief={projectBrief} />

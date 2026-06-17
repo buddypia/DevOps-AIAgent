@@ -24,12 +24,13 @@
 16. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
 17. `src/judgeBrief.ts` が競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員向け1ページに圧縮する
 18. `src/judgeTour.ts` がJudge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
-19. `src/autonomyLedger.ts` が市場探索、判断、契約、A2A委任、検証、運用、提出をAI自律性台帳にする
-20. `src/security.ts` がSecret Manager、IP allowlist、入力制限、A2A信頼境界、CIを審査用セキュリティ証拠にする
-21. `src/impact.ts` が対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性証拠にする
-22. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
-23. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-24. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+19. `src/userPilot.ts` が開発リード、Platform/SRE、提出者の初回利用導線、摩擦、次クリックを検証する
+20. `src/autonomyLedger.ts` が市場探索、判断、契約、A2A委任、検証、運用、提出をAI自律性台帳にする
+21. `src/security.ts` がSecret Manager、IP allowlist、入力制限、A2A信頼境界、CIを審査用セキュリティ証拠にする
+22. `src/impact.ts` が対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性証拠にする
+23. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
+24. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+25. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -57,6 +58,7 @@
   - `judge.proof`
   - `judge.brief`
   - `judge.tour`
+  - `user.pilot`
 
 ## Strategy Surface
 
@@ -97,6 +99,14 @@
 - Judge claims: AI中心性、競合差別化、実用性、安全境界、提出誠実性の5主張をscoreとevidenceに変換する
 - Blockers: ProtoPedia作品URLと動画URLは未入力ならexternal、形式不正ならqualityとして扱い、提出完了にしない
 - A2A payload: `judge.tour` skillとしてtour score、readiness、steps、claims、blockersを返す
+
+## User Pilot Surface
+
+- `POST /api/user-pilot`: 開発リード、Platform/SRE、ハッカソン提出者が最初の3分で価値へ到達できるかを検証する
+- Persona paths: 各対象ユーザーにgoal、time-to-value、task list、success signal、proofを持たせる
+- Frictions: ユーザビリティ、配送信頼度、公開デモwatch、安全境界をowner付き改善アクションに変換する
+- Next clicks: Judge Tour、Contract Desk、Impact Case、Marketplaceなど、次に押すべきボタンを明示する
+- A2A payload: `user.pilot` skillとしてpilot score、readiness、paths、frictions、next clicksを返す
 
 ## Autonomy Ledger Surface
 
@@ -159,6 +169,7 @@
 - `POST /api/win-run`: 競合/SWOT、証拠、最終候補判定、提出、運用を一括実行し、勝てる状態と残アクションを返す
 - `POST /api/impact-case`: 実用性のbefore/after、ユーザー別KPI、導入計画、審査回答を返す
 - `POST /api/judge-tour`: 初見審査員向けに90秒の画面順、反論、証拠リンク、残ブロッカーを返す
+- `POST /api/user-pilot`: 実利用者3ペルソナの初回導線、摩擦、次クリックを返す
 - Release gate: Cloud Run SREが公開継続かrollbackかを判断する
 - Rebuy loop: A2A Market BrokerがObservability Oracle / Test Forge / Security Sentinelの買い足しを推薦する
 - Runbook: healthz、ops drill、Cloud Run describe、Cloud Logging、traffic updateコマンドを提示する
@@ -184,6 +195,7 @@
 - Security review proof: `security.review` skillとして、Secret/IP/input/A2A/CIの安全境界をA2A payloadにも含める
 - Impact proof: `impact.case` skillとして、実用性の定量指標、ユーザー別KPI、導入計画をA2A payloadにも含める
 - Judge tour proof: `judge.tour` skillとして、審査員が開く順番、反論、証拠リンク、外部URLギャップをA2A payloadにも含める
+- User pilot proof: `user.pilot` skillとして、開発リード、Platform/SRE、提出者のfirst-run usabilityをA2A payloadにも含める
 
 ## Submission Surface
 
@@ -200,6 +212,7 @@
 - MVP audit: `/api/mvp-audit`
 - Judge brief: `/api/judge-brief`
 - Judge tour: `/api/judge-tour`
+- User pilot: `/api/user-pilot`
 - Autonomy ledger: `/api/autonomy-ledger`
 - Submission launch: `/api/submission-launch`
 - Security review: `/api/security-review`
@@ -221,6 +234,6 @@
 
 - AIエージェントが価値の中心: 市場探索、購入判断、A2A委任、自律ミッション、運用ドリル、Gemini分析が体験の中心
 - 課題アプローチ: AIを作るだけでなく、必要なAI能力を発見・調達・運用する問題を扱う
-- ユーザビリティ: 数値・価格・改善量・競合/SWOTに加え、Judge Tourで審査員が最初に開く順番まで意思決定できる
+- ユーザビリティ: 数値・価格・改善量・競合/SWOTに加え、Judge TourとUser Pilot Labで審査員と実利用者の最初の導線まで意思決定できる
 - 実用性: 開発現場のエージェント選定、DevOps改善、公開後の異常検知とrollback判断に加え、Impact CaseとJudge Tourで時間短縮、提出信頼度、ユーザー別KPI、審査説明順を説明可能
 - 実装力: React、Gemini API、A2A Agent Card、Cloud Run、戦略API、ミッションAPI、フォールバック、テストを含む

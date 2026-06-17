@@ -263,7 +263,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
       { name: "design-lint", tools: ["check_contrast", "inspect_layout"], maturity: 76 },
       { name: "asset-ledger", tools: ["record_image_source", "verify_assets"], maturity: 70 }
     ],
-    a2aSkillIds: ["ux.compose", "market.visualize", "demo.polish"],
+    a2aSkillIds: ["ux.compose", "market.visualize", "demo.polish", "user.pilot"],
     synergyTags: ["ux", "marketplace", "game", "a2a"]
   },
   {

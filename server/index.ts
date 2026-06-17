@@ -29,6 +29,7 @@ import { SUBMISSION_PROOF } from "../src/submission.js";
 import type { CiProof } from "../src/proof.js";
 import { buildWinningStrategy } from "../src/strategy.js";
 import type { GeminiRecommendation } from "../src/types.js";
+import { buildUserPilotLab } from "../src/userPilot.js";
 
 const app = express();
 const port = Number(process.env.PORT || 8080);
@@ -142,6 +143,12 @@ function agentCard(baseUrl: string) {
         name: "Build the 90-second judge walkthrough",
         description: "審査員が開く順番、話す台詞、反論、証拠リンク、残ブロッカーを90秒導線へ束ねる。",
         tags: ["judge-tour", "walkthrough", "demo", "evidence", "submission"]
+      },
+      {
+        id: "user.pilot",
+        name: "Run target-user first-run pilot",
+        description: "開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証する。",
+        tags: ["usability", "pilot", "persona", "first-run", "judge-score"]
       },
       {
         id: "autonomy.ledger",
@@ -1253,6 +1260,41 @@ app.post("/api/judge-tour", async (req, res) => {
   );
 });
 
+app.post("/api/user-pilot", async (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "対象ユーザーが最初の3分でAI能力調達の価値へ到達できるかを検証する。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const ci = await fetchCiProof();
+  const securityReview = buildSecurityReview({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    allowlist: ipAllowlistSummary,
+    ci,
+    geminiSecretConfigured: geminiSecretConfigured()
+  });
+  const impactCase = buildImpactCase({ recommendation, strategy, opsDrill, securityReview });
+
+  res.json(
+    buildUserPilotLab({
+      recommendation,
+      strategy,
+      impactCase,
+      opsDrill,
+      securityReview,
+      squadContract
+    })
+  );
+});
+
 app.post("/api/autonomy-ledger", async (req, res) => {
   const parsed = RecommendSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -1801,6 +1843,14 @@ app.post("/a2a", (req, res) => {
     opsDrill,
     securityReview
   });
+  const userPilot = buildUserPilotLab({
+    recommendation,
+    strategy,
+    impactCase,
+    opsDrill,
+    securityReview,
+    squadContract
+  });
   const judgeTour = buildJudgeTour({
     baseUrl: publicBaseUrl(req),
     recommendation,
@@ -1958,6 +2008,28 @@ app.post("/a2a", (req, res) => {
                   })),
                   nextImpactHire: impactCase.nextImpactHire?.name ?? null
                 },
+                userPilot: {
+                  id: userPilot.id,
+                  pilotScore: userPilot.pilotScore,
+                  readiness: userPilot.readiness,
+                  timeToValueSeconds: userPilot.timeToValueSeconds,
+                  usabilityLift: userPilot.usabilityLift,
+                  paths: userPilot.paths.map((path) => ({
+                    id: path.id,
+                    persona: path.persona,
+                    seconds: path.timeToValueSeconds
+                  })),
+                  frictions: userPilot.frictions.map((friction) => ({
+                    id: friction.id,
+                    severity: friction.severity,
+                    owner: friction.owner
+                  })),
+                  nextClicks: userPilot.nextClicks.map((click) => ({
+                    id: click.id,
+                    screen: click.screen,
+                    button: click.button
+                  }))
+                },
                 judgeTour: {
                   id: judgeTour.id,
                   tourScore: judgeTour.tourScore,
@@ -2095,6 +2167,7 @@ app.post("/a2a", (req, res) => {
                 submissionLaunchEndpoint: `${publicBaseUrl(req)}/api/submission-launch`,
                 securityReviewEndpoint: `${publicBaseUrl(req)}/api/security-review`,
                 impactCaseEndpoint: `${publicBaseUrl(req)}/api/impact-case`,
+                userPilotEndpoint: `${publicBaseUrl(req)}/api/user-pilot`,
                 judgeTourEndpoint: `${publicBaseUrl(req)}/api/judge-tour`,
                 winRunEndpoint: `${publicBaseUrl(req)}/api/win-run`,
                 demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,

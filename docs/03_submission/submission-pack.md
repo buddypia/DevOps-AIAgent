@@ -39,6 +39,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - MVP Auditで、必須技術、審査5項目、DevOps証拠、提出3点をpass/watch/failで監査し、外部未発行URLを合格扱いにしない
 - Judge Briefで、競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページにまとめる
 - Judge Tourで、Judge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
+- User Pilot Labで、開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証する
 - Autonomy Ledgerで、市場探索、判断、契約、A2A委任、検証、運用、提出を検収可能なAI自律性台帳として見せる
 - Security Sentinel Reviewで、Secret Manager、IP allowlist、Zod入力制限、A2A信頼境界、CIを審査員向け安全性証拠にする
 - Impact Caseで、対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性・体験価値の証拠にする
@@ -68,6 +69,7 @@ React UI
   -> MVP Audit hard gates
   -> Judge Brief one-page judge readout
   -> Judge Tour 90-second judge walkthrough
+  -> User Pilot Lab first-run usability paths
   -> Autonomy Ledger agent centrality audit
   -> Security Sentinel Review
   -> Impact Case
@@ -92,8 +94,8 @@ React UI
 | Time | Shot |
 | --- | --- |
 | 0-4s | Judge Tourで90秒導線、5つのjudge claims、外部URL不足を最初に見せる |
-| 4-8s | Market Intelを実行し、公式ソース付き競合比較と「作る基盤ではなくAI能力調達で勝つ」仮説を見せる |
-| 8-12s | Judge Briefでkey metrics、hard truth、proof ladder、risk registerを1画面で見せる |
+| 4-8s | User Pilot Labで開発リード、Platform/SRE、提出者のfirst-run pathsと摩擦を見せる |
+| 8-12s | Judge BriefとMarket Intelでkey metrics、公式ソース付き競合比較、proof ladder、risk registerを見せる |
 | 12-16s | Autonomy LedgerでAIがsense -> decide -> contract -> delegate -> verify -> operate -> submitした台帳を見せる |
 | 16-21s | Security Sentinel Review、Impact Case、Submission Launch Gate、Judge Proofで安全境界、実用性KPI、外部URL、Gemini/Cloud Run/A2A/CI/DevOpsの証拠束を見せる |
 | 21-25s | Submission DossierでProtoPedia本文、提出リンク、録画順、最終チェックを見せる |
@@ -124,6 +126,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/judge-brief \
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/judge-tour \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"protopediaUrl":"https://protopedia.net/prototype/999999","videoUrl":"https://youtu.be/demo1234567"}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/user-pilot \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/autonomy-ledger \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
