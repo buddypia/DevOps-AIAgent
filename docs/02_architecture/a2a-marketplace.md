@@ -24,9 +24,10 @@
 16. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
 17. `src/judgeBrief.ts` が競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員向け1ページに圧縮する
 18. `src/autonomyLedger.ts` が市場探索、判断、契約、A2A委任、検証、運用、提出をAI自律性台帳にする
-19. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
-20. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-21. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+19. `src/security.ts` がSecret Manager、IP allowlist、入力制限、A2A信頼境界、CIを審査用セキュリティ証拠にする
+20. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
+21. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+22. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -45,6 +46,7 @@
   - `submission.publish`
   - `submission.dossier`
   - `submission.launch`
+  - `security.review`
   - `demo.runway`
   - `win.autopilot`
   - `ops.drill`
@@ -100,6 +102,14 @@
 - Submit packet: Findy提出フォームに貼るGitHub URL、デプロイ済みURL、ProtoPedia URL、動画URL、タグを返す
 - A2A payload: `submission.launch` skillとしてlaunch score、readiness、URL status、checklist、submit packetを返す
 
+## Security Review Surface
+
+- `POST /api/security-review`: Secret Manager、IP allowlist、Zod入力制限、A2A信頼境界、CI、Cloud Run runtimeを監査する
+- Security controls: secret boundary、public demo allowlist、input contract、A2A trust、CI、prompt/output boundary、runtime guard、submission data minimizationをpass/watch/failで返す
+- Trust boundaries: browser -> Express、Express -> Gemini、A2A broker -> skills、Cloud Run -> public URLの境界とguardrailを明示する
+- Judge answers: Gemini APIキー、A2A権限、公開URL運用に関する厳しい質問へ短く答える
+- A2A payload: `security.review` skillとしてsecurity score、posture、controls、threats、next security hireを返す
+
 ## Contract Surface
 
 - `POST /api/contracts`: 選択済みAIの契約、受入条件、SLA、検証runbook、A2A payloadを返す
@@ -149,6 +159,7 @@
 - Judge brief proof: `judge.brief` skillとして、審査員の初見用にkey metrics、proof ladder、30秒route、risk registerをA2A payloadにも含める
 - Autonomy ledger proof: `autonomy.ledger` skillとして、AIの判断連鎖、agent handoff、検証endpoint、sha256 receiptをA2A payloadにも含める
 - Submission launch proof: `submission.launch` skillとして、外部URL入力後のsubmit-ready判定と提出フォーム用packetをA2A payloadにも含める
+- Security review proof: `security.review` skillとして、Secret/IP/input/A2A/CIの安全境界をA2A payloadにも含める
 
 ## Submission Surface
 
@@ -166,6 +177,7 @@
 - Judge brief: `/api/judge-brief`
 - Autonomy ledger: `/api/autonomy-ledger`
 - Submission launch: `/api/submission-launch`
+- Security review: `/api/security-review`
 - Ops drill: `/api/ops-drill`
 - Contracts: `/api/contracts`
 - Publisher: `/api/publisher`

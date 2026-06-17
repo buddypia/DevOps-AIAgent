@@ -21,6 +21,7 @@ import { buildOpsDrill } from "../src/ops.js";
 import { buildPitchRun } from "../src/pitch.js";
 import { buildJudgeProof } from "../src/proof.js";
 import { buildProtoPediaPublisher } from "../src/publisher.js";
+import { buildSecurityReview } from "../src/security.js";
 import { buildSubmissionLaunchGate } from "../src/submissionLaunch.js";
 import { SUBMISSION_PROOF } from "../src/submission.js";
 import type { CiProof } from "../src/proof.js";
@@ -181,6 +182,12 @@ function agentCard(baseUrl: string) {
         name: "Validate final submission launch gate",
         description: "ProtoPedia作品URLと動画URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する。",
         tags: ["submission", "launch-gate", "protopedia", "video", "mvp"]
+      },
+      {
+        id: "security.review",
+        name: "Review public demo security boundaries",
+        description: "Secret Manager、IP allowlist、Zod入力制限、A2A信頼境界、CIを審査員向けの安全性証拠に変換する。",
+        tags: ["security", "trust-boundary", "secret-manager", "a2a", "cloud-run"]
       },
       {
         id: "ops.drill",
@@ -365,6 +372,10 @@ function ciUnavailable(reason: string, status: CiProof["status"] = "watch"): CiP
 function ciStatus(status: string, conclusion: string | null): CiProof["status"] {
   if (status !== "completed") return "watch";
   return conclusion === "success" ? "passed" : "missing";
+}
+
+function geminiSecretConfigured() {
+  return Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY);
 }
 
 async function fetchCiProof(): Promise<CiProof> {
@@ -1254,6 +1265,28 @@ app.post("/api/ops-drill", (req, res) => {
   res.json(buildOpsDrill(recommendation, strategy, parsed.data.observed));
 });
 
+app.post("/api/security-review", async (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const ci = await fetchCiProof();
+  res.json(
+    buildSecurityReview({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy,
+      allowlist: ipAllowlistSummary,
+      ci,
+      geminiSecretConfigured: geminiSecretConfigured()
+    })
+  );
+});
+
 app.post("/api/contracts", (req, res) => {
   const parsed = RecommendSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -1554,6 +1587,14 @@ app.post("/a2a", (req, res) => {
     proof,
     publisher
   });
+  const securityReview = buildSecurityReview({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    allowlist: ipAllowlistSummary,
+    ci: ciUnavailable("A2A synchronous artifact uses /api/security-review for live CI evidence"),
+    geminiSecretConfigured: geminiSecretConfigured()
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -1663,6 +1704,23 @@ app.post("/a2a", (req, res) => {
                     id: item.id,
                     status: item.status
                   }))
+                },
+                securityReview: {
+                  id: securityReview.id,
+                  securityScore: securityReview.securityScore,
+                  posture: securityReview.posture,
+                  verdict: securityReview.verdict,
+                  controls: securityReview.controls.map((control) => ({
+                    id: control.id,
+                    status: control.status,
+                    score: control.score
+                  })),
+                  threats: securityReview.threats.map((threat) => ({
+                    id: threat.id,
+                    severity: threat.severity,
+                    likelihood: threat.likelihood
+                  })),
+                  nextSecurityHire: securityReview.nextSecurityHire?.name ?? null
                 },
                 mission: {
                   id: mission.id,
@@ -1779,6 +1837,7 @@ app.post("/a2a", (req, res) => {
                 judgeBriefEndpoint: `${publicBaseUrl(req)}/api/judge-brief`,
                 autonomyLedgerEndpoint: `${publicBaseUrl(req)}/api/autonomy-ledger`,
                 submissionLaunchEndpoint: `${publicBaseUrl(req)}/api/submission-launch`,
+                securityReviewEndpoint: `${publicBaseUrl(req)}/api/security-review`,
                 winRunEndpoint: `${publicBaseUrl(req)}/api/win-run`,
                 demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,
                 proofEndpoint: `${publicBaseUrl(req)}/api/proof`,

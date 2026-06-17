@@ -45,6 +45,7 @@ import type { OpsDrill } from "./ops";
 import type { PitchRun } from "./pitch";
 import type { JudgeProof } from "./proof";
 import type { ProtoPediaPublisher } from "./publisher";
+import type { SecurityReview } from "./security";
 import type { SubmissionDossier } from "./dossier";
 import type { SubmissionLaunchGate } from "./submissionLaunch";
 import { buildWinningStrategy } from "./strategy";
@@ -796,6 +797,160 @@ function AutonomyLedgerPanel({
           <Network size={28} />
           <strong>Build autonomy ledgerで、AIの判断、契約、A2A委任、検証、運用、提出を1本の台帳にします。</strong>
           <p>審査基準の「AIエージェントが価値の中心」を、主張ではなく検収可能なログとして見せます。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SecurityReviewPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [review, setReview] = useState<SecurityReview | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function runSecurityReview() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/security-review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setReview((await response.json()) as SecurityReview);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="security-review">
+      <div className="security-heading">
+        <div>
+          <span className="eyebrow">Trust boundary</span>
+          <h2>
+            <ShieldCheck size={20} />
+            Security Sentinel Review
+          </h2>
+        </div>
+        <button className="icon-button" onClick={runSecurityReview} disabled={loading} title="公開デモの安全境界を監査">
+          <ShieldCheck size={17} />
+          {loading ? "Reviewing" : "Run security review"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Security review request failed: {error}</p>}
+
+      {review ? (
+        <div className="security-body">
+          <div className="security-summary">
+            <div>
+              <span className={cx("risk-chip", review.posture === "guarded" ? "low" : review.posture === "watch" ? "medium" : "high")}>
+                {review.posture}
+              </span>
+              <h3>{review.verdict}</h3>
+              <p>{review.hardTruth}</p>
+            </div>
+            <div className="security-score">
+              <strong>{review.securityScore}</strong>
+              <span>security score</span>
+            </div>
+          </div>
+
+          <div className="security-controls">
+            {review.controls.map((control) => (
+              <article key={control.id} className={control.status}>
+                <div>
+                  <strong>{control.label}</strong>
+                  <span>{control.status}</span>
+                </div>
+                <p>{control.evidence}</p>
+                <small>{control.action}</small>
+              </article>
+            ))}
+          </div>
+
+          <div className="security-grid">
+            <section>
+              <h3>
+                <Network size={15} />
+                Trust boundaries
+              </h3>
+              <div className="security-boundaries">
+                {review.boundaries.map((boundary) => (
+                  <article key={boundary.id}>
+                    <span>
+                      {boundary.from}
+                      {" -> "}
+                      {boundary.to}
+                    </span>
+                    <strong>{boundary.guardrail}</strong>
+                    <p>{boundary.risk}</p>
+                    <small>{boundary.evidence}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <AlertTriangle size={15} />
+                Threats
+              </h3>
+              <div className="security-threats">
+                {review.threats.map((threat) => (
+                  <article key={threat.id} className={threat.severity}>
+                    <div>
+                      <strong>{threat.threat}</strong>
+                      <span>{threat.severity}</span>
+                    </div>
+                    <p>{threat.mitigation}</p>
+                    <small>{threat.proof}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                Judge answers
+              </h3>
+              <div className="security-answers">
+                {review.judgeAnswers.map((answer) => (
+                  <article key={answer.id}>
+                    <strong>{answer.question}</strong>
+                    <p>{answer.answer}</p>
+                    <small>{answer.evidence}</small>
+                  </article>
+                ))}
+              </div>
+              {review.nextSecurityHire && (
+                <div className="security-next">
+                  <span>Next security hire</span>
+                  <strong>{review.nextSecurityHire.name}</strong>
+                  <p>{review.nextSecurityHire.reason}</p>
+                </div>
+              )}
+              <pre>{JSON.stringify({ runbook: review.runbookCommands, a2aPayload: review.a2aPayload }, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="security-empty">
+          <ShieldCheck size={28} />
+          <strong>Run security reviewで、Secret、IP allowlist、入力制限、A2A信頼境界、CIを審査用の証拠にします。</strong>
+          <p>公開デモの安全性を、口頭ではなくSecurity Sentinelの監査ログとして見せます。</p>
         </div>
       )}
     </section>
@@ -2948,6 +3103,7 @@ export default function App() {
 
       <JudgeBriefPanel recommendation={recommendation} projectBrief={projectBrief} />
       <AutonomyLedgerPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <SecurityReviewPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MarketIntelPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MvpAuditPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SubmissionLaunchPanel recommendation={recommendation} projectBrief={projectBrief} />
