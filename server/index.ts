@@ -5,6 +5,7 @@ import path from "node:path";
 import { z } from "zod";
 import { ipAllowlistMiddleware, ipAllowlistSummary } from "./ipAllowlist.js";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js";
+import { buildSquadContract } from "../src/contracts.js";
 import { buildJudgeDrill } from "../src/judgeDrill.js";
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market.js";
 import { buildMissionRun } from "../src/mission.js";
@@ -82,6 +83,12 @@ function agentCard(baseUrl: string) {
         name: "Hire a squad",
         description: "予算内でエージェントを購入し、企画・実装・運用・統制スコアの改善量を返す。",
         tags: ["gamification", "capability-score", "squad"]
+      },
+      {
+        id: "contract.issue",
+        name: "Issue agent contracts",
+        description: "選択したAIごとの成果物、受入条件、SLA、検証コマンド、支払い条件を生成する。",
+        tags: ["contract", "procurement", "acceptance", "sla", "marketplace"]
       },
       {
         id: "task.delegate",
@@ -407,6 +414,20 @@ app.post("/api/ops-drill", (req, res) => {
   res.json(buildOpsDrill(recommendation, strategy, parsed.data.observed));
 });
 
+app.post("/api/contracts", (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "選択したAIを成果物、受入条件、SLA、検証コマンド付きで雇う。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  res.json(buildSquadContract({ recommendation, strategy, mission, opsDrill }));
+});
+
 app.post("/api/pitch", (req, res) => {
   const parsed = RecommendSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -530,6 +551,7 @@ app.post("/a2a", (req, res) => {
   const strategy = buildWinningStrategy(recommendation);
   const mission = buildMissionRun(recommendation, strategy, String(text));
   const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
   const pitch = buildPitchRun({
     baseUrl: publicBaseUrl(req),
     recommendation,
@@ -597,6 +619,17 @@ app.post("/a2a", (req, res) => {
                   rollbackRecommended: opsDrill.rollbackRecommended,
                   nextOpsAgent: opsDrill.nextOpsAgent?.name ?? null,
                   runbookCommands: opsDrill.runbookCommands
+                },
+                contract: {
+                  id: squadContract.id,
+                  contractScore: squadContract.contractScore,
+                  totalPrice: squadContract.totalPrice,
+                  remainingBudget: squadContract.remainingBudget,
+                  contracts: squadContract.contracts.map((contract) => ({
+                    agentId: contract.agentId,
+                    risk: contract.risk,
+                    acceptanceCriteria: contract.acceptanceCriteria
+                  }))
                 },
                 pitch: {
                   id: pitch.id,

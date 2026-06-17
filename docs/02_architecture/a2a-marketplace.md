@@ -10,12 +10,13 @@
 2. `src/agentEngine.ts` が能力重みを計算する
 3. 市場エージェントを価格・能力・相性でランキングする
 4. 選択されたエージェントから改善スコアとA2A委任タイムラインを作る
-5. `src/strategy.ts` が競合、SWOT、審査5項目、MVP提出準備、次に雇うべきAIを算出する
-6. `src/mission.ts` が弱点補強、A2A委任、検証runbook、ProtoPedia提出パックを生成する
-7. `src/ops.ts` がCloud Run公開デモのシグナルから継続・ロールバック・追加雇用を判断する
-8. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
-9. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-10. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+5. `src/contracts.ts` が選択済みAIの成果物、受入条件、SLA、検証コマンドを契約化する
+6. `src/strategy.ts` が競合、SWOT、審査5項目、MVP提出準備、次に雇うべきAIを算出する
+7. `src/mission.ts` が弱点補強、A2A委任、検証runbook、ProtoPedia提出パックを生成する
+8. `src/ops.ts` がCloud Run公開デモのシグナルから継続・ロールバック・追加雇用を判断する
+9. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
+10. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+11. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -24,6 +25,7 @@
 - Main skills:
   - `market.discover`
   - `agent.hire`
+  - `contract.issue`
   - `task.delegate`
   - `strategy.audit`
   - `mission.run`
@@ -38,6 +40,13 @@
 - MVP proof: Cloud Run、Gemini、A2A、公開GitHub、ProtoPediaの提出準備を分離
 - Next hire: 最も弱い審査項目に効くエージェントを推薦
 
+## Contract Surface
+
+- `POST /api/contracts`: 選択済みAIの契約、受入条件、SLA、検証runbook、A2A payloadを返す
+- Contract score: 予算、審査スコア、verification、ops readiness、契約リスクから算出する
+- Acceptance runbook: GitHub Actions、Judge Proof、Ops Drill、Pitch Directorを検収条件へ接続する
+- A2A payload: `contract.issue` skillとして価格、risk、acceptanceCriteriaを返す
+
 ## Mission Surface
 
 - Autonomous proof: sense → decide → delegate → verify → ship の5段階で、AIが判断して動いた証跡を表示
@@ -48,6 +57,7 @@
 ## Operations Surface
 
 - `POST /api/ops-drill`: Cloud Run health、p95 latency、5xx率、Gemini fallback、予算余力、外部提出URLの状態を評価する
+- `POST /api/contracts`: AI契約、受入条件、SLA、検証コマンド、支払い条件を評価する
 - `POST /api/pitch`: 30秒動画のshot list、voiceover、lower thirds、recording checklist、提出残リスクを返す
 - `POST /api/judge-drill`: 審査5項目ごとの厳しめ質問、回答、証拠リンク、デモ画面を返す
 - Release gate: Cloud Run SREが公開継続かrollbackかを判断する
@@ -60,6 +70,7 @@
 - `POST /api/proof`: Gemini実行、Cloud Run公開、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1つの審査証拠束にまとめる
 - UI: `Run judge proof` ボタンでoverall proof score、7カテゴリスコア、live links、proof runbook、sha256 receiptを表示する
 - A2A skill: `judge.proof` としてAgent Cardにも公開する
+- Contract proof: `contract.issue` skillとして、AIの購入が成果物と検収条件に接続されていることを示す
 - CI proof: `.github/workflows/ci.yml` が `npm run typecheck`、`npm test`、`npm run build`、`make q.check-architecture` を公開repo上で実行し、Proof APIが最新main runを取り込む
 - Pitch proof: `pitch.director` skillとして、審査員に見せる順番と提出動画の残作業をA2A payloadにも含める
 - Judge drill: `judge.drill` skillとして、審査員の反論に対する回答と証拠リンクをA2A payloadにも含める
@@ -76,6 +87,7 @@
 - Cloud Run service: `a2a-agent-marketplace`
 - Health check: `/api/healthz` (`/healthz` もローカル互換で提供)
 - Ops drill: `/api/ops-drill`
+- Contracts: `/api/contracts`
 - Pitch director: `/api/pitch`
 - Judge drill: `/api/judge-drill`
 - Judge proof: `/api/proof`

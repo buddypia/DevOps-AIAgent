@@ -33,6 +33,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 
 - Project Briefを入力すると、必要能力を抽出し、AIエージェント市場から候補を推薦する
 - 各エージェントを価格、能力値、MCP成熟度、A2Aスキルで比較できる
+- Contract Deskで、選択したAIの成果物、受入条件、SLA、検証コマンドを発行する
 - Winning Strategyで競合分析、SWOT、審査5項目、MVP proof、次に雇うべきAIを表示する
 - Mission Controlで、AIが弱点を検出し、A2A委任、検証runbook、提出パックを生成した証跡を見せる
 - Ops Drillで、Cloud Run公開デモの稼働シグナルから継続・ロールバック・追加雇用を判断する
@@ -49,7 +50,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 ```text
 React UI
   -> Express API
-  -> Recommendation / Strategy / Mission engines
+  -> Recommendation / Contract / Strategy / Mission engines
   -> Ops Drill / Cloud Run runbook
   -> Judge Proof bundle
   -> Pitch Director
@@ -67,7 +68,7 @@ React UI
 | 0-5s | Project Briefに課題を貼り、AI能力市場が候補を並べる |
 | 5-10s | Judge Proofを実行し、Gemini/Cloud Run/A2A/CI/DevOps/提出URLの証拠束を見せる |
 | 10-16s | Winning Strategyで競合/SWOT/審査スコアを確認する |
-| 16-22s | Mission ControlとOps Drillで自律判断、A2A委任、運用判断を見せる |
+| 16-22s | Contract Desk、Mission Control、Ops Drillで契約、A2A委任、運用判断を見せる |
 | 22-27s | Pitch DirectorとJudge Drillで録画順、字幕、想定問答を見せる |
 | 27-30s | Cloud Run URL、GitHub Actions、ProtoPediaタグ、構成図を提出パックとして締める |
 
@@ -84,6 +85,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/strategy \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mission \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/contracts \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/ops-drill \
