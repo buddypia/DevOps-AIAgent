@@ -38,6 +38,7 @@ import type { JudgeDrill } from "./judgeDrill";
 import { CAPABILITY_LABELS, DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "./market";
 import type { MarketIntelReport } from "./marketIntel";
 import type { MissionRun } from "./mission";
+import type { MvpAuditReport } from "./mvpAudit";
 import type { OpsDrill } from "./ops";
 import type { PitchRun } from "./pitch";
 import type { JudgeProof } from "./proof";
@@ -626,6 +627,169 @@ function MarketIntelPanel({
           <Radar size={28} />
           <strong>Run market intelで、公式ソース付き競合比較、差別化仮説、審査回答を生成します。</strong>
           <p>ADKやLangGraphと正面衝突せず、AI能力を調達する体験として勝つ理由を1画面にします。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function MvpAuditPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [audit, setAudit] = useState<MvpAuditReport | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function runAudit() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/mvp-audit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setAudit((await response.json()) as MvpAuditReport);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="mvp-audit">
+      <div className="mvp-heading">
+        <div>
+          <span className="eyebrow">MVP audit</span>
+          <h2>
+            <Gauge size={20} />
+            Hard-gate readiness check
+          </h2>
+        </div>
+        <button className="icon-button" onClick={runAudit} disabled={loading} title="MVP監査を実行">
+          <BadgeCheck size={17} />
+          {loading ? "Auditing" : "Run MVP audit"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">MVP audit request failed: {error}</p>}
+
+      {audit ? (
+        <div className="mvp-body">
+          <div className="mvp-summary">
+            <div>
+              <span className={cx("risk-chip", audit.band === "submission-ready" ? "low" : audit.band === "mvp-with-external-gaps" ? "medium" : "high")}>
+                {audit.band}
+              </span>
+              <h3>{audit.verdict}</h3>
+              <p>{audit.hardTruth}</p>
+            </div>
+            <div className="mvp-score">
+              <strong>{audit.mvpScore}</strong>
+              <span>MVP score</span>
+            </div>
+          </div>
+
+          <div className="mvp-gates">
+            {audit.gates.map((gate) => (
+              <article key={gate.id} className={gate.status}>
+                <div>
+                  <strong>{gate.label}</strong>
+                  <span>{gate.status}</span>
+                </div>
+                <p>{gate.evidence}</p>
+                <small>{gate.nextAction}</small>
+                {gate.url && (
+                  <a href={gate.url} target="_blank" rel="noreferrer">
+                    Evidence <ExternalLink size={13} />
+                  </a>
+                )}
+              </article>
+            ))}
+          </div>
+
+          <div className="mvp-grid">
+            <section>
+              <h3>
+                <Trophy size={15} />
+                Judge lanes
+              </h3>
+              <div className="mvp-lanes">
+                {audit.judgeLanes.map((lane) => (
+                  <article key={lane.id} className={lane.status}>
+                    <div>
+                      <strong>{lane.label}</strong>
+                      <span>{lane.score}</span>
+                    </div>
+                    <p>{lane.evidence}</p>
+                    <small>{lane.nextAction}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <AlertTriangle size={15} />
+                Blockers
+              </h3>
+              <div className="mvp-actions">
+                {audit.blockers.length > 0 ? (
+                  audit.blockers.map((action) => (
+                    <article key={action.id} className={action.priority}>
+                      <div>
+                        <strong>{action.label}</strong>
+                        <span>{action.priority}</span>
+                      </div>
+                      <p>{action.action}</p>
+                      <small>{action.owner} / {action.proof}</small>
+                    </article>
+                  ))
+                ) : (
+                  <article className="later">
+                    <div>
+                      <strong>No blockers</strong>
+                      <span>clear</span>
+                    </div>
+                    <p>ハードゲート上の未達はありません。</p>
+                  </article>
+                )}
+              </div>
+              <h3>
+                <ExternalLink size={15} />
+                Proof URLs
+              </h3>
+              <div className="mvp-links">
+                {audit.proofUrls.map((url) => (
+                  <a key={url.id} href={url.url} target="_blank" rel="noreferrer">
+                    {url.label}
+                    <ExternalLink size={13} />
+                  </a>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <ShieldCheck size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(audit.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="mvp-empty">
+          <Gauge size={28} />
+          <strong>Run MVP auditで、必須技術、審査5項目、DevOps証拠、提出3点をハードゲート判定します。</strong>
+          <p>未発行のProtoPedia作品URLと動画URLは、合格扱いにせずwatchとして残します。</p>
         </div>
       )}
     </section>
@@ -2312,6 +2476,7 @@ export default function App() {
       </section>
 
       <MarketIntelPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <MvpAuditPanel recommendation={recommendation} projectBrief={projectBrief} />
       <WinAutopilotPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SubmissionDossierPanel recommendation={recommendation} projectBrief={projectBrief} />
       <DemoRunwayPanel recommendation={recommendation} projectBrief={projectBrief} />

@@ -7,7 +7,9 @@ import { buildSubmissionDossier } from "../src/dossier";
 import { buildFinalistSimulation } from "../src/finalist";
 import { buildJudgeDrill } from "../src/judgeDrill";
 import { DEFAULT_PROJECT_BRIEF } from "../src/market";
+import { buildMarketIntelReport } from "../src/marketIntel";
 import { buildMissionRun } from "../src/mission";
+import { buildMvpAudit } from "../src/mvpAudit";
 import { buildOpsDrill } from "../src/ops";
 import { buildPitchRun } from "../src/pitch";
 import { buildJudgeProof } from "../src/proof";
@@ -16,11 +18,12 @@ import { buildProtoPediaPublisher } from "../src/publisher";
 import { SUBMISSION_PROOF } from "../src/submission";
 import { buildWinningStrategy } from "../src/strategy";
 
-describe("submission dossier", () => {
-  test("packages copy blocks, proof links, and recording steps for final external submission", () => {
+describe("MVP audit", () => {
+  test("keeps external submission URLs as watch while passing core MVP gates", () => {
     const baseUrl = "https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app";
     const recommendation = recommendSquad(DEFAULT_PROJECT_BRIEF, ["market-broker", "gemini-strategist", "cloud-run-sre"], 140);
     const strategy = buildWinningStrategy(recommendation);
+    const marketIntel = buildMarketIntelReport({ baseUrl, recommendation, strategy });
     const mission = buildMissionRun(recommendation, strategy);
     const opsDrill = buildOpsDrill(recommendation, strategy);
     const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
@@ -39,15 +42,12 @@ describe("submission dossier", () => {
       evidence: "Latest main CI run completed successfully.",
       runId: 1
     };
-    const proof = buildJudgeProof({
-      baseUrl,
-      recommendation,
-      strategy,
-      mission,
-      opsDrill,
-      gemini: localGeminiRecommendation(recommendation, "test"),
-      ci
-    });
+    const gemini = {
+      ...localGeminiRecommendation(recommendation, "test"),
+      source: "gemini" as const,
+      model: "gemini-3.5-flash"
+    };
+    const proof = buildJudgeProof({ baseUrl, recommendation, strategy, mission, opsDrill, gemini, ci });
     const autopilot = buildWinningAutopilot({
       baseUrl,
       recommendation,
@@ -72,23 +72,31 @@ describe("submission dossier", () => {
       autopilot,
       proof
     });
+    const audit = buildMvpAudit({
+      baseUrl,
+      recommendation,
+      strategy,
+      mission,
+      opsDrill,
+      finalist,
+      autopilot,
+      dossier,
+      proof,
+      marketIntel
+    });
 
-    expect(dossier.dossierScore).toBeGreaterThanOrEqual(84);
-    expect(dossier.readiness).toBe("needs-external-urls");
-    expect(dossier.copyBlocks.map((block) => block.id)).toEqual(
-      expect.arrayContaining(["title", "one-liner", "problem", "users", "features", "technology", "demo-flow", "judge-proof", "tags"])
-    );
-    expect(dossier.links.map((link) => link.id)).toEqual(expect.arrayContaining(["github", "cloud-run", "ci", "architecture", "protopedia", "video"]));
-    expect(dossier.links.filter((link) => link.status === "watch").map((link) => link.id)).toEqual(expect.arrayContaining(["protopedia", "video"]));
-    expect(dossier.recordingPlan[0]).toContain("Market Intel");
-    expect(dossier.recordingPlan[1]).toContain("MVP Audit");
-    expect(dossier.recordingPlan[2]).toContain("Win Autopilot");
-    expect(dossier.markdown).toContain("30秒動画録画順");
-    expect(dossier.markdown).toContain("needs external URL");
-    expect(dossier.a2aPayload).toMatchObject({
+    expect(audit.mvpScore).toBeGreaterThanOrEqual(84);
+    expect(audit.band).toBe("mvp-with-external-gaps");
+    expect(audit.gates.find((gate) => gate.id === "cloud-run-runtime")?.status).toBe("pass");
+    expect(audit.gates.find((gate) => gate.id === "gemini-ai")?.status).toBe("pass");
+    expect(audit.gates.find((gate) => gate.id === "market-swot")?.status).toBe("pass");
+    expect(audit.gates.find((gate) => gate.id === "protopedia-url")?.status).toBe("watch");
+    expect(audit.gates.find((gate) => gate.id === "video-url")?.status).toBe("watch");
+    expect(audit.blockers.map((action) => action.id)).toEqual(expect.arrayContaining(["protopedia-url", "video-url"]));
+    expect(audit.a2aPayload).toMatchObject({
       method: "message/send",
-      skill: "submission.dossier",
-      readiness: "needs-external-urls"
+      skill: "mvp.audit",
+      band: "mvp-with-external-gaps"
     });
   });
 });

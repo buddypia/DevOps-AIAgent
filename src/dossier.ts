@@ -138,7 +138,9 @@ export function buildSubmissionDossier(input: {
       }))
   ];
   const recordingPlan = [
-    "0-4s: Win Autopilotでwin score、残アクション、証拠デッキを見せる",
+    "0-4s: Market Intelで公式ソース付き競合比較とAI能力調達の勝ち筋を見せる",
+    "4-8s: MVP Auditで必須技術、審査5項目、DevOps証拠、提出3点のwatch/failを見せる",
+    "8-12s: Win Autopilotでwin score、残アクション、証拠デッキを見せる",
     ...demoRunway.recordingCues
   ];
   const dossierScore = Math.round(

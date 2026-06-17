@@ -14,6 +14,7 @@ import { buildJudgeDrill } from "../src/judgeDrill.js";
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market.js";
 import { buildMarketIntelReport } from "../src/marketIntel.js";
 import { buildMissionRun } from "../src/mission.js";
+import { buildMvpAudit } from "../src/mvpAudit.js";
 import { buildOpsDrill } from "../src/ops.js";
 import { buildPitchRun } from "../src/pitch.js";
 import { buildJudgeProof } from "../src/proof.js";
@@ -113,6 +114,12 @@ function agentCard(baseUrl: string) {
         name: "Build source-backed market intelligence",
         description: "公式ソース付き競合比較、差別化仮説、審査回答、次アクションを提出向けに返す。",
         tags: ["market-intelligence", "competitive-analysis", "sources", "swot", "judge-score"]
+      },
+      {
+        id: "mvp.audit",
+        name: "Audit MVP readiness with hard gates",
+        description: "必須技術、審査5項目、DevOps証拠、提出3点をハードゲートで判定し、未達をwatch/failとして返す。",
+        tags: ["mvp", "audit", "hard-gates", "judge-score", "submission"]
       },
       {
         id: "mission.run",
@@ -775,6 +782,129 @@ app.post("/api/dossier", async (req, res) => {
   );
 });
 
+app.post("/api/mvp-audit", async (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const marketIntel = buildMarketIntelReport({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy
+  });
+  const mission = buildMissionRun(recommendation, strategy, "MVPとして提出できるかを、必須技術、審査基準、DevOps証拠、提出3点で監査する。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const pitch = buildPitchRun({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill
+  });
+  const judgeDrill = buildJudgeDrill({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch
+  });
+  const finalist = buildFinalistSimulation({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    judgeDrill,
+    squadContract
+  });
+  const publisher = buildProtoPediaPublisher({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist
+  });
+  const demoRunway = buildDemoRunway({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist,
+    publisher
+  });
+  const [geminiResult, ciResult] = await Promise.allSettled([
+    runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
+    fetchCiProof()
+  ]);
+  const gemini =
+    geminiResult.status === "fulfilled"
+      ? geminiResult.value
+      : localGeminiRecommendation(
+          recommendation,
+          geminiResult.reason instanceof Error ? geminiResult.reason.message : "Gemini request failed"
+        );
+  const ci = ciResult.status === "fulfilled" ? ciResult.value : ciUnavailable("CI status promise rejected");
+  const proof = buildJudgeProof({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    gemini,
+    ci
+  });
+  const autopilot = buildWinningAutopilot({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    squadContract,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    proof
+  });
+  const dossier = buildSubmissionDossier({
+    recommendation,
+    strategy,
+    mission,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    autopilot,
+    proof
+  });
+
+  res.json(
+    buildMvpAudit({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy,
+      mission,
+      opsDrill,
+      finalist,
+      autopilot,
+      dossier,
+      proof,
+      marketIntel
+    })
+  );
+});
+
 app.post("/api/ops-drill", (req, res) => {
   const parsed = OpsDrillSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -962,7 +1092,7 @@ app.post("/a2a", (req, res) => {
     req.body?.params?.message?.parts?.find((part: { text?: string }) => typeof part.text === "string")?.text ||
     req.body?.params?.text ||
     "DevOps x AI Agent marketplace request";
-  const recommendation = recommendSquad(String(text), [], 140);
+  const recommendation = recommendSquad(String(text), ["market-broker", "gemini-strategist", "cloud-run-sre"], 140);
   const strategy = buildWinningStrategy(recommendation);
   const mission = buildMissionRun(recommendation, strategy, String(text));
   const opsDrill = buildOpsDrill(recommendation, strategy);
@@ -1049,6 +1179,18 @@ app.post("/a2a", (req, res) => {
     recommendation,
     strategy
   });
+  const mvpAudit = buildMvpAudit({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    finalist,
+    autopilot: winAutopilot,
+    dossier,
+    proof,
+    marketIntel
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -1100,6 +1242,22 @@ app.post("/a2a", (req, res) => {
                     id: move.id,
                     priority: move.priority,
                     action: move.action
+                  }))
+                },
+                mvpAudit: {
+                  id: mvpAudit.id,
+                  mvpScore: mvpAudit.mvpScore,
+                  band: mvpAudit.band,
+                  verdict: mvpAudit.verdict,
+                  gates: mvpAudit.gates.map((gate) => ({
+                    id: gate.id,
+                    status: gate.status,
+                    score: gate.score
+                  })),
+                  blockers: mvpAudit.blockers.map((action) => ({
+                    id: action.id,
+                    priority: action.priority,
+                    action: action.action
                   }))
                 },
                 mission: {
@@ -1213,6 +1371,7 @@ app.post("/a2a", (req, res) => {
                 },
                 dossierEndpoint: `${publicBaseUrl(req)}/api/dossier`,
                 marketIntelEndpoint: `${publicBaseUrl(req)}/api/market-intel`,
+                mvpAuditEndpoint: `${publicBaseUrl(req)}/api/mvp-audit`,
                 winRunEndpoint: `${publicBaseUrl(req)}/api/win-run`,
                 demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,
                 proofEndpoint: `${publicBaseUrl(req)}/api/proof`,

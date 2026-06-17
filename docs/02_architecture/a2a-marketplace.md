@@ -13,16 +13,17 @@
 5. `src/contracts.ts` が選択済みAIの成果物、受入条件、SLA、検証コマンドを契約化する
 6. `src/strategy.ts` が競合、SWOT、審査5項目、MVP提出準備、次に雇うべきAIを算出する
 7. `src/marketIntel.ts` が公式ソース付き競合比較、差別化仮説、審査回答、次アクションを生成する
-8. `src/mission.ts` が弱点補強、A2A委任、検証runbook、ProtoPedia提出パックを生成する
-9. `src/ops.ts` がCloud Run公開デモのシグナルから継続・ロールバック・追加雇用を判断する
-10. `src/finalist.ts` が審査員5役の模擬判定、落選理由、残ギャップ、次の一手を生成する
-11. `src/publisher.ts` がProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
-12. `src/demoRunway.ts` が証拠、最終候補判定、提出本文、AI市場、運用判断を30秒の審査員導線に束ねる
-13. `src/autopilot.ts` が全証拠を一括判定し、win score、残ブロッカー、証拠デッキを返す
-14. `src/dossier.ts` がProtoPedia本文、動画録画順、提出リンク、最終チェックを1つのドシエに束ねる
-15. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
-16. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-17. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+8. `src/mvpAudit.ts` が必須技術、審査5項目、DevOps証拠、提出3点をハードゲート判定する
+9. `src/mission.ts` が弱点補強、A2A委任、検証runbook、ProtoPedia提出パックを生成する
+10. `src/ops.ts` がCloud Run公開デモのシグナルから継続・ロールバック・追加雇用を判断する
+11. `src/finalist.ts` が審査員5役の模擬判定、落選理由、残ギャップ、次の一手を生成する
+12. `src/publisher.ts` がProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
+13. `src/demoRunway.ts` が証拠、最終候補判定、提出本文、AI市場、運用判断を30秒の審査員導線に束ねる
+14. `src/autopilot.ts` が全証拠を一括判定し、win score、残ブロッカー、証拠デッキを返す
+15. `src/dossier.ts` がProtoPedia本文、動画録画順、提出リンク、最終チェックを1つのドシエに束ねる
+16. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
+17. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+18. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -35,6 +36,7 @@
   - `task.delegate`
   - `strategy.audit`
   - `market.intel`
+  - `mvp.audit`
   - `mission.run`
   - `submission.publish`
   - `submission.dossier`
@@ -60,6 +62,14 @@
 - Judge answers: 審査5項目へそのまま返せる短い回答と証拠を生成する
 - A2A payload: `market.intel` skillとしてmarket score、source ids、next movesを返す
 
+## MVP Audit Surface
+
+- `POST /api/mvp-audit`: 必須技術、審査5項目、DevOps証拠、提出3点をpass/watch/failで判定する
+- Hard gates: Cloud Run、Gemini、A2A、競合/SWOT、CI、Ops、公開GitHub、デプロイ済みURL、ProtoPedia作品URL、動画URL、30秒導線
+- Judge lanes: 審査5項目のスコア、証拠、次アクションを監査結果に含める
+- Blockers: 未発行のProtoPedia作品URLと動画URLをwatchとして残し、外部作業を合格扱いしない
+- A2A payload: `mvp.audit` skillとしてMVP score、band、gate statuses、blockersを返す
+
 ## Contract Surface
 
 - `POST /api/contracts`: 選択済みAIの契約、受入条件、SLA、検証runbook、A2A payloadを返す
@@ -79,6 +89,7 @@
 - `POST /api/ops-drill`: Cloud Run health、p95 latency、5xx率、Gemini fallback、予算余力、外部提出URLの状態を評価する
 - `POST /api/contracts`: AI契約、受入条件、SLA、検証コマンド、支払い条件を評価する
 - `POST /api/market-intel`: ソース付き競合比較、審査回答、差別化次アクションを評価する
+- `POST /api/mvp-audit`: MVPハードゲート、審査lane、提出blockerを評価する
 - `POST /api/pitch`: 30秒動画のshot list、voiceover、lower thirds、recording checklist、提出残リスクを返す
 - `POST /api/judge-drill`: 審査5項目ごとの厳しめ質問、回答、証拠リンク、デモ画面を返す
 - `POST /api/finalist`: 審査員5役の最終候補判定、落選理由、残ギャップ、次の一手を返す
@@ -118,6 +129,7 @@
 - Cloud Run service: `a2a-agent-marketplace`
 - Health check: `/api/healthz` (`/healthz` もローカル互換で提供)
 - Market intel: `/api/market-intel`
+- MVP audit: `/api/mvp-audit`
 - Ops drill: `/api/ops-drill`
 - Contracts: `/api/contracts`
 - Publisher: `/api/publisher`
