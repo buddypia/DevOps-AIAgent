@@ -14,6 +14,7 @@ import { buildFinalistSimulation } from "../src/finalist.js";
 import { buildImpactCase } from "../src/impact.js";
 import { buildJudgeBrief } from "../src/judgeBrief.js";
 import { buildJudgeDrill } from "../src/judgeDrill.js";
+import { buildJudgeTour } from "../src/judgeTour.js";
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market.js";
 import { buildMarketIntelReport } from "../src/marketIntel.js";
 import { buildMissionRun } from "../src/mission.js";
@@ -135,6 +136,12 @@ function agentCard(baseUrl: string) {
         name: "Build the one-page judge brief",
         description: "競合差別化、MVP監査、証拠、30秒導線、残リスクを審査員向けの1枚に束ねる。",
         tags: ["judge-brief", "demo", "mvp", "market-intelligence", "submission"]
+      },
+      {
+        id: "judge.tour",
+        name: "Build the 90-second judge walkthrough",
+        description: "審査員が開く順番、話す台詞、反論、証拠リンク、残ブロッカーを90秒導線へ束ねる。",
+        tags: ["judge-tour", "walkthrough", "demo", "evidence", "submission"]
       },
       {
         id: "autonomy.ledger",
@@ -1082,6 +1089,170 @@ app.post("/api/judge-brief", async (req, res) => {
   );
 });
 
+app.post("/api/judge-tour", async (req, res) => {
+  const parsed = LaunchSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const baseUrl = publicBaseUrl(req);
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const marketIntel = buildMarketIntelReport({
+    baseUrl,
+    recommendation,
+    strategy
+  });
+  const mission = buildMissionRun(recommendation, strategy, "審査員が90秒で競合差別化、実用性、安全性、実行証拠、提出状態を理解できる導線を生成する。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const pitch = buildPitchRun({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill
+  });
+  const judgeDrill = buildJudgeDrill({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch
+  });
+  const finalist = buildFinalistSimulation({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    judgeDrill,
+    squadContract
+  });
+  const publisher = buildProtoPediaPublisher({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist
+  });
+  const demoRunway = buildDemoRunway({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist,
+    publisher
+  });
+  const [geminiResult, ciResult] = await Promise.allSettled([
+    runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
+    fetchCiProof()
+  ]);
+  const gemini =
+    geminiResult.status === "fulfilled"
+      ? geminiResult.value
+      : localGeminiRecommendation(
+          recommendation,
+          geminiResult.reason instanceof Error ? geminiResult.reason.message : "Gemini request failed"
+        );
+  const ci = ciResult.status === "fulfilled" ? ciResult.value : ciUnavailable("CI status promise rejected");
+  const proof = buildJudgeProof({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    gemini,
+    ci
+  });
+  const autopilot = buildWinningAutopilot({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    squadContract,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    proof
+  });
+  const dossier = buildSubmissionDossier({
+    recommendation,
+    strategy,
+    mission,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    autopilot,
+    proof
+  });
+  const mvpAudit = buildMvpAudit({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    finalist,
+    autopilot,
+    dossier,
+    proof,
+    marketIntel
+  });
+  const judgeBrief = buildJudgeBrief({
+    baseUrl,
+    recommendation,
+    strategy,
+    marketIntel,
+    mvpAudit,
+    autopilot,
+    dossier,
+    proof,
+    finalist
+  });
+  const securityReview = buildSecurityReview({
+    baseUrl,
+    recommendation,
+    strategy,
+    allowlist: ipAllowlistSummary,
+    ci,
+    geminiSecretConfigured: geminiSecretConfigured()
+  });
+  const impactCase = buildImpactCase({ recommendation, strategy, opsDrill, securityReview });
+  const submissionLaunch = buildSubmissionLaunchGate({
+    protopediaUrl: parsed.data.protopediaUrl,
+    videoUrl: parsed.data.videoUrl,
+    mvpAudit,
+    dossier,
+    proof,
+    publisher
+  });
+
+  res.json(
+    buildJudgeTour({
+      baseUrl,
+      recommendation,
+      strategy,
+      marketIntel,
+      judgeBrief,
+      impactCase,
+      securityReview,
+      proof,
+      demoRunway,
+      submissionLaunch
+    })
+  );
+});
+
 app.post("/api/autonomy-ledger", async (req, res) => {
   const parsed = RecommendSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -1630,6 +1801,18 @@ app.post("/a2a", (req, res) => {
     opsDrill,
     securityReview
   });
+  const judgeTour = buildJudgeTour({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    marketIntel,
+    judgeBrief,
+    impactCase,
+    securityReview,
+    proof,
+    demoRunway,
+    submissionLaunch
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -1775,6 +1958,26 @@ app.post("/a2a", (req, res) => {
                   })),
                   nextImpactHire: impactCase.nextImpactHire?.name ?? null
                 },
+                judgeTour: {
+                  id: judgeTour.id,
+                  tourScore: judgeTour.tourScore,
+                  readiness: judgeTour.readiness,
+                  totalSeconds: judgeTour.totalSeconds,
+                  headline: judgeTour.headline,
+                  steps: judgeTour.steps.map((step) => ({
+                    id: step.id,
+                    status: step.status,
+                    endpoint: step.endpoint
+                  })),
+                  claims: judgeTour.claims.map((claim) => ({
+                    id: claim.id,
+                    score: claim.score
+                  })),
+                  blockers: judgeTour.blockers.map((blocker) => ({
+                    id: blocker.id,
+                    severity: blocker.severity
+                  }))
+                },
                 mission: {
                   id: mission.id,
                   summary: mission.summary,
@@ -1892,6 +2095,7 @@ app.post("/a2a", (req, res) => {
                 submissionLaunchEndpoint: `${publicBaseUrl(req)}/api/submission-launch`,
                 securityReviewEndpoint: `${publicBaseUrl(req)}/api/security-review`,
                 impactCaseEndpoint: `${publicBaseUrl(req)}/api/impact-case`,
+                judgeTourEndpoint: `${publicBaseUrl(req)}/api/judge-tour`,
                 winRunEndpoint: `${publicBaseUrl(req)}/api/win-run`,
                 demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,
                 proofEndpoint: `${publicBaseUrl(req)}/api/proof`,

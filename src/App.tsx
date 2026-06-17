@@ -38,6 +38,7 @@ import type { FinalistSimulation } from "./finalist";
 import type { ImpactCase } from "./impact";
 import type { JudgeBrief } from "./judgeBrief";
 import type { JudgeDrill } from "./judgeDrill";
+import type { JudgeTour } from "./judgeTour";
 import { CAPABILITY_LABELS, DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "./market";
 import type { MarketIntelReport } from "./marketIntel";
 import type { MissionRun } from "./mission";
@@ -485,6 +486,185 @@ function StrategyMeter({ label, value }: { label: string; value: number }) {
         <span style={{ width: `${value}%` }} />
       </div>
     </div>
+  );
+}
+
+function JudgeTourPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [tour, setTour] = useState<JudgeTour | null>(null);
+  const [protopediaUrl, setProtopediaUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildTour() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/judge-tour", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+          protopediaUrl,
+          videoUrl
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setTour((await response.json()) as JudgeTour);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="judge-tour">
+      <div className="tour-heading">
+        <div>
+          <span className="eyebrow">Judge tour</span>
+          <h2>
+            <Play size={20} />
+            90-second walkthrough
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildTour} disabled={loading} title="審査員向け90秒導線を生成">
+          <Trophy size={17} />
+          {loading ? "Sequencing" : "Build judge tour"}
+        </button>
+      </div>
+
+      <div className="tour-inputs">
+        <label>
+          <span>ProtoPedia work URL</span>
+          <input value={protopediaUrl} onChange={(event) => setProtopediaUrl(event.target.value)} placeholder="https://protopedia.net/prototype/..." />
+        </label>
+        <label>
+          <span>Video URL</span>
+          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://drive.google.com/..." />
+        </label>
+      </div>
+
+      {error && <p className="error-text">Judge tour request failed: {error}</p>}
+
+      {tour ? (
+        <div className="tour-body">
+          <div className="tour-summary">
+            <div>
+              <span className={cx("risk-chip", tour.readiness === "walkthrough-ready" ? "low" : tour.readiness === "external-url-gaps" ? "medium" : "high")}>
+                {tour.readiness}
+              </span>
+              <h3>{tour.headline}</h3>
+              <p>{tour.openingScript}</p>
+              <strong>{tour.hardTruth}</strong>
+            </div>
+            <div className="tour-score">
+              <strong>{tour.tourScore}</strong>
+              <span>{tour.totalSeconds}s tour</span>
+            </div>
+          </div>
+
+          <div className="tour-claims">
+            {tour.claims.map((claim) => (
+              <article key={claim.id} className={scoreTone(claim.score)}>
+                <span>{claim.label}</span>
+                <strong>{claim.score}</strong>
+                <p>{claim.claim}</p>
+                <small>{claim.evidence}</small>
+              </article>
+            ))}
+          </div>
+
+          <div className="tour-steps">
+            {tour.steps.map((step) => (
+              <article key={step.id} className={step.status}>
+                <div>
+                  <span>{step.timeRange}</span>
+                  <strong>{step.screen}</strong>
+                  <b>{step.status}</b>
+                </div>
+                <p>{step.narratorLine}</p>
+                <small>{step.action}</small>
+                <a href={step.endpoint} target="_blank" rel="noreferrer">
+                  Endpoint <ExternalLink size={13} />
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <div className="tour-grid">
+            <section>
+              <h3>
+                <AlertTriangle size={15} />
+                Judge objections
+              </h3>
+              <div className="tour-objections">
+                {tour.objections.map((objection) => (
+                  <article key={objection.id}>
+                    <strong>{objection.question}</strong>
+                    <p>{objection.response}</p>
+                    <small>{objection.proof}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Blockers and links
+              </h3>
+              <div className="tour-blockers">
+                {tour.blockers.length > 0 ? (
+                  tour.blockers.map((blocker) => (
+                    <article key={blocker.id} className={blocker.severity}>
+                      <div>
+                        <strong>{blocker.label}</strong>
+                        <span>{blocker.severity}</span>
+                      </div>
+                      <p>{blocker.action}</p>
+                      <small>{blocker.proof}</small>
+                    </article>
+                  ))
+                ) : (
+                  <article className="clear">
+                    <strong>No blockers</strong>
+                    <p>外部URL、品質、運用のブロッカーはありません。</p>
+                  </article>
+                )}
+              </div>
+              <div className="tour-links">
+                {tour.links.map((link) => (
+                  <a key={link.id} href={link.url} target="_blank" rel="noreferrer">
+                    {link.label}
+                    <ExternalLink size={13} />
+                  </a>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(tour.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="tour-empty">
+          <Play size={28} />
+          <strong>Build judge tourで、審査員が開く順番、話す台詞、反論、証拠リンク、残ブロッカーを90秒導線に束ねます。</strong>
+          <p>Judge Brief、Market Intel、Impact Case、Security Review、Judge Proof、Submission Launch Gateを一つの審査ルートとして確認します。</p>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -3278,6 +3458,7 @@ export default function App() {
         </div>
       </section>
 
+      <JudgeTourPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeBriefPanel recommendation={recommendation} projectBrief={projectBrief} />
       <AutonomyLedgerPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SecurityReviewPanel recommendation={recommendation} projectBrief={projectBrief} />

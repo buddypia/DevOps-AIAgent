@@ -53,7 +53,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
       { name: "notion-brief-reader", tools: ["read_page", "extract_blocks"], maturity: 82 },
       { name: "github-issue-drafter", tools: ["create_issue", "link_pr"], maturity: 74 }
     ],
-    a2aSkillIds: ["brief.analyze", "project.scope", "judge.pitch"],
+    a2aSkillIds: ["brief.analyze", "project.scope", "judge.pitch", "judge.tour"],
     synergyTags: ["brief2dev", "protopedia", "planning", "a2a"]
   },
   {
