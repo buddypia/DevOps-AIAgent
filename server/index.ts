@@ -8,6 +8,7 @@ import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market.js";
 import { buildMissionRun } from "../src/mission.js";
 import { buildOpsDrill } from "../src/ops.js";
+import { buildJudgeProof } from "../src/proof.js";
 import { buildWinningStrategy } from "../src/strategy.js";
 import type { GeminiRecommendation } from "../src/types.js";
 
@@ -107,6 +108,12 @@ function agentCard(baseUrl: string) {
         name: "Run Cloud Run operations drill",
         description: "公開デモの稼働シグナルを読み、継続・ロールバック・追加雇用を判断してDevOps証跡を返す。",
         tags: ["cloud-run", "sre", "rollback", "observability", "devops"]
+      },
+      {
+        id: "judge.proof",
+        name: "Build one-click judge proof bundle",
+        description: "Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを1つの審査証拠束として返す。",
+        tags: ["judge-proof", "gemini", "cloud-run", "a2a", "submission"]
       }
     ],
     supportsAuthenticatedExtendedCard: false
@@ -297,6 +304,37 @@ app.post("/api/ops-drill", (req, res) => {
   res.json(buildOpsDrill(recommendation, strategy, parsed.data.observed));
 });
 
+app.post("/api/proof", async (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "審査員に1クリックで提出可能性、AI実行、Cloud Run運用、A2A委任を証明する。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  let gemini: GeminiRecommendation;
+
+  try {
+    gemini = await runGemini(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  } catch (error) {
+    gemini = localGeminiRecommendation(recommendation, error instanceof Error ? error.message : "Gemini request failed");
+  }
+
+  res.json(
+    buildJudgeProof({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy,
+      mission,
+      opsDrill,
+      gemini
+    })
+  );
+});
+
 app.post("/api/recommend", async (req, res) => {
   const parsed = RecommendSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -383,7 +421,8 @@ app.post("/a2a", (req, res) => {
                   rollbackRecommended: opsDrill.rollbackRecommended,
                   nextOpsAgent: opsDrill.nextOpsAgent?.name ?? null,
                   runbookCommands: opsDrill.runbookCommands
-                }
+                },
+                proofEndpoint: `${publicBaseUrl(req)}/api/proof`
               }
             }
           ]

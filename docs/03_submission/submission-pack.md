@@ -36,6 +36,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Winning Strategyで競合分析、SWOT、審査5項目、MVP proof、次に雇うべきAIを表示する
 - Mission Controlで、AIが弱点を検出し、A2A委任、検証runbook、提出パックを生成した証跡を見せる
 - Ops Drillで、Cloud Run公開デモの稼働シグナルから継続・ロールバック・追加雇用を判断する
+- Judge Proofで、Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを1クリックの証拠束にする
 - Gemini 3.5 Flashで勝ち筋、残リスク、30秒ピッチを生成する
 - Cloud RunでUI、API、Agent Card、A2A endpointを単一サービスとして公開する
 
@@ -48,6 +49,7 @@ React UI
   -> Express API
   -> Recommendation / Strategy / Mission engines
   -> Ops Drill / Cloud Run runbook
+  -> Judge Proof bundle
   -> Gemini 3.5 Flash
   -> A2A Agent Card + JSON-RPC endpoint
   -> Cloud Run
@@ -58,9 +60,9 @@ React UI
 | Time | Shot |
 | --- | --- |
 | 0-5s | Project Briefに課題を貼り、AI能力市場が候補を並べる |
-| 5-10s | Winning Strategyで競合/SWOT/審査スコアを確認する |
-| 10-16s | Mission Controlを実行し、sense -> decide -> delegate -> verify -> shipを表示する |
-| 16-22s | Ops DrillでCloud Run運用シグナルから継続/ロールバック判断を見せる |
+| 5-10s | Judge Proofを実行し、Gemini/Cloud Run/A2A/DevOps/提出URLの証拠束を見せる |
+| 10-16s | Winning Strategyで競合/SWOT/審査スコアを確認する |
+| 16-22s | Mission ControlとOps Drillで自律判断、A2A委任、運用判断を見せる |
 | 22-27s | Next hireとGemini分析、Agent Card JSONを開き、AIとA2Aの実装面を見せる |
 | 27-30s | Cloud Run URL、ProtoPediaタグ、構成図を提出パックとして締める |
 
@@ -79,6 +81,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mission \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/ops-drill \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/proof \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 ```

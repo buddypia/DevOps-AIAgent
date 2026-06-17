@@ -33,6 +33,7 @@ import { recommendSquad } from "./agentEngine";
 import { CAPABILITY_LABELS, DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "./market";
 import type { MissionRun } from "./mission";
 import type { OpsDrill } from "./ops";
+import type { JudgeProof } from "./proof";
 import { buildWinningStrategy } from "./strategy";
 import type { SwotQuadrant, WinningStrategy } from "./strategy";
 import type { CapabilityKey, GeminiRecommendation, MarketAgent, Recommendation } from "./types";
@@ -330,6 +331,152 @@ function StrategyMeter({ label, value }: { label: string; value: number }) {
         <span style={{ width: `${value}%` }} />
       </div>
     </div>
+  );
+}
+
+function JudgeProofBundle({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [proof, setProof] = useState<JudgeProof | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function runProof() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/proof", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setProof((await response.json()) as JudgeProof);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="proof-bundle">
+      <div className="proof-heading">
+        <div>
+          <span className="eyebrow">Judge proof</span>
+          <h2>
+            <Trophy size={20} />
+            One-click evidence bundle
+          </h2>
+        </div>
+        <button className="icon-button" onClick={runProof} disabled={loading} title="審査証拠を生成">
+          <Activity size={17} />
+          {loading ? "Running" : "Run judge proof"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Judge proof request failed: {error}</p>}
+
+      {proof ? (
+        <div className="proof-body">
+          <div className="proof-summary">
+            <div>
+              <span className="event-pill">
+                <Sparkles size={15} />
+                {proof.gemini.source} / {proof.gemini.model}
+              </span>
+              <h3>{proof.summary}</h3>
+              <p>{proof.gemini.executiveSummary}</p>
+            </div>
+            <div className="proof-score">
+              <strong>{proof.overallScore}</strong>
+              <span>overall proof</span>
+            </div>
+          </div>
+
+          <div className="proof-score-grid">
+            <StrategyMeter label="AI" value={proof.scores.ai} />
+            <StrategyMeter label="Cloud Run" value={proof.scores.cloudRun} />
+            <StrategyMeter label="A2A" value={proof.scores.a2a} />
+            <StrategyMeter label="Strategy" value={proof.scores.strategy} />
+            <StrategyMeter label="DevOps" value={proof.scores.devops} />
+            <StrategyMeter label="Submission" value={proof.scores.submission} />
+          </div>
+
+          <div className="proof-grid">
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Evidence
+              </h3>
+              <div className="proof-items">
+                {proof.proofItems.map((item) => (
+                  <article key={item.id} className={item.status}>
+                    <div>
+                      <strong>{item.label}</strong>
+                      <span>{item.status}</span>
+                    </div>
+                    <p>{item.evidence}</p>
+                    {item.url && (
+                      <a href={item.url} target="_blank" rel="noreferrer">
+                        Open <ExternalLink size={13} />
+                      </a>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <ExternalLink size={15} />
+                Live Links
+              </h3>
+              <div className="proof-links">
+                <a href={proof.links.app} target="_blank" rel="noreferrer">Cloud Run</a>
+                <a href={proof.links.github} target="_blank" rel="noreferrer">GitHub</a>
+                <a href={proof.links.agentCard} target="_blank" rel="noreferrer">Agent Card</a>
+                <a href={proof.links.architecture} target="_blank" rel="noreferrer">Architecture</a>
+                <a href={proof.links.story} target="_blank" rel="noreferrer">Story Markdown</a>
+              </div>
+              <div className="proof-snapshot">
+                <div>
+                  <span>Weakest</span>
+                  <strong>{proof.mission.weakestCriterion}</strong>
+                </div>
+                <div>
+                  <span>Ops</span>
+                  <strong>{proof.opsDrill.severity}</strong>
+                </div>
+                <div>
+                  <span>Next</span>
+                  <strong>{proof.strategy.nextBestAgent ?? proof.opsDrill.nextOpsAgent ?? "none"}</strong>
+                </div>
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                Proof Runbook
+              </h3>
+              <pre>{proof.runbook.slice(0, 8).join("\n")}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="proof-empty">
+          <Trophy size={28} />
+          <strong>Run judge proofで、Gemini・Cloud Run・A2A・競合/SWOT・Mission・Ops・提出URLを一括検証します。</strong>
+          <p>審査員が最初に押すボタンとして、作品の価値と実装証拠を1つの束にします。</p>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -838,6 +985,8 @@ export default function App() {
           </div>
         </div>
       </section>
+
+      <JudgeProofBundle recommendation={recommendation} projectBrief={projectBrief} />
 
       <section className="workbench">
         <aside className="panel brief-panel">

@@ -13,8 +13,9 @@
 5. `src/strategy.ts` が競合、SWOT、審査5項目、MVP提出準備、次に雇うべきAIを算出する
 6. `src/mission.ts` が弱点補強、A2A委任、検証runbook、ProtoPedia提出パックを生成する
 7. `src/ops.ts` がCloud Run公開デモのシグナルから継続・ロールバック・追加雇用を判断する
-8. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-9. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+8. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
+9. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+10. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -27,6 +28,7 @@
   - `strategy.audit`
   - `mission.run`
   - `ops.drill`
+  - `judge.proof`
 
 ## Strategy Surface
 
@@ -51,6 +53,12 @@
 - Runbook: healthz、ops drill、Cloud Run describe、Cloud Logging、traffic updateコマンドを提示する
 - A2A payload: `ops.drill` skillとしてseverity、signals、rollbackRecommended、nextOpsAgentを返す
 
+## Proof Surface
+
+- `POST /api/proof`: Gemini実行、Cloud Run公開、A2A、競合/SWOT、Mission、Ops、提出URLを1つの審査証拠束にまとめる
+- UI: `Run judge proof` ボタンでoverall proof score、6カテゴリスコア、live links、proof runbookを表示する
+- A2A skill: `judge.proof` としてAgent Cardにも公開する
+
 ## Submission Surface
 
 - `GET /api/submission-kit`: 提出タイトル、タグ、ストーリー、動画ストーリーボード、構成図URL、提出チェックリストを返す
@@ -63,6 +71,7 @@
 - Cloud Run service: `a2a-agent-marketplace`
 - Health check: `/api/healthz` (`/healthz` もローカル互換で提供)
 - Ops drill: `/api/ops-drill`
+- Judge proof: `/api/proof`
 - Build: `cloudbuild.yaml`
 - Secret boundary: `GEMINI_API_KEY` は環境変数のみ
 
