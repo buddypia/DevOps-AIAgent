@@ -1,0 +1,74 @@
+<svg width="1440" height="900" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Agent-To-Agent Marketplace system architecture</title>
+  <desc id="desc">Architecture diagram for the DevOps AI Agent Hackathon submission.</desc>
+  <rect width="1440" height="900" fill="#eef2ed"/>
+  <rect x="32" y="32" width="1376" height="836" rx="18" fill="#fffdf9" stroke="#172126" stroke-width="3"/>
+  <text x="72" y="92" fill="#172126" font-family="Avenir Next, Arial, sans-serif" font-size="38" font-weight="800">Agent-To-Agent Marketplace</text>
+  <text x="74" y="128" fill="#64706b" font-family="Avenir Next, Arial, sans-serif" font-size="18">Discover, hire, delegate, verify, operate, and package AI agent capabilities for Cloud Run submission.</text>
+
+  <defs>
+    <marker id="arrow" markerWidth="14" markerHeight="14" refX="10" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#0f766e"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#172126" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <rect x="72" y="190" width="240" height="126" rx="12" fill="#14342f"/>
+    <text x="96" y="238" fill="#fffdf7" font-family="Avenir Next, Arial, sans-serif" font-size="24" font-weight="800">React UI</text>
+    <text x="96" y="270" fill="#dcefe4" font-family="Avenir Next, Arial, sans-serif" font-size="15">brief / market / strategy</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="408" y="190" width="240" height="126" rx="12" fill="#2457a6"/>
+    <text x="432" y="238" fill="#fffdf7" font-family="Avenir Next, Arial, sans-serif" font-size="24" font-weight="800">Express API</text>
+    <text x="432" y="270" fill="#e8f0f8" font-family="Avenir Next, Arial, sans-serif" font-size="15">recommend / strategy / mission / ops</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="744" y="190" width="240" height="126" rx="12" fill="#0f766e"/>
+    <text x="768" y="238" fill="#fffdf7" font-family="Avenir Next, Arial, sans-serif" font-size="24" font-weight="800">Agent Engines</text>
+    <text x="768" y="270" fill="#dcefe4" font-family="Avenir Next, Arial, sans-serif" font-size="15">recommend / SWOT / mission / ops drill</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1080" y="190" width="240" height="126" rx="12" fill="#6d597a"/>
+    <text x="1104" y="238" fill="#fffdf7" font-family="Avenir Next, Arial, sans-serif" font-size="24" font-weight="800">Gemini 3.5 Flash</text>
+    <text x="1104" y="270" fill="#f6e9f7" font-family="Avenir Next, Arial, sans-serif" font-size="15">winning angle / risks / pitch</text>
+  </g>
+
+  <path d="M316 253 H396" stroke="#0f766e" stroke-width="5" marker-end="url(#arrow)"/>
+  <path d="M652 253 H732" stroke="#0f766e" stroke-width="5" marker-end="url(#arrow)"/>
+  <path d="M988 253 H1068" stroke="#0f766e" stroke-width="5" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="170" y="432" width="260" height="132" rx="12" fill="#fff5d7" stroke="#f0c46e" stroke-width="2"/>
+    <text x="198" y="480" fill="#172126" font-family="Avenir Next, Arial, sans-serif" font-size="23" font-weight="800">A2A Agent Card</text>
+    <text x="198" y="512" fill="#6f3f18" font-family="Avenir Next, Arial, sans-serif" font-size="15">/.well-known/agent-card.json</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="590" y="432" width="260" height="132" rx="12" fill="#e8f3ee" stroke="#0f766e" stroke-width="2"/>
+    <text x="618" y="480" fill="#172126" font-family="Avenir Next, Arial, sans-serif" font-size="23" font-weight="800">A2A JSON-RPC</text>
+    <text x="618" y="512" fill="#21423d" font-family="Avenir Next, Arial, sans-serif" font-size="15">/a2a message/send artifacts</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1010" y="432" width="260" height="132" rx="12" fill="#f6f8f4" stroke="#c9d4ce" stroke-width="2"/>
+    <text x="1038" y="480" fill="#172126" font-family="Avenir Next, Arial, sans-serif" font-size="23" font-weight="800">Cloud Run</text>
+    <text x="1038" y="512" fill="#64706b" font-family="Avenir Next, Arial, sans-serif" font-size="15">UI + API + health + rollback runbook</text>
+  </g>
+
+  <path d="M864 320 C864 392 720 384 720 424" stroke="#0f766e" stroke-width="5" marker-end="url(#arrow)"/>
+  <path d="M528 320 C528 392 300 384 300 424" stroke="#0f766e" stroke-width="5" marker-end="url(#arrow)"/>
+  <path d="M852 498 H998" stroke="#0f766e" stroke-width="5" marker-end="url(#arrow)"/>
+
+  <g>
+    <rect x="96" y="666" width="1248" height="118" rx="14" fill="#172126"/>
+    <text x="132" y="716" fill="#fffdf7" font-family="Avenir Next, Arial, sans-serif" font-size="24" font-weight="800">Mission Control + Ops Drill loop</text>
+    <text x="132" y="752" fill="#dcefe4" font-family="Avenir Next, Arial, sans-serif" font-size="17">sense competitors -> delegate with A2A -> verify commands -> read Cloud Run signals -> decide rollback or continue</text>
+    <text x="132" y="780" fill="#f2b84b" font-family="Avenir Next, Arial, sans-serif" font-size="15" font-weight="800">Artifacts: story markdown / 30 second storyboard / verification runbook / ops runbook / architecture diagram</text>
+  </g>
+</svg>

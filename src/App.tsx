@@ -1,24 +1,40 @@
 import {
+  Activity,
+  AlertTriangle,
   BadgeCheck,
   Bot,
   CheckCircle2,
+  ClipboardCheck,
   Cloud,
   Coins,
+  Crosshair,
   Download,
   ExternalLink,
+  FileText,
+  Film,
   Gauge,
   GitBranch,
+  Lightbulb,
   Network,
   Play,
+  Radar,
+  Rocket,
   Search,
   ShieldCheck,
   ShoppingCart,
   Sparkles,
-  TrendingUp
+  Terminal,
+  TrendingUp,
+  Trophy,
+  Workflow
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { recommendSquad } from "./agentEngine";
 import { CAPABILITY_LABELS, DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "./market";
+import type { MissionRun } from "./mission";
+import type { OpsDrill } from "./ops";
+import { buildWinningStrategy } from "./strategy";
+import type { SwotQuadrant, WinningStrategy } from "./strategy";
 import type { CapabilityKey, GeminiRecommendation, MarketAgent, Recommendation } from "./types";
 import "./styles.css";
 
@@ -32,6 +48,12 @@ const STAGE_LABELS: Record<string, string> = {
 };
 
 const TOP_CAPABILITIES: CapabilityKey[] = ["a2a", "mcp", "cloudRun", "testing", "ux"];
+const SWOT_LABELS: Record<SwotQuadrant, string> = {
+  strengths: "Strengths",
+  weaknesses: "Weaknesses",
+  opportunities: "Opportunities",
+  threats: "Threats"
+};
 
 function cx(...classes: Array<string | false | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -297,6 +319,478 @@ function AgentCardJson() {
   );
 }
 
+function StrategyMeter({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="strategy-meter">
+      <div className="strategy-meter-row">
+        <span>{label}</span>
+        <strong>{value}</strong>
+      </div>
+      <div className="meter" data-tone={scoreTone(value)}>
+        <span style={{ width: `${value}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function StrategyWarRoom({
+  strategy,
+  onHire
+}: {
+  strategy: WinningStrategy;
+  onHire: (id: string) => void;
+}) {
+  const nextBestAgent = strategy.nextBestAgent;
+
+  return (
+    <section className="strategy-war-room">
+      <div className="strategy-briefing">
+        <span className="event-pill">
+          <Trophy size={16} />
+          Winning Strategy
+        </span>
+        <h2>{strategy.strategicThesis}</h2>
+        <div className="strategy-kpis">
+          <StrategyMeter label="Judge fit" value={strategy.judgeScore} />
+          <StrategyMeter label="Moat" value={strategy.moatScore} />
+          <StrategyMeter label="MVP proof" value={strategy.mvpScore} />
+        </div>
+      </div>
+
+      <div className="strategy-grid">
+        <section className="strategy-card competition-card">
+          <div className="panel-heading">
+            <h2>
+              <Radar size={18} />
+              Competitive Arena
+            </h2>
+            <span className={cx("risk-chip", strategy.riskLevel)}>{strategy.riskLevel}</span>
+          </div>
+          <div className="competition-list">
+            {strategy.competitors.slice(0, 4).map((competitor) => (
+              <article key={competitor.id} className="competition-row">
+                <div>
+                  <strong>{competitor.name}</strong>
+                  <span>{competitor.category}</span>
+                </div>
+                <p>{competitor.counterPosition}</p>
+                <a href={competitor.sourceUrl} target="_blank" rel="noreferrer">
+                  Source <ExternalLink size={13} />
+                </a>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="strategy-card swot-card">
+          <div className="panel-heading">
+            <h2>
+              <Crosshair size={18} />
+              SWOT
+            </h2>
+            <span className="chip">live</span>
+          </div>
+          <div className="swot-grid">
+            {(Object.entries(strategy.swot) as Array<[SwotQuadrant, WinningStrategy["swot"][SwotQuadrant]]>).map(([quadrant, items]) => (
+              <div key={quadrant} className={cx("swot-quadrant", quadrant)}>
+                <h3>{SWOT_LABELS[quadrant]}</h3>
+                {items.slice(0, 2).map((item) => (
+                  <div key={`${quadrant}-${item.title}`} className={cx("swot-item", item.signal)}>
+                    <strong>{item.title}</strong>
+                    <p>{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="strategy-card judge-card">
+          <div className="panel-heading">
+            <h2>
+              <ClipboardCheck size={18} />
+              Judge Scorecard
+            </h2>
+            <span className="chip">{strategy.judgeCriteria.length} criteria</span>
+          </div>
+          <div className="judge-list">
+            {strategy.judgeCriteria.map((criterion) => (
+              <div key={criterion.id} className="judge-row">
+                <div>
+                  <strong>{criterion.label}</strong>
+                  <span>{criterion.score}</span>
+                </div>
+                <div className="meter" data-tone={scoreTone(criterion.score)}>
+                  <span style={{ width: `${criterion.score}%` }} />
+                </div>
+                <p>{criterion.evidence}</p>
+                <small>{criterion.nextAction}</small>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="strategy-card moves-card">
+          <div className="panel-heading">
+            <h2>
+              <Lightbulb size={18} />
+              Winning Moves
+            </h2>
+            <span className="chip">{strategy.hypotheses.length} bets</span>
+          </div>
+          <div className="hypothesis-list">
+            {strategy.hypotheses.map((hypothesis) => (
+              <article key={hypothesis.id} className="hypothesis-row">
+                <div>
+                  <strong>{hypothesis.claim}</strong>
+                  <span>{hypothesis.confidence}</span>
+                </div>
+                <p>{hypothesis.proof}</p>
+                <small>{hypothesis.experiment}</small>
+              </article>
+            ))}
+          </div>
+          {nextBestAgent && (
+            <div className="next-agent">
+              <div>
+                <span>
+                  <AlertTriangle size={15} />
+                  Next hire
+                </span>
+                <strong>{nextBestAgent.agent.name}</strong>
+                <p>{nextBestAgent.reason}</p>
+                <small>{nextBestAgent.expectedLift}</small>
+              </div>
+              <button className="icon-button" onClick={() => onHire(nextBestAgent.agent.id)} title="推薦エージェントを雇う">
+                <ShoppingCart size={17} />
+                Hire
+              </button>
+            </div>
+          )}
+          <div className="submission-strip">
+            {strategy.submissionItems.map((item) => (
+              <div key={item.id} className={item.done ? "done" : "todo"} title={item.nextAction}>
+                {item.done ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </section>
+  );
+}
+
+function MissionControl({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [mission, setMission] = useState<MissionRun | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function runMission() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/mission", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setMission((await response.json()) as MissionRun);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const visibleMission = mission;
+
+  return (
+    <section className="mission-control">
+      <div className="mission-heading">
+        <div>
+          <span className="eyebrow">Autonomous proof</span>
+          <h2>
+            <Rocket size={20} />
+            Mission Control
+          </h2>
+        </div>
+        <button className="icon-button" onClick={runMission} disabled={loading} title="自律ミッションを実行">
+          <Activity size={17} />
+          {loading ? "Running" : "Run mission"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Mission request failed: {error}</p>}
+
+      {visibleMission ? (
+        <div className="mission-body">
+          <div className="mission-summary">
+            <strong>{visibleMission.summary}</strong>
+            <p>{visibleMission.objective}</p>
+            <div className="mission-kpis">
+              <StrategyMeter label="Autonomy" value={visibleMission.autonomyScore} />
+              <StrategyMeter label="Verification" value={visibleMission.verificationScore} />
+              <StrategyMeter label="Submission" value={visibleMission.submissionScore} />
+            </div>
+          </div>
+
+          <div className="mission-steps">
+            {visibleMission.steps.map((step) => (
+              <article key={step.id} className={cx("mission-step", step.phase)}>
+                <span>{step.phase}</span>
+                <strong>{step.actor}</strong>
+                <p>{step.action}</p>
+                <small>{step.output}</small>
+              </article>
+            ))}
+          </div>
+
+          <div className="mission-grid">
+            <section>
+              <h3>Decisions</h3>
+              {visibleMission.decisions.map((decision) => (
+                <div key={decision.id} className="mission-decision">
+                  <div>
+                    <strong>{decision.target}</strong>
+                    <span>{decision.confidence}</span>
+                  </div>
+                  <p>{decision.rationale}</p>
+                  <small>{decision.evidence}</small>
+                </div>
+              ))}
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                Verification
+              </h3>
+              <pre>{visibleMission.verificationCommands.join("\n")}</pre>
+            </section>
+            <section className="submission-pack">
+              <h3>Submission Pack</h3>
+              <strong>{visibleMission.submissionPack.protopediaTitle}</strong>
+              <p>{visibleMission.submissionPack.demoScript}</p>
+              <div className="mission-tags">
+                {visibleMission.submissionPack.tags.map((tag) => (
+                  <span key={tag}>{tag}</span>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          <div className="submission-kit">
+            <section className="submission-architecture">
+              <div className="submission-kit-heading">
+                <h3>
+                  <Workflow size={16} />
+                  Architecture Diagram
+                </h3>
+                <a href={visibleMission.submissionPack.architectureDiagramUrl} target="_blank" rel="noreferrer" className="icon-link">
+                  <ExternalLink size={14} />
+                  Open
+                </a>
+              </div>
+              <img src={visibleMission.submissionPack.architectureDiagramUrl} alt="Agent-To-Agent Marketplace architecture" />
+            </section>
+
+            <section className="submission-storyboard">
+              <div className="submission-kit-heading">
+                <h3>
+                  <Film size={16} />
+                  30s Storyboard
+                </h3>
+                <a href={visibleMission.submissionPack.storyMarkdownPath} target="_blank" rel="noreferrer" className="icon-link">
+                  <FileText size={14} />
+                  Markdown
+                </a>
+              </div>
+              <ol>
+                {visibleMission.submissionPack.videoStoryboard.map((shot) => (
+                  <li key={shot}>{shot}</li>
+                ))}
+              </ol>
+            </section>
+
+            <section className="submission-requirements">
+              <h3>
+                <ClipboardCheck size={16} />
+                Required Assets
+              </h3>
+              <div>
+                {visibleMission.submissionPack.requirements.map((item) => (
+                  <article key={item.id} className={item.status}>
+                    <strong>{item.label}</strong>
+                    <span>{item.status === "ready" ? "ready" : "needs URL"}</span>
+                    <p>{item.proof}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="mission-empty">
+          <Rocket size={28} />
+          <strong>Run missionで、自律判断・A2A委任・検証runbook・提出パックを生成します。</strong>
+          <p>審査員に見せるべき「AIが価値の中心である証拠」を、この画面で一気に作ります。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function OpsDrillPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [drill, setDrill] = useState<OpsDrill | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function runOpsDrill() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/ops-drill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setDrill((await response.json()) as OpsDrill);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="ops-drill">
+      <div className="ops-heading">
+        <div>
+          <span className="eyebrow">Operate proof</span>
+          <h2>
+            <Cloud size={20} />
+            Cloud Run Ops Drill
+          </h2>
+        </div>
+        <button className="icon-button" onClick={runOpsDrill} disabled={loading} title="運用ドリルを実行">
+          <Activity size={17} />
+          {loading ? "Running" : "Run ops drill"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Ops drill request failed: {error}</p>}
+
+      {drill ? (
+        <div className="ops-body">
+          <div className="ops-summary">
+            <div>
+              <span className={cx("risk-chip", drill.severity)}>{drill.severity}</span>
+              <h3>{drill.incidentTitle}</h3>
+              <p>{drill.summary}</p>
+            </div>
+            <div className="ops-readiness">
+              <StrategyMeter label="Readiness" value={drill.readinessScore} />
+              <div className={cx("rollback-card", drill.rollbackRecommended && "is-risk")}>
+                {drill.rollbackRecommended ? <AlertTriangle size={22} /> : <CheckCircle2 size={22} />}
+                <strong>{drill.rollbackRecommended ? "Rollback" : "Continue"}</strong>
+                <span>{drill.rollbackRecommended ? "restore previous revision" : "guarded release accepted"}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="ops-signal-grid">
+            {drill.signals.map((signal) => (
+              <article key={signal.id} className={cx("ops-signal", signal.status)}>
+                <div>
+                  <strong>{signal.label}</strong>
+                  <span>{signal.status}</span>
+                </div>
+                <p>{signal.value}</p>
+                <small>{signal.threshold}</small>
+              </article>
+            ))}
+          </div>
+
+          <div className="ops-grid">
+            <section>
+              <h3>
+                <Radar size={15} />
+                Decisions
+              </h3>
+              {drill.decisions.map((decision) => (
+                <div key={decision.id} className="ops-decision">
+                  <div>
+                    <strong>{decision.decision}</strong>
+                    <span>{decision.confidence}</span>
+                  </div>
+                  <p>{decision.rationale}</p>
+                  <small>{decision.actor}</small>
+                </div>
+              ))}
+            </section>
+            <section>
+              <h3>
+                <Workflow size={15} />
+                A2A Ops Timeline
+              </h3>
+              <div className="ops-steps">
+                {drill.steps.map((step) => (
+                  <article key={step.id} className={step.phase}>
+                    <span>{step.phase}</span>
+                    <strong>{step.actor}</strong>
+                    <p>{step.action}</p>
+                    <small>{step.output}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                Runbook
+              </h3>
+              <pre>{drill.runbookCommands.join("\n")}</pre>
+              {drill.nextOpsAgent && (
+                <div className="ops-next-agent">
+                  <span>Next ops hire</span>
+                  <strong>{drill.nextOpsAgent.name}</strong>
+                  <p>{drill.nextOpsAgent.reason}</p>
+                </div>
+              )}
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="ops-empty">
+          <Cloud size={28} />
+          <strong>Run ops drillで、公開デモの異常検知、継続/ロールバック判断、追加雇用を生成します。</strong>
+          <p>DevOpsハッカソンの「まわす」を、AIエージェントの判断ログとして見せます。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function App() {
   const [projectBrief, setProjectBrief] = useState(DEFAULT_PROJECT_BRIEF);
   const [selectedIds, setSelectedIds] = useState<string[]>(["market-broker", "gemini-strategist", "cloud-run-sre"]);
@@ -304,6 +798,7 @@ export default function App() {
   const [query, setQuery] = useState("");
 
   const recommendation = useMemo(() => recommendSquad(projectBrief, selectedIds, 140), [projectBrief, selectedIds]);
+  const strategy = useMemo(() => buildWinningStrategy(recommendation), [recommendation]);
   const rankedIds = useMemo(() => new Map(recommendation.ranked.map((fit, index) => [fit.agent.id, index])), [recommendation]);
 
   const filteredAgents = MARKET_AGENTS.filter((agent) => {
@@ -416,6 +911,10 @@ export default function App() {
           <A2APanel recommendation={recommendation} />
         </aside>
       </section>
+
+      <StrategyWarRoom strategy={strategy} onHire={toggleAgent} />
+      <MissionControl recommendation={recommendation} projectBrief={projectBrief} />
+      <OpsDrillPanel recommendation={recommendation} projectBrief={projectBrief} />
 
       <section className="lower-grid">
         <GeminiPanel recommendation={recommendation} projectBrief={projectBrief} />

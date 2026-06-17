@@ -202,6 +202,8 @@ const RAKUTEN_MOBILE_CIDRS = [
   "2001:268:809:800::/56"
 ];
 
+const LOCAL_DEVELOPMENT_CIDRS = ["127.0.0.0/8", "::1/128"];
+
 type ParsedCidr = {
   raw: string;
   family: 4 | 6;
@@ -214,7 +216,7 @@ type ParsedIp = {
   value: bigint;
 };
 
-const ALLOWED_CIDRS = [...EXACT_ALLOWED_IPS.map((ip) => `${ip}/32`), ...RAKUTEN_MOBILE_CIDRS].map(parseCidr);
+const ALLOWED_CIDRS = [...EXACT_ALLOWED_IPS.map((ip) => `${ip}/32`), ...LOCAL_DEVELOPMENT_CIDRS, ...RAKUTEN_MOBILE_CIDRS].map(parseCidr);
 
 function normalizeIp(ip: string) {
   return ip.trim().replace(/^\[|\]$/g, "").replace(/^::ffff:/i, "");
@@ -304,5 +306,6 @@ export function ipAllowlistMiddleware(req: Request, res: Response, next: NextFun
 
 export const ipAllowlistSummary = {
   exactIpCount: EXACT_ALLOWED_IPS.length,
+  localDevelopmentCidrCount: LOCAL_DEVELOPMENT_CIDRS.length,
   rakutenMobileCidrCount: RAKUTEN_MOBILE_CIDRS.length
 };

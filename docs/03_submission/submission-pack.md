@@ -1,0 +1,93 @@
+# Agent-To-Agent Marketplace Submission Pack
+
+## Title
+
+Agent-To-Agent Marketplace
+
+## Tags
+
+- findy_hackathon
+- DevOps
+- AI Agent
+- A2A
+- Cloud Run
+- Gemini
+
+## One-liner
+
+必要なAI能力を市場から探し、雇い、A2Aで委任し、Cloud Run運用と提出証跡まで閉じるエージェント調達ワークベンチ。
+
+## Story
+
+### 1. 解決したい課題と背景
+
+AIエージェント開発では、エージェントを作る前に「どの能力を持つAIを選ぶべきか」が曖昧になりやすい。ADK、LangGraph、CrewAI、Dify、AgentOpsなどの基盤は強力だが、開発チームが審査基準、運用制約、A2A連携、検証証跡を見ながらAI能力を調達する体験はまだ弱い。
+
+### 2. 想定ユーザー
+
+- ハッカソンや新規事業でAIエージェントを短期間に企画、開発、デプロイする個人・チーム
+- Cloud RunやGeminiを使った公開デモを作りたいエンジニア
+- 複数のエージェントやMCPツールを、価値・価格・リスクで比較したい開発リード
+
+### 3. プロダクトの特徴
+
+- Project Briefを入力すると、必要能力を抽出し、AIエージェント市場から候補を推薦する
+- 各エージェントを価格、能力値、MCP成熟度、A2Aスキルで比較できる
+- Winning Strategyで競合分析、SWOT、審査5項目、MVP proof、次に雇うべきAIを表示する
+- Mission Controlで、AIが弱点を検出し、A2A委任、検証runbook、提出パックを生成した証跡を見せる
+- Ops Drillで、Cloud Run公開デモの稼働シグナルから継続・ロールバック・追加雇用を判断する
+- Gemini 3.5 Flashで勝ち筋、残リスク、30秒ピッチを生成する
+- Cloud RunでUI、API、Agent Card、A2A endpointを単一サービスとして公開する
+
+## System Architecture
+
+![Agent-To-Agent Marketplace architecture](/assets/a2a-marketplace-architecture.svg)
+
+```text
+React UI
+  -> Express API
+  -> Recommendation / Strategy / Mission engines
+  -> Ops Drill / Cloud Run runbook
+  -> Gemini 3.5 Flash
+  -> A2A Agent Card + JSON-RPC endpoint
+  -> Cloud Run
+```
+
+## 30 Second Demo Storyboard
+
+| Time | Shot |
+| --- | --- |
+| 0-5s | Project Briefに課題を貼り、AI能力市場が候補を並べる |
+| 5-10s | Winning Strategyで競合/SWOT/審査スコアを確認する |
+| 10-16s | Mission Controlを実行し、sense -> decide -> delegate -> verify -> shipを表示する |
+| 16-22s | Ops DrillでCloud Run運用シグナルから継続/ロールバック判断を見せる |
+| 22-27s | Next hireとGemini分析、Agent Card JSONを開き、AIとA2Aの実装面を見せる |
+| 27-30s | Cloud Run URL、ProtoPediaタグ、構成図を提出パックとして締める |
+
+## Verification Runbook
+
+```bash
+npm run typecheck
+npm test
+npm run build
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/api/healthz
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/.well-known/agent-card.json
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/strategy \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mission \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/ops-drill \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+```
+
+## Submission Checklist
+
+- Public GitHub repository URL: needs final URL
+- Deployed URL: Cloud Run URL
+- ProtoPedia work URL: needs final URL
+- Video URL: needs YouTube or Vimeo URL
+- System architecture diagram: `public/assets/a2a-marketplace-architecture.svg`
+- Required tag: `findy_hackathon`

@@ -10,8 +10,11 @@
 2. `src/agentEngine.ts` が能力重みを計算する
 3. 市場エージェントを価格・能力・相性でランキングする
 4. 選択されたエージェントから改善スコアとA2A委任タイムラインを作る
-5. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋とリスクを問い合わせる
-6. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+5. `src/strategy.ts` が競合、SWOT、審査5項目、MVP提出準備、次に雇うべきAIを算出する
+6. `src/mission.ts` が弱点補強、A2A委任、検証runbook、ProtoPedia提出パックを生成する
+7. `src/ops.ts` がCloud Run公開デモのシグナルから継続・ロールバック・追加雇用を判断する
+8. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+9. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -21,18 +24,52 @@
   - `market.discover`
   - `agent.hire`
   - `task.delegate`
+  - `strategy.audit`
+  - `mission.run`
+  - `ops.drill`
+
+## Strategy Surface
+
+- Competitive arena: ADK / Google Cloud AI Agent Marketplace / LangGraph / CrewAI / Dify / AgentOps を比較
+- SWOT: 現在の編成から strengths / weaknesses / opportunities / threats を再計算
+- Judge scorecard: 審査5項目ごとのスコア、証拠、次アクションを表示
+- MVP proof: Cloud Run、Gemini、A2A、公開GitHub、ProtoPediaの提出準備を分離
+- Next hire: 最も弱い審査項目に効くエージェントを推薦
+
+## Mission Surface
+
+- Autonomous proof: sense → decide → delegate → verify → ship の5段階で、AIが判断して動いた証跡を表示
+- Decisions: 競合ポジション、最弱審査項目、次に雇うAIを明示
+- Verification runbook: typecheck / test / build / healthz / Agent Card / Strategy API を提出時の証拠として固定
+- Submission pack: ProtoPediaタイトル、タグ、ストーリー、30秒動画スクリプト、構成図SVG、提出チェックリストを生成
+
+## Operations Surface
+
+- `POST /api/ops-drill`: Cloud Run health、p95 latency、5xx率、Gemini fallback、予算余力、外部提出URLの状態を評価する
+- Release gate: Cloud Run SREが公開継続かrollbackかを判断する
+- Rebuy loop: A2A Market BrokerがObservability Oracle / Test Forge / Security Sentinelの買い足しを推薦する
+- Runbook: healthz、ops drill、Cloud Run describe、Cloud Logging、traffic updateコマンドを提示する
+- A2A payload: `ops.drill` skillとしてseverity、signals、rollbackRecommended、nextOpsAgentを返す
+
+## Submission Surface
+
+- `GET /api/submission-kit`: 提出タイトル、タグ、ストーリー、動画ストーリーボード、構成図URL、提出チェックリストを返す
+- `public/assets/a2a-marketplace-architecture.svg`: ProtoPediaに貼れるシステム構成図
+- `docs/03_submission/submission-pack.md`: ProtoPediaストーリー欄に転記するMarkdown下書き
+- UI: Mission Control実行後に Architecture Diagram / 30s Storyboard / Required Assets を表示
 
 ## GCP Surface
 
 - Cloud Run service: `a2a-agent-marketplace`
 - Health check: `/api/healthz` (`/healthz` もローカル互換で提供)
+- Ops drill: `/api/ops-drill`
 - Build: `cloudbuild.yaml`
 - Secret boundary: `GEMINI_API_KEY` は環境変数のみ
 
 ## Judging Angle
 
-- AIエージェントが価値の中心: 市場探索、購入判断、A2A委任、Gemini分析が体験の中心
+- AIエージェントが価値の中心: 市場探索、購入判断、A2A委任、自律ミッション、運用ドリル、Gemini分析が体験の中心
 - 課題アプローチ: AIを作るだけでなく、必要なAI能力を発見・調達・運用する問題を扱う
-- ユーザビリティ: 数値・価格・改善量で意思決定できる
-- 実用性: 開発現場のエージェント選定、DevOps改善、提出後の運用に転用可能
-- 実装力: React、Gemini API、A2A Agent Card、Cloud Run、フォールバック、テストを含む
+- ユーザビリティ: 数値・価格・改善量・競合/SWOTで意思決定できる
+- 実用性: 開発現場のエージェント選定、DevOps改善、公開後の異常検知とrollback判断に転用可能
+- 実装力: React、Gemini API、A2A Agent Card、Cloud Run、戦略API、ミッションAPI、フォールバック、テストを含む

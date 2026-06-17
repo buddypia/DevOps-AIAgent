@@ -2,6 +2,12 @@ import { describe, expect, test } from "vitest";
 import { isAllowedClientIp } from "../server/ipAllowlist";
 
 describe("IP allowlist", () => {
+  test("allows local development loopback addresses", () => {
+    expect(isAllowedClientIp("127.0.0.1")).toBe(true);
+    expect(isAllowedClientIp("::1")).toBe(true);
+    expect(isAllowedClientIp("::ffff:127.0.0.1")).toBe(true);
+  });
+
   test("allows the explicitly requested fixed IPs", () => {
     expect(isAllowedClientIp("61.25.196.10")).toBe(true);
     expect(isAllowedClientIp("221.241.27.92")).toBe(true);
