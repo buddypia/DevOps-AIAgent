@@ -1,4 +1,5 @@
 import { MARKET_AGENTS } from "./market.js";
+import { hasSubmissionUrl, SUBMISSION_PROOF } from "./submission.js";
 import type { CapabilityKey, MarketAgent, Recommendation } from "./types.js";
 
 export type ThreatLevel = "low" | "medium" | "high";
@@ -215,7 +216,7 @@ function buildSubmissionItems(recommendation: Recommendation): SubmissionItem[] 
       id: "cloud-run",
       label: "デプロイ済みURL",
       done: true,
-      proof: "Dockerfile、cloudbuild.yaml、/healthz、/api/healthzを実装済み。",
+      proof: `${SUBMISSION_PROOF.deployedUrl} をCloud Runで公開済み。Dockerfile、cloudbuild.yaml、/healthz、/api/healthzを実装済み。`,
       nextAction: "Cloud Run URLを提出フォームとProtoPediaに貼る"
     },
     {
@@ -235,9 +236,13 @@ function buildSubmissionItems(recommendation: Recommendation): SubmissionItem[] 
     {
       id: "public-github",
       label: "公開GitHub",
-      done: false,
-      proof: "URLは環境外の提出作業なので、アプリ内では未証明。",
-      nextAction: "mainブランチを公開リポジトリへpushし、READMEに提出URLを固定する"
+      done: hasSubmissionUrl(SUBMISSION_PROOF.publicGitHubUrl),
+      proof: hasSubmissionUrl(SUBMISSION_PROOF.publicGitHubUrl)
+        ? `${SUBMISSION_PROOF.publicGitHubUrl} をPUBLICリポジトリとして公開済み。`
+        : "URLは環境外の提出作業なので、アプリ内では未証明。",
+      nextAction: hasSubmissionUrl(SUBMISSION_PROOF.publicGitHubUrl)
+        ? "ProtoPediaと提出フォームに公開GitHub URLを貼る"
+        : "mainブランチを公開リポジトリへpushし、READMEに提出URLを固定する"
     },
     {
       id: "protopedia",

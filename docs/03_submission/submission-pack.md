@@ -85,8 +85,8 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/ops-drill \
 
 ## Submission Checklist
 
-- Public GitHub repository URL: needs final URL
-- Deployed URL: Cloud Run URL
+- Public GitHub repository URL: <https://github.com/buddypia/DevOps-AIAgent>
+- Deployed URL: <https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app>
 - ProtoPedia work URL: needs final URL
 - Video URL: needs YouTube or Vimeo URL
 - System architecture diagram: `public/assets/a2a-marketplace-architecture.svg`

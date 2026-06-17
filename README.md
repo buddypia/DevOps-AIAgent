@@ -103,6 +103,10 @@ Deployed URL:
 
 <https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app>
 
+Public GitHub:
+
+<https://github.com/buddypia/DevOps-AIAgent>
+
 ```bash
 gcloud builds submit --config cloudbuild.yaml \
   --substitutions _REGION=asia-northeast1,_SERVICE=a2a-agent-marketplace,_REPOSITORY=cloud-run-source-deploy,_GEMINI_SECRET=gemini-api-key-a2a-marketplace
@@ -119,4 +123,4 @@ The deployed Cloud Run service reads `GEMINI_API_KEY` from Secret Manager secret
 
 ## Submission Notes
 
-ProtoPediaには、公開GitHubリポジトリURL、Cloud Run URL、作品URLを提出します。タグは `findy_hackathon`。動画では「ブリーフ入力 → 競合/SWOT確認 → Mission Control実行 → Ops Drillで運用判断 → Submission Kit確認 → Gemini分析 → Agent Card確認」を30秒で見せる構成が向いています。
+ProtoPediaには、公開GitHubリポジトリURL、Cloud Run URL、作品URLを提出します。GitHubは <https://github.com/buddypia/DevOps-AIAgent>、Cloud Runは <https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app>。タグは `findy_hackathon`。動画では「ブリーフ入力 → 競合/SWOT確認 → Mission Control実行 → Ops Drillで運用判断 → Submission Kit確認 → Gemini分析 → Agent Card確認」を30秒で見せる構成が向いています。

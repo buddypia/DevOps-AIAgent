@@ -1,4 +1,5 @@
 import type { Recommendation } from "./types.js";
+import { hasSubmissionUrl, SUBMISSION_PROOF } from "./submission.js";
 import type { JudgeCriterion, WinningStrategy } from "./strategy.js";
 
 export type MissionPhase = "sense" | "decide" | "delegate" | "verify" | "ship";
@@ -56,6 +57,10 @@ export type MissionRun = {
     architectureBullets: string[];
     architectureDiagramUrl: string;
     storyMarkdownPath: string;
+    publicGitHubUrl: string;
+    deployedUrl: string;
+    protopediaUrl: string;
+    videoUrl: string;
     videoStoryboard: string[];
     requirements: SubmissionRequirement[];
   };
@@ -203,14 +208,16 @@ export function buildMissionRun(recommendation: Recommendation, strategy: Winnin
     {
       id: "github",
       label: "公開GitHubリポジトリURL",
-      status: "needs-url",
-      proof: "コード、README、テスト、Cloud Run構成、提出資料はリポジトリ側に準備済み。"
+      status: hasSubmissionUrl(SUBMISSION_PROOF.publicGitHubUrl) ? "ready" : "needs-url",
+      proof: hasSubmissionUrl(SUBMISSION_PROOF.publicGitHubUrl)
+        ? `${SUBMISSION_PROOF.publicGitHubUrl} をPUBLICリポジトリとして提出可能。`
+        : "コード、README、テスト、Cloud Run構成、提出資料はリポジトリ側に準備済み。"
     },
     {
       id: "deployed-url",
       label: "デプロイ済みURL",
       status: "ready",
-      proof: "Dockerfile、cloudbuild.yaml、/api/healthz、Agent Card、A2A endpointを実装済み。"
+      proof: `${SUBMISSION_PROOF.deployedUrl} でCloud Run公開済み。Dockerfile、cloudbuild.yaml、/api/healthz、Agent Card、A2A endpointを実装済み。`
     },
     {
       id: "protopedia",
@@ -311,6 +318,10 @@ export function buildMissionRun(recommendation: Recommendation, strategy: Winnin
       ],
       architectureDiagramUrl,
       storyMarkdownPath: "/docs/03_submission/submission-pack.md",
+      publicGitHubUrl: SUBMISSION_PROOF.publicGitHubUrl,
+      deployedUrl: SUBMISSION_PROOF.deployedUrl,
+      protopediaUrl: SUBMISSION_PROOF.protopediaUrl,
+      videoUrl: SUBMISSION_PROOF.videoUrl,
       videoStoryboard,
       requirements
     }

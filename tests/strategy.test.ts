@@ -36,11 +36,15 @@ describe("winning strategy layer", () => {
     expect(strategy.nextBestAgent?.reason).toContain("実装力");
   });
 
-  test("marks external submission work as unproven until URLs and ProtoPedia are supplied", () => {
+  test("marks public GitHub as proven and keeps ProtoPedia external work pending", () => {
     const recommendation = recommendSquad(DEFAULT_PROJECT_BRIEF, ["market-broker", "gemini-strategist", "cloud-run-sre"], 140);
     const strategy = buildWinningStrategy(recommendation);
     const pending = strategy.submissionItems.filter((item) => !item.done).map((item) => item.id);
+    const github = strategy.submissionItems.find((item) => item.id === "public-github");
 
-    expect(pending).toEqual(expect.arrayContaining(["public-github", "protopedia"]));
+    expect(github?.done).toBe(true);
+    expect(github?.proof).toContain("https://github.com/buddypia/DevOps-AIAgent");
+    expect(pending).toEqual(expect.arrayContaining(["protopedia"]));
+    expect(pending).not.toContain("public-github");
   });
 });

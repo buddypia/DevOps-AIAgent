@@ -277,6 +277,10 @@ app.get("/api/submission-kit", (_req, res) => {
     videoStoryboard: mission.submissionPack.videoStoryboard,
     architectureDiagramUrl: mission.submissionPack.architectureDiagramUrl,
     storyMarkdownPath: mission.submissionPack.storyMarkdownPath,
+    publicGitHubUrl: mission.submissionPack.publicGitHubUrl,
+    deployedUrl: mission.submissionPack.deployedUrl,
+    protopediaUrl: mission.submissionPack.protopediaUrl,
+    videoUrl: mission.submissionPack.videoUrl,
     requirements: mission.submissionPack.requirements
   });
 });
