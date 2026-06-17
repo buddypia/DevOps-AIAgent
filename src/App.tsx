@@ -38,6 +38,7 @@ import type { MissionRun } from "./mission";
 import type { OpsDrill } from "./ops";
 import type { PitchRun } from "./pitch";
 import type { JudgeProof } from "./proof";
+import type { ProtoPediaPublisher } from "./publisher";
 import { buildWinningStrategy } from "./strategy";
 import type { SwotQuadrant, WinningStrategy } from "./strategy";
 import type { CapabilityKey, GeminiRecommendation, MarketAgent, Recommendation } from "./types";
@@ -1056,6 +1057,149 @@ function FinalistSimulator({
   );
 }
 
+function SubmissionPublisher({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [publisher, setPublisher] = useState<ProtoPediaPublisher | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildPublisher() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/publisher", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setPublisher((await response.json()) as ProtoPediaPublisher);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="submission-publisher">
+      <div className="publisher-heading">
+        <div>
+          <span className="eyebrow">Submission publisher</span>
+          <h2>
+            <FileText size={20} />
+            ProtoPedia paste kit
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildPublisher} disabled={loading} title="提出本文を生成">
+          <ClipboardCheck size={17} />
+          {loading ? "Building" : "Build publisher"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Publisher request failed: {error}</p>}
+
+      {publisher ? (
+        <div className="publisher-body">
+          <div className="publisher-summary">
+            <div>
+              <span className={cx("risk-chip", publisher.readiness === "ready-to-register" ? "low" : "medium")}>{publisher.readiness}</span>
+              <h3>{publisher.summary}</h3>
+              <p>ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを1つの提出パッケージにします。</p>
+            </div>
+            <div className="publisher-score">
+              <strong>{publisher.publishScore}</strong>
+              <span>publish score</span>
+            </div>
+          </div>
+
+          <div className="publisher-fields">
+            {publisher.pasteFields.map((field) => (
+              <article key={field.id} className={field.status}>
+                <div>
+                  <strong>{field.label}</strong>
+                  <span>{field.status}</span>
+                </div>
+                <small>{field.copyHint}</small>
+                <pre>{field.value}</pre>
+              </article>
+            ))}
+          </div>
+
+          <div className="publisher-grid">
+            <section>
+              <h3>
+                <ExternalLink size={15} />
+                Assets
+              </h3>
+              <div className="publisher-assets">
+                {publisher.assets.map((asset) => (
+                  <article key={asset.id} className={asset.status}>
+                    <div>
+                      <strong>{asset.label}</strong>
+                      <span>{asset.status}</span>
+                    </div>
+                    <p>{asset.proof}</p>
+                    {asset.url && (
+                      <a href={asset.url} target="_blank" rel="noreferrer">
+                        Open <ExternalLink size={13} />
+                      </a>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Final checklist
+              </h3>
+              <div className="publisher-checklist">
+                {publisher.finalChecklist.map((item) => (
+                  <article key={item.id} className={item.status}>
+                    <div>
+                      <strong>{item.label}</strong>
+                      <span>{item.status}</span>
+                    </div>
+                    <p>{item.action}</p>
+                    <small>{item.proof}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Film size={15} />
+                Recording script
+              </h3>
+              <pre>{publisher.recordingScript}</pre>
+              <h3>
+                <ShieldCheck size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(publisher.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="publisher-empty">
+          <FileText size={28} />
+          <strong>Build publisherで、ProtoPediaに貼る本文、タグ、URL、動画台本、未完了項目を生成します。</strong>
+          <p>外部登録作業を、提出直前のチェックリストまで落とします。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function StrategyWarRoom({
   strategy,
   onHire
@@ -1566,6 +1710,7 @@ export default function App() {
       <PitchDirector recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeDrillPanel recommendation={recommendation} projectBrief={projectBrief} />
       <FinalistSimulator recommendation={recommendation} projectBrief={projectBrief} />
+      <SubmissionPublisher recommendation={recommendation} projectBrief={projectBrief} />
 
       <section className="workbench">
         <aside className="panel brief-panel">

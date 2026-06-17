@@ -13,6 +13,7 @@ import { buildMissionRun } from "../src/mission.js";
 import { buildOpsDrill } from "../src/ops.js";
 import { buildPitchRun } from "../src/pitch.js";
 import { buildJudgeProof } from "../src/proof.js";
+import { buildProtoPediaPublisher } from "../src/publisher.js";
 import { SUBMISSION_PROOF } from "../src/submission.js";
 import type { CiProof } from "../src/proof.js";
 import { buildWinningStrategy } from "../src/strategy.js";
@@ -114,6 +115,12 @@ function agentCard(baseUrl: string) {
         name: "Package ProtoPedia submission assets",
         description: "動画ストーリーボード、システム構成図、ストーリー、必須タグ、提出チェックリストを返す。",
         tags: ["protopedia", "video", "architecture", "findy_hackathon"]
+      },
+      {
+        id: "submission.publish",
+        name: "Prepare paste-ready ProtoPedia publication",
+        description: "ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージとして返す。",
+        tags: ["protopedia", "publishing", "video", "submission", "findy_hackathon"]
       },
       {
         id: "ops.drill",
@@ -409,6 +416,57 @@ app.get("/api/submission-kit", (_req, res) => {
   });
 });
 
+app.post("/api/publisher", (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "ProtoPediaに貼る本文、タグ、動画台本、提出URL、残ギャップを一括生成する。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const pitch = buildPitchRun({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill
+  });
+  const judgeDrill = buildJudgeDrill({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch
+  });
+  const finalist = buildFinalistSimulation({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    judgeDrill,
+    squadContract
+  });
+
+  res.json(
+    buildProtoPediaPublisher({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy,
+      mission,
+      opsDrill,
+      pitch,
+      finalist
+    })
+  );
+});
+
 app.post("/api/ops-drill", (req, res) => {
   const parsed = OpsDrillSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -626,6 +684,15 @@ app.post("/a2a", (req, res) => {
     judgeDrill,
     squadContract
   });
+  const publisher = buildProtoPediaPublisher({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -724,8 +791,16 @@ app.post("/a2a", (req, res) => {
                     action: gap.action
                   }))
                 },
+                publisher: {
+                  id: publisher.id,
+                  publishScore: publisher.publishScore,
+                  readiness: publisher.readiness,
+                  pasteFields: publisher.pasteFields.map((field) => field.id),
+                  missingExternal: publisher.missingExternal.map((item) => item.id)
+                },
                 proofEndpoint: `${publicBaseUrl(req)}/api/proof`,
                 finalistEndpoint: `${publicBaseUrl(req)}/api/finalist`,
+                publisherEndpoint: `${publicBaseUrl(req)}/api/publisher`,
                 ciWorkflowUrl: SUBMISSION_PROOF.ciWorkflowUrl
               }
             }

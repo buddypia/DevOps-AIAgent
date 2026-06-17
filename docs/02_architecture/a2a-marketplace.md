@@ -15,9 +15,10 @@
 7. `src/mission.ts` が弱点補強、A2A委任、検証runbook、ProtoPedia提出パックを生成する
 8. `src/ops.ts` がCloud Run公開デモのシグナルから継続・ロールバック・追加雇用を判断する
 9. `src/finalist.ts` が審査員5役の模擬判定、落選理由、残ギャップ、次の一手を生成する
-10. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
-11. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-12. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+10. `src/publisher.ts` がProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
+11. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
+12. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+13. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -30,6 +31,7 @@
   - `task.delegate`
   - `strategy.audit`
   - `mission.run`
+  - `submission.publish`
   - `ops.drill`
   - `finalist.simulate`
   - `judge.proof`
@@ -63,6 +65,7 @@
 - `POST /api/pitch`: 30秒動画のshot list、voiceover、lower thirds、recording checklist、提出残リスクを返す
 - `POST /api/judge-drill`: 審査5項目ごとの厳しめ質問、回答、証拠リンク、デモ画面を返す
 - `POST /api/finalist`: 審査員5役の最終候補判定、落選理由、残ギャップ、次の一手を返す
+- `POST /api/publisher`: ProtoPediaに貼る本文、タグ、URL、動画台本、提出チェックリストを返す
 - Release gate: Cloud Run SREが公開継続かrollbackかを判断する
 - Rebuy loop: A2A Market BrokerがObservability Oracle / Test Forge / Security Sentinelの買い足しを推薦する
 - Runbook: healthz、ops drill、Cloud Run describe、Cloud Logging、traffic updateコマンドを提示する
@@ -78,6 +81,7 @@
 - Pitch proof: `pitch.director` skillとして、審査員に見せる順番と提出動画の残作業をA2A payloadにも含める
 - Judge drill: `judge.drill` skillとして、審査員の反論に対する回答と証拠リンクをA2A payloadにも含める
 - Finalist proof: `finalist.simulate` skillとして、最終候補スコア、judge consensus、残ギャップをA2A payloadにも含める
+- Publisher proof: `submission.publish` skillとして、ProtoPedia貼り付け本文、メディアURL、未完了外部作業をA2A payloadにも含める
 
 ## Submission Surface
 
@@ -92,6 +96,7 @@
 - Health check: `/api/healthz` (`/healthz` もローカル互換で提供)
 - Ops drill: `/api/ops-drill`
 - Contracts: `/api/contracts`
+- Publisher: `/api/publisher`
 - Pitch director: `/api/pitch`
 - Judge drill: `/api/judge-drill`
 - Finalist simulator: `/api/finalist`
