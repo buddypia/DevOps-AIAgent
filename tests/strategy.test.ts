@@ -32,8 +32,8 @@ describe("winning strategy layer", () => {
     const strategy = buildWinningStrategy(recommendation);
 
     expect(strategy.nextBestAgent).not.toBeNull();
-    expect(strategy.nextBestAgent?.agent.id).toBe("test-forge");
-    expect(strategy.nextBestAgent?.reason).toContain("実装力");
+    expect(strategy.nextBestAgent?.agent.id).toBe("ux-guildmaster");
+    expect(strategy.nextBestAgent?.reason).toContain("ユーザビリティ");
   });
 
   test("marks public GitHub as proven and keeps ProtoPedia external work pending", () => {

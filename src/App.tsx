@@ -31,6 +31,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { recommendSquad } from "./agentEngine";
 import type { SquadContract } from "./contracts";
+import type { FinalistSimulation } from "./finalist";
 import type { JudgeDrill } from "./judgeDrill";
 import { CAPABILITY_LABELS, DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "./market";
 import type { MissionRun } from "./mission";
@@ -909,6 +910,152 @@ function JudgeDrillPanel({
   );
 }
 
+function FinalistSimulator({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [simulation, setSimulation] = useState<FinalistSimulation | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function runSimulation() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/finalist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setSimulation((await response.json()) as FinalistSimulation);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="finalist-simulator">
+      <div className="finalist-heading">
+        <div>
+          <span className="eyebrow">Finalist simulator</span>
+          <h2>
+            <Trophy size={20} />
+            Judge panel verdict
+          </h2>
+        </div>
+        <button className="icon-button" onClick={runSimulation} disabled={loading} title="最終候補判定を実行">
+          <Activity size={17} />
+          {loading ? "Simulating" : "Simulate finalist"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Finalist simulation failed: {error}</p>}
+
+      {simulation ? (
+        <div className="finalist-body">
+          <div className="finalist-summary">
+            <div>
+              <span className={cx("risk-chip", simulation.finalistBand === "finalist-ready" ? "low" : simulation.finalistBand === "borderline" ? "medium" : "high")}>
+                {simulation.finalistBand}
+              </span>
+              <h3>{simulation.advanceDecision}</h3>
+              <p>{simulation.winningMove}</p>
+              <small>{simulation.judgeConsensus}</small>
+            </div>
+            <div className="finalist-score">
+              <strong>{simulation.finalistScore}</strong>
+              <span>finalist score</span>
+            </div>
+          </div>
+
+          <div className="finalist-panels">
+            {simulation.panels.map((panel) => (
+              <article key={panel.id} className={panel.verdict}>
+                <div>
+                  <span>{panel.verdict}</span>
+                  <strong>{panel.score}</strong>
+                </div>
+                <h3>{panel.judgeRole}</h3>
+                <small>{panel.criterion}</small>
+                <p>{panel.decisiveProof}</p>
+                <em>{panel.concern}</em>
+                <a href={panel.evidenceUrl} target="_blank" rel="noreferrer">
+                  Evidence <ExternalLink size={13} />
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <div className="finalist-grid">
+            <section>
+              <h3>
+                <AlertTriangle size={15} />
+                Remaining gaps
+              </h3>
+              <div className="finalist-gaps">
+                {simulation.gaps.length > 0 ? (
+                  simulation.gaps.map((gap) => (
+                    <article key={gap.id} className={gap.severity}>
+                      <div>
+                        <strong>{gap.label}</strong>
+                        <span>{gap.severity}</span>
+                      </div>
+                      <p>{gap.action}</p>
+                      <small>{gap.proof}</small>
+                    </article>
+                  ))
+                ) : (
+                  <article className="clear">
+                    <div>
+                      <strong>No remaining gaps</strong>
+                      <span>clear</span>
+                    </div>
+                    <p>提出URL、動画、証拠リンクが揃っています。</p>
+                  </article>
+                )}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Top concern
+              </h3>
+              <p>{simulation.topConcern}</p>
+              <h3>
+                <Terminal size={15} />
+                Runbook
+              </h3>
+              <pre>{simulation.runbook.join("\n")}</pre>
+            </section>
+            <section>
+              <h3>
+                <ShieldCheck size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(simulation.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="finalist-empty">
+          <Trophy size={28} />
+          <strong>Simulate finalistで、審査員5役の最終候補判定、落選理由、残ギャップ、次の一手を生成します。</strong>
+          <p>機能が揃ったかではなく、審査で残れるかを判定します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function StrategyWarRoom({
   strategy,
   onHire
@@ -1418,6 +1565,7 @@ export default function App() {
       <JudgeProofBundle recommendation={recommendation} projectBrief={projectBrief} />
       <PitchDirector recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeDrillPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <FinalistSimulator recommendation={recommendation} projectBrief={projectBrief} />
 
       <section className="workbench">
         <aside className="panel brief-panel">

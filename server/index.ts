@@ -6,6 +6,7 @@ import { z } from "zod";
 import { ipAllowlistMiddleware, ipAllowlistSummary } from "./ipAllowlist.js";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js";
 import { buildSquadContract } from "../src/contracts.js";
+import { buildFinalistSimulation } from "../src/finalist.js";
 import { buildJudgeDrill } from "../src/judgeDrill.js";
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market.js";
 import { buildMissionRun } from "../src/mission.js";
@@ -139,10 +140,16 @@ function agentCard(baseUrl: string) {
         tags: ["judge-drill", "qa", "rebuttal", "evidence", "scorecard"]
       },
       {
+        id: "finalist.simulate",
+        name: "Simulate finalist judging panel",
+        description: "審査員5役の模擬判定で、最終候補スコア、落選理由、残ギャップ、次の一手を返す。",
+        tags: ["finalist", "judge-panel", "mvp", "scorecard", "submission"]
+      },
+      {
         id: "judge.proof",
         name: "Build one-click judge proof bundle",
-        description: "Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、CI、Pitch、Judge Drill、提出URLを1つの審査証拠束として返す。",
-        tags: ["judge-proof", "gemini", "cloud-run", "a2a", "ci", "pitch", "judge-drill", "submission"]
+        description: "Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、CI、Pitch、Judge Drill、Finalist、提出URLを1つの審査証拠束として返す。",
+        tags: ["judge-proof", "gemini", "cloud-run", "a2a", "ci", "pitch", "judge-drill", "finalist", "submission"]
       }
     ],
     supportsAuthenticatedExtendedCard: false
@@ -480,6 +487,48 @@ app.post("/api/judge-drill", (req, res) => {
   );
 });
 
+app.post("/api/finalist", (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "審査員5役で最終候補に残せるかを模擬判定し、落選理由と次の一手を出す。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const pitch = buildPitchRun({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill
+  });
+  const judgeDrill = buildJudgeDrill({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch
+  });
+
+  res.json(
+    buildFinalistSimulation({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy,
+      mission,
+      opsDrill,
+      pitch,
+      judgeDrill,
+      squadContract
+    })
+  );
+});
+
 app.post("/api/proof", async (req, res) => {
   const parsed = RecommendSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -567,6 +616,16 @@ app.post("/a2a", (req, res) => {
     opsDrill,
     pitch
   });
+  const finalist = buildFinalistSimulation({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    judgeDrill,
+    squadContract
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -653,7 +712,20 @@ app.post("/a2a", (req, res) => {
                     question: objection.question
                   }))
                 },
+                finalist: {
+                  id: finalist.id,
+                  finalistScore: finalist.finalistScore,
+                  finalistBand: finalist.finalistBand,
+                  judgeConsensus: finalist.judgeConsensus,
+                  topConcern: finalist.topConcern,
+                  gaps: finalist.gaps.map((gap) => ({
+                    id: gap.id,
+                    severity: gap.severity,
+                    action: gap.action
+                  }))
+                },
                 proofEndpoint: `${publicBaseUrl(req)}/api/proof`,
+                finalistEndpoint: `${publicBaseUrl(req)}/api/finalist`,
                 ciWorkflowUrl: SUBMISSION_PROOF.ciWorkflowUrl
               }
             }

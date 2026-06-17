@@ -170,6 +170,8 @@ function buildJudgeCriteria(recommendation: Recommendation): JudgeCriterion[] {
   const usability = selectedCapabilityAverage(recommendation, CAPABILITY_FOR_CRITERION.usability);
   const practicality = selectedCapabilityAverage(recommendation, CAPABILITY_FOR_CRITERION.practicality);
   const implementation = selectedCapabilityAverage(recommendation, CAPABILITY_FOR_CRITERION.implementation);
+  const implementationProofBoost =
+    (hasSubmissionUrl(SUBMISSION_PROOF.ciWorkflowUrl) ? 6 : 0) + (hasSubmissionUrl(SUBMISSION_PROOF.deployedUrl) ? 4 : 0);
 
   return [
     {
@@ -203,9 +205,13 @@ function buildJudgeCriteria(recommendation: Recommendation): JudgeCriterion[] {
     {
       id: "implementation",
       label: "実装力",
-      score: Math.round(clamp(implementation + (hasAgent(recommendation, "test-forge") ? 7 : 0))),
-      evidence: "React、Express、Gemini API、A2A、Cloud Run、テストを同一プロダクトに統合する。",
-      nextAction: hasAgent(recommendation, "test-forge") ? "テスト結果をREADMEと動画で示す" : "Test Forgeを雇い、検証証跡を前面に出す"
+      score: Math.round(clamp(implementation + (hasAgent(recommendation, "test-forge") ? 7 : 0) + implementationProofBoost)),
+      evidence: "React、Express、Gemini API、A2A、Cloud Run、GitHub Actions CI、テストを同一プロダクトに統合する。",
+      nextAction: hasAgent(recommendation, "test-forge")
+        ? "テスト結果をREADMEと動画で示す"
+        : hasSubmissionUrl(SUBMISSION_PROOF.ciWorkflowUrl)
+          ? "最新CI成功runをJudge ProofとFinalist Simulatorで前面に出す"
+          : "Test Forgeを雇い、検証証跡を前面に出す"
     }
   ];
 }

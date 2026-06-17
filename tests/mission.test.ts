@@ -40,8 +40,8 @@ describe("autonomous mission engine", () => {
     const mission = buildMissionRun(recommendation, strategy, "審査に勝つための追加検証を作る");
 
     expect(mission.objective).toBe("審査に勝つための追加検証を作る");
-    expect(mission.weakestCriterion.label).toBe("実装力");
-    expect(mission.steps.find((step) => step.phase === "decide")?.output).toContain("Test Forge");
-    expect(mission.artifacts.find((artifact) => artifact.id === "a2a-delegation")?.content).toContain("test-forge");
+    expect(mission.weakestCriterion.label).toBe("ユーザビリティ");
+    expect(mission.steps.find((step) => step.phase === "decide")?.output).toContain("UX Guildmaster");
+    expect(mission.artifacts.find((artifact) => artifact.id === "a2a-delegation")?.content).toContain("ux-guildmaster");
   });
 });
