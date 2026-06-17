@@ -14,12 +14,30 @@ export type ProofItem = {
   url?: string;
 };
 
+export type CiProof = {
+  status: ProofStatus;
+  conclusion: string;
+  url: string;
+  workflowUrl: string;
+  branch: string;
+  checkedAt: string;
+  evidence: string;
+  runId?: number;
+};
+
 export type ProofReceiptPayload = {
   proofId: string;
   issuedAt: string;
   overallScore: number;
   scores: JudgeProof["scores"];
   links: JudgeProof["links"];
+  ci: {
+    status: ProofStatus;
+    conclusion: string;
+    branch: string;
+    checkedAt: string;
+    runId: number | null;
+  };
   geminiSource: GeminiRecommendation["source"];
   geminiModel: string;
   proofItemStatuses: Array<{ id: string; status: ProofStatus }>;
@@ -46,11 +64,13 @@ export type JudgeProof = {
     a2a: number;
     strategy: number;
     devops: number;
+    ci: number;
     submission: number;
   };
   links: {
     app: string;
     github: string;
+    ci: string;
     agentCard: string;
     a2a: string;
     architecture: string;
@@ -83,6 +103,13 @@ export type JudgeProof = {
     rollbackRecommended: boolean;
     nextOpsAgent: string | null;
   };
+  ci: {
+    status: ProofStatus;
+    conclusion: string;
+    branch: string;
+    checkedAt: string;
+    runId: number | null;
+  };
 };
 
 function clamp(value: number, min = 0, max = 100) {
@@ -100,9 +127,28 @@ function statusFromScore(value: number): ProofStatus {
   return "missing";
 }
 
+function scoreFromStatus(status: ProofStatus) {
+  if (status === "passed") return 100;
+  if (status === "watch") return 72;
+  return 35;
+}
+
 function absoluteUrl(baseUrl: string, path: string) {
   if (path.startsWith("https://")) return path;
   return `${baseUrl.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+function defaultCiProof(githubUrl: string, generatedAt: string): CiProof {
+  const workflowUrl = `${githubUrl.replace(/\/$/, "")}/actions/workflows/ci.yml`;
+  return {
+    status: "watch",
+    conclusion: "not-checked",
+    url: workflowUrl,
+    workflowUrl,
+    branch: "main",
+    checkedAt: generatedAt,
+    evidence: "GitHub Actions workflow is configured; live run status is checked by the deployed proof endpoint."
+  };
 }
 
 function canonicalize(value: unknown): unknown {
@@ -128,25 +174,31 @@ export function buildJudgeProof(input: {
   mission: MissionRun;
   opsDrill: OpsDrill;
   gemini: GeminiRecommendation;
+  ci?: CiProof;
 }): JudgeProof {
   const { baseUrl, recommendation, strategy, mission, opsDrill, gemini } = input;
+  const generatedAt = new Date().toISOString();
+  const ciProof = input.ci ?? defaultCiProof(mission.submissionPack.publicGitHubUrl, generatedAt);
   const hasGemini = gemini.source === "gemini";
   const hasMarketBroker = recommendation.selected.some((agent) => agent.id === "market-broker");
   const readyRequirements = mission.submissionPack.requirements.filter((item) => item.status === "ready").length;
   const requirementScore = Math.round((readyRequirements / mission.submissionPack.requirements.length) * 100);
+  const ciScore = scoreFromStatus(ciProof.status);
 
   const scores = {
     ai: hasGemini ? 100 : 68,
     cloudRun: mission.submissionPack.deployedUrl.startsWith("https://") ? 100 : 42,
     a2a: hasMarketBroker ? 100 : 70,
     strategy: Math.round(average([strategy.judgeScore, strategy.moatScore])),
-    devops: Math.round(average([mission.verificationScore, opsDrill.readinessScore])),
+    devops: Math.round(average([mission.verificationScore, opsDrill.readinessScore, ciScore])),
+    ci: ciScore,
     submission: Math.round(average([mission.submissionScore, requirementScore]))
   };
   const overallScore = Math.round(clamp(average(Object.values(scores))));
   const links = {
     app: mission.submissionPack.deployedUrl || baseUrl,
     github: mission.submissionPack.publicGitHubUrl,
+    ci: ciProof.workflowUrl,
     agentCard: absoluteUrl(baseUrl, "/.well-known/agent-card.json"),
     a2a: absoluteUrl(baseUrl, "/a2a"),
     architecture: absoluteUrl(baseUrl, mission.submissionPack.architectureDiagramUrl),
@@ -172,7 +224,8 @@ export function buildJudgeProof(input: {
       id: "a2a",
       label: "A2A Agent Card and JSON-RPC endpoint",
       status: hasMarketBroker ? "passed" : "watch",
-      evidence: "Agent Card exposes market.discover, agent.hire, task.delegate, strategy.audit, mission.run, submission.package, and ops.drill.",
+      evidence:
+        "Agent Card exposes market.discover, agent.hire, task.delegate, strategy.audit, mission.run, submission.package, ops.drill, ci.verify, and judge.proof.",
       url: links.agentCard
     },
     {
@@ -197,6 +250,13 @@ export function buildJudgeProof(input: {
       url: links.app
     },
     {
+      id: "ci",
+      label: "GitHub Actions quality gate",
+      status: ciProof.status,
+      evidence: ciProof.evidence,
+      url: ciProof.url
+    },
+    {
       id: "submission",
       label: "Submission assets",
       status: mission.submissionScore >= 80 ? "passed" : "watch",
@@ -205,7 +265,6 @@ export function buildJudgeProof(input: {
     }
   ];
 
-  const generatedAt = new Date().toISOString();
   const id = `proof-${overallScore}-${mission.id}`;
   const receiptPayload: ProofReceiptPayload = {
     proofId: id,
@@ -213,6 +272,13 @@ export function buildJudgeProof(input: {
     overallScore,
     scores,
     links,
+    ci: {
+      status: ciProof.status,
+      conclusion: ciProof.conclusion,
+      branch: ciProof.branch,
+      checkedAt: ciProof.checkedAt,
+      runId: ciProof.runId ?? null
+    },
     geminiSource: gemini.source,
     geminiModel: gemini.model,
     proofItemStatuses: proofItems.map((item) => ({ id: item.id, status: item.status })),
@@ -230,7 +296,7 @@ export function buildJudgeProof(input: {
   return {
     id,
     generatedAt,
-    summary: `Judge proof bundle scored ${overallScore}: Gemini ${scores.ai}, Cloud Run ${scores.cloudRun}, A2A ${scores.a2a}, strategy ${scores.strategy}, DevOps ${scores.devops}, submission ${scores.submission}.`,
+    summary: `Judge proof bundle scored ${overallScore}: Gemini ${scores.ai}, Cloud Run ${scores.cloudRun}, A2A ${scores.a2a}, strategy ${scores.strategy}, DevOps ${scores.devops}, CI ${scores.ci}, submission ${scores.submission}.`,
     overallScore,
     scores,
     links,
@@ -239,6 +305,7 @@ export function buildJudgeProof(input: {
     runbook: [
       `curl -s ${absoluteUrl(baseUrl, "/api/healthz")}`,
       `curl -s ${links.agentCard}`,
+      `curl -s ${links.ci}`,
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/proof")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/proof")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}' | jq '.receipt'`,
       ...mission.verificationCommands,
@@ -267,6 +334,13 @@ export function buildJudgeProof(input: {
       readinessScore: opsDrill.readinessScore,
       rollbackRecommended: opsDrill.rollbackRecommended,
       nextOpsAgent: opsDrill.nextOpsAgent?.name ?? null
+    },
+    ci: {
+      status: ciProof.status,
+      conclusion: ciProof.conclusion,
+      branch: ciProof.branch,
+      checkedAt: ciProof.checkedAt,
+      runId: ciProof.runId ?? null
     }
   };
 }

@@ -11,12 +11,12 @@
 - Google Cloud: Cloud Run デプロイを前提にした `Dockerfile` / `cloudbuild.yaml` / `/healthz`
 - AI: Gemini API `gemini-3.5-flash`
 - A2A: `/.well-known/agent-card.json` と `/a2a` JSON-RPC互換エンドポイント
-- DevOps: GitHub/CI/CD/Cloud Run運用を見据えた推薦、検証コマンド、MCP行列
+- DevOps: GitHub Actions CI/CD/Cloud Run運用を見据えた推薦、検証コマンド、MCP行列
 - UX: Agent Studio の「AIをキャラクターとして管理する」発想を、市場・購入・編成のゲームループに再構成
 - Strategy: ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsとの差分をアプリ内で比較し、SWOT、審査5項目、提出準備、次に雇うべきAIを算出
 - Autonomy: Mission Controlが審査で弱い項目を検出し、A2A委任、検証runbook、ProtoPedia提出パックを生成
 - Operate: Ops DrillがCloud Run公開デモの稼働シグナルを読み、継続・ロールバック・追加雇用を判断
-- Proof: Judge ProofがGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを1クリックで証拠束にする
+- Proof: Judge ProofがGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1クリックで証拠束にする
 - Visual asset: `image_gen` で生成した `public/assets/agent-marketplace-hero.png`
 
 ## Winning Strategy Layer
@@ -60,11 +60,20 @@
 
 ## Judge Proof
 
-`Judge Proof` は審査員が最初に押すための証拠束です。Geminiの実応答、Cloud Run公開URL、A2A Agent Card、競合/SWOT、Mission Control、Ops Drill、提出URLをまとめ、AI・Google Cloud・DevOps・A2A・提出準備の状態を1レスポンスで確認できます。
+`Judge Proof` は審査員が最初に押すための証拠束です。Geminiの実応答、Cloud Run公開URL、A2A Agent Card、競合/SWOT、Mission Control、Ops Drill、GitHub Actions CI、提出URLをまとめ、AI・Google Cloud・DevOps・A2A・提出準備の状態を1レスポンスで確認できます。
 
 - API: `POST /api/proof`
 - App UI: `Run judge proof`
-- Output: overall proof score、6カテゴリスコア、live links、proof runbook、sha256 receipt
+- Output: overall proof score、7カテゴリスコア、live links、proof runbook、sha256 receipt
+
+## GitHub Actions CI
+
+公開CIは `.github/workflows/ci.yml` で固定しています。
+
+- Workflow: <https://github.com/buddypia/DevOps-AIAgent/actions/workflows/ci.yml>
+- Runs on: push to `main` and pull requests
+- Checks: `npm run typecheck` / `npm test` / `npm run build` / `make q.check-architecture`
+- Proof API: `/api/proof` が最新main runをGitHub public APIから読み、CI statusとrun URLを証拠束に含める
 
 ## Local Development
 
@@ -117,6 +126,10 @@ Public GitHub:
 
 <https://github.com/buddypia/DevOps-AIAgent>
 
+GitHub Actions:
+
+<https://github.com/buddypia/DevOps-AIAgent/actions/workflows/ci.yml>
+
 ```bash
 gcloud builds submit --config cloudbuild.yaml \
   --substitutions _REGION=asia-northeast1,_SERVICE=a2a-agent-marketplace,_REPOSITORY=cloud-run-source-deploy,_GEMINI_SECRET=gemini-api-key-a2a-marketplace
@@ -133,4 +146,4 @@ The deployed Cloud Run service reads `GEMINI_API_KEY` from Secret Manager secret
 
 ## Submission Notes
 
-ProtoPediaには、公開GitHubリポジトリURL、Cloud Run URL、作品URLを提出します。GitHubは <https://github.com/buddypia/DevOps-AIAgent>、Cloud Runは <https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app>。タグは `findy_hackathon`。動画では「ブリーフ入力 → 競合/SWOT確認 → Mission Control実行 → Ops Drillで運用判断 → Submission Kit確認 → Gemini分析 → Agent Card確認」を30秒で見せる構成が向いています。
+ProtoPediaには、公開GitHubリポジトリURL、Cloud Run URL、作品URLを提出します。GitHubは <https://github.com/buddypia/DevOps-AIAgent>、Cloud Runは <https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app>。公開CIは <https://github.com/buddypia/DevOps-AIAgent/actions/workflows/ci.yml>。タグは `findy_hackathon`。動画では「ブリーフ入力 → Judge ProofでCI/Cloud Run証跡確認 → 競合/SWOT確認 → Mission Control実行 → Ops Drillで運用判断 → Submission Kit確認 → Gemini分析 → Agent Card確認」を30秒で見せる構成が向いています。

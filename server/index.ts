@@ -9,6 +9,8 @@ import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market.js";
 import { buildMissionRun } from "../src/mission.js";
 import { buildOpsDrill } from "../src/ops.js";
 import { buildJudgeProof } from "../src/proof.js";
+import { SUBMISSION_PROOF } from "../src/submission.js";
+import type { CiProof } from "../src/proof.js";
 import { buildWinningStrategy } from "../src/strategy.js";
 import type { GeminiRecommendation } from "../src/types.js";
 
@@ -110,10 +112,16 @@ function agentCard(baseUrl: string) {
         tags: ["cloud-run", "sre", "rollback", "observability", "devops"]
       },
       {
+        id: "ci.verify",
+        name: "Verify GitHub Actions quality gate",
+        description: "公開GitHub Actionsの最新main runを読み、typecheck/test/build/architecture checkの証跡を返す。",
+        tags: ["github-actions", "ci", "quality-gate", "devops"]
+      },
+      {
         id: "judge.proof",
         name: "Build one-click judge proof bundle",
-        description: "Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを1つの審査証拠束として返す。",
-        tags: ["judge-proof", "gemini", "cloud-run", "a2a", "submission"]
+        description: "Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、CI、提出URLを1つの審査証拠束として返す。",
+        tags: ["judge-proof", "gemini", "cloud-run", "a2a", "ci", "submission"]
       }
     ],
     supportsAuthenticatedExtendedCard: false
@@ -232,6 +240,74 @@ async function runGeminiWithRetry(projectBrief: string, selectedAgentIds: string
   throw lastError instanceof Error ? lastError : new Error("Gemini request failed");
 }
 
+type GitHubWorkflowRunsResponse = {
+  workflow_runs?: Array<{
+    id: number;
+    name?: string;
+    display_title?: string;
+    head_branch: string;
+    status: string;
+    conclusion: string | null;
+    html_url: string;
+    updated_at: string;
+  }>;
+};
+
+const ciRunsApiUrl = "https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/ci.yml/runs?branch=main&per_page=1";
+
+function ciUnavailable(reason: string, status: CiProof["status"] = "watch"): CiProof {
+  return {
+    status,
+    conclusion: "unavailable",
+    url: SUBMISSION_PROOF.ciWorkflowUrl,
+    workflowUrl: SUBMISSION_PROOF.ciWorkflowUrl,
+    branch: "main",
+    checkedAt: new Date().toISOString(),
+    evidence: `GitHub Actions status could not be read (${reason}); workflow URL remains public.`
+  };
+}
+
+function ciStatus(status: string, conclusion: string | null): CiProof["status"] {
+  if (status !== "completed") return "watch";
+  return conclusion === "success" ? "passed" : "missing";
+}
+
+async function fetchCiProof(): Promise<CiProof> {
+  try {
+    const response = await fetch(ciRunsApiUrl, {
+      headers: {
+        Accept: "application/vnd.github+json",
+        "User-Agent": "a2a-agent-marketplace"
+      },
+      signal: AbortSignal.timeout(3000)
+    });
+
+    if (!response.ok) return ciUnavailable(`GitHub API HTTP ${response.status}`);
+
+    const payload = (await response.json()) as GitHubWorkflowRunsResponse;
+    const run = payload.workflow_runs?.[0];
+    if (!run) return ciUnavailable("no workflow run on main yet");
+
+    const status = ciStatus(run.status, run.conclusion);
+    const conclusion = run.conclusion ?? run.status;
+    return {
+      status,
+      conclusion,
+      url: run.html_url || SUBMISSION_PROOF.ciWorkflowUrl,
+      workflowUrl: SUBMISSION_PROOF.ciWorkflowUrl,
+      branch: run.head_branch || "main",
+      checkedAt: run.updated_at,
+      runId: run.id,
+      evidence:
+        status === "passed"
+          ? `Latest main CI run ${run.id} completed successfully: ${run.display_title ?? run.name ?? "CI"}.`
+          : `Latest main CI run ${run.id} is ${run.status}/${conclusion}: ${run.display_title ?? run.name ?? "CI"}.`
+    };
+  } catch (error) {
+    return ciUnavailable(error instanceof Error ? error.message : "request failed");
+  }
+}
+
 app.disable("x-powered-by");
 app.use(express.json({ limit: "256kb" }));
 app.use(ipAllowlistMiddleware);
@@ -297,6 +373,7 @@ app.get("/api/submission-kit", (_req, res) => {
     architectureDiagramUrl: mission.submissionPack.architectureDiagramUrl,
     storyMarkdownPath: mission.submissionPack.storyMarkdownPath,
     publicGitHubUrl: mission.submissionPack.publicGitHubUrl,
+    ciWorkflowUrl: mission.submissionPack.ciWorkflowUrl,
     deployedUrl: mission.submissionPack.deployedUrl,
     protopediaUrl: mission.submissionPack.protopediaUrl,
     videoUrl: mission.submissionPack.videoUrl,
@@ -327,13 +404,18 @@ app.post("/api/proof", async (req, res) => {
   const strategy = buildWinningStrategy(recommendation);
   const mission = buildMissionRun(recommendation, strategy, "審査員に1クリックで提出可能性、AI実行、Cloud Run運用、A2A委任を証明する。");
   const opsDrill = buildOpsDrill(recommendation, strategy);
-  let gemini: GeminiRecommendation;
-
-  try {
-    gemini = await runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds);
-  } catch (error) {
-    gemini = localGeminiRecommendation(recommendation, error instanceof Error ? error.message : "Gemini request failed");
-  }
+  const [geminiResult, ciResult] = await Promise.allSettled([
+    runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
+    fetchCiProof()
+  ]);
+  const gemini =
+    geminiResult.status === "fulfilled"
+      ? geminiResult.value
+      : localGeminiRecommendation(
+          recommendation,
+          geminiResult.reason instanceof Error ? geminiResult.reason.message : "Gemini request failed"
+        );
+  const ci = ciResult.status === "fulfilled" ? ciResult.value : ciUnavailable("CI status promise rejected");
 
   res.json(
     buildJudgeProof({
@@ -342,7 +424,8 @@ app.post("/api/proof", async (req, res) => {
       strategy,
       mission,
       opsDrill,
-      gemini
+      gemini,
+      ci
     })
   );
 });
@@ -434,7 +517,8 @@ app.post("/a2a", (req, res) => {
                   nextOpsAgent: opsDrill.nextOpsAgent?.name ?? null,
                   runbookCommands: opsDrill.runbookCommands
                 },
-                proofEndpoint: `${publicBaseUrl(req)}/api/proof`
+                proofEndpoint: `${publicBaseUrl(req)}/api/proof`,
+                ciWorkflowUrl: SUBMISSION_PROOF.ciWorkflowUrl
               }
             }
           ]

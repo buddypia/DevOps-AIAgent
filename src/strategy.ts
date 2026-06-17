@@ -245,6 +245,17 @@ function buildSubmissionItems(recommendation: Recommendation): SubmissionItem[] 
         : "mainブランチを公開リポジトリへpushし、READMEに提出URLを固定する"
     },
     {
+      id: "github-ci",
+      label: "GitHub Actions CI",
+      done: hasSubmissionUrl(SUBMISSION_PROOF.ciWorkflowUrl),
+      proof: hasSubmissionUrl(SUBMISSION_PROOF.ciWorkflowUrl)
+        ? `${SUBMISSION_PROOF.ciWorkflowUrl} でtypecheck/test/build/architecture checkを公開実行する。`
+        : "CI/CDの公開証跡は未設定。",
+      nextAction: hasSubmissionUrl(SUBMISSION_PROOF.ciWorkflowUrl)
+        ? "Judge Proofで最新main CI runの状態を見せる"
+        : ".github/workflows/ci.ymlを追加して公開repo上で品質ゲートを走らせる"
+    },
+    {
       id: "protopedia",
       label: "ProtoPedia作品",
       done: false,

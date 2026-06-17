@@ -41,10 +41,14 @@ describe("winning strategy layer", () => {
     const strategy = buildWinningStrategy(recommendation);
     const pending = strategy.submissionItems.filter((item) => !item.done).map((item) => item.id);
     const github = strategy.submissionItems.find((item) => item.id === "public-github");
+    const ci = strategy.submissionItems.find((item) => item.id === "github-ci");
 
     expect(github?.done).toBe(true);
     expect(github?.proof).toContain("https://github.com/buddypia/DevOps-AIAgent");
+    expect(ci?.done).toBe(true);
+    expect(ci?.proof).toContain("actions/workflows/ci.yml");
     expect(pending).toEqual(expect.arrayContaining(["protopedia"]));
     expect(pending).not.toContain("public-github");
+    expect(pending).not.toContain("github-ci");
   });
 });

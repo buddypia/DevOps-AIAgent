@@ -22,12 +22,15 @@ describe("autonomous mission engine", () => {
     expect(mission.submissionPack.architectureDiagramUrl).toBe("/assets/a2a-marketplace-architecture.svg");
     expect(mission.submissionPack.storyMarkdownPath).toBe("/docs/03_submission/submission-pack.md");
     expect(mission.submissionPack.publicGitHubUrl).toBe("https://github.com/buddypia/DevOps-AIAgent");
+    expect(mission.submissionPack.ciWorkflowUrl).toBe("https://github.com/buddypia/DevOps-AIAgent/actions/workflows/ci.yml");
     expect(mission.submissionPack.deployedUrl).toBe("https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app");
     expect(mission.submissionPack.videoStoryboard.length).toBeGreaterThanOrEqual(6);
     expect(mission.submissionPack.requirements.map((item) => item.id)).toEqual(
-      expect.arrayContaining(["github", "deployed-url", "protopedia", "video", "architecture", "tag"])
+      expect.arrayContaining(["github", "deployed-url", "github-ci", "protopedia", "video", "architecture", "tag"])
     );
+    expect(mission.verificationCommands.join("\n")).toContain("actions/workflows/ci.yml");
     expect(mission.submissionPack.requirements.find((item) => item.id === "github")?.status).toBe("ready");
+    expect(mission.submissionPack.requirements.find((item) => item.id === "github-ci")?.status).toBe("ready");
     expect(mission.submissionPack.requirements.find((item) => item.id === "protopedia")?.status).toBe("needs-url");
   });
 

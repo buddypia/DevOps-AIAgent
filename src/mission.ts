@@ -58,6 +58,7 @@ export type MissionRun = {
     architectureDiagramUrl: string;
     storyMarkdownPath: string;
     publicGitHubUrl: string;
+    ciWorkflowUrl: string;
     deployedUrl: string;
     protopediaUrl: string;
     videoUrl: string;
@@ -184,10 +185,12 @@ export function buildMissionRun(recommendation: Recommendation, strategy: Winnin
     "npm run typecheck",
     "npm test",
     "npm run build",
+    "make q.check-architecture",
     "curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/api/healthz",
     "curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/.well-known/agent-card.json",
     "curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/strategy -H 'Content-Type: application/json' --data '{\"projectBrief\":\"A2A Cloud Run Gemini DevOps\",\"selectedAgentIds\":[\"market-broker\",\"gemini-strategist\",\"cloud-run-sre\"]}'",
-    "curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/ops-drill -H 'Content-Type: application/json' --data '{\"projectBrief\":\"A2A Cloud Run Gemini DevOps\",\"selectedAgentIds\":[\"market-broker\",\"gemini-strategist\",\"cloud-run-sre\"]}'"
+    "curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/ops-drill -H 'Content-Type: application/json' --data '{\"projectBrief\":\"A2A Cloud Run Gemini DevOps\",\"selectedAgentIds\":[\"market-broker\",\"gemini-strategist\",\"cloud-run-sre\"]}'",
+    "curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/ci.yml/runs?branch=main\\&per_page=1"
   ];
 
   const story = [
@@ -236,6 +239,14 @@ export function buildMissionRun(recommendation: Recommendation, strategy: Winnin
       label: "システム構成図",
       status: "ready",
       proof: `${architectureDiagramUrl} を公開アセットとして用意。`
+    },
+    {
+      id: "github-ci",
+      label: "GitHub Actions CI",
+      status: hasSubmissionUrl(SUBMISSION_PROOF.ciWorkflowUrl) ? "ready" : "needs-url",
+      proof: hasSubmissionUrl(SUBMISSION_PROOF.ciWorkflowUrl)
+        ? `${SUBMISSION_PROOF.ciWorkflowUrl} でtypecheck、test、build、architecture checkの公開証跡を確認可能。`
+        : "公開CI workflowは未設定。"
     },
     {
       id: "tag",
@@ -319,6 +330,7 @@ export function buildMissionRun(recommendation: Recommendation, strategy: Winnin
       architectureDiagramUrl,
       storyMarkdownPath: "/docs/03_submission/submission-pack.md",
       publicGitHubUrl: SUBMISSION_PROOF.publicGitHubUrl,
+      ciWorkflowUrl: SUBMISSION_PROOF.ciWorkflowUrl,
       deployedUrl: SUBMISSION_PROOF.deployedUrl,
       protopediaUrl: SUBMISSION_PROOF.protopediaUrl,
       videoUrl: SUBMISSION_PROOF.videoUrl,

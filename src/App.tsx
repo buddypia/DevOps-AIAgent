@@ -407,6 +407,7 @@ function JudgeProofBundle({
             <StrategyMeter label="A2A" value={proof.scores.a2a} />
             <StrategyMeter label="Strategy" value={proof.scores.strategy} />
             <StrategyMeter label="DevOps" value={proof.scores.devops} />
+            <StrategyMeter label="CI" value={proof.scores.ci} />
             <StrategyMeter label="Submission" value={proof.scores.submission} />
           </div>
 
@@ -441,6 +442,7 @@ function JudgeProofBundle({
               <div className="proof-links">
                 <a href={proof.links.app} target="_blank" rel="noreferrer">Cloud Run</a>
                 <a href={proof.links.github} target="_blank" rel="noreferrer">GitHub</a>
+                <a href={proof.links.ci} target="_blank" rel="noreferrer">GitHub Actions</a>
                 <a href={proof.links.agentCard} target="_blank" rel="noreferrer">Agent Card</a>
                 <a href={proof.links.architecture} target="_blank" rel="noreferrer">Architecture</a>
                 <a href={proof.links.story} target="_blank" rel="noreferrer">Story Markdown</a>
@@ -453,6 +455,10 @@ function JudgeProofBundle({
                 <div>
                   <span>Ops</span>
                   <strong>{proof.opsDrill.severity}</strong>
+                </div>
+                <div>
+                  <span>CI</span>
+                  <strong>{proof.ci.conclusion}</strong>
                 </div>
                 <div>
                   <span>Next</span>

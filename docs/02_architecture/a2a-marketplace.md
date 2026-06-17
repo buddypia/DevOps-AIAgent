@@ -55,9 +55,10 @@
 
 ## Proof Surface
 
-- `POST /api/proof`: Gemini実行、Cloud Run公開、A2A、競合/SWOT、Mission、Ops、提出URLを1つの審査証拠束にまとめる
-- UI: `Run judge proof` ボタンでoverall proof score、6カテゴリスコア、live links、proof runbook、sha256 receiptを表示する
+- `POST /api/proof`: Gemini実行、Cloud Run公開、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1つの審査証拠束にまとめる
+- UI: `Run judge proof` ボタンでoverall proof score、7カテゴリスコア、live links、proof runbook、sha256 receiptを表示する
 - A2A skill: `judge.proof` としてAgent Cardにも公開する
+- CI proof: `.github/workflows/ci.yml` が `npm run typecheck`、`npm test`、`npm run build`、`make q.check-architecture` を公開repo上で実行し、Proof APIが最新main runを取り込む
 
 ## Submission Surface
 
