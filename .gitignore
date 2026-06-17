@@ -1,0 +1,28 @@
+# OS / editor
+.DS_Store
+
+# Node
+node_modules/
+outputs/*/node_modules/
+npm-debug.log*
+
+# Build output
+dist/
+dist-server/
+outputs/*/dist/
+.vite/
+coverage/
+
+# Logs
+*.log
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Tooling working dirs
+.playwright-cli/
+
+# Private idea / planning material (not for public repo)
+.tmp/

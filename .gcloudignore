@@ -1,0 +1,15 @@
+.git
+.DS_Store
+node_modules/
+dist/
+dist-server/
+.tmp/
+coverage/
+test-results/
+playwright-report/
+raw/
+outputs/
+*.log
+.env
+.env.*
+!.env.example

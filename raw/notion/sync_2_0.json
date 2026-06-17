@@ -1,0 +1,3292 @@
+{
+  "recordMap": {
+    "__version__": 3,
+    "block": {
+      "34904bf5-e7e4-8016-884b-ef3d74553d98": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8016-884b-ef3d74553d98",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "本条第1項から第3項の資格・義務を満たさない場合"
+                ]
+              ]
+            },
+            "created_time": 1776738911568,
+            "last_edited_time": 1776738926669,
+            "parent_id": "34904bf5-e7e4-802c-9902-e1c750518232",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "lhETgETJ-DGJZ6BlulpDgA,\"start\",\"end\"",
+                "n": {
+                  "lhETgETJ-DGJZ6BlulpDgA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "lhETgETJ-DGJZ6BlulpDgA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "fT1zjZQ2x5X6",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 24,
+                          "c": "本条第1項から第3項の資格・義務を満たさない場合"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80a6-839f-d82bb6b5e57a": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80a6-839f-d82bb6b5e57a",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "登録情報に虚偽、誤り、または入力漏れがある場合"
+                ]
+              ]
+            },
+            "created_time": 1776738911568,
+            "last_edited_time": 1776738927530,
+            "parent_id": "34904bf5-e7e4-802c-9902-e1c750518232",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "UfYRBOWwlTbIuLsigIkWZA,\"start\",\"end\"",
+                "n": {
+                  "UfYRBOWwlTbIuLsigIkWZA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "UfYRBOWwlTbIuLsigIkWZA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "le2lQWSCBnEX",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 23,
+                          "c": "登録情報に虚偽、誤り、または入力漏れがある場合"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80b5-98f6-f063b6ca367b": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80b5-98f6-f063b6ca367b",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "反社会的勢力等である、またはその疑いがあると当社が判断した場合"
+                ]
+              ]
+            },
+            "created_time": 1776738911569,
+            "last_edited_time": 1776738928200,
+            "parent_id": "34904bf5-e7e4-802c-9902-e1c750518232",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "1M2MPjBJjuTNXE6W9FR6uA,\"start\",\"end\"",
+                "n": {
+                  "1M2MPjBJjuTNXE6W9FR6uA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "1M2MPjBJjuTNXE6W9FR6uA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "HrrimWz2OTVN",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 31,
+                          "c": "反社会的勢力等である、またはその疑いがあると当社が判断した場合"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8033-aaae-c876466ed15a": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8033-aaae-c876466ed15a",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "その他、当社が合理的に不適切と判断した場合"
+                ]
+              ]
+            },
+            "created_time": 1776738911569,
+            "last_edited_time": 1776738928757,
+            "parent_id": "34904bf5-e7e4-802c-9902-e1c750518232",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "ygXKLdA425DA_rvpUaie3Q,\"start\",\"end\"",
+                "n": {
+                  "ygXKLdA425DA_rvpUaie3Q,\"start\",\"end\"": {
+                    "s": {
+                      "x": "ygXKLdA425DA_rvpUaie3Q",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "ZOw3PqyochXf",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 21,
+                          "c": "その他、当社が合理的に不適切と判断した場合"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-807a-84e8-ddb40588eb00": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-807a-84e8-ddb40588eb00",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "第３条定める参加資格を満たさないことが判明した場合。"
+                ]
+              ]
+            },
+            "created_time": 1776738911572,
+            "last_edited_time": 1776738935299,
+            "parent_id": "34904bf5-e7e4-8020-8410-f3deaba85610",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "FH_F6huKeGl7n7cOKwBS7A,\"start\",\"end\"",
+                "n": {
+                  "FH_F6huKeGl7n7cOKwBS7A,\"start\",\"end\"": {
+                    "s": {
+                      "x": "FH_F6huKeGl7n7cOKwBS7A",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "XhlODB2N4i6C",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 26,
+                          "c": "第３条定める参加資格を満たさないことが判明した場合。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8046-aa6d-ee1624e2abbc": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8046-aa6d-ee1624e2abbc",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "登録情報に虚偽、誤り、または記載漏れがあった場合。"
+                ]
+              ]
+            },
+            "created_time": 1776738911572,
+            "last_edited_time": 1776738936086,
+            "parent_id": "34904bf5-e7e4-8020-8410-f3deaba85610",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "4z4VIv9_f84h2Qa38_NKTA,\"start\",\"end\"",
+                "n": {
+                  "4z4VIv9_f84h2Qa38_NKTA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "4z4VIv9_f84h2Qa38_NKTA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "zFo2CnxWTne2",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 25,
+                          "c": "登録情報に虚偽、誤り、または記載漏れがあった場合。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80fa-a04f-d767c97fe766": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80fa-a04f-d767c97fe766",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "反社会的勢力等（暴力団、暴力団員、右翼団体、反社会的勢力、その他これに準ずるもの）である、または反社会的勢力等と何かしらの交流若しくは関与を行っていると当社が判断した場合。"
+                ]
+              ]
+            },
+            "created_time": 1776738911573,
+            "last_edited_time": 1776738936791,
+            "parent_id": "34904bf5-e7e4-8020-8410-f3deaba85610",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "WtSyHpmtwvxsUZb39x2CXg,\"start\",\"end\"",
+                "n": {
+                  "WtSyHpmtwvxsUZb39x2CXg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "WtSyHpmtwvxsUZb39x2CXg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "FvYmtdSc4w-2",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 86,
+                          "c": "反社会的勢力等（暴力団、暴力団員、右翼団体、反社会的勢力、その他これに準ずるもの）である、または反社会的勢力等と何かしらの交流若しくは関与を行っていると当社が判断した場合。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80b9-9e2b-fe760ba7c87d": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80b9-9e2b-fe760ba7c87d",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "本規約に違反する行為がなされ、当社からの勧告によっても是正されない場合。\nその他、当社において参加者登録が不適切と判断した場合。"
+                ]
+              ]
+            },
+            "created_time": 1776738911573,
+            "last_edited_time": 1776738937490,
+            "parent_id": "34904bf5-e7e4-8020-8410-f3deaba85610",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "QtSFCjGsiMJdm4d8HJE3bQ,\"start\",\"end\"",
+                "n": {
+                  "QtSFCjGsiMJdm4d8HJE3bQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "QtSFCjGsiMJdm4d8HJE3bQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "xf4yeKIDyk2U",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 64,
+                          "c": "本規約に違反する行為がなされ、当社からの勧告によっても是正されない場合。\nその他、当社において参加者登録が不適切と判断した場合。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-80c1-b443-ca3d46e4077a": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-80c1-b443-ca3d46e4077a",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "本イベントに関する事項のご連絡のため。"
+                ]
+              ]
+            },
+            "created_time": 1776909254504,
+            "last_edited_time": 1776909267463,
+            "parent_id": "34b04bf5-e7e4-802d-8544-df03f587e7e1",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "iueaRz47BgbcysyqcDfgkw,\"start\",\"end\"",
+                "n": {
+                  "iueaRz47BgbcysyqcDfgkw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "iueaRz47BgbcysyqcDfgkw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "LVGC63FCTQih",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 19,
+                          "c": "本イベントに関する事項のご連絡のため。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-8018-9939-dd8c7bc399ec": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-8018-9939-dd8c7bc399ec",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "本イベントの効果測定、改善のために行うアンケート送付のため。"
+                ]
+              ]
+            },
+            "created_time": 1776909254508,
+            "last_edited_time": 1776909268209,
+            "parent_id": "34b04bf5-e7e4-802d-8544-df03f587e7e1",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "00lWHymf3ZUS8hqiEn9T3A,\"start\",\"end\"",
+                "n": {
+                  "00lWHymf3ZUS8hqiEn9T3A,\"start\",\"end\"": {
+                    "s": {
+                      "x": "00lWHymf3ZUS8hqiEn9T3A",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "AvVSdT6aLC9P",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 30,
+                          "c": "本イベントの効果測定、改善のために行うアンケート送付のため。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-80fc-b7cc-e0812ca7f315": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-80fc-b7cc-e0812ca7f315",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "当社およびスポンサー企業の採用活動、最新トレンドのご連絡、商品・サービス・イベント等のマーケティング活動に関するご連絡のため。"
+                ]
+              ]
+            },
+            "created_time": 1776909254511,
+            "last_edited_time": 1776909269145,
+            "parent_id": "34b04bf5-e7e4-802d-8544-df03f587e7e1",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "elepgTwd9EdKJrp1DH8WCA,\"start\",\"end\"",
+                "n": {
+                  "elepgTwd9EdKJrp1DH8WCA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "elepgTwd9EdKJrp1DH8WCA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "Fb3EM1iPPoeT",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 63,
+                          "c": "当社およびスポンサー企業の採用活動、最新トレンドのご連絡、商品・サービス・イベント等のマーケティング活動に関するご連絡のため。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-80e1-b7f7-e14b2d990908": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-80e1-b7f7-e14b2d990908",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "いただいたお問い合わせへ回答するため。"
+                ]
+              ]
+            },
+            "created_time": 1776909254513,
+            "last_edited_time": 1776909269890,
+            "parent_id": "34b04bf5-e7e4-802d-8544-df03f587e7e1",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "j85yRqM1966CRAq7DlqMdg,\"start\",\"end\"",
+                "n": {
+                  "j85yRqM1966CRAq7DlqMdg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "j85yRqM1966CRAq7DlqMdg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4mZBBeMfe85o",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 19,
+                          "c": "いただいたお問い合わせへ回答するため。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-8046-baeb-fe9512905565": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-8046-baeb-fe9512905565",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "本イベントの運営管理、次回開催のご案内のため。"
+                ]
+              ]
+            },
+            "created_time": 1776909254516,
+            "last_edited_time": 1776909270759,
+            "parent_id": "34b04bf5-e7e4-802d-8544-df03f587e7e1",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "lL500GjLuCvp3rWirSrZ9g,\"start\",\"end\"",
+                "n": {
+                  "lL500GjLuCvp3rWirSrZ9g,\"start\",\"end\"": {
+                    "s": {
+                      "x": "lL500GjLuCvp3rWirSrZ9g",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "rxFK3akpXhGK",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 23,
+                          "c": "本イベントの運営管理、次回開催のご案内のため。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-80e6-857a-d51373c9118f": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-80e6-857a-d51373c9118f",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "当社およびスポンサー企業によるご案内のため。"
+                ]
+              ]
+            },
+            "created_time": 1776909254518,
+            "last_edited_time": 1776909271665,
+            "parent_id": "34b04bf5-e7e4-802d-8544-df03f587e7e1",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "yHEjguS4z7cvDhM1hXdINw,\"start\",\"end\"",
+                "n": {
+                  "yHEjguS4z7cvDhM1hXdINw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "yHEjguS4z7cvDhM1hXdINw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "pqvz_XCxGIdX",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 22,
+                          "c": "当社およびスポンサー企業によるご案内のため。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-8093-a024-eff3aa90fe3d": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-8093-a024-eff3aa90fe3d",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "運営支援パートナー（一般社団法人 MA）：運営業務の遂行、Proto Pedia の運用"
+                ]
+              ]
+            },
+            "created_time": 1776909254524,
+            "last_edited_time": 1776909273078,
+            "parent_id": "34b04bf5-e7e4-80ca-811e-f5fe4111bfa2",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "jrWlgEm8nJbRqkm0dkjEIw,\"start\",\"end\"",
+                "n": {
+                  "jrWlgEm8nJbRqkm0dkjEIw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "jrWlgEm8nJbRqkm0dkjEIw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "KA5gUJilNZbj",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 44,
+                          "c": "運営支援パートナー（一般社団法人 MA）：運営業務の遂行、Proto Pedia の運用"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-8074-aad8-da3624af4e87": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-8074-aad8-da3624af4e87",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "スポンサー企業：スポンサープランに応じたリード提供、採用活動、マーケティング活動"
+                ]
+              ]
+            },
+            "created_time": 1776909254527,
+            "last_edited_time": 1776909273668,
+            "parent_id": "34b04bf5-e7e4-80ca-811e-f5fe4111bfa2",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "f1P82XVtD-urEK0BXvAOvg,\"start\",\"end\"",
+                "n": {
+                  "f1P82XVtD-urEK0BXvAOvg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "f1P82XVtD-urEK0BXvAOvg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "ZZXhXJz_waWL",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 40,
+                          "c": "スポンサー企業：スポンサープランに応じたリード提供、採用活動、マーケティング活動"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-80b3-9f3d-c5160148eee3": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-80b3-9f3d-c5160148eee3",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "審査員：審査業務の遂行"
+                ]
+              ]
+            },
+            "created_time": 1776909254530,
+            "last_edited_time": 1776909274247,
+            "parent_id": "34b04bf5-e7e4-80ca-811e-f5fe4111bfa2",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "4ysTpfeSMRJ7MYxH9xgWZA,\"start\",\"end\"",
+                "n": {
+                  "4ysTpfeSMRJ7MYxH9xgWZA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "4ysTpfeSMRJ7MYxH9xgWZA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "dZ3xNn7HOVXm",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 11,
+                          "c": "審査員：審査業務の遂行"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8013-9fa2-ef3072ca52ef": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8013-9fa2-ef3072ca52ef",
+            "version": 9,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "暴力的または残虐な表現を含む情報"
+                ]
+              ]
+            },
+            "created_time": 1776738911581,
+            "last_edited_time": 1776738972852,
+            "parent_id": "34904bf5-e7e4-803a-adf7-d716e46371dd",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "XjiZ-x8-FrTFaQAXzhKIeQ,\"start\",\"end\"",
+                "n": {
+                  "XjiZ-x8-FrTFaQAXzhKIeQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "XjiZ-x8-FrTFaQAXzhKIeQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "JgNYAh3F39X0",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 16,
+                          "c": "暴力的または残虐な表現を含む情報"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8080-b228-ea5587d1491d": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8080-b228-ea5587d1491d",
+            "version": 9,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "コンピューター・ウィルスその他の有害なコンピューター・プログラムを含む情報\n当社、本イベントの他の参加者およびその他の第三者の名誉または信用を毀損する表現を含む情報"
+                ]
+              ]
+            },
+            "created_time": 1776738911582,
+            "last_edited_time": 1776738972852,
+            "parent_id": "34904bf5-e7e4-803a-adf7-d716e46371dd",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "SPJxm44lujtYo33ZGLjU3g,\"start\",\"end\"",
+                "n": {
+                  "SPJxm44lujtYo33ZGLjU3g,\"start\",\"end\"": {
+                    "s": {
+                      "x": "SPJxm44lujtYo33ZGLjU3g",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "DszshA3EySZC",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 82,
+                          "c": "コンピューター・ウィルスその他の有害なコンピューター・プログラムを含む情報\n当社、本イベントの他の参加者およびその他の第三者の名誉または信用を毀損する表現を含む情報"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80a5-a923-c0749396a120": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80a5-a923-c0749396a120",
+            "version": 9,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "わいせつな表現を含む情報"
+                ]
+              ]
+            },
+            "created_time": 1776738911582,
+            "last_edited_time": 1776738972852,
+            "parent_id": "34904bf5-e7e4-803a-adf7-d716e46371dd",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "4-oamQfC52dzviIjXMminw,\"start\",\"end\"",
+                "n": {
+                  "4-oamQfC52dzviIjXMminw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "4-oamQfC52dzviIjXMminw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "xP4hxWibiclz",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 12,
+                          "c": "わいせつな表現を含む情報"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80b6-b952-fd0158e4393b": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80b6-b952-fd0158e4393b",
+            "version": 9,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "差別を助長する表現を含む情報"
+                ]
+              ]
+            },
+            "created_time": 1776738911582,
+            "last_edited_time": 1776738972852,
+            "parent_id": "34904bf5-e7e4-803a-adf7-d716e46371dd",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "j6-CMxvO5eeAHA_V3xgLwg,\"start\",\"end\"",
+                "n": {
+                  "j6-CMxvO5eeAHA_V3xgLwg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "j6-CMxvO5eeAHA_V3xgLwg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "xbrKs-lEiYkF",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 14,
+                          "c": "差別を助長する表現を含む情報"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8059-b30a-dbd628e96964": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8059-b30a-dbd628e96964",
+            "version": 9,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "自殺、自傷行為を助長する表現を含む情報"
+                ]
+              ]
+            },
+            "created_time": 1776738911582,
+            "last_edited_time": 1776738972852,
+            "parent_id": "34904bf5-e7e4-803a-adf7-d716e46371dd",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "CWGch9ZHrSte8TVwu3frtQ,\"start\",\"end\"",
+                "n": {
+                  "CWGch9ZHrSte8TVwu3frtQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "CWGch9ZHrSte8TVwu3frtQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "-uLWMfd8DhyM",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 19,
+                          "c": "自殺、自傷行為を助長する表現を含む情報"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80d8-ba7e-fb615c69d8e2": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80d8-ba7e-fb615c69d8e2",
+            "version": 9,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "薬物の不適切な利用を助長する表現を含む情報"
+                ]
+              ]
+            },
+            "created_time": 1776738911583,
+            "last_edited_time": 1776738972852,
+            "parent_id": "34904bf5-e7e4-803a-adf7-d716e46371dd",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "XkM5Kh_gK29u79jcTFK4Sw,\"start\",\"end\"",
+                "n": {
+                  "XkM5Kh_gK29u79jcTFK4Sw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "XkM5Kh_gK29u79jcTFK4Sw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "g87aV_JT47Np",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 21,
+                          "c": "薬物の不適切な利用を助長する表現を含む情報"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8035-8615-dda0b18788f0": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8035-8615-dda0b18788f0",
+            "version": 9,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "反社会的な表現を含む情報"
+                ]
+              ]
+            },
+            "created_time": 1776738911583,
+            "last_edited_time": 1776738972852,
+            "parent_id": "34904bf5-e7e4-803a-adf7-d716e46371dd",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "hj6A_SQIS_Y92mW6f3q-Zw,\"start\",\"end\"",
+                "n": {
+                  "hj6A_SQIS_Y92mW6f3q-Zw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "hj6A_SQIS_Y92mW6f3q-Zw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "1fqAHyQvG0mg",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 12,
+                          "c": "反社会的な表現を含む情報"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-805c-a544-e1865fe7e99c": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-805c-a544-e1865fe7e99c",
+            "version": 9,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "チェーンメール等の第三者への情報の拡散を求める情報"
+                ]
+              ]
+            },
+            "created_time": 1776738911583,
+            "last_edited_time": 1776738972852,
+            "parent_id": "34904bf5-e7e4-803a-adf7-d716e46371dd",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "5vJSbfm-qEkQqqzizQ2nqA,\"start\",\"end\"",
+                "n": {
+                  "5vJSbfm-qEkQqqzizQ2nqA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "5vJSbfm-qEkQqqzizQ2nqA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "7R89BX7dADN_",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 25,
+                          "c": "チェーンメール等の第三者への情報の拡散を求める情報"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80f2-8ac2-e43f5485e260": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80f2-8ac2-e43f5485e260",
+            "version": 17,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "上記aからhまでの他、他人に不快感を与える表現を含む情報"
+                ]
+              ]
+            },
+            "created_time": 1776738911583,
+            "last_edited_time": 1776739001240,
+            "parent_id": "34904bf5-e7e4-803a-adf7-d716e46371dd",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "RRBUjSTfdJj9L7VHaI-UKw,\"start\",\"end\"",
+                "n": {
+                  "RRBUjSTfdJj9L7VHaI-UKw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "RRBUjSTfdJj9L7VHaI-UKw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "n0hPGbMYLj0Y",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 2,
+                          "c": "上記"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            29
+                          ],
+                          "o": [
+                            "n0hPGbMYLj0Y",
+                            2
+                          ],
+                          "l": 1,
+                          "c": "a"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "n0hPGbMYLj0Y",
+                            3
+                          ],
+                          "o": [
+                            "n0hPGbMYLj0Y",
+                            2
+                          ],
+                          "l": -1
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "n0hPGbMYLj0Y",
+                            4
+                          ],
+                          "o": [
+                            "n0hPGbMYLj0Y",
+                            3
+                          ],
+                          "l": 2,
+                          "c": "から"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            30
+                          ],
+                          "o": [
+                            "n0hPGbMYLj0Y",
+                            5
+                          ],
+                          "l": 1,
+                          "c": "h"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "n0hPGbMYLj0Y",
+                            6
+                          ],
+                          "o": [
+                            "n0hPGbMYLj0Y",
+                            5
+                          ],
+                          "l": -1
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "n0hPGbMYLj0Y",
+                            7
+                          ],
+                          "o": [
+                            "n0hPGbMYLj0Y",
+                            6
+                          ],
+                          "l": 22,
+                          "c": "までの他、他人に不快感を与える表現を含む情報"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-80eb-9eb5-e62d97c7a7c9": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-80eb-9eb5-e62d97c7a7c9",
+            "version": 9,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社が指定する Proto Pedia その他の外部プラットフォームへの投稿"
+                ]
+              ]
+            },
+            "created_time": 1776909343703,
+            "last_edited_time": 1776909362675,
+            "parent_id": "34904bf5-e7e4-8071-bf63-ec16936c83e0",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "bN_WTbXH3IJM-78w1m0EQg,\"start\",\"end\"",
+                "n": {
+                  "bN_WTbXH3IJM-78w1m0EQg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "bN_WTbXH3IJM-78w1m0EQg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "tJwH_CsGr3e5",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 38,
+                          "c": "当社が指定する Proto Pedia その他の外部プラットフォームへの投稿"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-801a-bd4c-df833bdaeb87": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-801a-bd4c-df833bdaeb87",
+            "version": 9,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "本イベントの運営・審査・結果発表の過程における公開"
+                ]
+              ]
+            },
+            "created_time": 1776909343705,
+            "last_edited_time": 1776909363799,
+            "parent_id": "34904bf5-e7e4-8071-bf63-ec16936c83e0",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "HCPaVKQj8_Jew7zavn4KxQ,\"start\",\"end\"",
+                "n": {
+                  "HCPaVKQj8_Jew7zavn4KxQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "HCPaVKQj8_Jew7zavn4KxQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "xqZ4YlA3YCjV",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 25,
+                          "c": "本イベントの運営・審査・結果発表の過程における公開"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-8092-a240-fa4d3846a7cc": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-8092-a240-fa4d3846a7cc",
+            "version": 9,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "一次審査通過後の、当社が別途指定する方法・媒体での公開"
+                ]
+              ]
+            },
+            "created_time": 1776909343707,
+            "last_edited_time": 1776909364821,
+            "parent_id": "34904bf5-e7e4-8071-bf63-ec16936c83e0",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "dDuAoB3ZZQZtSQe-qVCxXw,\"start\",\"end\"",
+                "n": {
+                  "dDuAoB3ZZQZtSQe-qVCxXw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "dDuAoB3ZZQZtSQe-qVCxXw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "9bCB0vHtAtUW",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 27,
+                          "c": "一次審査通過後の、当社が別途指定する方法・媒体での公開"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-8014-bf1a-cc2afb961c39": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-8014-bf1a-cc2afb961c39",
+            "version": 9,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "当社の事前の書面による承諾を得た場合"
+                ]
+              ]
+            },
+            "created_time": 1776909343708,
+            "last_edited_time": 1776909365807,
+            "parent_id": "34904bf5-e7e4-8071-bf63-ec16936c83e0",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "StbpVYvgJwKlaCGpG61SiA,\"start\",\"end\"",
+                "n": {
+                  "StbpVYvgJwKlaCGpG61SiA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "StbpVYvgJwKlaCGpG61SiA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "G87Rvxa4MIiG",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 18,
+                          "c": "当社の事前の書面による承諾を得た場合"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80d6-8863-ce44b0493c9f": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80d6-8863-ce44b0493c9f",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "暴力団員等が経営を支配、または経営に実質的に関与していると認められる関係を有すること。"
+                ]
+              ]
+            },
+            "created_time": 1776738911595,
+            "last_edited_time": 1776739015866,
+            "parent_id": "34904bf5-e7e4-8082-a186-e26a3bee754c",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "kTOdOZZ1fXrzXjpZNLS-4Q,\"start\",\"end\"",
+                "n": {
+                  "kTOdOZZ1fXrzXjpZNLS-4Q,\"start\",\"end\"": {
+                    "s": {
+                      "x": "kTOdOZZ1fXrzXjpZNLS-4Q",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nm6zx6pPg0J4",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 43,
+                          "c": "暴力団員等が経営を支配、または経営に実質的に関与していると認められる関係を有すること。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80f6-9d71-fb570c311b46": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80f6-9d71-fb570c311b46",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "不当に暴力団員等を利用していると認められる関係を有すること。"
+                ]
+              ]
+            },
+            "created_time": 1776738911595,
+            "last_edited_time": 1776739016599,
+            "parent_id": "34904bf5-e7e4-8082-a186-e26a3bee754c",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "qyHiiovIMxogEDtc2P2XeA,\"start\",\"end\"",
+                "n": {
+                  "qyHiiovIMxogEDtc2P2XeA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "qyHiiovIMxogEDtc2P2XeA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "X3zKz8bf-RTy",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 30,
+                          "c": "不当に暴力団員等を利用していると認められる関係を有すること。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8082-9554-dc7a426ec374": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8082-9554-dc7a426ec374",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "暴力団員等に対して資金等を提供し、または便宜を供与するなどの関与をしていると認められる関係を有すること。"
+                ]
+              ]
+            },
+            "created_time": 1776738911595,
+            "last_edited_time": 1776739017198,
+            "parent_id": "34904bf5-e7e4-8082-a186-e26a3bee754c",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "2YxDl25GSHEP7tsQFOqEsA,\"start\",\"end\"",
+                "n": {
+                  "2YxDl25GSHEP7tsQFOqEsA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "2YxDl25GSHEP7tsQFOqEsA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "qjRsER5LaLRP",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 52,
+                          "c": "暴力団員等に対して資金等を提供し、または便宜を供与するなどの関与をしていると認められる関係を有すること。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80e4-9a5c-c7da9c5cc097": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80e4-9a5c-c7da9c5cc097",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "役員または経営に実質的に関与している者が暴力団員等と社会的に非難されるべき関係を有すること。"
+                ]
+              ]
+            },
+            "created_time": 1776738911595,
+            "last_edited_time": 1776739018524,
+            "parent_id": "34904bf5-e7e4-8082-a186-e26a3bee754c",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "wxV5P2IISy5GNE54ATrxHg,\"start\",\"end\"",
+                "n": {
+                  "wxV5P2IISy5GNE54ATrxHg,\"start\",\"end\"": {
+                    "s": {
+                      "x": "wxV5P2IISy5GNE54ATrxHg",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "-u72Gu5xFDZy",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 46,
+                          "c": "役員または経営に実質的に関与している者が暴力団員等と社会的に非難されるべき関係を有すること。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80ef-937d-e2be88b7ce09": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80ef-937d-e2be88b7ce09",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "暴力的な要求行為、または法的な責任を超えた不当な要求行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911596,
+            "last_edited_time": 1776739021767,
+            "parent_id": "34904bf5-e7e4-80f3-997f-dd335be615d2",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "Evb4NlGB_qYnDb5HkdWs4w,\"start\",\"end\"",
+                "n": {
+                  "Evb4NlGB_qYnDb5HkdWs4w,\"start\",\"end\"": {
+                    "s": {
+                      "x": "Evb4NlGB_qYnDb5HkdWs4w",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "MJiAxA-HtMl1",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 29,
+                          "c": "暴力的な要求行為、または法的な責任を超えた不当な要求行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80c4-a221-de1686222ccf": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80c4-a221-de1686222ccf",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "取引に関して、脅迫的な言動をし、または暴力を用いる行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911596,
+            "last_edited_time": 1776739022469,
+            "parent_id": "34904bf5-e7e4-80f3-997f-dd335be615d2",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "JInjKrQrV_B8_c6sjU_22w,\"start\",\"end\"",
+                "n": {
+                  "JInjKrQrV_B8_c6sjU_22w,\"start\",\"end\"": {
+                    "s": {
+                      "x": "JInjKrQrV_B8_c6sjU_22w",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "IH4ZKm7koMLJ",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 28,
+                          "c": "取引に関して、脅迫的な言動をし、または暴力を用いる行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80f5-8c82-fd500baa1d33": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80f5-8c82-fd500baa1d33",
+            "version": 7,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "風説を流布し、偽計を用いまたは威力を用いて当社の信用を毀損し、または当社の業務を妨害する行為。"
+                ]
+              ]
+            },
+            "created_time": 1776738911596,
+            "last_edited_time": 1776739023000,
+            "parent_id": "34904bf5-e7e4-80f3-997f-dd335be615d2",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "f5wFuo5KV0f_USHg6XRR_g,\"start\",\"end\"",
+                "n": {
+                  "f5wFuo5KV0f_USHg6XRR_g,\"start\",\"end\"": {
+                    "s": {
+                      "x": "f5wFuo5KV0f_USHg6XRR_g",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "SaNFU7U3DGux",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 47,
+                          "c": "風説を流布し、偽計を用いまたは威力を用いて当社の信用を毀損し、または当社の業務を妨害する行為。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-803c-b51f-dee7b610fe28": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-803c-b51f-dee7b610fe28",
+            "version": 4,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "本イベントに関する事項のご連絡のため。"
+                ]
+              ]
+            },
+            "created_time": 1776909497015,
+            "last_edited_time": 1776909497035,
+            "parent_id": "34904bf5-e7e4-8037-889b-d06f7d785299",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "6RGiH01KWyuNZwW6fO92ng,\"start\",\"end\"",
+                "n": {
+                  "6RGiH01KWyuNZwW6fO92ng,\"start\",\"end\"": {
+                    "s": {
+                      "x": "6RGiH01KWyuNZwW6fO92ng",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "unAxoq24w3S1",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 19,
+                          "c": "本イベントに関する事項のご連絡のため。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-8001-952a-c6de955736b0": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-8001-952a-c6de955736b0",
+            "version": 4,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "本イベントの効果測定、改善のために行うアンケート送付のため。"
+                ]
+              ]
+            },
+            "created_time": 1776909497019,
+            "last_edited_time": 1776909497035,
+            "parent_id": "34904bf5-e7e4-8037-889b-d06f7d785299",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "nolz6b_ApxPdkwASWaA4cQ,\"start\",\"end\"",
+                "n": {
+                  "nolz6b_ApxPdkwASWaA4cQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "nolz6b_ApxPdkwASWaA4cQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "hZuzKD4URtUy",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 30,
+                          "c": "本イベントの効果測定、改善のために行うアンケート送付のため。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-807c-9e7d-e1fd8797a26b": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-807c-9e7d-e1fd8797a26b",
+            "version": 4,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "当社およびスポンサー企業の採用活動、最新トレンドのご連絡、商品・サービス・イベント等のマーケティング活動に関するご連絡のため。"
+                ]
+              ]
+            },
+            "created_time": 1776909497020,
+            "last_edited_time": 1776909497035,
+            "parent_id": "34904bf5-e7e4-8037-889b-d06f7d785299",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "YgR457QOfHDBZ8qvnNo9_Q,\"start\",\"end\"",
+                "n": {
+                  "YgR457QOfHDBZ8qvnNo9_Q,\"start\",\"end\"": {
+                    "s": {
+                      "x": "YgR457QOfHDBZ8qvnNo9_Q",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "ltKSrDLgVM7y",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 63,
+                          "c": "当社およびスポンサー企業の採用活動、最新トレンドのご連絡、商品・サービス・イベント等のマーケティング活動に関するご連絡のため。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-80a6-8242-c7cd40776bf9": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-80a6-8242-c7cd40776bf9",
+            "version": 4,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "いただいたお問い合わせへ回答するため。"
+                ]
+              ]
+            },
+            "created_time": 1776909497022,
+            "last_edited_time": 1776909497035,
+            "parent_id": "34904bf5-e7e4-8037-889b-d06f7d785299",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "zGE9y1anQOPEz2mMp207MA,\"start\",\"end\"",
+                "n": {
+                  "zGE9y1anQOPEz2mMp207MA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "zGE9y1anQOPEz2mMp207MA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "qBg1C9_AuXyv",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 19,
+                          "c": "いただいたお問い合わせへ回答するため。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-80fe-9fd7-d5a1f3868b0a": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-80fe-9fd7-d5a1f3868b0a",
+            "version": 4,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "本イベントの運営管理、次回開催のご案内のため。"
+                ]
+              ]
+            },
+            "created_time": 1776909497023,
+            "last_edited_time": 1776909497035,
+            "parent_id": "34904bf5-e7e4-8037-889b-d06f7d785299",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "uRcn4fV-muKzDnDEp2-bTQ,\"start\",\"end\"",
+                "n": {
+                  "uRcn4fV-muKzDnDEp2-bTQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "uRcn4fV-muKzDnDEp2-bTQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "hwYh54Q9m51X",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 23,
+                          "c": "本イベントの運営管理、次回開催のご案内のため。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-803f-bf8a-e5c128c5ff08": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-803f-bf8a-e5c128c5ff08",
+            "version": 4,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "当社およびスポンサー企業によるご案内のため。"
+                ]
+              ]
+            },
+            "created_time": 1776909497024,
+            "last_edited_time": 1776909497035,
+            "parent_id": "34904bf5-e7e4-8037-889b-d06f7d785299",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "dgfVksq0I0TdG57C8OdnBA,\"start\",\"end\"",
+                "n": {
+                  "dgfVksq0I0TdG57C8OdnBA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "dgfVksq0I0TdG57C8OdnBA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "NNTrdMWOni4q",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 22,
+                          "c": "当社およびスポンサー企業によるご案内のため。"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-80fe-923c-ef2a05db7458": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-80fe-923c-ef2a05db7458",
+            "version": 4,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "運営支援パートナー（一般社団法人 MA）：運営業務の遂行、Proto Pedia の運用"
+                ]
+              ]
+            },
+            "created_time": 1776909549149,
+            "last_edited_time": 1776909549161,
+            "parent_id": "34b04bf5-e7e4-8046-8626-e3d9fc1f4f4d",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "cgMidsSCinbbFr_SAvUpUw,\"start\",\"end\"",
+                "n": {
+                  "cgMidsSCinbbFr_SAvUpUw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "cgMidsSCinbbFr_SAvUpUw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "e-woAzJkHgOR",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 44,
+                          "c": "運営支援パートナー（一般社団法人 MA）：運営業務の遂行、Proto Pedia の運用"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-8097-aeee-d9911d88dd87": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-8097-aeee-d9911d88dd87",
+            "version": 4,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "スポンサー企業：スポンサープランに応じたリード提供、採用活動、マーケティング活動"
+                ]
+              ]
+            },
+            "created_time": 1776909549151,
+            "last_edited_time": 1776909549161,
+            "parent_id": "34b04bf5-e7e4-8046-8626-e3d9fc1f4f4d",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "9vqWQdUHfoXkjWaRWFLRrQ,\"start\",\"end\"",
+                "n": {
+                  "9vqWQdUHfoXkjWaRWFLRrQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "9vqWQdUHfoXkjWaRWFLRrQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "HAaYS0Jo3Pww",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 40,
+                          "c": "スポンサー企業：スポンサープランに応じたリード提供、採用活動、マーケティング活動"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34b04bf5-e7e4-809a-8d9b-f744d94d437e": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34b04bf5-e7e4-809a-8d9b-f744d94d437e",
+            "version": 4,
+            "type": "bulleted_list",
+            "properties": {
+              "title": [
+                [
+                  "審査員：審査業務の遂行"
+                ]
+              ]
+            },
+            "created_time": 1776909549152,
+            "last_edited_time": 1776909549161,
+            "parent_id": "34b04bf5-e7e4-8046-8626-e3d9fc1f4f4d",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "6XHhePdXZ62Bdm2-o_ThaA,\"start\",\"end\"",
+                "n": {
+                  "6XHhePdXZ62Bdm2-o_ThaA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "6XHhePdXZ62Bdm2-o_ThaA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "dOHYm82YLE7M",
+                            1
+                          ],
+                          "o": "start",
+                          "l": 11,
+                          "c": "審査員：審査業務の遂行"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-800c-87c9-d3b704044ef7": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-800c-87c9-d3b704044ef7",
+            "version": 66,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "グーグル・クラウド・ジャパン合同会社"
+                ]
+              ]
+            },
+            "created_time": 1776738377087,
+            "last_edited_time": 1776738455487,
+            "parent_id": "34904bf5-e7e4-8078-9525-f07280267bc8",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "J2N5drmXtLt1xmiofBezbA,\"start\",\"end\"",
+                "n": {
+                  "J2N5drmXtLt1xmiofBezbA,\"start\",\"end\"": {
+                    "s": {
+                      "x": "J2N5drmXtLt1xmiofBezbA",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": [
+                      "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",817],[\"4wnq0j4gII--\",835]"
+                    ]
+                  },
+                  "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",817],[\"4wnq0j4gII--\",835]": {
+                    "s": {
+                      "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            817
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            656
+                          ]
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            657
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            656
+                          ],
+                          "l": -3
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            660
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            659
+                          ],
+                          "l": 14,
+                          "c": "グーグル・クラウド・ジャパン"
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            831
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            673
+                          ],
+                          "l": 4,
+                          "c": "合同会社"
+                        },
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            835
+                          ],
+                          "o": [
+                            "4wnq0j4gII--",
+                            834
+                          ]
+                        }
+                      ],
+                      "l": "{{v"
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-8007-bb9b-f33cffc2f79c": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-8007-bb9b-f33cffc2f79c",
+            "version": 12,
+            "type": "numbered_list",
+            "properties": {
+              "title": [
+                [
+                  "elasticsearch K.K."
+                ]
+              ]
+            },
+            "created_time": 1776738385015,
+            "last_edited_time": 1776738458218,
+            "parent_id": "34904bf5-e7e4-8078-9525-f07280267bc8",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "EdPb_lJGOnoRfhQ6d3SwmQ,\"start\",\"end\"",
+                "n": {
+                  "EdPb_lJGOnoRfhQ6d3SwmQ,\"start\",\"end\"": {
+                    "s": {
+                      "x": "EdPb_lJGOnoRfhQ6d3SwmQ",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": [
+                      "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",835],[\"4wnq0j4gII--\",836]"
+                    ]
+                  },
+                  "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",835],[\"4wnq0j4gII--\",836]": {
+                    "s": {
+                      "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            835
+                          ],
+                          "o": [
+                            "4wnq0j4gII--",
+                            834
+                          ]
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            819
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            673
+                          ],
+                          "l": -2
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            822
+                          ],
+                          "o": [
+                            "4wnq0j4gII--",
+                            820
+                          ],
+                          "l": -2
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            825
+                          ],
+                          "o": [
+                            "4wnq0j4gII--",
+                            823
+                          ],
+                          "l": -2
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            829
+                          ],
+                          "o": [
+                            "4wnq0j4gII--",
+                            826
+                          ],
+                          "l": -2
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            827
+                          ],
+                          "o": [
+                            "4wnq0j4gII--",
+                            826
+                          ],
+                          "l": -2
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            824
+                          ],
+                          "o": [
+                            "4wnq0j4gII--",
+                            823
+                          ],
+                          "l": -1
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            821
+                          ],
+                          "o": [
+                            "4wnq0j4gII--",
+                            820
+                          ],
+                          "l": -1
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            818
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            673
+                          ],
+                          "l": -1
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            674
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            673
+                          ],
+                          "l": -7
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            681
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            680
+                          ],
+                          "l": 18,
+                          "c": "elasticsearch K.K."
+                        },
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            836
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            698
+                          ]
+                        }
+                      ],
+                      "l": "{{y"
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      },
+      "34904bf5-e7e4-80ef-91b5-cbd71eb6d9f4": {
+        "spaceId": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+        "value": {
+          "value": {
+            "id": "34904bf5-e7e4-80ef-91b5-cbd71eb6d9f4",
+            "version": 46,
+            "type": "text",
+            "properties": {
+              "title": [
+                [
+                  "ファインディ株式会社　"
+                ],
+                [
+                  "personal.info@findy.co.jp",
+                  [
+                    [
+                      "a",
+                      "mailto:personal.info@findy.co.jp"
+                    ]
+                  ]
+                ]
+              ]
+            },
+            "created_time": 1776738469448,
+            "last_edited_time": 1776738531472,
+            "parent_id": "34904bf5-e7e4-8045-b228-debc14aa89b3",
+            "parent_table": "block",
+            "alive": true,
+            "space_id": "0ffe0496-1ca2-4424-8f3f-5e99f120c278",
+            "crdt_format_version": 1,
+            "crdt_data": {
+              "title": {
+                "r": "K5QYYSErgyR0ows9yvzkTw,\"start\",\"end\"",
+                "n": {
+                  "K5QYYSErgyR0ows9yvzkTw,\"start\",\"end\"": {
+                    "s": {
+                      "x": "K5QYYSErgyR0ows9yvzkTw",
+                      "i": [
+                        {
+                          "t": "s"
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": ""
+                    },
+                    "c": [
+                      "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",840],\"end\""
+                    ]
+                  },
+                  "cuTGR7qmt5zrKfwOL_C6vg,[\"4wnq0j4gII--\",840],\"end\"": {
+                    "s": {
+                      "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                      "i": [
+                        {
+                          "t": "p",
+                          "i": [
+                            "4wnq0j4gII--",
+                            840
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            727
+                          ],
+                          "a": [
+                            {
+                              "t": "r",
+                              "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                              "l": "",
+                              "i": [
+                                "4wnq0j4gII--",
+                                869
+                              ],
+                              "s": {
+                                "i": [
+                                  "4wnq0j4gII--",
+                                  840
+                                ],
+                                "a": "a"
+                              },
+                              "e": {
+                                "i": [
+                                  "4wnq0j4gII--",
+                                  842
+                                ],
+                                "a": "b"
+                              },
+                              "k": "a"
+                            }
+                          ]
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            728
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            727
+                          ],
+                          "l": 10,
+                          "c": "ファインディ株式会社",
+                          "b": [
+                            {
+                              "t": "a",
+                              "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                              "l": "",
+                              "i": [
+                                "4wnq0j4gII--",
+                                841
+                              ],
+                              "s": {
+                                "i": [
+                                  "nLn3EfwtOaH2",
+                                  728
+                                ],
+                                "a": "b"
+                              },
+                              "e": {
+                                "i": [
+                                  "nLn3EfwtOaH2",
+                                  737
+                                ],
+                                "a": "a"
+                              },
+                              "a": [
+                                "a",
+                                "mailto:personal.info@findy.co.jp"
+                              ]
+                            },
+                            {
+                              "t": "r",
+                              "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                              "l": "",
+                              "i": [
+                                "4wnq0j4gII--",
+                                869
+                              ],
+                              "s": {
+                                "i": [
+                                  "4wnq0j4gII--",
+                                  840
+                                ],
+                                "a": "a"
+                              },
+                              "e": {
+                                "i": [
+                                  "4wnq0j4gII--",
+                                  842
+                                ],
+                                "a": "b"
+                              },
+                              "k": "a"
+                            }
+                          ],
+                          "a": [
+                            {
+                              "t": "r",
+                              "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                              "l": "",
+                              "i": [
+                                "4wnq0j4gII--",
+                                869
+                              ],
+                              "s": {
+                                "i": [
+                                  "4wnq0j4gII--",
+                                  840
+                                ],
+                                "a": "a"
+                              },
+                              "e": {
+                                "i": [
+                                  "4wnq0j4gII--",
+                                  842
+                                ],
+                                "a": "b"
+                              },
+                              "k": "a"
+                            }
+                          ]
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            842
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            737
+                          ],
+                          "l": 1,
+                          "c": "　",
+                          "b": []
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "4wnq0j4gII--",
+                            843
+                          ],
+                          "o": [
+                            "4wnq0j4gII--",
+                            842
+                          ],
+                          "l": 25,
+                          "c": "personal.info@findy.co.jp",
+                          "b": [
+                            {
+                              "t": "a",
+                              "x": "cuTGR7qmt5zrKfwOL_C6vg",
+                              "l": "",
+                              "i": [
+                                "4wnq0j4gII--",
+                                868
+                              ],
+                              "s": {
+                                "i": [
+                                  "4wnq0j4gII--",
+                                  843
+                                ],
+                                "a": "b"
+                              },
+                              "e": {
+                                "i": [
+                                  "4wnq0j4gII--",
+                                  867
+                                ],
+                                "a": "a"
+                              },
+                              "a": [
+                                "a",
+                                "mailto:personal.info@findy.co.jp"
+                              ]
+                            }
+                          ],
+                          "a": []
+                        },
+                        {
+                          "t": "t",
+                          "i": [
+                            "nLn3EfwtOaH2",
+                            738
+                          ],
+                          "o": [
+                            "nLn3EfwtOaH2",
+                            737
+                          ],
+                          "l": -61
+                        },
+                        {
+                          "t": "e"
+                        }
+                      ],
+                      "l": "{{{l"
+                    },
+                    "c": []
+                  }
+                }
+              }
+            }
+          },
+          "role": "reader"
+        }
+      }
+    }
+  }
+}

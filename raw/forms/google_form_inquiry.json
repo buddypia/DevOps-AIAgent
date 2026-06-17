@@ -1,0 +1,27 @@
+{
+  "title": "【DevOps×AI Agent Hackathon】お問い合わせフォーム",
+  "description": "本フォームは、ファインディ株式会社が主催する「DevOps×AI Agent Hackathon」のお問い合わせフォームです。\n\nご回答まで数日かかる場合がございます。ご了承ください。\n\n◆個人情報の取り扱いについて\nお客様に入力して頂いた氏名・メールアドレス等の個人情報はお問い合わせの対応の目的のために利用させていただきます。弊社は、ご提供いただいた個人情報を、法令に基づく命令などを除いて、あらかじめお客様の同意を得ないで第三者に提供することはありません。\n\nファインディ株式会社 プライバシーポリシー\nhttps://findy.co.jp/privacy/",
+  "questions": [
+    {
+      "id": 1716135497,
+      "title": "お名前（フルネーム）",
+      "description": "",
+      "type": 0,
+      "required": true
+    },
+    {
+      "id": 1954884736,
+      "title": "メールアドレス (半角英数)",
+      "description": "",
+      "type": 0,
+      "required": true
+    },
+    {
+      "id": 1191175926,
+      "title": "ご質問内容",
+      "description": "",
+      "type": 1,
+      "required": true
+    }
+  ]
+}
