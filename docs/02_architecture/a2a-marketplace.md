@@ -23,8 +23,9 @@
 15. `src/dossier.ts` がProtoPedia本文、動画録画順、提出リンク、最終チェックを1つのドシエに束ねる
 16. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
 17. `src/judgeBrief.ts` が競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員向け1ページに圧縮する
-18. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-19. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+18. `src/autonomyLedger.ts` が市場探索、判断、契約、A2A委任、検証、運用、提出をAI自律性台帳にする
+19. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+20. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -39,6 +40,7 @@
   - `market.intel`
   - `mvp.audit`
   - `mission.run`
+  - `autonomy.ledger`
   - `submission.publish`
   - `submission.dossier`
   - `demo.runway`
@@ -79,6 +81,14 @@
 - Proof ladder: 競合差別化、MVP判定、実行証拠、次アクション、提出ドシエを証拠URL付きで並べる
 - Risk register: ProtoPedia作品URLと動画URLなど、外部作業の未完了を提出完了扱いせず明示する
 - A2A payload: `judge.brief` skillとしてbrief score、readiness、metrics、risksを返す
+
+## Autonomy Ledger Surface
+
+- `POST /api/autonomy-ledger`: AIエージェント中心性を、sense、decide、contract、delegate、verify、operate、submitの7段階台帳で返す
+- Decision chain: 各段階にactor、decision、action、evidence、verifier、endpoint、statusを持たせる
+- Handoffs: Contract Deskのagent contractsからscope、acceptance、verification proofを抽出する
+- Judge challenges: 「単なるダッシュボードではないか」「なぜAIが必然か」「DevOpsサイクルが閉じているか」への反証を返す
+- A2A payload: `autonomy.ledger` skillとしてledger score、verdict、phases、handoffs、receiptを返す
 
 ## Contract Surface
 
@@ -127,6 +137,7 @@
 - Demo runway proof: `demo.runway` skillとして、30秒デモ順、証拠リンク、録画キュー、外部残リスクをA2A payloadにも含める
 - Win autopilot proof: `win.autopilot` skillとして、win score、lane scorecards、残ブロッカー、証拠デッキをA2A payloadにも含める
 - Judge brief proof: `judge.brief` skillとして、審査員の初見用にkey metrics、proof ladder、30秒route、risk registerをA2A payloadにも含める
+- Autonomy ledger proof: `autonomy.ledger` skillとして、AIの判断連鎖、agent handoff、検証endpoint、sha256 receiptをA2A payloadにも含める
 
 ## Submission Surface
 
@@ -142,6 +153,7 @@
 - Market intel: `/api/market-intel`
 - MVP audit: `/api/mvp-audit`
 - Judge brief: `/api/judge-brief`
+- Autonomy ledger: `/api/autonomy-ledger`
 - Ops drill: `/api/ops-drill`
 - Contracts: `/api/contracts`
 - Publisher: `/api/publisher`

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { ipAllowlistMiddleware, ipAllowlistSummary } from "./ipAllowlist.js";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js";
 import { buildWinningAutopilot } from "../src/autopilot.js";
+import { buildAutonomyLedger } from "../src/autonomyLedger.js";
 import { buildSquadContract } from "../src/contracts.js";
 import { buildDemoRunway } from "../src/demoRunway.js";
 import { buildSubmissionDossier } from "../src/dossier.js";
@@ -127,6 +128,12 @@ function agentCard(baseUrl: string) {
         name: "Build the one-page judge brief",
         description: "競合差別化、MVP監査、証拠、30秒導線、残リスクを審査員向けの1枚に束ねる。",
         tags: ["judge-brief", "demo", "mvp", "market-intelligence", "submission"]
+      },
+      {
+        id: "autonomy.ledger",
+        name: "Build the agent autonomy ledger",
+        description: "市場探索、判断、契約、A2A委任、検証、運用、提出の連鎖を審査員向けの自律性台帳にする。",
+        tags: ["autonomy", "agent-centrality", "a2a", "evidence", "devops"]
       },
       {
         id: "mission.run",
@@ -1046,6 +1053,53 @@ app.post("/api/judge-brief", async (req, res) => {
   );
 });
 
+app.post("/api/autonomy-ledger", async (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "AIエージェント中心性を、判断、委任、検証、運用、提出の証拠台帳として証明する。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const [geminiResult, ciResult] = await Promise.allSettled([
+    runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
+    fetchCiProof()
+  ]);
+  const gemini =
+    geminiResult.status === "fulfilled"
+      ? geminiResult.value
+      : localGeminiRecommendation(
+          recommendation,
+          geminiResult.reason instanceof Error ? geminiResult.reason.message : "Gemini request failed"
+        );
+  const ci = ciResult.status === "fulfilled" ? ciResult.value : ciUnavailable("CI status promise rejected");
+  const proof = buildJudgeProof({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    gemini,
+    ci
+  });
+
+  res.json(
+    buildAutonomyLedger({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy,
+      mission,
+      opsDrill,
+      squadContract,
+      proof
+    })
+  );
+});
+
 app.post("/api/ops-drill", (req, res) => {
   const parsed = OpsDrillSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -1343,6 +1397,15 @@ app.post("/a2a", (req, res) => {
     proof,
     finalist
   });
+  const autonomyLedger = buildAutonomyLedger({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    squadContract,
+    proof
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -1427,6 +1490,21 @@ app.post("/a2a", (req, res) => {
                     tone: risk.tone,
                     action: risk.action
                   }))
+                },
+                autonomyLedger: {
+                  id: autonomyLedger.id,
+                  ledgerScore: autonomyLedger.ledgerScore,
+                  verdict: autonomyLedger.verdict,
+                  phases: autonomyLedger.chain.map((event) => ({
+                    id: event.id,
+                    phase: event.phase,
+                    status: event.status
+                  })),
+                  handoffs: autonomyLedger.handoffs.map((handoff) => ({
+                    id: handoff.id,
+                    status: handoff.status
+                  })),
+                  receipt: autonomyLedger.receipt.digest
                 },
                 mission: {
                   id: mission.id,
@@ -1541,6 +1619,7 @@ app.post("/a2a", (req, res) => {
                 marketIntelEndpoint: `${publicBaseUrl(req)}/api/market-intel`,
                 mvpAuditEndpoint: `${publicBaseUrl(req)}/api/mvp-audit`,
                 judgeBriefEndpoint: `${publicBaseUrl(req)}/api/judge-brief`,
+                autonomyLedgerEndpoint: `${publicBaseUrl(req)}/api/autonomy-ledger`,
                 winRunEndpoint: `${publicBaseUrl(req)}/api/win-run`,
                 demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,
                 proofEndpoint: `${publicBaseUrl(req)}/api/proof`,

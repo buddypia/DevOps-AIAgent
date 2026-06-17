@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { recommendSquad } from "./agentEngine";
+import type { AutonomyLedger } from "./autonomyLedger";
 import type { WinningAutopilotRun } from "./autopilot";
 import type { SquadContract } from "./contracts";
 import type { DemoRunway } from "./demoRunway";
@@ -648,6 +649,152 @@ function JudgeBriefPanel({
           <FileText size={28} />
           <strong>Build judge briefで、競合差別化、MVP監査、証拠、30秒導線、残リスクを1枚に束ねます。</strong>
           <p>審査員が最初に読むビューとして、機能の多さを短い判断材料に圧縮します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function AutonomyLedgerPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [ledger, setLedger] = useState<AutonomyLedger | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildLedger() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/autonomy-ledger", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setLedger((await response.json()) as AutonomyLedger);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="autonomy-ledger">
+      <div className="ledger-heading">
+        <div>
+          <span className="eyebrow">Agent centrality</span>
+          <h2>
+            <Network size={20} />
+            Autonomy Ledger
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildLedger} disabled={loading} title="自律性台帳を生成">
+          <GitBranch size={17} />
+          {loading ? "Building" : "Build autonomy ledger"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Autonomy ledger request failed: {error}</p>}
+
+      {ledger ? (
+        <div className="ledger-body">
+          <div className="ledger-summary">
+            <div>
+              <span className={cx("risk-chip", ledger.verdict === "agent-led" ? "low" : ledger.verdict === "agent-led-with-external-gaps" ? "medium" : "high")}>
+                {ledger.verdict}
+              </span>
+              <h3>{ledger.autonomyClaim}</h3>
+              <p>{ledger.summary}</p>
+            </div>
+            <div className="ledger-score">
+              <strong>{ledger.ledgerScore}</strong>
+              <span>ledger score</span>
+            </div>
+          </div>
+
+          <div className="ledger-metrics">
+            {ledger.metrics.map((metric) => (
+              <article key={metric.id} className={metric.status}>
+                <span>{metric.label}</span>
+                <strong>{metric.value}</strong>
+              </article>
+            ))}
+          </div>
+
+          <div className="ledger-chain">
+            {ledger.chain.map((event) => (
+              <article key={event.id} className={event.status}>
+                <div>
+                  <span>{event.phase}</span>
+                  <strong>{event.actor}</strong>
+                </div>
+                <p>{event.decision}</p>
+                <small>{event.action}</small>
+                <b>{event.verifier}</b>
+                <a href={event.endpoint} target="_blank" rel="noreferrer">
+                  Evidence <ExternalLink size={13} />
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <div className="ledger-grid">
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Handoffs
+              </h3>
+              <div className="ledger-handoffs">
+                {ledger.handoffs.map((handoff) => (
+                  <article key={handoff.id} className={handoff.status}>
+                    <div>
+                      <strong>{handoff.agentName}</strong>
+                      <span>{handoff.status}</span>
+                    </div>
+                    <p>{handoff.scope}</p>
+                    <small>{handoff.acceptance}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <ShieldCheck size={15} />
+                Judge challenges
+              </h3>
+              <div className="ledger-challenges">
+                {ledger.challengeAnswers.map((challenge) => (
+                  <article key={challenge.id}>
+                    <strong>{challenge.challenge}</strong>
+                    <p>{challenge.answer}</p>
+                    <small>{challenge.proof}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                Receipt
+              </h3>
+              <pre>{JSON.stringify({ ...ledger.receipt, a2aPayload: ledger.a2aPayload }, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="ledger-empty">
+          <Network size={28} />
+          <strong>Build autonomy ledgerで、AIの判断、契約、A2A委任、検証、運用、提出を1本の台帳にします。</strong>
+          <p>審査基準の「AIエージェントが価値の中心」を、主張ではなく検収可能なログとして見せます。</p>
         </div>
       )}
     </section>
@@ -2647,6 +2794,7 @@ export default function App() {
       </section>
 
       <JudgeBriefPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <AutonomyLedgerPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MarketIntelPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MvpAuditPanel recommendation={recommendation} projectBrief={projectBrief} />
       <WinAutopilotPanel recommendation={recommendation} projectBrief={projectBrief} />
