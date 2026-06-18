@@ -276,7 +276,7 @@
 
 - API: `POST /api/submission-closeout`
 - App UI: `Build closeout`
-- Output: closeout score、readiness、next action、work items、copy tray、ProtoPedia Quality Lock、video run、Video Proof Lock、Submission Dry Run Lock、submit packet、A2A `submission.closeout` payload
+- Output: closeout score、readiness、next action、work items、copy tray、ProtoPedia Quality Lock、video run、Video Proof Lock、Submission Dry Run Lock、Submission Asset Lock、submit packet、A2A `submission.closeout` payload
 
 ## Security Sentinel Review
 

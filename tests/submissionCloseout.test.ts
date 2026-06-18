@@ -185,6 +185,20 @@ describe("submission closeout workbench", () => {
         expect.objectContaining({ id: "external-url-handoff", status: "watch" })
       ])
     });
+    expect(closeout.assetLock).toMatchObject({
+      readiness: "assets-external-watch",
+      lockScore: 98,
+      readyCount: 5,
+      watchCount: 1,
+      blockedCount: 0,
+      checks: expect.arrayContaining([
+        expect.objectContaining({ id: "copy-tray", status: "ready" }),
+        expect.objectContaining({ id: "architecture-diagram", status: "ready" }),
+        expect.objectContaining({ id: "video-caption-pack", status: "ready" }),
+        expect.objectContaining({ id: "final-form-fields", status: "ready" }),
+        expect.objectContaining({ id: "external-url-slots", status: "watch" })
+      ])
+    });
     expect(closeout.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "submission.closeout",
@@ -203,6 +217,14 @@ describe("submission closeout workbench", () => {
       dryRunLock: {
         readiness: "submit-dry-run-ready",
         checks: expect.arrayContaining([expect.objectContaining({ id: "external-url-handoff", status: "watch" })])
+      },
+      assetLock: {
+        readiness: "assets-external-watch",
+        pasteOrder: expect.arrayContaining([
+          "Paste the ProtoPedia copy tray.",
+          "Paste the final three URLs into Findy."
+        ]),
+        checks: expect.arrayContaining([expect.objectContaining({ id: "external-url-slots", status: "watch" })])
       },
       endpoints: {
         closeout: `${SUBMISSION_PROOF.deployedUrl}/api/submission-closeout`,
@@ -224,6 +246,8 @@ describe("submission closeout workbench", () => {
     expect(closeout.videoProofLock.readiness).toBe("video-url-ready");
     expect(closeout.videoProofLock.checks.find((check) => check.id === "publish-url")?.status).toBe("ready");
     expect(closeout.dryRunLock.readiness).toBe("submit-dry-run-sealed");
+    expect(closeout.assetLock.readiness).toBe("assets-publish-ready");
+    expect(closeout.assetLock.checks.every((check) => check.status === "ready")).toBe(true);
     expect(closeout.dryRunLock.lockScore).toBe(100);
     expect(closeout.dryRunLock.checks.every((check) => check.status === "ready")).toBe(true);
     expect(closeout.submitPacket).toMatchObject({
@@ -245,6 +269,8 @@ describe("submission closeout workbench", () => {
     expect(closeout.videoProofLock.readiness).toBe("blocked-video-url");
     expect(closeout.videoProofLock.checks.find((check) => check.id === "publish-url")?.status).toBe("blocked");
     expect(closeout.dryRunLock.readiness).toBe("needs-dry-run-fix");
+    expect(closeout.assetLock.readiness).toBe("needs-asset-fix");
+    expect(closeout.assetLock.checks.find((check) => check.id === "external-url-slots")?.status).toBe("blocked");
     expect(closeout.dryRunLock.checks.find((check) => check.id === "external-url-handoff")?.status).toBe("blocked");
   });
 });

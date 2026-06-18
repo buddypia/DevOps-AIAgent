@@ -5652,6 +5652,46 @@ function SubmissionCloseoutPanel({
             </div>
           </div>
 
+          <div className="closeout-asset-lock">
+            <section>
+              <div>
+                <span
+                  className={cx(
+                    "risk-chip",
+                    workbench.assetLock.readiness === "assets-publish-ready"
+                      ? "low"
+                      : workbench.assetLock.readiness === "assets-external-watch"
+                        ? "medium"
+                        : "high"
+                  )}
+                >
+                  {workbench.assetLock.readiness}
+                </span>
+                <strong>{workbench.assetLock.lockScore}</strong>
+              </div>
+              <h3>Submission Asset Lock</h3>
+              <p>{workbench.assetLock.operatorLine}</p>
+              <small>
+                ready {workbench.assetLock.readyCount} / watch {workbench.assetLock.watchCount} / blocked {workbench.assetLock.blockedCount}
+              </small>
+            </section>
+            <div>
+              {workbench.assetLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.acceptance}</p>
+                  <small>{check.proof}</small>
+                  <a href={check.evidenceUrl} target="_blank" rel="noreferrer">
+                    Evidence <ExternalLink size={13} />
+                  </a>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="closeout-quality-lock">
             <section>
               <div>

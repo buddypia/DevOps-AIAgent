@@ -38,6 +38,7 @@ export type CloseoutVideoStep = {
 
 export type CloseoutVideoLockReadiness = "video-url-ready" | "recording-locked" | "needs-recording-proof" | "blocked-video-url";
 export type CloseoutDryRunReadiness = "submit-dry-run-sealed" | "submit-dry-run-ready" | "needs-dry-run-fix";
+export type CloseoutAssetLockReadiness = "assets-publish-ready" | "assets-external-watch" | "needs-asset-fix";
 
 export type CloseoutVideoLockCheck = {
   id: string;
@@ -87,6 +88,27 @@ export type CloseoutDryRunLock = {
   checks: CloseoutDryRunCheck[];
 };
 
+export type CloseoutAssetLockCheck = {
+  id: string;
+  label: string;
+  status: CloseoutStatus;
+  proof: string;
+  evidenceUrl: string;
+  acceptance: string;
+};
+
+export type CloseoutAssetLock = {
+  id: string;
+  lockScore: number;
+  readiness: CloseoutAssetLockReadiness;
+  readyCount: number;
+  watchCount: number;
+  blockedCount: number;
+  operatorLine: string;
+  pasteOrder: string[];
+  checks: CloseoutAssetLockCheck[];
+};
+
 export type SubmissionCloseoutWorkbench = {
   id: string;
   closeoutScore: number;
@@ -101,6 +123,7 @@ export type SubmissionCloseoutWorkbench = {
   protopediaQualityLock: ProtoPediaQualityLock;
   videoProofLock: CloseoutVideoProofLock;
   dryRunLock: CloseoutDryRunLock;
+  assetLock: CloseoutAssetLock;
   submitPacket: SubmissionLaunchGate["submitPacket"];
   proofScript: string[];
   a2aPayload: Record<string, unknown>;
@@ -169,6 +192,12 @@ function lockScore(item: CloseoutVideoLockCheck) {
 function dryRunCheckScore(item: CloseoutDryRunCheck) {
   if (item.status === "ready") return 100;
   if (item.status === "watch") return 70;
+  return 20;
+}
+
+function assetLockCheckScore(item: CloseoutAssetLockCheck) {
+  if (item.status === "ready") return 100;
+  if (item.status === "watch") return 88;
   return 20;
 }
 
@@ -439,6 +468,122 @@ function buildDryRunLock(input: {
   };
 }
 
+function buildAssetLock(input: {
+  base: string;
+  workItems: CloseoutWorkItem[];
+  copyFields: CloseoutCopyField[];
+  videoSteps: CloseoutVideoStep[];
+  protopediaQualityLock: ProtoPediaQualityLock;
+  videoProofLock: CloseoutVideoProofLock;
+  dryRunLock: CloseoutDryRunLock;
+  launchGate: SubmissionLaunchGate;
+  proof: JudgeProof;
+}): CloseoutAssetLock {
+  const workItem = (id: string) => input.workItems.find((item) => item.id === id);
+  const copyReady = input.copyFields.length >= 8 && input.copyFields.every((field) => field.status === "ready");
+  const architectureItem = workItem("attach-architecture");
+  const videoCaptionsReady = input.videoProofLock.captions.length >= 5 && input.videoSteps.length >= 7;
+  const submitPacketReady =
+    input.launchGate.submitPacket.githubUrl.length > 0 &&
+    input.launchGate.submitPacket.deployedUrl.length > 0 &&
+    input.launchGate.submitPacket.title.length > 0 &&
+    input.launchGate.submitPacket.protoPediaTag === "findy_hackathon" &&
+    input.launchGate.submitPacket.protoPediaStatus === "完成" &&
+    input.launchGate.submitPacket.submitterMemo.length > 0;
+  const externalStatus: CloseoutStatus =
+    input.launchGate.readiness === "submit-ready" ? "ready" : input.launchGate.readiness === "invalid-urls" ? "blocked" : "watch";
+  const checks: CloseoutAssetLockCheck[] = [
+    {
+      id: "copy-tray",
+      label: "ProtoPedia copy tray",
+      status: copyReady && input.protopediaQualityLock.readiness !== "needs-copy-repair" ? "ready" : "watch",
+      proof: `${input.copyFields.filter((field) => field.status === "ready").length}/${input.copyFields.length} fields; ${input.protopediaQualityLock.readiness}.`,
+      evidenceUrl: absoluteUrl(input.base, "/api/submission-closeout"),
+      acceptance: "タイトル、概要、課題、対象ユーザー、特徴、技術構成、タグ、URL欄をそのまま貼れる。"
+    },
+    {
+      id: "architecture-diagram",
+      label: "Architecture diagram handoff",
+      status: architectureItem?.status ?? "watch",
+      proof: architectureItem?.proof ?? "Architecture diagram URL is not available.",
+      evidenceUrl: absoluteUrl(input.base, "/assets/a2a-marketplace-architecture.svg"),
+      acceptance: "ProtoPediaのシステム構成図欄へ添付する画像URLが確定している。"
+    },
+    {
+      id: "video-caption-pack",
+      label: "30-second caption pack",
+      status: videoCaptionsReady && input.videoProofLock.readiness !== "needs-recording-proof" ? "ready" : "watch",
+      proof: `${input.videoProofLock.targetDurationSeconds}s / ${input.videoSteps.length} chapters / ${input.videoProofLock.captions.length} captions.`,
+      evidenceUrl: absoluteUrl(input.base, "/api/demo-run"),
+      acceptance: "録画時に読む字幕、章、画面、証拠URLが30秒の順番で確定している。"
+    },
+    {
+      id: "receipt-digest",
+      label: "Receipt digest",
+      status: input.proof.receipt.digest ? "ready" : "watch",
+      proof: input.proof.receipt.digest || "Judge Proof receipt digest is missing.",
+      evidenceUrl: absoluteUrl(input.base, "/api/proof"),
+      acceptance: "動画説明欄または提出メモに貼るsha256 receiptがある。"
+    },
+    {
+      id: "final-form-fields",
+      label: "Findy final form fields",
+      status: submitPacketReady && input.dryRunLock.readiness !== "needs-dry-run-fix" ? "ready" : "watch",
+      proof: `${input.launchGate.submitPacket.title}; ${input.launchGate.submitPacket.protoPediaStatus}; ${input.launchGate.submitPacket.protoPediaTag}; ${input.dryRunLock.readiness}.`,
+      evidenceUrl: absoluteUrl(input.base, "/api/submission-launch"),
+      acceptance: "公開GitHub、Cloud Run、ProtoPedia、タグ、完成ステータス、提出メモの貼付先が確定している。"
+    },
+    {
+      id: "external-url-slots",
+      label: "External URL slots",
+      status: externalStatus,
+      proof:
+        externalStatus === "ready"
+          ? "ProtoPedia and video URLs are pasted and valid."
+          : externalStatus === "blocked"
+            ? "External URL slots contain malformed evidence."
+            : "ProtoPedia work URL and video URL are still empty slots.",
+      evidenceUrl: absoluteUrl(input.base, "/api/submission-launch"),
+      acceptance: "未発行URLはwatchとして残し、不正URLはblockedにして提出完了扱いにしない。"
+    }
+  ];
+  const nonExternalChecks = checks.filter((check) => check.id !== "external-url-slots");
+  const readyCount = checks.filter((check) => check.status === "ready").length;
+  const watchCount = checks.filter((check) => check.status === "watch").length;
+  const blockedCount = checks.filter((check) => check.status === "blocked").length;
+  const readiness: CloseoutAssetLockReadiness =
+    blockedCount > 0 || nonExternalChecks.some((check) => check.status !== "ready")
+      ? "needs-asset-fix"
+      : externalStatus === "ready"
+        ? "assets-publish-ready"
+        : "assets-external-watch";
+  const lockScoreValue = Math.round(clamp(average(checks.map(assetLockCheckScore))));
+
+  return {
+    id: `submission-asset-lock-${lockScoreValue}-${readiness}`,
+    lockScore: lockScoreValue,
+    readiness,
+    readyCount,
+    watchCount,
+    blockedCount,
+    operatorLine:
+      readiness === "assets-publish-ready"
+        ? "Copy tray, architecture, video captions, receipt, final form fields, and external URLs are sealed."
+        : readiness === "assets-external-watch"
+          ? "All internal submission assets are paste-ready; only the externally published ProtoPedia/video URLs remain."
+          : "Submission assets still need a copy, architecture, video, receipt, or URL fix before final handoff.",
+    pasteOrder: [
+      "Paste the ProtoPedia copy tray.",
+      "Attach the architecture diagram.",
+      "Record the 30-second caption pack.",
+      "Publish the video URL.",
+      "Publish the ProtoPedia work URL.",
+      "Paste the final three URLs into Findy."
+    ],
+    checks
+  };
+}
+
 export function buildSubmissionCloseoutWorkbench(input: {
   baseUrl: string;
   publisher: ProtoPediaPublisher;
@@ -552,6 +697,17 @@ export function buildSubmissionCloseoutWorkbench(input: {
     launchGate: input.launchGate,
     proof: input.proof
   });
+  const assetLock = buildAssetLock({
+    base,
+    workItems,
+    copyFields,
+    videoSteps,
+    protopediaQualityLock,
+    videoProofLock,
+    dryRunLock,
+    launchGate: input.launchGate,
+    proof: input.proof
+  });
   const blocked = workItems.some((entry) => entry.status === "blocked");
   const openItems = workItems.filter((entry) => entry.status !== "ready");
   const readiness: CloseoutReadiness = blocked ? "invalid-evidence" : openItems.length === 0 ? "ready-to-submit" : "needs-closeout";
@@ -565,6 +721,7 @@ export function buildSubmissionCloseoutWorkbench(input: {
         input.demoRunway.demoScore,
         input.proof.overallScore,
         dryRunLock.lockScore,
+        assetLock.lockScore,
         average(workItems.map(workScore))
       ])
     )
@@ -594,12 +751,14 @@ export function buildSubmissionCloseoutWorkbench(input: {
     protopediaQualityLock,
     videoProofLock,
     dryRunLock,
+    assetLock,
     submitPacket: input.launchGate.submitPacket,
     proofScript: [
       "Submission Closeout Workbenchで残作業をnow/watch/readyに分ける。",
       `ProtoPedia Quality Lockで${protopediaQualityLock.qualityScore}点の本文受入条件を固定する。`,
       `Video Proof Lockで${videoProofLock.lockScore}点の録画受入条件を固定する。`,
       `Submission Dry Run Lockで${dryRunLock.lockScore}点の外部URL以外の提出リハーサルを固定する。`,
+      `Submission Asset Lockで${assetLock.lockScore}点のcopy tray、構成図、動画字幕、receipt、最終フォーム項目を固定する。`,
       "Copy fieldsをProtoPediaへ貼り、構成図を添付する。",
       "Video chaptersの順番で30秒動画を録画し、動画URLを入力する。",
       "ProtoPedia作品URLを入力し、Submission Launch Gateをsubmit-readyにする。",
@@ -639,6 +798,15 @@ export function buildSubmissionCloseoutWorkbench(input: {
         watchCount: dryRunLock.watchCount,
         blockedCount: dryRunLock.blockedCount,
         checks: dryRunLock.checks.map((check) => ({ id: check.id, status: check.status, evidenceUrl: check.evidenceUrl }))
+      },
+      assetLock: {
+        lockScore: assetLock.lockScore,
+        readiness: assetLock.readiness,
+        readyCount: assetLock.readyCount,
+        watchCount: assetLock.watchCount,
+        blockedCount: assetLock.blockedCount,
+        pasteOrder: assetLock.pasteOrder,
+        checks: assetLock.checks.map((check) => ({ id: check.id, status: check.status, evidenceUrl: check.evidenceUrl }))
       },
       urls: input.launchGate.urlStatuses.map((status) => ({
         id: status.id,

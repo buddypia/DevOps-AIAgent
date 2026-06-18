@@ -284,7 +284,8 @@
 - ProtoPedia Quality Lock: 本文が課題/対象ユーザー/特徴、Cloud Run/Gemini/A2A/GitHub Actions、審査5項目、競合/SWOT、30秒デモ導線、公開証拠、外部URL状態を満たすかをscore/readiness付きで返す
 - Video Proof Lock: 動画URLが未発行でも、公開Cloud Run開始、30秒導線、Judge Proof receipt、競合反論、提出handoff、YouTube/Vimeo URLの受入条件をscore/readiness付きで返す
 - Submission Dry Run Lock: 外部URL未発行でも、copy fields、構成図、録画順、ProtoPedia本文lock、Judge Proof receipt、提出パケットhandoffが揃っているかをready/watch/blockedで固定し、URLだけが残る状態を `submit-dry-run-ready` として返す
-- A2A payload: `submission.closeout` skillとしてcloseout score、readiness、next action、work items、ProtoPedia Quality Lock、Video Proof Lock、Submission Dry Run Lock、URL status、endpoint群を返す
+- Submission Asset Lock: copy tray、構成図、動画字幕、receipt、Findy最終フォーム項目をready/watch/blockedで固定し、ProtoPedia/動画URLだけを外部watchとして残す
+- A2A payload: `submission.closeout` skillとしてcloseout score、readiness、next action、work items、ProtoPedia Quality Lock、Video Proof Lock、Submission Dry Run Lock、Submission Asset Lock、URL status、endpoint群を返す
 
 ## Architecture Pack Surface
 
@@ -385,7 +386,7 @@
 - Finalist proof: `finalist.simulate` skillとして、最終候補スコア、judge consensus、残ギャップをA2A payloadにも含める
 - Publisher proof: `submission.publish` skillとして、ProtoPedia貼り付け本文、メディアURL、未完了外部作業をA2A payloadにも含める
 - Dossier proof: `submission.dossier` skillとして、提出コピー欄、録画順、提出フォームhandoff packet、構成図パケット、提出リンク、MarkdownドシエをA2A payloadにも含める
-- Closeout proof: `submission.closeout` skillとして、外部提出の残作業、copy tray、video run、Video Proof Lock、Submission Dry Run Lock、submit packetをA2A payloadにも含める
+- Closeout proof: `submission.closeout` skillとして、外部提出の残作業、copy tray、video run、Video Proof Lock、Submission Dry Run Lock、Submission Asset Lock、submit packetをA2A payloadにも含める
 - Architecture proof: `submission.package` skillとして、システム構成図、Mermaid、必須技術対応表、ProtoPedia checklistをA2A payloadにも含める
 - Demo runway proof: `demo.runway` skillとして、30秒デモ順、証拠リンク、録画キュー、外部残リスクをA2A payloadにも含める
 - Win autopilot proof: `win.autopilot` skillとして、win score、12 lane scorecards、残ブロッカー、証拠デッキ、live evidence score、receipt digest、moat verdict、squad readinessをA2A payloadにも含める
