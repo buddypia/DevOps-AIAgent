@@ -711,6 +711,7 @@ async function externalUrlProbe(input: {
   label: string;
   url: string;
   fetchUrl?: string;
+  init?: RequestInit;
   required: boolean;
   missingEvidence: string;
   invalidEvidence: string;
@@ -741,11 +742,14 @@ async function externalUrlProbe(input: {
 
   const startedAt = Date.now();
   try {
+    const inputHeaders = input.init?.headers instanceof Headers ? Object.fromEntries(input.init.headers.entries()) : (input.init?.headers as Record<string, string> | undefined);
     const response = await fetch(input.fetchUrl ?? url, {
+      ...input.init,
       method: "GET",
       headers: {
         Accept: "text/html,application/json;q=0.9,*/*;q=0.8",
-        "User-Agent": "a2a-agent-marketplace"
+        "User-Agent": "a2a-agent-marketplace",
+        ...inputHeaders
       },
       redirect: "follow",
       signal: AbortSignal.timeout(4500)
@@ -1975,7 +1979,8 @@ app.post("/api/external-evidence", async (req, res) => {
       id: "deployed-url",
       label: "Deployed Cloud Run URL",
       url: SUBMISSION_PROOF.deployedUrl,
-      fetchUrl: `${SUBMISSION_PROOF.deployedUrl.replace(/\/$/, "")}/api/healthz`,
+      fetchUrl: `${publicBaseUrl(req)}/api/healthz`,
+      init: { headers: selfProbeHeaders(req) },
       required: true,
       missingEvidence: "Cloud Run deployed URL is not configured.",
       invalidEvidence: "Cloud Run deployed URL must be an https://*.run.app URL."
