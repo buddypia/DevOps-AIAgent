@@ -29,7 +29,8 @@ const requiredAgentCardSignals = [
   "judge.rehearsal:tag:recording-lock",
   "win.gap.radar:tag:feature-freeze-lock",
   "winner.packet:tag:winner-release-lock",
-  "finalist.simulate:tag:release-drift"
+  "finalist.simulate:tag:release-drift",
+  "competitive.battlecard:tag:criteria-duel"
 ];
 
 const passedProbe = (id: string): ReleaseDriftProbe => ({
@@ -136,6 +137,7 @@ describe("deploy recovery plan", () => {
       observedAgentCardSignals: [
         "judge.rehearsal:tag:recording-lock",
         "win.gap.radar:tag:feature-freeze-lock",
+        "winner.packet:tag:winner-release-lock",
         "finalist.simulate:tag:release-drift"
       ],
       generatedAt: "2026-06-18T00:00:00.000Z",
@@ -145,7 +147,7 @@ describe("deploy recovery plan", () => {
           ...passedProbe("agent-card-skill-surface"),
           status: "watch",
           score: 58,
-          evidence: "Agent Card exposes all skills but misses winner.packet:tag:winner-release-lock."
+          evidence: "Agent Card exposes all skills but misses competitive.battlecard:tag:criteria-duel."
         },
         passedProbe("acceptance-endpoint"),
         passedProbe("a2a-artifact"),
@@ -161,7 +163,7 @@ describe("deploy recovery plan", () => {
     expect(plan.readiness).toBe("redeploy-required");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")).toMatchObject({
       status: "blocked",
-      evidence: expect.stringContaining("winner.packet:tag:winner-release-lock")
+      evidence: expect.stringContaining("competitive.battlecard:tag:criteria-duel")
     });
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")).toMatchObject({
       blocking: true,
@@ -169,11 +171,11 @@ describe("deploy recovery plan", () => {
     });
     expect(plan.steps.find((step) => step.id === "skill-surface")?.status).toBe("blocked");
     expect(plan.blockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["agent-card-signals", "agent-card-skill-surface"]));
-    expect(plan.judgeScript.join("\n")).toContain("winner.packet:tag:winner-release-lock");
+    expect(plan.judgeScript.join("\n")).toContain("competitive.battlecard:tag:criteria-duel");
     expect(plan.a2aPayload).toMatchObject({
       skill: "deploy.recover",
       releaseDrift: {
-        missingAgentCardSignals: ["winner.packet:tag:winner-release-lock"]
+        missingAgentCardSignals: ["competitive.battlecard:tag:criteria-duel"]
       }
     });
   });

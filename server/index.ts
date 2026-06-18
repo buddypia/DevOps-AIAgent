@@ -2239,7 +2239,8 @@ async function buildReleaseDriftForTarget(input: {
     "judge.rehearsal:tag:recording-lock",
     "win.gap.radar:tag:feature-freeze-lock",
     "winner.packet:tag:winner-release-lock",
-    "finalist.simulate:tag:release-drift"
+    "finalist.simulate:tag:release-drift",
+    "competitive.battlecard:tag:criteria-duel"
   ];
   const requiredSkillIds = [
     "task.delegate",
@@ -2294,11 +2295,13 @@ async function buildReleaseDriftForTarget(input: {
         const winGapRadar = skills.find((skill) => skill.id === "win.gap.radar");
         const winnerPacket = skills.find((skill) => skill.id === "winner.packet");
         const finalistSimulate = skills.find((skill) => skill.id === "finalist.simulate");
+        const competitiveBattlecard = skills.find((skill) => skill.id === "competitive.battlecard");
         observedAgentCardSignals = [
           ...(judgeRehearsal?.tags?.includes("recording-lock") ? ["judge.rehearsal:tag:recording-lock"] : []),
           ...(winGapRadar?.tags?.includes("feature-freeze-lock") ? ["win.gap.radar:tag:feature-freeze-lock"] : []),
           ...(winnerPacket?.tags?.includes("winner-release-lock") ? ["winner.packet:tag:winner-release-lock"] : []),
-          ...(finalistSimulate?.tags?.includes("release-drift") ? ["finalist.simulate:tag:release-drift"] : [])
+          ...(finalistSimulate?.tags?.includes("release-drift") ? ["finalist.simulate:tag:release-drift"] : []),
+          ...(competitiveBattlecard?.tags?.includes("criteria-duel") ? ["competitive.battlecard:tag:criteria-duel"] : [])
         ];
         const missing = requiredSkillIds.filter((skill) => !observedSkillIds.includes(skill));
         const missingSignals = requiredAgentCardSignals.filter((signal) => !observedAgentCardSignals.includes(signal));

@@ -30,7 +30,8 @@ const requiredAgentCardSignals = [
   "judge.rehearsal:tag:recording-lock",
   "win.gap.radar:tag:feature-freeze-lock",
   "winner.packet:tag:winner-release-lock",
-  "finalist.simulate:tag:release-drift"
+  "finalist.simulate:tag:release-drift",
+  "competitive.battlecard:tag:criteria-duel"
 ];
 
 const passedProbe = (id: string): ReleaseDriftProbe => ({
@@ -133,6 +134,7 @@ describe("release drift guard", () => {
       observedAgentCardSignals: [
         "judge.rehearsal:tag:recording-lock",
         "win.gap.radar:tag:feature-freeze-lock",
+        "winner.packet:tag:winner-release-lock",
         "finalist.simulate:tag:release-drift"
       ],
       generatedAt: "2026-06-18T00:00:00.000Z",
@@ -142,7 +144,7 @@ describe("release drift guard", () => {
           ...passedProbe("agent-card-skill-surface"),
           status: "watch",
           score: 58,
-          evidence: "Target Agent Card exposes all skill ids but is missing winner.packet:tag:winner-release-lock."
+          evidence: "Target Agent Card exposes all skill ids but is missing competitive.battlecard:tag:criteria-duel."
         },
         passedProbe("acceptance-endpoint"),
         passedProbe("a2a-artifact"),
@@ -152,13 +154,13 @@ describe("release drift guard", () => {
 
     expect(guard.verdict).toBe("deploy-drift");
     expect(guard.missingSkills).toEqual([]);
-    expect(guard.missingAgentCardSignals).toEqual(["winner.packet:tag:winner-release-lock"]);
+    expect(guard.missingAgentCardSignals).toEqual(["competitive.battlecard:tag:criteria-duel"]);
     expect(guard.summary).toContain("0 required skills and 1 required Agent Card signals");
-    expect(guard.runbook.join("\n")).toContain('select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="finalist.simulate")');
+    expect(guard.runbook.join("\n")).toContain('select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="finalist.simulate" or .id=="competitive.battlecard")');
     expect(guard.a2aPayload).toMatchObject({
       skill: "release.drift",
       verdict: "deploy-drift",
-      missingAgentCardSignals: ["winner.packet:tag:winner-release-lock"]
+      missingAgentCardSignals: ["competitive.battlecard:tag:criteria-duel"]
     });
   });
 });

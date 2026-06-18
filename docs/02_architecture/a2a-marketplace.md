@@ -234,7 +234,7 @@
 
 ## Release Drift Surface
 
-- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Feature Freeze Lock tag、Winner Release Lock tag、Finalist Release Drift tag、Acceptance Matrix、A2A artifactを返しているかを検査する
+- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Feature Freeze Lock tag、Winner Release Lock tag、Finalist Release Drift tag、Criteria Duel tag、Acceptance Matrix、A2A artifactを返しているかを検査する
 - Drift probes: target health、Agent Card skill surface、Acceptance Matrix endpoint、A2A artifact endpoints、latest main CIを同時に評価する
 - Verdict: 最新なら `release-current`、公開URLが古いなら `deploy-drift`、health/CIが落ちたら `release-blocked`
 - Runbook: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Acceptance Matrix、A2A artifactの再確認コマンドを返す
@@ -244,7 +244,7 @@
 
 - `POST /api/deploy-recovery`: Release Drift Guardの結果と直近gcloudエラーを、再デプロイ復旧計画に変換する
 - Checks: target health、skill surface、Cloud Build auth、A2A artifact、latest main CIをready/watch/blockedで返す
-- Commands: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Recording Lock / Feature Freeze Lock / Winner Release Lock / Finalist Release Drift のrequired signal tags、`/api/deploy-recovery`、A2A `deployRecoveryEndpoint` の再検証コマンドを返す
+- Commands: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Recording Lock / Feature Freeze Lock / Winner Release Lock / Finalist Release Drift / Criteria Duel のrequired signal tags、`/api/deploy-recovery`、A2A `deployRecoveryEndpoint` の再検証コマンドを返す
 - A2A payload: `deploy.recover` skillとしてrecovery score、readiness、blocking commands、blockersを返す
 
 ## Demo Receipt Surface

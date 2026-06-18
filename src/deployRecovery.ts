@@ -201,8 +201,8 @@ export function buildDeployRecoveryPlan(input: {
     {
       id: "verify-agent-card-signals",
       label: "Verify Agent Card signals",
-      command: `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="finalist.simulate") | {id, tags}'`,
-      why: "Recording Lock、Feature Freeze Lock、Winner Release Lock、Finalist Release Driftが公開Agent Cardに載ったことを確認します。",
+      command: `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="finalist.simulate" or .id=="competitive.battlecard") | {id, tags}'`,
+      why: "Recording Lock、Feature Freeze Lock、Winner Release Lock、Finalist Release Drift、Criteria Duelが公開Agent Cardに載ったことを確認します。",
       copyGroup: "verify",
       blocking: input.releaseDrift.missingAgentCardSignals.length > 0
     },
