@@ -6,6 +6,8 @@ export type BattlecardReadiness = "judge-ready" | "needs-proof" | "exposed";
 export type BattlecardStatus = "lead" | "parity" | "risk";
 export type CompetitiveProofLockStatus = "sealed" | "watch" | "missing";
 export type CompetitiveProofLockReadiness = "proof-locked" | "proof-watch" | "needs-counterproof";
+export type CompetitiveCriteriaDuelStatus = "win" | "contest" | "exposed";
+export type CompetitiveCriteriaDuelReadiness = "duel-locked" | "duel-watch" | "needs-duel-proof";
 
 export type BattlecardSwotLink = {
   quadrant: SwotQuadrant;
@@ -104,6 +106,29 @@ export type CompetitiveProofLock = {
   checks: CompetitiveProofLockCheck[];
 };
 
+export type CompetitiveCriteriaDuelRow = {
+  id: string;
+  label: string;
+  status: CompetitiveCriteriaDuelStatus;
+  score: number;
+  targetCompetitor: string;
+  competitorAdvantage: string;
+  ourCounter: string;
+  proofUrl: string;
+  sourceCount: number;
+  swotSignal: BattlecardSwotLink;
+  judgeLine: string;
+  recordingCue: string;
+};
+
+export type CompetitiveCriteriaDuel = {
+  id: string;
+  duelScore: number;
+  readiness: CompetitiveCriteriaDuelReadiness;
+  judgeLine: string;
+  rows: CompetitiveCriteriaDuelRow[];
+};
+
 export type CompetitiveBattlecard = {
   id: string;
   battleScore: number;
@@ -117,6 +142,7 @@ export type CompetitiveBattlecard = {
   objectionReceipts: CompetitiveObjectionReceipt[];
   objectionReplay: CompetitiveObjectionReplay;
   proofLock: CompetitiveProofLock;
+  criteriaDuel: CompetitiveCriteriaDuel;
   judgeScript: string[];
   a2aPayload: Record<string, unknown>;
 };
@@ -293,6 +319,34 @@ function sourceLockStatus(readiness: string): CompetitiveProofLockStatus {
   return "watch";
 }
 
+const CRITERIA_DUEL_CONFIG: Record<string, { competitorId: string; proofPath: string; recordingCue: string }> = {
+  agentCentrality: {
+    competitorId: "a2a-marketplace",
+    proofPath: "/.well-known/agent-card.json",
+    recordingCue: "Agent CardとA2A payloadを開き、AI能力調達が主操作であることを見せる。"
+  },
+  approach: {
+    competitorId: "google-adk",
+    proofPath: "/api/competitive-battlecard",
+    recordingCue: "ADKの強みを認めてから、調達と検収の市場体験へ話をずらす。"
+  },
+  usability: {
+    competitorId: "dify",
+    proofPath: "/api/demo-concierge",
+    recordingCue: "Demo Conciergeのfirst clickで、ワークフロー作成ではなく審査導線の迷いを解く。"
+  },
+  practicality: {
+    competitorId: "agentops",
+    proofPath: "/api/pilot-economics",
+    recordingCue: "Pilot Economicsで買い手価値と回収日数を見せる。"
+  },
+  implementation: {
+    competitorId: "google-adk",
+    proofPath: "/api/release-drift",
+    recordingCue: "Release Drift Guardで、公開Cloud Runが最新証拠を返すかを検収する。"
+  }
+};
+
 function buildObjectionReplay(input: {
   baseUrl: string;
   battleScore: number;
@@ -468,6 +522,76 @@ function buildProofLock(input: {
   };
 }
 
+function criteriaDuelStatus(score: number, card: CompetitiveBattlecardCard): CompetitiveCriteriaDuelStatus {
+  if (score >= 88 && card.status !== "risk") return "win";
+  if (score >= 76) return "contest";
+  return "exposed";
+}
+
+function fallbackSwotSignal(card: CompetitiveBattlecardCard): BattlecardSwotLink {
+  return (
+    card.swotLinks.find((link) => link.quadrant === "threats") ??
+    card.swotLinks[0] ?? {
+      quadrant: "threats",
+      title: "競合差分の証拠不足",
+      signal: "warning"
+    }
+  );
+}
+
+function buildCriteriaDuel(input: { baseUrl: string; strategy: WinningStrategy; cards: CompetitiveBattlecardCard[] }): CompetitiveCriteriaDuel {
+  const normalizedBase = input.baseUrl.replace(/\/$/, "");
+  const weakestCard = [...input.cards].sort((left, right) => left.score - right.score)[0];
+  const rows = input.strategy.judgeCriteria.map((criterion): CompetitiveCriteriaDuelRow => {
+    const config = CRITERIA_DUEL_CONFIG[criterion.id] ?? {
+      competitorId: weakestCard.id,
+      proofPath: "/api/competitive-battlecard",
+      recordingCue: "Competitive Battlecardで審査基準ごとの勝ち筋を見せる。"
+    };
+    const card = input.cards.find((item) => item.id === config.competitorId) ?? weakestCard;
+    const sourceScore = card.sourceUrls.length >= 2 ? 100 : card.sourceUrls.length === 1 ? 88 : 50;
+    const swotScore = card.swotLinks.length >= 3 ? 100 : card.swotLinks.length >= 2 ? 88 : 62;
+    const proofRouteScore = card.proofRoute.length >= 30 ? 96 : 78;
+    const score = Math.round(clamp(average([criterion.score, card.score, sourceScore, swotScore, proofRouteScore])));
+    const status = criteriaDuelStatus(score, card);
+    const swotSignal = fallbackSwotSignal(card);
+
+    return {
+      id: criterion.id,
+      label: criterion.label,
+      status,
+      score,
+      targetCompetitor: card.competitor,
+      competitorAdvantage: card.whereTheyWin,
+      ourCounter: card.shortAnswer,
+      proofUrl: `${normalizedBase}${config.proofPath}`,
+      sourceCount: card.sourceUrls.length,
+      swotSignal,
+      judgeLine: `${criterion.label}: ${card.competitor}は${card.whereTheyWin}で強い。こちらは${card.shortAnswer}`,
+      recordingCue: config.recordingCue
+    };
+  });
+  const duelScore = Math.round(clamp(average(rows.map((row) => row.score))));
+  const readiness: CompetitiveCriteriaDuelReadiness = rows.some((row) => row.status === "exposed")
+    ? "needs-duel-proof"
+    : rows.every((row) => row.status === "win") && duelScore >= 88
+      ? "duel-locked"
+      : "duel-watch";
+
+  return {
+    id: `criteria-duel-${duelScore}-${readiness}`,
+    duelScore,
+    readiness,
+    judgeLine:
+      readiness === "duel-locked"
+        ? "審査5項目すべてで、競合の勝ち筋、こちらの反論、証拠URL、SWOT signalが揃っています。"
+        : readiness === "duel-watch"
+          ? "審査5項目の競合反論は揃っています。contest行は録画で証拠を先に開いて補強します。"
+          : "審査基準別に競合へ負けて見える行があります。録画前に証拠routeを補強してください。",
+    rows
+  };
+}
+
 export function buildCompetitiveBattlecard(input: {
   baseUrl: string;
   strategy: WinningStrategy;
@@ -490,6 +614,7 @@ export function buildCompetitiveBattlecard(input: {
   const swotReceipts = buildSwotReceipts(input.strategy);
   const objectionReceipts = buildObjectionReceipts(cards);
   const objectionReplay = buildObjectionReplay({ baseUrl: normalizedBase, battleScore, cards, objectionReceipts });
+  const criteriaDuel = buildCriteriaDuel({ baseUrl: normalizedBase, strategy: input.strategy, cards });
   const proofLock = buildProofLock({
     baseUrl: normalizedBase,
     strategy: input.strategy,
@@ -519,9 +644,11 @@ export function buildCompetitiveBattlecard(input: {
     objectionReceipts,
     objectionReplay,
     proofLock,
+    criteriaDuel,
     judgeScript: [
       "まず競合の強みを認める: 作る基盤、workflow、observabilityは既存ツールが強い。",
       `Objection Replayで${objectionReplay.weakestCompetitor}への質問を、source、SWOT、proof routeの30秒順に固定する。`,
+      `Criteria Duelで審査5項目ごとに、競合の勝ち筋とこちらの証拠URLを1行ずつ確認する。`,
       `Competitive Proof Lockで${proofLock.coverage.competitorCount}競合、${proofLock.coverage.sourceUrlCount}公式ソース、${proofLock.coverage.swotLinkCount} SWOTリンクを確認する。`,
       "次にずらす: このプロダクトはAI能力を選び、雇い、A2A委任し、DevOps証拠で検収する市場体験です。",
       "Battlecardで最も強い競合質問を1つ開き、source、SWOT、proof routeを同時に見せる。",
@@ -559,6 +686,19 @@ export function buildCompetitiveBattlecard(input: {
         sourceCount: objectionReplay.sourceCount,
         swotSignalCount: objectionReplay.swotSignalCount,
         steps: objectionReplay.steps.map((step) => ({ id: step.id, status: step.status, proofUrl: step.proofUrl }))
+      },
+      criteriaDuel: {
+        duelScore: criteriaDuel.duelScore,
+        readiness: criteriaDuel.readiness,
+        rows: criteriaDuel.rows.map((row) => ({
+          id: row.id,
+          status: row.status,
+          score: row.score,
+          targetCompetitor: row.targetCompetitor,
+          proofUrl: row.proofUrl,
+          sourceCount: row.sourceCount,
+          swot: row.swotSignal.quadrant
+        }))
       },
       proofLock: {
         proofScore: proofLock.proofScore,

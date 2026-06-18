@@ -3595,6 +3595,36 @@ function CompetitiveBattlecardPanel({
             </div>
           </div>
 
+          <div className="battle-duel">
+            <section>
+              <div>
+                <span className={cx("risk-chip", battlecard.criteriaDuel.readiness === "duel-locked" ? "low" : battlecard.criteriaDuel.readiness === "duel-watch" ? "medium" : "high")}>
+                  {battlecard.criteriaDuel.readiness}
+                </span>
+                <strong>{battlecard.criteriaDuel.duelScore}</strong>
+              </div>
+              <h3>Criteria Duel</h3>
+              <p>{battlecard.criteriaDuel.judgeLine}</p>
+            </section>
+            <div>
+              {battlecard.criteriaDuel.rows.map((row) => (
+                <article key={row.id} className={row.status}>
+                  <div>
+                    <span>{row.status}</span>
+                    <strong>{row.score}</strong>
+                  </div>
+                  <h3>{row.label}</h3>
+                  <small>{row.targetCompetitor}</small>
+                  <p>{row.competitorAdvantage}</p>
+                  <b>{row.ourCounter}</b>
+                  <em>
+                    {row.sourceCount} sources / {row.swotSignal.quadrant}: {row.swotSignal.title}
+                  </em>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="battle-cards">
             {battlecard.cards.map((card) => (
               <article key={card.id} className={card.status}>

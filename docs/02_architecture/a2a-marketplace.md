@@ -108,10 +108,11 @@
 
 ## Competitive Battlecard Surface
 
-- `POST /api/competitive-battlecard`: Market Intel、Moat Stress、SWOTを競合別の審査回答カードへ束ねる
+- `POST /api/competitive-battlecard`: Market Intel、Moat Stress、SWOTを競合別の審査回答カードへ束ね、Criteria Duelで審査5項目ごとの競合勝敗を固定する
 - Cards: 競合ごとに「審査員の質問」「短い回答」「相手が勝つ領域」「こちらが勝つ領域」「見せる証拠route」を返す
 - Source/SWOT receipts: 公式ソースURLとSWOT項目を同じカードに載せ、競合分析が主張だけで終わらないようにする
 - Objection Replay: 最弱競合への質問、source ledger、SWOT receipt、Live Evidence proof routeを0-30秒のready/watch/blocked stepsに固定する
+- Criteria Duel: AI中心性、課題アプローチ、ユーザビリティ、実用性、実装力ごとに、疑われる競合、相手の勝ち筋、こちらの証拠URL、SWOT signalを1行にする
 - Competitive Proof Lock: 競合カバレッジ、公式ソース、SWOT mapping、反論receipt、Objection Replay、live source lockをsealed/watch/missingで検収する
 - Judge script: 質疑で話す順番を「相手の強みを認める → 調達体験へずらす → 証拠を開く」に固定する
 - A2A payload: `competitive.battlecard` skillとしてbattle score、readiness、card verdicts、top risks、proof lockを返す
@@ -345,7 +346,7 @@
 - `POST /api/contracts`: AI契約、受入条件、SLA、検証コマンド、支払い条件を評価する
 - `POST /api/market-intel`: ソース付き競合比較、審査回答、差別化次アクションを評価する
 - `POST /api/moat-stress`: 主要競合からの反論、証拠付き回答、録画順を評価する
-- `POST /api/competitive-battlecard`: 公式ソース、SWOT、競合反論、証拠routeを審査回答カードとして評価する
+- `POST /api/competitive-battlecard`: 公式ソース、SWOT、Criteria Duel、競合反論、証拠routeを審査回答カードとして評価する
 - `POST /api/mvp-audit`: MVPハードゲート、審査lane、提出blockerを評価する
 - `POST /api/judge-command-center`: 初回審査用の証拠ボタン、90秒timeline、残ブロッカーを評価する
 - `POST /api/demo-concierge`: persona別のfirst click、台詞、証拠URL、成功条件を返す
@@ -416,7 +417,7 @@
 - Acceptance matrix proof: `acceptance.matrix` skillとして、必須技術、審査5項目、公開証拠、提出物の受入状態をA2A payloadにも含める
 - Task board proof: `task.delegate` skillとして、agent work orders、execution order、verification queue、receipt digestをA2A payloadにも含める
 - Moat stress proof: `moat.stress` skillとして、競合別の想定反論、反証、見せる証拠、録画順をA2A payloadにも含める
-- Competitive battlecard proof: `competitive.battlecard` skillとして、競合別の短い回答、公式ソース、SWOT receipts、Objection Replay、top risksをA2A payloadにも含める
+- Competitive battlecard proof: `competitive.battlecard` skillとして、競合別の短い回答、公式ソース、SWOT receipts、Criteria Duel、Objection Replay、top risksをA2A payloadにも含める
 
 ## Submission Surface
 

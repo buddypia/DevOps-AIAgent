@@ -40,7 +40,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Moat Stress Testで、ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsからの反論を先に受け、証拠付き回答と録画順を表示する
 - MVP Auditで、必須技術、審査5項目、DevOps証拠、提出3点をpass/watch/failで監査し、外部未発行URLを合格扱いにしない
 - Judge Briefで、競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページにまとめる
-- Judge Command Centerで、Judge Tour、Competitive Battlecard、Objection Replay、Competitive Proof Lock、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
+- Judge Command Centerで、Judge Tour、Competitive Battlecard、Criteria Duel、Objection Replay、Competitive Proof Lock、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
 - Demo Conciergeで、審査員、買い手、提出者ごとの最初の1クリック、台詞、証拠URL、成功条件を固定し、Judge Route LockとFirst-Run Focus Lockで0-90秒のlocked stepsに圧縮する
 - Judge Rehearsal Roomで、Final Pitch Defense Lock、90秒segments、想定質問、scorecard、録画チェックを固定する
 - Winner Proof Packetで、審査5項目ごとの主張、証拠URL、競合/SWOT反論、録画cue、提出copyを1枚に束ねる
@@ -127,7 +127,7 @@ React UI
 | 4-8s | Judge Command Centerで、最初に押す証拠、MVP受入状態、公開revision drift、残ブロッカーを1画面で見せる |
 | 8-11s | Judge Tourで90秒導線、5つのjudge claims、外部URL不足を見せる |
 | 11-14s | Squad Optimizerで140予算内の最適編成、+22のUX追加ギャップ、swap planを見せる |
-| 14-16s | Competitive BattlecardのObjection ReplayとCompetitive Proof Lockで「既存ツールでよくない？」へのsource、SWOT、proof routeを30秒順に出す |
+| 14-16s | Competitive BattlecardのCriteria Duel、Objection Replay、Competitive Proof Lockで「既存ツールでよくない？」へのsource、SWOT、proof routeを30秒順に出す |
 | 16-18s | Market IntelのSource Freshness Lockで、公式ソースURLが今も到達可能かを見せる |
 | 18-20s | Live Evidence Monitorで公開Cloud Run、Agent Card、A2A、Optimizer、CIの5 probesを見せる |
 | 20-22s | Observability Oracleで公開証拠、継続/復旧判断、買い手価値SLO、次のAI雇用を見せる |

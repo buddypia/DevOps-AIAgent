@@ -194,8 +194,8 @@ function agentCard(baseUrl: string) {
       {
         id: "competitive.battlecard",
         name: "Build competitor battlecards",
-        description: "公式ソース、SWOT、競合反論、見せる証拠を競合別の審査回答カードに束ね、Competitive Proof Lockで検収する。",
-        tags: ["competitive-analysis", "battlecard", "swot", "judge-qa", "proof", "proof-lock"]
+        description: "公式ソース、SWOT、競合反論、Criteria Duel、見せる証拠を競合別の審査回答カードに束ね、Competitive Proof Lockで検収する。",
+        tags: ["competitive-analysis", "battlecard", "swot", "judge-qa", "criteria-duel", "proof", "proof-lock"]
       },
       {
         id: "mvp.audit",

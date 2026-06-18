@@ -49,6 +49,27 @@ describe("competitive battlecard", () => {
     expect(battlecard.objectionReplay.replayScore).toBeGreaterThanOrEqual(90);
     expect(battlecard.objectionReplay.steps.map((step) => step.id)).toEqual(["objection", "source-ledger", "swot-receipt", "proof-route"]);
     expect(battlecard.objectionReplay.steps.every((step) => step.status === "ready")).toBe(true);
+    expect(battlecard.criteriaDuel).toMatchObject({
+      readiness: expect.stringMatching(/duel-/),
+      rows: expect.arrayContaining([
+        expect.objectContaining({
+          id: "approach",
+          targetCompetitor: "Google ADK / Gemini Enterprise",
+          proofUrl: `${baseUrl}/api/competitive-battlecard`
+        }),
+        expect.objectContaining({
+          id: "usability",
+          targetCompetitor: "Dify",
+          proofUrl: `${baseUrl}/api/demo-concierge`
+        }),
+        expect.objectContaining({
+          id: "implementation",
+          proofUrl: `${baseUrl}/api/release-drift`
+        })
+      ])
+    });
+    expect(battlecard.criteriaDuel.rows).toHaveLength(5);
+    expect(battlecard.criteriaDuel.rows.every((row) => row.status !== "exposed")).toBe(true);
     expect(battlecard.proofLock).toMatchObject({
       readiness: "proof-watch",
       proofScore: 95,
@@ -98,6 +119,16 @@ describe("competitive battlecard", () => {
           expect.objectContaining({
             id: "proof-route",
             proofUrl: `${baseUrl}/api/live-evidence`
+          })
+        ])
+      },
+      criteriaDuel: {
+        duelScore: expect.any(Number),
+        readiness: expect.stringMatching(/duel-/),
+        rows: expect.arrayContaining([
+          expect.objectContaining({
+            id: "implementation",
+            proofUrl: `${baseUrl}/api/release-drift`
           })
         ])
       },

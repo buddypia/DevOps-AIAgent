@@ -7482,6 +7482,100 @@ h1 {
   text-decoration: none;
 }
 
+.battle-duel {
+  display: grid;
+  grid-template-columns: minmax(340px, 0.42fr) minmax(580px, 1fr);
+  gap: 1px;
+  background: #d1d6cf;
+}
+
+.battle-duel > section,
+.battle-duel > div {
+  min-width: 0;
+  padding: 14px;
+  background: #fbfbf6;
+}
+
+.battle-duel > section {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  border-top: 5px solid #1b3f55;
+}
+
+.battle-duel > section > div,
+.battle-duel article > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.battle-duel > section strong {
+  color: #1b3f55;
+  font-size: 2.6rem;
+  line-height: 1;
+}
+
+.battle-duel > div {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(160px, 1fr));
+  gap: 8px;
+}
+
+.battle-duel article {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid #d1d6cf;
+  border-left: 4px solid var(--green);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.battle-duel article.contest {
+  border-left-color: var(--amber);
+  background: #fff9e9;
+}
+
+.battle-duel article.exposed {
+  border-left-color: var(--rose);
+  background: #fff1f3;
+}
+
+.battle-duel h3 {
+  font-size: 1rem;
+  line-height: 1.22;
+}
+
+.battle-duel span {
+  color: #355c7d;
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.battle-duel p,
+.battle-duel small,
+.battle-duel b,
+.battle-duel em {
+  color: #3e4651;
+  line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+
+.battle-duel b,
+.battle-duel em {
+  font-style: normal;
+}
+
+.battle-duel b {
+  color: #1b3f55;
+}
+
 .battle-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(290px, 1fr));
@@ -13447,6 +13541,7 @@ pre {
   }
 
   .battle-replay,
+  .battle-duel,
   .battle-proof-checks,
   .battle-cards,
   .battle-grid {
@@ -13454,6 +13549,10 @@ pre {
   }
 
   .battle-replay > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .battle-duel > div {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -13762,6 +13861,7 @@ pre {
     .moat-grid,
     .battle-summary,
     .battle-replay,
+    .battle-duel,
     .battle-proof-summary,
     .battle-proof-checks,
     .battle-cards,
@@ -13891,6 +13991,10 @@ pre {
   }
 
   .battle-replay > div {
+    grid-template-columns: 1fr;
+  }
+
+  .battle-duel > div {
     grid-template-columns: 1fr;
   }
 
