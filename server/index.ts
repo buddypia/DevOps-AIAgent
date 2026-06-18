@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getClientIp, ipAllowlistMiddleware, ipAllowlistSummary } from "./ipAllowlist.js";
 import { buildJudgeAcceptanceMatrix } from "../src/acceptanceMatrix.js";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js";
+import { buildArchitecturePack } from "../src/architecturePack.js";
 import { buildWinningAutopilot } from "../src/autopilot.js";
 import { buildAutonomyLedger } from "../src/autonomyLedger.js";
 import { ciStatusFromBadge } from "../src/ciProof.js";
@@ -780,6 +781,27 @@ app.get("/api/submission-kit", (_req, res) => {
     videoUrl: mission.submissionPack.videoUrl,
     requirements: mission.submissionPack.requirements
   });
+});
+
+app.post("/api/architecture-pack", (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "ProtoPediaに貼るシステム構成図と、必須技術・A2A・DevOps証拠の対応表を生成する。");
+
+  res.json(
+    buildArchitecturePack({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy,
+      mission
+    })
+  );
 });
 
 app.post("/api/publisher", (req, res) => {
@@ -3164,6 +3186,12 @@ app.post("/a2a", async (req, res) => {
     pilotEconomics,
     releaseDrift
   });
+  const architecturePack = buildArchitecturePack({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -3570,6 +3598,15 @@ app.post("/a2a", async (req, res) => {
                       screen: chapter.screen,
                       status: chapter.status
                     })),
+                    architecturePack: {
+                      score: dossier.handoffPacket.architecturePack.architectureScore,
+                      readiness: dossier.handoffPacket.architecturePack.readiness,
+                      diagramUrl: dossier.handoffPacket.architecturePack.diagramUrl,
+                      requirements: dossier.handoffPacket.architecturePack.requirements.map((requirement) => ({
+                        id: requirement.id,
+                        status: requirement.status
+                      }))
+                    },
                     missingOnly: dossier.handoffPacket.missingOnly.map((item) => item.id)
                   },
                   finalChecks: dossier.finalChecks.map((check) => ({
@@ -3577,6 +3614,18 @@ app.post("/a2a", async (req, res) => {
                     status: check.status
                   }))
                 },
+                architecturePack: {
+                  id: architecturePack.id,
+                  architectureScore: architecturePack.architectureScore,
+                  readiness: architecturePack.readiness,
+                  diagramUrl: architecturePack.diagramUrl,
+                  nodes: architecturePack.nodes.map((node) => ({ id: node.id, layer: node.layer })),
+                  requirements: architecturePack.requirements.map((requirement) => ({
+                    id: requirement.id,
+                    status: requirement.status
+                  }))
+                },
+                architecturePackEndpoint: `${publicBaseUrl(req)}/api/architecture-pack`,
                 dossierEndpoint: `${publicBaseUrl(req)}/api/dossier`,
                 marketIntelEndpoint: `${publicBaseUrl(req)}/api/market-intel`,
                 moatStressEndpoint: `${publicBaseUrl(req)}/api/moat-stress`,

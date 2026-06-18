@@ -21,25 +21,26 @@
 13. `src/publisher.ts` がProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
 14. `src/demoRunway.ts` が証拠、最終候補判定、提出本文、AI市場、運用判断を30秒の審査員導線に束ねる
 15. `src/autopilot.ts` が競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizerを含む全証拠を一括判定し、win score、残ブロッカー、証拠デッキを返す
-16. `src/dossier.ts` がProtoPedia本文、動画録画順、提出リンク、最終チェックを1つのドシエに束ねる
-17. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
-18. `src/judgeBrief.ts` が競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員向け1ページに圧縮する
-19. `src/judgeTour.ts` がJudge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
-20. `src/judgeCommandCenter.ts` がJudge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
-21. `src/prizeStrategy.ts` が審査5項目の目標点、現在証拠、足りない証拠、最終ピッチ順を優勝作戦に束ねる
-22. `src/userPilot.ts` が開発リード、Platform/SRE、提出者の初回利用導線、摩擦、次クリックを検証する
-23. `src/squadOptimizer.ts` が予算内のAI編成を総当たりし、必須技術カバレッジ、交換計画、追加予算ギャップを返す
-24. `src/liveEvidence.ts` が公開Cloud Run、Agent Card、A2A、Squad Optimizer、CIのライブ証拠をスコア化する
-25. `src/releaseDrift.ts` が提出用Cloud Run URLのAgent Card、Acceptance Matrix、A2A artifactのrevision driftを検知する
-26. `src/deployRecovery.ts` がrelease drift、gcloud認証、Cloud Build、公開再検証を復旧計画にする
-27. `src/demoReceipt.ts` が審査導線、競合反論、編成判断、公開証拠、外部提出URLをsha256 digest付き検収票にする
-28. `src/acceptanceMatrix.ts` が必須技術、審査5項目、公開証拠、提出物をaccepted/watch/blockedの受入表にする
-29. `src/autonomyLedger.ts` が市場探索、判断、契約、A2A委任、検証、運用、提出をAI自律性台帳にする
-30. `src/security.ts` がSecret Manager、IP allowlist、入力制限、A2A信頼境界、CIを審査用セキュリティ証拠にする
-31. `src/impact.ts` が対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性証拠にする
-32. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
-33. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-34. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+16. `src/dossier.ts` がProtoPedia本文、動画録画順、提出リンク、構成図パケット、最終チェックを1つのドシエに束ねる
+17. `src/architecturePack.ts` がシステム構成図、Mermaid、ノード/エッジ、必須技術対応表を提出証拠に変換する
+18. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
+19. `src/judgeBrief.ts` が競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員向け1ページに圧縮する
+20. `src/judgeTour.ts` がJudge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
+21. `src/judgeCommandCenter.ts` がJudge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
+22. `src/prizeStrategy.ts` が審査5項目の目標点、現在証拠、足りない証拠、最終ピッチ順を優勝作戦に束ねる
+23. `src/userPilot.ts` が開発リード、Platform/SRE、提出者の初回利用導線、摩擦、次クリックを検証する
+24. `src/squadOptimizer.ts` が予算内のAI編成を総当たりし、必須技術カバレッジ、交換計画、追加予算ギャップを返す
+25. `src/liveEvidence.ts` が公開Cloud Run、Agent Card、A2A、Squad Optimizer、CIのライブ証拠をスコア化する
+26. `src/releaseDrift.ts` が提出用Cloud Run URLのAgent Card、Acceptance Matrix、A2A artifactのrevision driftを検知する
+27. `src/deployRecovery.ts` がrelease drift、gcloud認証、Cloud Build、公開再検証を復旧計画にする
+28. `src/demoReceipt.ts` が審査導線、競合反論、編成判断、公開証拠、外部提出URLをsha256 digest付き検収票にする
+29. `src/acceptanceMatrix.ts` が必須技術、審査5項目、公開証拠、提出物をaccepted/watch/blockedの受入表にする
+30. `src/autonomyLedger.ts` が市場探索、判断、契約、A2A委任、検証、運用、提出をAI自律性台帳にする
+31. `src/security.ts` がSecret Manager、IP allowlist、入力制限、A2A信頼境界、CIを審査用セキュリティ証拠にする
+32. `src/impact.ts` が対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性証拠にする
+33. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
+34. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+35. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -221,6 +222,13 @@
 - Submit packet: Findy提出フォームに貼るGitHub URL、デプロイ済みURL、ProtoPedia URL、動画URL、タグを返す
 - A2A payload: `submission.launch` skillとしてlaunch score、readiness、URL status、checklist、submit packetを返す
 
+## Architecture Pack Surface
+
+- `POST /api/architecture-pack`: ProtoPedia必須のシステム構成図を、公開SVG、Mermaid、ノード/エッジ、必須技術対応表、貼り付けチェックリストへ変換する
+- Requirement map: Cloud Run、Gemini API、A2A委任、GitHub Actions/Release Drift、システム構成図、外部提出URLをready/watchで返す
+- Dossier integration: `Submission Dossier` のhandoff packet内に構成図URL、architecture score、要件対応表を含める
+- A2A payload: 既存の `submission.package` skillとしてarchitecture score、diagram URL、nodes/edges、requirements、endpointを返す
+
 ## Security Review Surface
 
 - `POST /api/security-review`: Secret Manager、IP allowlist、Zod入力制限、A2A信頼境界、CI、Cloud Run runtimeを監査する
@@ -273,7 +281,8 @@
 - `POST /api/judge-drill`: 審査5項目ごとの厳しめ質問、回答、証拠リンク、デモ画面を返す
 - `POST /api/finalist`: 審査員5役の最終候補判定、落選理由、残ギャップ、次の一手を返す
 - `POST /api/publisher`: ProtoPediaに貼る本文、タグ、URL、動画台本、提出チェックリストを返す
-- `POST /api/dossier`: ProtoPedia本文、動画録画順、提出フォームhandoff packet、提出リンク、証拠デッキ、最終チェックを返す
+- `POST /api/dossier`: ProtoPedia本文、動画録画順、提出フォームhandoff packet、構成図パケット、提出リンク、証拠デッキ、最終チェックを返す
+- `POST /api/architecture-pack`: 構成図URL、Mermaid、ノード/エッジ、必須技術対応表、ProtoPedia貼り付けチェックリストを返す
 - `POST /api/demo-run`: Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線にする
 - `POST /api/win-run`: 競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を一括実行し、勝てる状態と残アクションを返す
 - `POST /api/impact-case`: 実用性のbefore/after、ユーザー別KPI、導入計画、審査回答を返す
@@ -301,7 +310,8 @@
 - Judge drill: `judge.drill` skillとして、審査員の反論に対する回答と証拠リンクをA2A payloadにも含める
 - Finalist proof: `finalist.simulate` skillとして、最終候補スコア、judge consensus、残ギャップをA2A payloadにも含める
 - Publisher proof: `submission.publish` skillとして、ProtoPedia貼り付け本文、メディアURL、未完了外部作業をA2A payloadにも含める
-- Dossier proof: `submission.dossier` skillとして、提出コピー欄、録画順、提出フォームhandoff packet、提出リンク、MarkdownドシエをA2A payloadにも含める
+- Dossier proof: `submission.dossier` skillとして、提出コピー欄、録画順、提出フォームhandoff packet、構成図パケット、提出リンク、MarkdownドシエをA2A payloadにも含める
+- Architecture proof: `submission.package` skillとして、システム構成図、Mermaid、必須技術対応表、ProtoPedia checklistをA2A payloadにも含める
 - Demo runway proof: `demo.runway` skillとして、30秒デモ順、証拠リンク、録画キュー、外部残リスクをA2A payloadにも含める
 - Win autopilot proof: `win.autopilot` skillとして、win score、12 lane scorecards、残ブロッカー、証拠デッキ、live evidence score、receipt digest、moat verdict、squad readinessをA2A payloadにも含める
 - Judge brief proof: `judge.brief` skillとして、審査員の初見用にkey metrics、proof ladder、30秒route、risk registerをA2A payloadにも含める
@@ -326,8 +336,9 @@
 
 - `GET /api/submission-kit`: 提出タイトル、タグ、ストーリー、動画ストーリーボード、構成図URL、提出チェックリストを返す
 - `public/assets/a2a-marketplace-architecture.svg`: ProtoPediaに貼れるシステム構成図
+- `POST /api/architecture-pack`: 構成図を提出証拠、Mermaid、必須技術対応表として再生成する
 - `docs/03_submission/submission-pack.md`: ProtoPediaストーリー欄に転記するMarkdown下書き
-- UI: Mission Control実行後に Architecture Diagram / 30s Storyboard / Required Assets を表示
+- UI: Mission Control実行後に Architecture Diagram / 30s Storyboard / Required Assets を表示し、Submission DossierでArchitecture packを提出直前に確認する
 
 ## GCP Surface
 

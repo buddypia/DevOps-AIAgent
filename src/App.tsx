@@ -4055,6 +4055,27 @@ function SubmissionDossierPanel({
                 ))}
               </div>
             </section>
+            <section>
+              <h3>
+                <Workflow size={15} />
+                Architecture pack
+              </h3>
+              <div>
+                <article className={dossier.handoffPacket.architecturePack.readiness === "submission-ready" ? "ready" : "watch"}>
+                  <strong>{dossier.handoffPacket.architecturePack.architectureScore} architecture score</strong>
+                  <span>{dossier.handoffPacket.architecturePack.readiness}</span>
+                  <p>{dossier.handoffPacket.architecturePack.headline}</p>
+                  <small>{dossier.handoffPacket.architecturePack.diagramUrl}</small>
+                </article>
+                {dossier.handoffPacket.architecturePack.requirements.slice(0, 3).map((requirement) => (
+                  <article key={requirement.id} className={requirement.status}>
+                    <strong>{requirement.label}</strong>
+                    <span>{requirement.status}</span>
+                    <p>{requirement.evidence}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
           </div>
 
           <div className="dossier-copy">

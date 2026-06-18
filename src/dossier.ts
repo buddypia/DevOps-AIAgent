@@ -6,6 +6,7 @@ import type { JudgeProof } from "./proof.js";
 import type { ProtoPediaPublisher, PublisherStatus } from "./publisher.js";
 import { SUBMISSION_PROOF } from "./submission.js";
 import type { WinningAutopilotRun } from "./autopilot.js";
+import { buildArchitecturePack, type ArchitecturePack } from "./architecturePack.js";
 import type { WinningStrategy } from "./strategy.js";
 import type { Recommendation } from "./types.js";
 
@@ -57,6 +58,7 @@ export type DossierHandoffPacket = {
   submitFields: DossierHandoffField[];
   protopediaFields: DossierHandoffField[];
   videoChapters: DossierVideoChapter[];
+  architecturePack: ArchitecturePack;
   proofLinks: DossierLink[];
   missingOnly: Array<{ id: string; label: string; target: string; action: string }>;
 };
@@ -99,6 +101,12 @@ function markdownList(values: string[]) {
 
 function markdownSection(title: string, body: string) {
   return [`## ${title}`, "", body.trim()].join("\n");
+}
+
+function baseUrlFromProof(proof: JudgeProof, mission: MissionRun) {
+  const suffix = mission.submissionPack.architectureDiagramUrl;
+  if (proof.links.architecture.endsWith(suffix)) return proof.links.architecture.slice(0, -suffix.length).replace(/\/$/, "");
+  return proof.links.app.replace(/\/$/, "");
 }
 
 export function buildSubmissionDossier(input: {
@@ -231,6 +239,12 @@ export function buildSubmissionDossier(input: {
     evidenceUrl: step.evidenceUrl,
     status: step.status
   }));
+  const architecturePack = buildArchitecturePack({
+    baseUrl: baseUrlFromProof(proof, mission),
+    recommendation,
+    strategy,
+    mission
+  });
   const missingOnly = [
     ...submitFields
       .filter((item) => item.status === "watch")
@@ -243,6 +257,7 @@ export function buildSubmissionDossier(input: {
     submitFields,
     protopediaFields,
     videoChapters,
+    architecturePack,
     proofLinks: links,
     missingOnly
   };
@@ -289,6 +304,19 @@ export function buildSubmissionDossier(input: {
     ),
     "",
     markdownSection(
+      "システム構成図パケット",
+      [
+        `Diagram: ${architecturePack.diagramUrl}`,
+        `Architecture score: ${architecturePack.architectureScore} (${architecturePack.readiness})`,
+        "Mermaid:",
+        "```mermaid",
+        architecturePack.mermaid,
+        "```",
+        architecturePack.protopediaChecklist.map((item) => `- ${item}`).join("\n")
+      ].join("\n")
+    ),
+    "",
+    markdownSection(
       "提出リンク",
       links.map((link) => `- ${link.label}: ${link.url ?? "needs external URL"} (${link.status})`).join("\n")
     ),
@@ -326,6 +354,12 @@ export function buildSubmissionDossier(input: {
         submitFields: submitFields.map((item) => ({ id: item.id, target: item.target, status: item.status })),
         protopediaFields: protopediaFields.map((item) => ({ id: item.id, target: item.target, status: item.status })),
         videoChapters: videoChapters.map((item) => ({ id: item.id, timeRange: item.timeRange, screen: item.screen, status: item.status })),
+        architecturePack: {
+          score: architecturePack.architectureScore,
+          readiness: architecturePack.readiness,
+          diagramUrl: architecturePack.diagramUrl,
+          requirements: architecturePack.requirements.map((item) => ({ id: item.id, status: item.status }))
+        },
         missingOnly: missingOnly.map((item) => ({ id: item.id, target: item.target }))
       },
       finalChecks: finalChecks.map((item) => ({ id: item.id, status: item.status }))

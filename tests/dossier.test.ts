@@ -90,10 +90,18 @@ describe("submission dossier", () => {
     });
     expect(dossier.handoffPacket.protopediaFields.map((field) => field.id)).toEqual(expect.arrayContaining(["problem", "features", "technology", "tags"]));
     expect(dossier.handoffPacket.videoChapters.length).toBeGreaterThanOrEqual(8);
+    expect(dossier.handoffPacket.architecturePack).toMatchObject({
+      readiness: "needs-external-urls",
+      diagramUrl: `${baseUrl}/assets/a2a-marketplace-architecture.svg`
+    });
+    expect(dossier.handoffPacket.architecturePack.requirements.map((requirement) => requirement.id)).toEqual(
+      expect.arrayContaining(["cloud-run", "google-ai", "a2a", "protopedia-architecture"])
+    );
     expect(dossier.handoffPacket.missingOnly.map((item) => item.id)).toEqual(expect.arrayContaining(["protopedia-url", "video-url"]));
     expect(dossier.markdown).toContain("30秒動画録画順");
     expect(dossier.markdown).toContain("提出フォームパケット");
     expect(dossier.markdown).toContain("動画チャプター");
+    expect(dossier.markdown).toContain("システム構成図パケット");
     expect(dossier.markdown).toContain("needs external URL");
     expect(dossier.a2aPayload).toMatchObject({
       method: "message/send",
@@ -102,6 +110,10 @@ describe("submission dossier", () => {
       handoffPacket: {
         submitFields: expect.arrayContaining([expect.objectContaining({ id: "github-url", status: "ready" })]),
         videoChapters: expect.arrayContaining([expect.objectContaining({ id: "proof-first" })]),
+        architecturePack: {
+          readiness: "needs-external-urls",
+          diagramUrl: `${baseUrl}/assets/a2a-marketplace-architecture.svg`
+        },
         missingOnly: expect.arrayContaining([expect.objectContaining({ id: "protopedia-url" })])
       }
     });
