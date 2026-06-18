@@ -3509,10 +3509,16 @@ function CompetitiveBattlecardPanel({
             Judge-ready competitor answers
           </h2>
         </div>
-        <button className="icon-button" onClick={buildBattlecard} disabled={loading} title="競合別の審査回答カードを生成">
-          <ClipboardCheck size={17} />
-          {loading ? "Building" : "Build battlecard"}
-        </button>
+        <div className="battle-heading-actions">
+          <a href="/competitive-swot" target="_blank" rel="noreferrer" className="icon-link">
+            <ExternalLink size={14} />
+            SWOT Page
+          </a>
+          <button className="icon-button" onClick={buildBattlecard} disabled={loading} title="競合別の審査回答カードを生成">
+            <ClipboardCheck size={17} />
+            {loading ? "Building" : "Build battlecard"}
+          </button>
+        </div>
       </div>
 
       {error && <p className="error-text">Competitive battlecard request failed: {error}</p>}

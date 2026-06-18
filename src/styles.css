@@ -7220,6 +7220,13 @@ h1 {
   font-size: 1.28rem;
 }
 
+.battle-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .battle-body {
   display: grid;
   gap: 1px;

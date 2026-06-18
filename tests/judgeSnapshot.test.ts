@@ -65,7 +65,7 @@ describe("judge snapshot", () => {
       selectedAgentIds,
       proof,
       battlecard,
-      agentCardSkillIds: ["competitive.battlecard", "judge.snapshot", "release.drift"],
+      agentCardSkillIds: ["competitive.battlecard", "competitive.snapshot", "judge.snapshot", "release.drift"],
       generatedAt: "2026-06-18T00:00:00.000Z"
     });
 
@@ -93,7 +93,7 @@ describe("judge snapshot", () => {
     expect(snapshot.summary).toMatchObject({
       ciStatus: "passed",
       releaseVerdict: "not-run",
-      agentCardSkillCount: 3
+      agentCardSkillCount: 4
     });
     expect(snapshot.a2aPayload).toMatchObject({
       skill: "judge.snapshot",
@@ -114,7 +114,7 @@ describe("judge snapshot", () => {
       selectedAgentIds,
       proof,
       battlecard,
-      agentCardSkillIds: ["competitive.battlecard", "judge.snapshot", "release.drift"],
+      agentCardSkillIds: ["competitive.battlecard", "competitive.snapshot", "judge.snapshot", "release.drift"],
       generatedAt: "2026-06-18T00:00:00.000Z"
     });
     snapshot.proofItems[0].evidence = "<script>alert('proof')</script>";
@@ -136,7 +136,7 @@ describe("judge snapshot", () => {
       selectedAgentIds,
       proof,
       battlecard,
-      agentCardSkillIds: ["competitive.battlecard", "judge.snapshot", "release.drift"],
+      agentCardSkillIds: ["competitive.battlecard", "competitive.snapshot", "judge.snapshot", "release.drift"],
       generatedAt: "2026-06-18T00:00:00.000Z"
     });
 
@@ -159,10 +159,10 @@ describe("judge snapshot", () => {
     const releaseDrift = buildReleaseDriftGuard({
       currentBaseUrl: baseUrl,
       targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
-      expectedSkillIds: ["competitive.battlecard", "judge.snapshot", "release.drift"],
-      observedSkillIds: ["competitive.battlecard", "judge.snapshot", "release.drift"],
-      requiredSkillIds: ["competitive.battlecard", "judge.snapshot", "release.drift"],
-      requiredAgentCardSignals: ["competitive.battlecard:tag:criteria-duel", "judge.snapshot:tag:get-proof"],
+      expectedSkillIds: ["competitive.battlecard", "competitive.snapshot", "judge.snapshot", "release.drift"],
+      observedSkillIds: ["competitive.battlecard", "competitive.snapshot", "judge.snapshot", "release.drift"],
+      requiredSkillIds: ["competitive.battlecard", "competitive.snapshot", "judge.snapshot", "release.drift"],
+      requiredAgentCardSignals: ["competitive.battlecard:tag:criteria-duel", "competitive.snapshot:tag:get-proof", "judge.snapshot:tag:get-proof"],
       observedAgentCardSignals: ["competitive.battlecard:tag:criteria-duel"],
       probes: [
         passedProbe("target-health"),
@@ -185,7 +185,7 @@ describe("judge snapshot", () => {
       selectedAgentIds,
       proof,
       battlecard,
-      agentCardSkillIds: ["competitive.battlecard", "judge.snapshot", "release.drift"],
+      agentCardSkillIds: ["competitive.battlecard", "competitive.snapshot", "judge.snapshot", "release.drift"],
       releaseDrift,
       generatedAt: "2026-06-18T00:00:00.000Z"
     });
@@ -193,9 +193,9 @@ describe("judge snapshot", () => {
     expect(snapshot.readiness).toBe("first-click-watch");
     expect(snapshot.summary).toMatchObject({
       releaseVerdict: "deploy-drift",
-      missingReleaseSignals: 1
+      missingReleaseSignals: 2
     });
-    expect(snapshot.releaseLock.missingAgentCardSignals).toEqual(["judge.snapshot:tag:get-proof"]);
+    expect(snapshot.releaseLock.missingAgentCardSignals).toEqual(["competitive.snapshot:tag:get-proof", "judge.snapshot:tag:get-proof"]);
     expect(snapshot.judgeScript.join("\n")).toContain("Release Drift verdict: deploy-drift");
   });
 });

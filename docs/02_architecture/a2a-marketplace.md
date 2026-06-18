@@ -427,6 +427,7 @@
 - Task board proof: `task.delegate` skillとして、agent work orders、execution order、verification queue、receipt digestをA2A payloadにも含める
 - Moat stress proof: `moat.stress` skillとして、競合別の想定反論、反証、見せる証拠、録画順をA2A payloadにも含める
 - Competitive battlecard proof: `competitive.battlecard` skillとして、競合別の短い回答、公式ソース、SWOT receipts、Criteria Duel、Objection Replay、top risksをA2A payloadにも含める
+- Competitive SWOT snapshot proof: `competitive.snapshot` skillとして、6競合、SWOT 4象限、公式ソース、Criteria Duel、Proof LockをGETで開ける審査用HTMLにも含める
 
 ## Submission Surface
 
