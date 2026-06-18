@@ -26,7 +26,7 @@ describe("judge proof bundle", () => {
     expect(proof.scores.cloudRun).toBe(100);
     expect(proof.scores.a2a).toBe(100);
     expect(proof.proofItems.map((item) => item.id)).toEqual(
-      expect.arrayContaining(["gemini", "cloud-run", "a2a", "strategy", "mission", "ops", "ci", "submission"])
+      expect.arrayContaining(["gemini", "cloud-run", "a2a", "strategy", "usability", "mission", "ops", "ci", "submission"])
     );
     expect(proof.proofItems.find((item) => item.id === "gemini")?.status).toBe("watch");
     expect(proof.geminiProofLock.readiness).toBe("fallback-visible");
@@ -42,8 +42,26 @@ describe("judge proof bundle", () => {
     expect(proof.receipt.payload.geminiProofLock).toMatchObject({
       readiness: "fallback-visible"
     });
+    expect(proof.usabilityProofLock).toMatchObject({
+      readiness: "usability-budget-watch",
+      budgetGap: 22
+    });
+    expect(proof.usabilityProofLock.checks.map((check) => check.id)).toEqual([
+      "single-first-click",
+      "ninety-second-route",
+      "proof-assets-visible",
+      "competitor-before-browse",
+      "ux-owner-budget",
+      "external-gap-honesty"
+    ]);
+    expect(proof.usabilityProofLock.checks.find((check) => check.id === "ux-owner-budget")?.status).toBe("watch");
+    expect(proof.receipt.payload.usabilityProofLock).toMatchObject({
+      readiness: "usability-budget-watch",
+      budgetGap: 22
+    });
     expect(proof.proofItems.find((item) => item.id === "ci")?.status).toBe("watch");
     expect(proof.scores.ci).toBeGreaterThanOrEqual(70);
+    expect(proof.scores.usability).toBeGreaterThanOrEqual(90);
     expect(proof.proofItems.find((item) => item.id === "a2a")?.evidence).toContain("impact.case");
     expect(proof.links.agentCard).toBe("https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app/.well-known/agent-card.json");
     expect(proof.links.github).toBe("https://github.com/buddypia/DevOps-AIAgent");
@@ -56,7 +74,7 @@ describe("judge proof bundle", () => {
     expect(proof.receipt.digest).toMatch(/^[a-f0-9]{64}$/);
     expect(proof.receipt.digest).toBe(proofDigest(proof.receipt.payload));
     expect(proof.receipt.payload.proofId).toBe(proof.id);
-    expect(proof.receipt.payload.proofItemStatuses.length).toBe(8);
+    expect(proof.receipt.payload.proofItemStatuses.length).toBe(9);
     expect(proof.receipt.payload.ci.conclusion).toBe("not-checked");
     expect(proof.strategy.topCompetitor).toContain("Google");
     expect(proof.mission.submissionScore).toBeGreaterThanOrEqual(80);
@@ -97,5 +115,31 @@ describe("judge proof bundle", () => {
     expect(proof.geminiProofLock.checks.every((check) => check.status === "passed")).toBe(true);
     expect(proof.proofItems.find((item) => item.id === "gemini")?.status).toBe("passed");
     expect(proof.receipt.payload.geminiProofLock.readiness).toBe("gemini-live");
+  });
+
+  test("locks usability proof when a UX owner is funded", () => {
+    const recommendation = recommendSquad(DEFAULT_PROJECT_BRIEF, ["market-broker", "gemini-strategist", "cloud-run-sre", "ux-guildmaster"], 162);
+    const strategy = buildWinningStrategy(recommendation);
+    const mission = buildMissionRun(recommendation, strategy);
+    const opsDrill = buildOpsDrill(recommendation, strategy);
+    const gemini = {
+      ...localGeminiRecommendation(recommendation, "unit test"),
+      source: "gemini" as const,
+      model: "gemini-3.5-flash"
+    };
+    const proof = buildJudgeProof({
+      baseUrl: "https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app",
+      recommendation,
+      strategy,
+      mission,
+      opsDrill,
+      gemini
+    });
+
+    expect(proof.usabilityProofLock.readiness).toBe("usability-locked");
+    expect(proof.usabilityProofLock.budgetGap).toBe(0);
+    expect(proof.usabilityProofLock.checks.every((check) => check.status === "passed")).toBe(true);
+    expect(proof.proofItems.find((item) => item.id === "usability")?.status).toBe("passed");
+    expect(proof.receipt.payload.usabilityProofLock.readiness).toBe("usability-locked");
   });
 });

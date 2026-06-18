@@ -6,6 +6,7 @@ import type { WinningStrategy } from "./strategy.js";
 
 export type ProofStatus = "passed" | "watch" | "missing";
 export type GeminiProofReadiness = "gemini-live" | "fallback-visible" | "needs-gemini-proof";
+export type UsabilityProofReadiness = "usability-locked" | "usability-budget-watch" | "needs-usability-proof";
 
 export type ProofItem = {
   id: string;
@@ -45,6 +46,26 @@ export type GeminiProofLock = {
   judgeAnswer: string;
 };
 
+export type UsabilityProofCheck = {
+  id: string;
+  label: string;
+  status: ProofStatus;
+  evidence: string;
+  acceptance: string;
+};
+
+export type UsabilityProofLock = {
+  id: string;
+  score: number;
+  readiness: UsabilityProofReadiness;
+  headline: string;
+  firstClick: string;
+  nextUxAgent: string | null;
+  budgetGap: number;
+  checks: UsabilityProofCheck[];
+  judgeAnswer: string;
+};
+
 export type ProofReceiptPayload = {
   proofId: string;
   issuedAt: string;
@@ -63,6 +84,12 @@ export type ProofReceiptPayload = {
   geminiProofLock: {
     score: number;
     readiness: GeminiProofReadiness;
+    checks: Array<{ id: string; status: ProofStatus }>;
+  };
+  usabilityProofLock: {
+    score: number;
+    readiness: UsabilityProofReadiness;
+    budgetGap: number;
     checks: Array<{ id: string; status: ProofStatus }>;
   };
   proofItemStatuses: Array<{ id: string; status: ProofStatus }>;
@@ -90,6 +117,7 @@ export type JudgeProof = {
     strategy: number;
     devops: number;
     ci: number;
+    usability: number;
     submission: number;
   };
   links: {
@@ -103,6 +131,7 @@ export type JudgeProof = {
   };
   proofItems: ProofItem[];
   geminiProofLock: GeminiProofLock;
+  usabilityProofLock: UsabilityProofLock;
   receipt: ProofReceipt;
   runbook: string[];
   gemini: GeminiRecommendation;
@@ -289,6 +318,111 @@ function buildGeminiProofLock(input: {
       readiness === "gemini-live"
         ? `Gemini ${gemini.model} is not decorative: it generates the winning angle, risks, next actions, and pitch script used by Mission, Ops, and Judge Proof.`
         : "この環境ではfallbackを明示しています。提出前はCloud Runの /api/proof を再実行し、gemini-live のreceiptを提示します。"
+    };
+}
+
+function buildUsabilityProofLock(input: {
+  recommendation: Recommendation;
+  strategy: WinningStrategy;
+  mission: MissionRun;
+}): UsabilityProofLock {
+  const { recommendation, strategy, mission } = input;
+  const selectedIds = new Set(recommendation.selected.map((agent) => agent.id));
+  const usabilityCriterion = strategy.judgeCriteria.find((criterion) => criterion.id === "usability");
+  const hasGuidedCore = ["market-broker", "gemini-strategist", "cloud-run-sre"].every((id) => selectedIds.has(id));
+  const hasUxOwner = selectedIds.has("ux-guildmaster") || selectedIds.has("brief-cartographer");
+  const nextUxAgent =
+    strategy.nextBestAgent?.agent.id === "ux-guildmaster" || strategy.nextBestAgent?.agent.id === "brief-cartographer"
+      ? strategy.nextBestAgent.agent
+      : null;
+  const budgetGap = nextUxAgent ? Math.max(0, nextUxAgent.price - recommendation.remainingBudget) : 0;
+  const swotCount = Object.values(strategy.swot).reduce((sum, items) => sum + items.length, 0);
+  const externalWatchCount = mission.submissionPack.requirements.filter((requirement) => requirement.status === "needs-url").length;
+  const hasStoryboard = mission.submissionPack.videoStoryboard.length >= 6;
+  const hasProofAssets =
+    Boolean(mission.submissionPack.architectureDiagramUrl) &&
+    Boolean(mission.submissionPack.storyMarkdownPath) &&
+    mission.submissionPack.requirements.some((requirement) => requirement.id === "deployed-url" && requirement.status === "ready");
+  const usabilityScore = usabilityCriterion?.score ?? 0;
+
+  const checks: UsabilityProofCheck[] = [
+    {
+      id: "single-first-click",
+      label: "Single first click",
+      status: hasGuidedCore ? "passed" : "watch",
+      evidence: hasGuidedCore
+        ? "Market Broker, Gemini Strategist, and Cloud Run SRE form one guided judge route."
+        : "The recommended judge route is missing at least one core agent.",
+      acceptance: "初見審査員に機能一覧を浴びせず、最初の操作を1つに固定する。"
+    },
+    {
+      id: "ninety-second-route",
+      label: "90-second route",
+      status: hasStoryboard ? "passed" : "missing",
+      evidence: `${mission.submissionPack.videoStoryboard.length} storyboard cuts are ready for the 30-second recording path.`,
+      acceptance: "録画と審査導線が同じ順番で辿れる。"
+    },
+    {
+      id: "proof-assets-visible",
+      label: "Proof assets visible",
+      status: hasProofAssets ? "passed" : "missing",
+      evidence: `${mission.submissionPack.deployedUrl}, ${mission.submissionPack.architectureDiagramUrl}, ${mission.submissionPack.storyMarkdownPath}`,
+      acceptance: "Cloud Run、構成図、ストーリーが1クリック証拠として開ける。"
+    },
+    {
+      id: "competitor-before-browse",
+      label: "Competitor answer before browsing",
+      status: strategy.competitors.length >= 6 && swotCount >= 8 ? "passed" : "watch",
+      evidence: `${strategy.competitors.length} competitors and ${swotCount} SWOT signals are available before marketplace browsing.`,
+      acceptance: "ADK/LangGraph等への反論を先に出し、その後で市場UIを見せる。"
+    },
+    {
+      id: "ux-owner-budget",
+      label: "UX owner budget",
+      status: hasUxOwner ? "passed" : nextUxAgent ? "watch" : "missing",
+      evidence: hasUxOwner
+        ? "A UX/story owner is already selected."
+        : nextUxAgent
+          ? `${nextUxAgent.name} is the next UX hire; budget gap ${budgetGap}.`
+          : "No explicit UX/story owner is selected or recommended.",
+      acceptance: "UX不足を隠さず、必要な追加雇用や予算差分として説明する。"
+    },
+    {
+      id: "external-gap-honesty",
+      label: "External gap honesty",
+      status: "passed",
+      evidence: `${externalWatchCount} external submission URL rows remain visible instead of being treated as done.`,
+      acceptance: "ProtoPedia/動画URL未発行をユーザビリティ不足と混同せず、提出watchとして表示する。"
+    }
+  ];
+  const score = Math.round(clamp(average(checks.map((check) => scoreFromStatus(check.status)))));
+  const readiness: UsabilityProofReadiness =
+    checks.some((check) => check.status === "missing") || usabilityScore < 70
+      ? "needs-usability-proof"
+      : hasUxOwner && score >= 92
+        ? "usability-locked"
+        : "usability-budget-watch";
+
+  return {
+    id: `usability-proof-${score}-${readiness}`,
+    score,
+    readiness,
+    headline:
+      readiness === "usability-locked"
+        ? "First-run usability is locked with an explicit UX/story owner."
+        : readiness === "usability-budget-watch"
+          ? "First-run route is defensible; the UX owner remains an honest budget watch."
+          : "The judge route needs a first-click or proof-asset fix before it can carry the demo.",
+    firstClick: "Run judge proof",
+    nextUxAgent: nextUxAgent?.name ?? null,
+    budgetGap,
+    checks,
+    judgeAnswer:
+      readiness === "usability-locked"
+        ? "初見審査員はRun judge proofから入り、Gemini、Cloud Run、A2A、競合反論、提出watchを同じ順番で確認できます。"
+        : nextUxAgent
+          ? `140予算内では現在編成が最適です。UX専任の${nextUxAgent.name}を入れるには+${budgetGap}が必要なので、Demo ConciergeとJudge Route Lockで先に導線を固定します。`
+          : "Run judge proofを入口にし、競合反論と提出watchを先に見せる導線へ寄せます。"
   };
 }
 
@@ -310,12 +444,14 @@ export function buildJudgeProof(input: {
   const requirementScore = Math.round((readyRequirements / mission.submissionPack.requirements.length) * 100);
   const ciScore = scoreFromStatus(ciProof.status);
   const geminiProofLock = buildGeminiProofLock({ recommendation, mission, opsDrill, gemini, ci: ciProof });
+  const usabilityProofLock = buildUsabilityProofLock({ recommendation, strategy, mission });
 
   const scores = {
     ai: Math.round(average([hasGemini ? 100 : 68, geminiProofLock.score])),
     cloudRun: mission.submissionPack.deployedUrl.startsWith("https://") ? 100 : 42,
     a2a: hasMarketBroker ? 100 : 70,
     strategy: Math.round(average([strategy.judgeScore, strategy.moatScore])),
+    usability: usabilityProofLock.score,
     devops: Math.round(average([mission.verificationScore, opsDrill.readinessScore, ciScore])),
     ci: ciScore,
     submission: Math.round(average([mission.submissionScore, requirementScore]))
@@ -360,6 +496,18 @@ export function buildJudgeProof(input: {
       status: statusFromScore(scores.strategy),
       evidence: `${strategy.competitors.length} competitors, SWOT quadrants, judge score ${strategy.judgeScore}, moat ${strategy.moatScore}.`,
       url: links.story
+    },
+    {
+      id: "usability",
+      label: "First-run usability proof",
+      status:
+        usabilityProofLock.readiness === "needs-usability-proof"
+          ? "missing"
+          : usabilityProofLock.readiness === "usability-budget-watch"
+            ? "watch"
+            : "passed",
+      evidence: `${usabilityProofLock.headline} First click: ${usabilityProofLock.firstClick}; UX budget gap ${usabilityProofLock.budgetGap}.`,
+      url: links.app
     },
     {
       id: "mission",
@@ -412,6 +560,12 @@ export function buildJudgeProof(input: {
       readiness: geminiProofLock.readiness,
       checks: geminiProofLock.checks.map((check) => ({ id: check.id, status: check.status }))
     },
+    usabilityProofLock: {
+      score: usabilityProofLock.score,
+      readiness: usabilityProofLock.readiness,
+      budgetGap: usabilityProofLock.budgetGap,
+      checks: usabilityProofLock.checks.map((check) => ({ id: check.id, status: check.status }))
+    },
     proofItemStatuses: proofItems.map((item) => ({ id: item.id, status: item.status })),
     missionId: mission.id,
     opsDrillId: opsDrill.id,
@@ -427,20 +581,24 @@ export function buildJudgeProof(input: {
   return {
     id,
     generatedAt,
-    summary: `Judge proof bundle scored ${overallScore}: Gemini ${scores.ai}, Cloud Run ${scores.cloudRun}, A2A ${scores.a2a}, strategy ${scores.strategy}, DevOps ${scores.devops}, CI ${scores.ci}, submission ${scores.submission}.`,
+    summary: `Judge proof bundle scored ${overallScore}: Gemini ${scores.ai}, Cloud Run ${scores.cloudRun}, A2A ${scores.a2a}, strategy ${scores.strategy}, usability ${scores.usability}, DevOps ${scores.devops}, CI ${scores.ci}, submission ${scores.submission}.`,
     overallScore,
     scores,
     links,
     proofItems,
     geminiProofLock,
+    usabilityProofLock,
     receipt,
     runbook: [
       `curl -s ${absoluteUrl(baseUrl, "/api/healthz")}`,
       `curl -s ${links.agentCard}`,
       `curl -s ${links.ci}`,
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/judge-command-center")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
+      `curl -s -X POST ${absoluteUrl(baseUrl, "/api/demo-concierge")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
+      `curl -s -X POST ${absoluteUrl(baseUrl, "/api/user-pilot")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/competitive-battlecard")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/win-gap-radar")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
+      `curl -s -X POST ${absoluteUrl(baseUrl, "/api/prize-strategy")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/submission-closeout")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/judge-rehearsal")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/winner-packet")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,

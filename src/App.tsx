@@ -6564,11 +6564,56 @@ function JudgeProofBundle({
             </div>
           </div>
 
+          <div className="proof-gemini-lock proof-usability-lock">
+            <div className="proof-gemini-copy">
+              <span
+                className={cx(
+                  "risk-chip",
+                  proof.usabilityProofLock.readiness === "usability-locked"
+                    ? "low"
+                    : proof.usabilityProofLock.readiness === "usability-budget-watch"
+                      ? "medium"
+                      : "high"
+                )}
+              >
+                {proof.usabilityProofLock.readiness}
+              </span>
+              <h3>
+                <Gauge size={16} />
+                Usability Proof Lock
+              </h3>
+              <p>{proof.usabilityProofLock.headline}</p>
+              <strong>{proof.usabilityProofLock.judgeAnswer}</strong>
+              <small>
+                first click: {proof.usabilityProofLock.firstClick}
+                {proof.usabilityProofLock.nextUxAgent ? ` / next UX: ${proof.usabilityProofLock.nextUxAgent}` : ""}
+              </small>
+            </div>
+            <div className="proof-gemini-score">
+              <strong>{proof.usabilityProofLock.score}</strong>
+              <span>ux proof</span>
+              <small>+{proof.usabilityProofLock.budgetGap} gap</small>
+            </div>
+            <div className="proof-gemini-checks">
+              {proof.usabilityProofLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.evidence}</p>
+                  <small>{check.acceptance}</small>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="proof-score-grid">
             <StrategyMeter label="AI" value={proof.scores.ai} />
             <StrategyMeter label="Cloud Run" value={proof.scores.cloudRun} />
             <StrategyMeter label="A2A" value={proof.scores.a2a} />
             <StrategyMeter label="Strategy" value={proof.scores.strategy} />
+            <StrategyMeter label="Usability" value={proof.scores.usability} />
             <StrategyMeter label="DevOps" value={proof.scores.devops} />
             <StrategyMeter label="CI" value={proof.scores.ci} />
             <StrategyMeter label="Submission" value={proof.scores.submission} />
@@ -6646,7 +6691,7 @@ function JudgeProofBundle({
       ) : (
         <div className="proof-empty">
           <Trophy size={28} />
-          <strong>Run judge proofで、Gemini・Cloud Run・A2A・競合/SWOT・Mission・Ops・提出URLを一括検証します。</strong>
+          <strong>Run judge proofで、Gemini・Cloud Run・A2A・競合/SWOT・UX導線・Mission・Ops・提出URLを一括検証します。</strong>
           <p>Win Autopilotの次に開く証拠束として、作品の価値と実装証拠を1つにまとめます。</p>
         </div>
       )}

@@ -63,7 +63,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Submission Launch Gateで、ProtoPedia作品URLと動画URLを入力し、提出3点、タグ、本文、CI、証拠receiptを最終判定する
 - Mission Controlで、AIが弱点を検出し、A2A委任、検証runbook、提出パックを生成した証跡を見せる
 - Ops Drillで、Cloud Run公開デモの稼働シグナルから継続・ロールバック・追加雇用を判断する
-- Judge Proofで、Gemini Proof Lock、Cloud Run、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1クリックの証拠束にし、sha256 receiptで照合できるようにする
+- Judge Proofで、Gemini Proof Lock、Usability Proof Lock、Cloud Run、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1クリックの証拠束にし、sha256 receiptで照合できるようにする
 - Pitch Directorで、30秒動画の録画順、読み上げ台詞、字幕、証拠リンク、提出残リスクを生成する
 - Judge Drillで、審査5項目と主要競合への厳しい質問、回答、60秒回答パス、証拠リンク、デモで開く画面を生成する
 - Finalist Simulatorで、審査員5役の最終候補判定、落選理由、残ギャップ、次の一手を生成する
@@ -284,6 +284,7 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - System architecture diagram: `public/assets/a2a-marketplace-architecture.svg`
 - Architecture Pack API: `POST /api/architecture-pack`
 - Gemini Proof Lock: run `POST /api/proof` and confirm `geminiProofLock.readiness` is `gemini-live` on Cloud Run before final submission
+- Usability Proof Lock: run `POST /api/proof` and confirm `usabilityProofLock.readiness` is `usability-budget-watch` or `usability-locked`; if it is `usability-budget-watch`, explain the +22 UX Guildmaster gap with Squad Optimizer
 - Judge Rehearsal API: `POST /api/judge-rehearsal`
 - Final Pitch Defense Lock: run `POST /api/judge-rehearsal` and confirm `defenseLock` is not `needs-defense-proof` before recording final Q&A
 - Winner Proof Packet API: `POST /api/winner-packet`

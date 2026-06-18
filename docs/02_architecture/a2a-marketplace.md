@@ -374,9 +374,10 @@
 
 ## Proof Surface
 
-- `POST /api/proof`: Gemini Proof Lock、Cloud Run公開、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1つの審査証拠束にまとめる
-- UI: `Run judge proof` ボタンでoverall proof score、Gemini Proof Lock、7カテゴリスコア、live links、proof runbook、sha256 receiptを表示する
+- `POST /api/proof`: Gemini Proof Lock、Usability Proof Lock、Cloud Run公開、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1つの審査証拠束にまとめる
+- UI: `Run judge proof` ボタンでoverall proof score、Gemini Proof Lock、Usability Proof Lock、8カテゴリスコア、live links、proof runbook、sha256 receiptを表示する
 - Gemini proof: live Gemini response、Gemini Strategist選定、構造化出力、Autonomy判断利用、receipt replay、fallback境界をready/watch/missingで固定する
+- Usability proof: single first click、90秒route、proof assets、競合反論の先出し、UX owner予算gap、外部URL watchの正直表示をready/watch/missingで固定する
 - A2A skill: `judge.proof` としてAgent Cardにも公開する
 - Contract proof: `contract.issue` skillとして、AIの購入が成果物と検収条件に接続されていることを示す
 - Task delegation proof: `task.delegate` skillとして、選んだAIへの仕事票、受入条件、proof URL、sha256 receiptをA2A payloadにも含める

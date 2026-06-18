@@ -10504,12 +10504,17 @@ h1 {
   background: #12324a;
 }
 
+.proof-usability-lock .proof-gemini-score {
+  background: #4d3640;
+}
+
 .proof-gemini-score strong {
   font-size: 3.25rem;
   line-height: 0.96;
 }
 
-.proof-gemini-score span {
+.proof-gemini-score span,
+.proof-gemini-score small {
   color: rgba(255, 253, 247, 0.72);
   font-size: 0.72rem;
   font-weight: 950;
@@ -10567,7 +10572,7 @@ h1 {
 
 .proof-score-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: 1px;
   background: var(--line);
 }
