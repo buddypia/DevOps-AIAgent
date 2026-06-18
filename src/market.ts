@@ -116,7 +116,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
     },
     skills: [
       { id: "run-deploy", label: "Cloud Run配送", proof: "Dockerfile/cloudbuild.yaml/runbook", score: 98 },
-      { id: "slo-health", label: "SLOヘルス", proof: "/healthz とログクエリ", score: 90 },
+      { id: "slo-health", label: "SLOヘルス", proof: "/api/healthz とログクエリ", score: 90 },
       { id: "rollback", label: "ロールバック判断", proof: "失敗時の停止条件を提示", score: 84 }
     ],
     mcp: [

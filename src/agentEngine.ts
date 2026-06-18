@@ -260,7 +260,7 @@ export function recommendSquad(brief: string, selectedIds: string[] = [], budget
       "Agent Cardを公開し、市場ブローカーが能力・MCP成熟度・価格を読み取る",
       "Gemini 3.5 Flashでプロジェクトブリーフを診断し、雇うべき能力を更新する",
       "選ばれたエージェントへA2A message/send形式で実装・検証・運用タスクを委任する",
-      "Cloud Runに公開し、/healthz とログ確認コマンドを提出物へ添える",
+      "Cloud Runに公開し、/api/healthz とログ確認コマンドを提出物へ添える",
       "ユーザーの購入履歴を改善量として可視化し、次の買い足しを推薦する"
     ],
     mcpMatrix: selected.flatMap((agent) =>
@@ -290,7 +290,7 @@ export function localGeminiRecommendation(recommendation: Recommendation, reason
     ],
     nextActions: [
       "ProtoPedia用に市場画面、A2A Agent Card、Cloud Run URLの3点を短い動画に収める",
-      "Cloud Runにデプロイし、/healthz と /.well-known/agent-card.json を確認する",
+      "Cloud Runにデプロイし、/api/healthz と /.well-known/agent-card.json を確認する",
       "GitHub READMEにGemini 3.5 Flash、A2A、MCP能力値、Cloud Runの説明を固定する"
     ],
     pitchScript:

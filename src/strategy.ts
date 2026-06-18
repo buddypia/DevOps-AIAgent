@@ -222,7 +222,7 @@ function buildSubmissionItems(recommendation: Recommendation): SubmissionItem[] 
       id: "cloud-run",
       label: "デプロイ済みURL",
       done: true,
-      proof: `${SUBMISSION_PROOF.deployedUrl} をCloud Runで公開済み。Dockerfile、cloudbuild.yaml、/healthz、/api/healthzを実装済み。`,
+      proof: `${SUBMISSION_PROOF.deployedUrl} をCloud Runで公開済み。Dockerfile、cloudbuild.yaml、/api/healthzを実装済み。`,
       nextAction: "Cloud Run URLを提出フォームとProtoPediaに貼る"
     },
     {

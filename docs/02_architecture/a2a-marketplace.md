@@ -317,7 +317,7 @@
 
 - Autonomous proof: sense → decide → delegate → verify → ship の5段階で、AIが判断して動いた証跡を表示
 - Decisions: 競合ポジション、最弱審査項目、次に雇うAIを明示
-- Verification runbook: typecheck / test / build / healthz / Agent Card / Strategy API を提出時の証拠として固定
+- Verification runbook: typecheck / test / build / `/api/healthz` / Agent Card / Strategy API を提出時の証拠として固定
 - Submission pack: ProtoPediaタイトル、タグ、ストーリー、30秒動画スクリプト、構成図SVG、提出チェックリストを生成
 
 ## Operations Surface
@@ -355,7 +355,7 @@
 - `POST /api/task-board`: `task.delegate` の委任先、目的、検収条件、A2A payload、receiptを返す
 - Release gate: Cloud Run SREが公開継続かrollbackかを判断する
 - Rebuy loop: A2A Market BrokerがObservability Oracle / Test Forge / Security Sentinelの買い足しを推薦する
-- Runbook: healthz、ops drill、Cloud Run describe、Cloud Logging、traffic updateコマンドを提示する
+- Runbook: `/api/healthz`、ops drill、Cloud Run describe、Cloud Logging、traffic updateコマンドを提示する
 - A2A payload: `ops.drill` skillとしてseverity、signals、rollbackRecommended、nextOpsAgentを返す
 
 ## Proof Surface
@@ -408,7 +408,7 @@
 ## GCP Surface
 
 - Cloud Run service: `a2a-agent-marketplace`
-- Health check: `/api/healthz` (`/healthz` もローカル互換で提供)
+- Health check: `/api/healthz`
 - Market intel: `/api/market-intel`
 - Moat stress: `/api/moat-stress`
 - Competitive battlecard: `/api/competitive-battlecard`
