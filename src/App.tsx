@@ -62,6 +62,7 @@ import type { SecurityReview } from "./security";
 import { SUBMISSION_PROOF } from "./submission";
 import type { OptimizedSquadCandidate, SquadOptimizerRun } from "./squadOptimizer";
 import type { SubmissionDossier } from "./dossier";
+import type { SubmissionCloseoutWorkbench } from "./submissionCloseout";
 import type { SubmissionLaunchGate } from "./submissionLaunch";
 import { buildWinningStrategy } from "./strategy";
 import type { SwotQuadrant, WinningStrategy } from "./strategy";
@@ -4124,6 +4125,162 @@ function SubmissionLaunchPanel({
   );
 }
 
+function SubmissionCloseoutPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [workbench, setWorkbench] = useState<SubmissionCloseoutWorkbench | null>(null);
+  const [protopediaUrl, setProtopediaUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildCloseout() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/submission-closeout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+          protopediaUrl,
+          videoUrl
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setWorkbench((await response.json()) as SubmissionCloseoutWorkbench);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="submission-closeout">
+      <div className="closeout-heading">
+        <div>
+          <span className="eyebrow">Submission closeout</span>
+          <h2>
+            <Rocket size={20} />
+            Final external workbench
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildCloseout} disabled={loading} title="外部提出作業を順番付きで閉じる">
+          <BadgeCheck size={17} />
+          {loading ? "Closing" : "Build closeout"}
+        </button>
+      </div>
+
+      <div className="closeout-inputs">
+        <label>
+          <span>ProtoPedia work URL</span>
+          <input value={protopediaUrl} onChange={(event) => setProtopediaUrl(event.target.value)} placeholder="https://protopedia.net/prototype/..." />
+        </label>
+        <label>
+          <span>Video URL</span>
+          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://drive.google.com/..." />
+        </label>
+      </div>
+
+      {error && <p className="error-text">Submission closeout request failed: {error}</p>}
+
+      {workbench ? (
+        <div className="closeout-body">
+          <div className="closeout-summary">
+            <div>
+              <span className={cx("risk-chip", workbench.readiness === "ready-to-submit" ? "low" : workbench.readiness === "needs-closeout" ? "medium" : "high")}>
+                {workbench.readiness}
+              </span>
+              <h3>{workbench.headline}</h3>
+              <p>{workbench.hardTruth}</p>
+              <strong>
+                Next: {workbench.nextAction.label} / {workbench.nextAction.status}
+              </strong>
+            </div>
+            <div className="closeout-score">
+              <strong>{workbench.closeoutScore}</strong>
+              <span>closeout score</span>
+            </div>
+          </div>
+
+          <div className="closeout-work">
+            {workbench.workItems.map((item) => (
+              <article key={item.id} className={item.status}>
+                <div>
+                  <span>{item.priority}</span>
+                  <strong>{item.label}</strong>
+                  <b>{item.status}</b>
+                </div>
+                <p>{item.action}</p>
+                <small>{item.proof}</small>
+                <a href={item.endpoint} target="_blank" rel="noreferrer">
+                  Evidence <ExternalLink size={13} />
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <div className="closeout-grid">
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Copy tray
+              </h3>
+              <div className="closeout-copy">
+                {workbench.copyFields.slice(0, 5).map((field) => (
+                  <article key={field.id} className={field.status}>
+                    <div>
+                      <strong>{field.label}</strong>
+                      <span>{field.target}</span>
+                    </div>
+                    <pre>{field.value}</pre>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Film size={15} />
+                Video run
+              </h3>
+              <div className="closeout-video">
+                {workbench.videoSteps.map((step) => (
+                  <article key={step.id} className={step.status}>
+                    <div>
+                      <strong>{step.timeRange}</strong>
+                      <span>{step.screen}</span>
+                    </div>
+                    <p>{step.narration}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                Submit packet
+              </h3>
+              <pre>{JSON.stringify({ submitPacket: workbench.submitPacket, a2aPayload: workbench.a2aPayload }, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="closeout-empty">
+          <Rocket size={28} />
+          <strong>Build closeoutで、ProtoPedia貼付、構成図、30秒動画、外部URL、最終提出フォームを順番付きの作業台にします。</strong>
+          <p>URL未入力なら今やる作業として残し、URL形式が不正なら提出完了扱いにしません。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function WinAutopilotPanel({
   recommendation,
   projectBrief
@@ -5918,6 +6075,7 @@ export default function App() {
       <MarketIntelPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MvpAuditPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SubmissionLaunchPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <SubmissionCloseoutPanel recommendation={recommendation} projectBrief={projectBrief} />
       <WinAutopilotPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SubmissionDossierPanel recommendation={recommendation} projectBrief={projectBrief} />
       <DemoRunwayPanel recommendation={recommendation} projectBrief={projectBrief} />

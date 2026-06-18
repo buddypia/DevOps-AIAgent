@@ -63,7 +63,8 @@ const requiredSkillIds = [
   "deploy.recover",
   "competitive.battlecard",
   "win.autopilot",
-  "win.gap.radar"
+  "win.gap.radar",
+  "submission.closeout"
 ];
 
 const passedProbe = (id: string): ReleaseDriftProbe => ({

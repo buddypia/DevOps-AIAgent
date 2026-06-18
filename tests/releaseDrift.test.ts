@@ -14,6 +14,7 @@ const expectedSkillIds = [
   "judge.command",
   "prize.strategy",
   "win.gap.radar",
+  "submission.closeout",
   "deploy.recover",
   "competitive.battlecard",
   "win.autopilot"
@@ -36,7 +37,7 @@ describe("release drift guard", () => {
       targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
       expectedSkillIds,
       observedSkillIds: ["market.discover", "agent.hire", "evidence.monitor", "win.autopilot"],
-      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "prize.strategy", "win.gap.radar", "deploy.recover", "competitive.battlecard"],
+      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"],
       generatedAt: "2026-06-18T00:00:00.000Z",
       probes: [
         passedProbe("target-health"),
@@ -64,7 +65,7 @@ describe("release drift guard", () => {
 
     expect(guard.verdict).toBe("deploy-drift");
     expect(guard.missingSkills).toEqual(
-      expect.arrayContaining(["demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "prize.strategy", "win.gap.radar", "deploy.recover", "competitive.battlecard"])
+      expect.arrayContaining(["demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"])
     );
     expect(guard.nextActions.map((action) => action.id)).toEqual(expect.arrayContaining(["agent-card-skill-surface", "acceptance-endpoint"]));
     expect(guard.runbook.join("\n")).toContain("gcloud builds submit");
@@ -81,7 +82,7 @@ describe("release drift guard", () => {
       targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
       expectedSkillIds,
       observedSkillIds: expectedSkillIds,
-      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "prize.strategy", "win.gap.radar", "deploy.recover", "competitive.battlecard"],
+      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"],
       probes: [
         passedProbe("target-health"),
         passedProbe("agent-card-skill-surface"),

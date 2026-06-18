@@ -64,6 +64,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Demo Runwayで、Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線に束ねる
 - Win Autopilotで、競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を一括判定し、win scoreと残アクションを返す
 - Submission Dossierで、ProtoPedia本文、動画録画順、提出リンク、最終チェック、Markdownを1つに束ねる
+- Submission Closeoutで、ProtoPedia貼付、構成図、30秒動画、外部URL、最終提出フォームを順番付きの作業台にする
 - Architecture Packで、システム構成図、Mermaid、Cloud Run/Gemini/A2A/CIの対応表、ProtoPedia貼り付け手順を提出証拠にする
 - Gemini 3.5 Flashで勝ち筋、残リスク、30秒ピッチを生成する
 - Cloud RunでUI、API、Agent Card、A2A endpointを単一サービスとして公開する
@@ -200,6 +201,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/pilot-economics \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/submission-launch \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"protopediaUrl":"https://protopedia.net/prototype/999999","videoUrl":"https://youtu.be/demo1234567"}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/submission-closeout \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"protopediaUrl":"https://protopedia.net/prototype/999999","videoUrl":"https://youtu.be/demo1234567"}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mission \

@@ -237,6 +237,13 @@
 - Submit packet: Findy提出フォームに貼るGitHub URL、デプロイ済みURL、ProtoPedia URL、動画URL、タグを返す
 - A2A payload: `submission.launch` skillとしてlaunch score、readiness、URL status、checklist、submit packetを返す
 
+## Submission Closeout Surface
+
+- `POST /api/submission-closeout`: Submission Dossier、Publisher、Demo Runway、Judge Proof、Launch Gateを束ね、外部提出作業を順番付きのworkbenchに変換する
+- Work items: ProtoPedia貼付、構成図添付、30秒動画、ProtoPedia公開、Launch Gate封印、Findy提出、receipt確認をready/watch/blockedで返す
+- Copy/video trays: ProtoPediaに貼るcopy fieldsと30秒動画のchapterを同じレスポンスで返す
+- A2A payload: `submission.closeout` skillとしてcloseout score、readiness、next action、work items、URL status、endpoint群を返す
+
 ## Architecture Pack Surface
 
 - `POST /api/architecture-pack`: ProtoPedia必須のシステム構成図を、公開SVG、Mermaid、ノード/エッジ、必須技術対応表、貼り付けチェックリストへ変換する
@@ -327,6 +334,7 @@
 - Finalist proof: `finalist.simulate` skillとして、最終候補スコア、judge consensus、残ギャップをA2A payloadにも含める
 - Publisher proof: `submission.publish` skillとして、ProtoPedia貼り付け本文、メディアURL、未完了外部作業をA2A payloadにも含める
 - Dossier proof: `submission.dossier` skillとして、提出コピー欄、録画順、提出フォームhandoff packet、構成図パケット、提出リンク、MarkdownドシエをA2A payloadにも含める
+- Closeout proof: `submission.closeout` skillとして、外部提出の残作業、copy tray、video run、submit packetをA2A payloadにも含める
 - Architecture proof: `submission.package` skillとして、システム構成図、Mermaid、必須技術対応表、ProtoPedia checklistをA2A payloadにも含める
 - Demo runway proof: `demo.runway` skillとして、30秒デモ順、証拠リンク、録画キュー、外部残リスクをA2A payloadにも含める
 - Win autopilot proof: `win.autopilot` skillとして、win score、12 lane scorecards、残ブロッカー、証拠デッキ、live evidence score、receipt digest、moat verdict、squad readinessをA2A payloadにも含める
@@ -379,6 +387,7 @@
 - Acceptance matrix: `/api/acceptance-matrix`
 - Autonomy ledger: `/api/autonomy-ledger`
 - Submission launch: `/api/submission-launch`
+- Submission closeout: `/api/submission-closeout`
 - Security review: `/api/security-review`
 - Impact case: `/api/impact-case`
 - Pilot economics: `/api/pilot-economics`

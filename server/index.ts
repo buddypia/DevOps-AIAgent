@@ -38,6 +38,7 @@ import { buildProtoPediaPublisher } from "../src/publisher.js";
 import { buildReleaseDriftGuard, type ReleaseDriftProbe } from "../src/releaseDrift.js";
 import { buildSecurityReview } from "../src/security.js";
 import { buildSquadOptimizer } from "../src/squadOptimizer.js";
+import { buildSubmissionCloseoutWorkbench } from "../src/submissionCloseout.js";
 import { buildSubmissionLaunchGate } from "../src/submissionLaunch.js";
 import { SUBMISSION_PROOF } from "../src/submission.js";
 import type { CiProof } from "../src/proof.js";
@@ -306,6 +307,12 @@ function agentCard(baseUrl: string) {
         name: "Validate final submission launch gate",
         description: "ProtoPedia作品URLと動画URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する。",
         tags: ["submission", "launch-gate", "protopedia", "video", "mvp"]
+      },
+      {
+        id: "submission.closeout",
+        name: "Close out external submission work",
+        description: "ProtoPedia貼付、構成図、30秒動画、外部URL、最終提出フォームを順番付きの作業台に束ねる。",
+        tags: ["submission", "closeout", "protopedia", "video", "launch-gate"]
       },
       {
         id: "demo.concierge",
@@ -1648,6 +1655,7 @@ app.post("/api/live-evidence", async (req, res) => {
         const hasJudgeCommand = skills.some((skill) => skill.id === "judge.command");
         const hasPrizeStrategy = skills.some((skill) => skill.id === "prize.strategy");
         const hasWinGapRadar = skills.some((skill) => skill.id === "win.gap.radar");
+        const hasSubmissionCloseout = skills.some((skill) => skill.id === "submission.closeout");
         const hasDeployRecovery = skills.some((skill) => skill.id === "deploy.recover");
         return hasEvidence &&
           hasOptimizer &&
@@ -1661,17 +1669,18 @@ app.post("/api/live-evidence", async (req, res) => {
           hasJudgeCommand &&
           hasPrizeStrategy &&
           hasWinGapRadar &&
+          hasSubmissionCloseout &&
           hasDeployRecovery &&
-          skills.length >= 39
+          skills.length >= 40
           ? {
               status: "passed",
               score: 100,
-              evidence: `Agent Card exposes ${skills.length} skills including win.gap.radar, demo.concierge, prize.strategy, competitive.battlecard, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
+              evidence: `Agent Card exposes ${skills.length} skills including submission.closeout, win.gap.radar, demo.concierge, prize.strategy, competitive.battlecard, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
             }
           : {
               status: "watch",
               score: 72,
-              evidence: `Agent Card exposes ${skills.length} skills; expected win gap radar, demo concierge, prize strategy, battlecard, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
+              evidence: `Agent Card exposes ${skills.length} skills; expected submission closeout, win gap radar, demo concierge, prize strategy, battlecard, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
             };
       }
     }),
@@ -1725,14 +1734,15 @@ app.post("/api/live-evidence", async (req, res) => {
           data?.judgeCommandEndpoint &&
           data?.prizeStrategyEndpoint &&
           data?.winGapRadarEndpoint &&
+          data?.submissionCloseoutEndpoint &&
           data?.deployRecoveryEndpoint
           ? {
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, and deployRecoveryEndpoint."
+                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but submission closeout/win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -1776,6 +1786,7 @@ async function buildReleaseDriftForTarget(input: {
     "judge.command",
     "prize.strategy",
     "win.gap.radar",
+    "submission.closeout",
     "deploy.recover",
     "competitive.battlecard",
     "win.autopilot"
@@ -1867,14 +1878,15 @@ async function buildReleaseDriftForTarget(input: {
           data?.judgeCommandEndpoint &&
           data?.prizeStrategyEndpoint &&
           data?.winGapRadarEndpoint &&
+          data?.submissionCloseoutEndpoint &&
           data?.competitiveBattlecardEndpoint &&
           data?.deployRecoveryEndpoint
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, competitiveBattlecardEndpoint, and deployRecoveryEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but submission closeout/win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -3135,6 +3147,121 @@ app.post("/api/submission-launch", async (req, res) => {
   );
 });
 
+app.post("/api/submission-closeout", async (req, res) => {
+  const parsed = LaunchSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const baseUrl = publicBaseUrl(req);
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const marketIntel = buildMarketIntelReport({ baseUrl, recommendation, strategy });
+  const mission = buildMissionRun(recommendation, strategy, "ProtoPedia貼付、動画公開、外部URL、最終提出を一画面でcloseoutする。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const pitch = buildPitchRun({ baseUrl, recommendation, strategy, mission, opsDrill });
+  const judgeDrill = buildJudgeDrill({ baseUrl, recommendation, strategy, mission, opsDrill, pitch });
+  const finalist = buildFinalistSimulation({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    judgeDrill,
+    squadContract
+  });
+  const publisher = buildProtoPediaPublisher({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist
+  });
+  const demoRunway = buildDemoRunway({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    finalist,
+    publisher
+  });
+  const [geminiResult, ciResult] = await Promise.allSettled([
+    runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
+    fetchCiProof()
+  ]);
+  const gemini =
+    geminiResult.status === "fulfilled"
+      ? geminiResult.value
+      : localGeminiRecommendation(
+          recommendation,
+          geminiResult.reason instanceof Error ? geminiResult.reason.message : "Gemini request failed"
+        );
+  const ci = ciResult.status === "fulfilled" ? ciResult.value : ciUnavailable("CI status promise rejected");
+  const proof = buildJudgeProof({ baseUrl, recommendation, strategy, mission, opsDrill, gemini, ci });
+  const autopilot = buildWinningAutopilot({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    squadContract,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    proof
+  });
+  const dossier = buildSubmissionDossier({
+    recommendation,
+    strategy,
+    mission,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    autopilot,
+    proof
+  });
+  const mvpAudit = buildMvpAudit({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    finalist,
+    autopilot,
+    dossier,
+    proof,
+    marketIntel
+  });
+  const launchGate = buildSubmissionLaunchGate({
+    protopediaUrl: parsed.data.protopediaUrl,
+    videoUrl: parsed.data.videoUrl,
+    mvpAudit,
+    dossier,
+    proof,
+    publisher
+  });
+
+  res.json(
+    buildSubmissionCloseoutWorkbench({
+      baseUrl,
+      publisher,
+      dossier,
+      demoRunway,
+      proof,
+      launchGate
+    })
+  );
+});
+
 app.post("/api/ops-drill", (req, res) => {
   const parsed = OpsDrillSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -3538,6 +3665,14 @@ app.post("/a2a", async (req, res) => {
     proof,
     publisher
   });
+  const submissionCloseout = buildSubmissionCloseoutWorkbench({
+    baseUrl: publicBaseUrl(req),
+    publisher,
+    dossier,
+    demoRunway,
+    proof,
+    launchGate: submissionLaunch
+  });
   const securityReview = buildSecurityReview({
     baseUrl: publicBaseUrl(req),
     recommendation,
@@ -3855,6 +3990,25 @@ app.post("/a2a", async (req, res) => {
                     status: item.status
                   }))
                 },
+                submissionCloseout: {
+                  id: submissionCloseout.id,
+                  closeoutScore: submissionCloseout.closeoutScore,
+                  readiness: submissionCloseout.readiness,
+                  nextAction: {
+                    id: submissionCloseout.nextAction.id,
+                    status: submissionCloseout.nextAction.status,
+                    endpoint: submissionCloseout.nextAction.endpoint
+                  },
+                  workItems: submissionCloseout.workItems.map((item) => ({
+                    id: item.id,
+                    status: item.status,
+                    priority: item.priority
+                  })),
+                  urlStatuses: submissionCloseout.urlStatuses.map((item) => ({
+                    id: item.id,
+                    status: item.status
+                  }))
+                },
                 securityReview: {
                   id: securityReview.id,
                   securityScore: securityReview.securityScore,
@@ -4159,6 +4313,7 @@ app.post("/a2a", async (req, res) => {
                 judgeBriefEndpoint: `${publicBaseUrl(req)}/api/judge-brief`,
                 autonomyLedgerEndpoint: `${publicBaseUrl(req)}/api/autonomy-ledger`,
                 submissionLaunchEndpoint: `${publicBaseUrl(req)}/api/submission-launch`,
+                submissionCloseoutEndpoint: `${publicBaseUrl(req)}/api/submission-closeout`,
                 securityReviewEndpoint: `${publicBaseUrl(req)}/api/security-review`,
                 impactCaseEndpoint: `${publicBaseUrl(req)}/api/impact-case`,
                 pilotEconomicsEndpoint: `${publicBaseUrl(req)}/api/pilot-economics`,
