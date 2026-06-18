@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { z } from "zod";
 import { getClientIp, ipAllowlistMiddleware, ipAllowlistSummary } from "./ipAllowlist.js";
+import { buildJudgeAcceptanceMatrix } from "../src/acceptanceMatrix.js";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js";
 import { buildWinningAutopilot } from "../src/autopilot.js";
 import { buildAutonomyLedger } from "../src/autonomyLedger.js";
@@ -156,6 +157,12 @@ function agentCard(baseUrl: string) {
         name: "Audit MVP readiness with hard gates",
         description: "必須技術、審査5項目、DevOps証拠、提出3点をハードゲートで判定し、未達をwatch/failとして返す。",
         tags: ["mvp", "audit", "hard-gates", "judge-score", "submission"]
+      },
+      {
+        id: "acceptance.matrix",
+        name: "Build the judge acceptance matrix",
+        description: "必須技術、審査5項目、公開証拠、提出物、receiptをaccepted/watch/blockedの受入表に束ねる。",
+        tags: ["acceptance", "mvp", "judge-score", "proof", "submission"]
       },
       {
         id: "judge.brief",
@@ -1509,9 +1516,10 @@ app.post("/api/live-evidence", async (req, res) => {
         const hasOptimizer = skills.some((skill) => skill.id === "squad.optimize");
         const hasMoat = skills.some((skill) => skill.id === "moat.stress");
         const hasReceipt = skills.some((skill) => skill.id === "demo.receipt");
-        return hasEvidence && hasOptimizer && hasMoat && hasReceipt && skills.length >= 30
-          ? { status: "passed", score: 100, evidence: `Agent Card exposes ${skills.length} skills including demo.receipt, moat.stress, evidence.monitor, and squad.optimize.` }
-          : { status: "watch", score: 72, evidence: `Agent Card exposes ${skills.length} skills; expected receipt, moat, live evidence, and optimizer skills.` };
+        const hasAcceptance = skills.some((skill) => skill.id === "acceptance.matrix");
+        return hasEvidence && hasOptimizer && hasMoat && hasReceipt && hasAcceptance && skills.length >= 31
+          ? { status: "passed", score: 100, evidence: `Agent Card exposes ${skills.length} skills including acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.` }
+          : { status: "watch", score: 72, evidence: `Agent Card exposes ${skills.length} skills; expected acceptance, receipt, moat, live evidence, and optimizer skills.` };
       }
     }),
     liveJsonProbe({
@@ -1552,9 +1560,9 @@ app.post("/api/live-evidence", async (req, res) => {
       },
       evaluate: (payload) => {
         const data = (payload as { result?: { artifacts?: Array<{ parts?: Array<{ data?: Record<string, unknown> }> }> } }).result?.artifacts?.[0]?.parts?.[0]?.data;
-        return data?.squadOptimizerEndpoint && data?.liveEvidenceEndpoint && data?.moatStressEndpoint && data?.demoReceiptEndpoint
-          ? { status: "passed", score: 100, evidence: "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, and demoReceiptEndpoint." }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but receipt/moat/live evidence endpoints were not visible." };
+        return data?.squadOptimizerEndpoint && data?.liveEvidenceEndpoint && data?.moatStressEndpoint && data?.demoReceiptEndpoint && data?.acceptanceMatrixEndpoint
+          ? { status: "passed", score: 100, evidence: "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, demoReceiptEndpoint, and acceptanceMatrixEndpoint." }
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -1613,6 +1621,131 @@ app.post("/api/demo-receipt", (req, res) => {
       squadOptimizer,
       protopediaUrl: parsed.data.protopediaUrl,
       videoUrl: parsed.data.videoUrl
+    })
+  );
+});
+
+app.post("/api/acceptance-matrix", async (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const baseUrl = publicBaseUrl(req);
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const marketIntel = buildMarketIntelReport({ baseUrl, recommendation, strategy });
+  const mission = buildMissionRun(recommendation, strategy, "審査5項目、必須技術、提出物、公開証拠を受入表として閉じる。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const pitch = buildPitchRun({ baseUrl, recommendation, strategy, mission, opsDrill });
+  const judgeDrill = buildJudgeDrill({ baseUrl, recommendation, strategy, mission, opsDrill, pitch });
+  const finalist = buildFinalistSimulation({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    judgeDrill,
+    squadContract
+  });
+  const publisher = buildProtoPediaPublisher({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist });
+  const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher });
+  const [geminiResult, ciResult] = await Promise.allSettled([
+    runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
+    fetchCiProof()
+  ]);
+  const gemini =
+    geminiResult.status === "fulfilled"
+      ? geminiResult.value
+      : localGeminiRecommendation(
+          recommendation,
+          geminiResult.reason instanceof Error ? geminiResult.reason.message : "Gemini request failed"
+        );
+  const ci = ciResult.status === "fulfilled" ? ciResult.value : ciUnavailable("CI status promise rejected");
+  const proof = buildJudgeProof({ baseUrl, recommendation, strategy, mission, opsDrill, gemini, ci });
+  const autopilot = buildWinningAutopilot({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    squadContract,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    proof
+  });
+  const dossier = buildSubmissionDossier({
+    recommendation,
+    strategy,
+    mission,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    autopilot,
+    proof
+  });
+  const mvpAudit = buildMvpAudit({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    finalist,
+    autopilot,
+    dossier,
+    proof,
+    marketIntel
+  });
+  const securityReview = buildSecurityReview({
+    baseUrl,
+    recommendation,
+    strategy,
+    allowlist: ipAllowlistSummary,
+    ci,
+    geminiSecretConfigured: geminiSecretConfigured()
+  });
+  const impactCase = buildImpactCase({ recommendation, strategy, opsDrill, securityReview });
+  const userPilot = buildUserPilotLab({
+    recommendation,
+    strategy,
+    impactCase,
+    opsDrill,
+    securityReview,
+    squadContract
+  });
+  const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
+  const squadOptimizer = buildSquadOptimizer({
+    projectBrief: parsed.data.projectBrief,
+    selectedAgentIds: parsed.data.selectedAgentIds,
+    budget: 140,
+    maxSquadSize: 4
+  });
+  const demoReceipt = buildJudgeDemoReceipt({
+    baseUrl,
+    recommendation,
+    strategy,
+    moatStress,
+    squadOptimizer
+  });
+
+  res.json(
+    buildJudgeAcceptanceMatrix({
+      baseUrl,
+      strategy,
+      marketIntel,
+      mvpAudit,
+      autopilot,
+      proof,
+      userPilot,
+      impactCase,
+      securityReview,
+      demoReceipt
     })
   );
 });
@@ -2525,6 +2658,7 @@ app.post("/a2a", (req, res) => {
                 squadOptimizerEndpoint: `${publicBaseUrl(req)}/api/squad-optimizer`,
                 liveEvidenceEndpoint: `${publicBaseUrl(req)}/api/live-evidence`,
                 demoReceiptEndpoint: `${publicBaseUrl(req)}/api/demo-receipt`,
+                acceptanceMatrixEndpoint: `${publicBaseUrl(req)}/api/acceptance-matrix`,
                 judgeTourEndpoint: `${publicBaseUrl(req)}/api/judge-tour`,
                 winRunEndpoint: `${publicBaseUrl(req)}/api/win-run`,
                 demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,

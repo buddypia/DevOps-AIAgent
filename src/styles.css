@@ -2049,6 +2049,278 @@ h1 {
   text-align: center;
 }
 
+.acceptance-matrix {
+  margin-top: 14px;
+  border: 1px solid #243032;
+  border-radius: 8px;
+  background: #f7fbf8;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.acceptance-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px;
+  border-bottom: 1px solid #cbd8d0;
+  color: #f7fbf8;
+  background:
+    linear-gradient(90deg, #243032, #55715e);
+}
+
+.acceptance-heading .eyebrow {
+  color: #f2b84b;
+}
+
+.acceptance-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 1.28rem;
+}
+
+.acceptance-body {
+  display: grid;
+  gap: 1px;
+  background: #cbd8d0;
+}
+
+.acceptance-summary {
+  display: grid;
+  grid-template-columns: minmax(380px, 1fr) minmax(210px, 0.25fr);
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  background: #f7fbf8;
+}
+
+.acceptance-summary h3 {
+  margin-top: 10px;
+  font-size: 1.42rem;
+  line-height: 1.22;
+}
+
+.acceptance-summary p,
+.acceptance-summary small,
+.acceptance-empty p {
+  display: block;
+  margin-top: 8px;
+  color: #344341;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.acceptance-score {
+  min-height: 136px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  border-radius: 8px;
+  color: #f7fbf8;
+  background: #243032;
+}
+
+.acceptance-score strong {
+  font-size: 3.8rem;
+  line-height: 0.96;
+}
+
+.acceptance-score span {
+  color: rgba(247, 251, 248, 0.74);
+  font-size: 0.76rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.acceptance-proof {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: #cbd8d0;
+}
+
+.acceptance-proof article {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  padding: 13px;
+  background: #f7fbf8;
+}
+
+.acceptance-proof span,
+.acceptance-rows span,
+.acceptance-actions span,
+.acceptance-digest span {
+  color: var(--teal);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.acceptance-proof strong {
+  color: #243032;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.acceptance-proof p,
+.acceptance-rows p,
+.acceptance-rows small,
+.acceptance-actions p,
+.acceptance-actions small,
+.acceptance-digest p {
+  color: #344341;
+  line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+
+.acceptance-rows {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(240px, 1fr));
+  gap: 1px;
+  background: #cbd8d0;
+}
+
+.acceptance-rows article {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 13px;
+  border-top: 5px solid var(--green);
+  background: #f7fbf8;
+}
+
+.acceptance-rows article.watch {
+  border-top-color: var(--amber);
+  background: #fff8e6;
+}
+
+.acceptance-rows article.blocked {
+  border-top-color: var(--rose);
+  background: #fff1f2;
+}
+
+.acceptance-rows article > div,
+.acceptance-actions article > div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.acceptance-rows article > div span {
+  grid-column: 1 / -1;
+}
+
+.acceptance-rows b {
+  color: #243032;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.acceptance-rows a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  color: var(--teal);
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.acceptance-grid {
+  display: grid;
+  grid-template-columns: minmax(360px, 0.92fr) minmax(420px, 1.08fr);
+  gap: 1px;
+  background: #cbd8d0;
+}
+
+.acceptance-grid > section {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 14px;
+  background: #f7fbf8;
+}
+
+.acceptance-grid h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.acceptance-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.acceptance-actions article {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid #cbd8d0;
+  border-left: 4px solid var(--amber);
+  border-radius: 8px;
+  background: #fff8e6;
+}
+
+.acceptance-actions article.now {
+  border-left-color: var(--rose);
+  background: #fff1f2;
+}
+
+.acceptance-actions article.clear {
+  border-left-color: var(--green);
+  background: #f2f8ec;
+}
+
+.acceptance-digest {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #cbd8d0;
+  border-radius: 8px;
+  background: #fffdf9;
+}
+
+.acceptance-digest strong {
+  color: #243032;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.acceptance-grid pre {
+  max-width: 100%;
+  max-height: 320px;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.acceptance-empty {
+  min-height: 190px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 22px;
+  text-align: center;
+}
+
 .judge-brief {
   margin-top: 14px;
   border: 1px solid #1f3032;
@@ -7274,6 +7546,11 @@ pre {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .acceptance-proof,
+  .acceptance-rows {
+    grid-template-columns: repeat(2, minmax(300px, 1fr));
+  }
+
   .ledger-metrics {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -7331,6 +7608,7 @@ pre {
   }
 
   .autopilot-grid,
+  .acceptance-grid,
   .brief-grid,
   .ledger-grid,
   .security-grid,
@@ -7403,6 +7681,10 @@ pre {
     .evidence-summary,
     .evidence-probes,
     .evidence-grid,
+    .acceptance-summary,
+    .acceptance-proof,
+    .acceptance-rows,
+    .acceptance-grid,
     .brief-summary,
     .brief-metrics,
     .brief-grid,
@@ -7505,6 +7787,7 @@ pre {
   .moat-heading,
   .receipt-heading,
   .evidence-heading,
+  .acceptance-heading,
   .brief-heading,
   .ledger-heading,
   .security-heading,
@@ -7532,6 +7815,7 @@ pre {
   .moat-heading,
   .receipt-heading,
   .evidence-heading,
+  .acceptance-heading,
   .brief-heading,
   .ledger-heading,
   .security-heading,

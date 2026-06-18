@@ -29,6 +29,7 @@ import {
   Workflow
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import type { JudgeAcceptanceMatrix } from "./acceptanceMatrix";
 import { recommendSquad } from "./agentEngine";
 import type { AutonomyLedger } from "./autonomyLedger";
 import type { WinningAutopilotRun } from "./autopilot";
@@ -1679,6 +1680,155 @@ function JudgeBriefPanel({
           <FileText size={28} />
           <strong>Build judge briefで、競合差別化、MVP監査、証拠、30秒導線、残リスクを1枚に束ねます。</strong>
           <p>審査員が最初に読むビューとして、機能の多さを短い判断材料に圧縮します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function AcceptanceMatrixPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [matrix, setMatrix] = useState<JudgeAcceptanceMatrix | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildMatrix() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/acceptance-matrix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setMatrix((await response.json()) as JudgeAcceptanceMatrix);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="acceptance-matrix">
+      <div className="acceptance-heading">
+        <div>
+          <span className="eyebrow">Judge acceptance matrix</span>
+          <h2>
+            <BadgeCheck size={20} />
+            MVP acceptance table
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildMatrix} disabled={loading} title="審査受入表を生成">
+          <ClipboardCheck size={17} />
+          {loading ? "Checking" : "Build acceptance matrix"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Acceptance matrix request failed: {error}</p>}
+
+      {matrix ? (
+        <div className="acceptance-body">
+          <div className="acceptance-summary">
+            <div>
+              <span className={cx("risk-chip", matrix.verdict === "ready-to-submit" ? "low" : matrix.verdict === "accepted-with-external-gaps" ? "medium" : "high")}>
+                {matrix.verdict}
+              </span>
+              <h3>{matrix.headline}</h3>
+              <p>{matrix.hardTruth}</p>
+              <small>{new Date(matrix.generatedAt).toLocaleString()}</small>
+            </div>
+            <div className="acceptance-score">
+              <strong>{matrix.acceptanceScore}</strong>
+              <span>acceptance score</span>
+            </div>
+          </div>
+
+          <div className="acceptance-proof">
+            {matrix.decisiveProof.map((proof) => (
+              <article key={proof.id}>
+                <span>{proof.label}</span>
+                <strong>{proof.value}</strong>
+                <p>{proof.proof}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className="acceptance-rows">
+            {matrix.rows.map((row) => (
+              <article key={row.id} className={row.status}>
+                <div>
+                  <span>{row.area}</span>
+                  <strong>{row.label}</strong>
+                  <b>{row.score}</b>
+                </div>
+                <p>{row.requirement}</p>
+                <small>{row.evidence}</small>
+                <a href={row.proofUrl} target="_blank" rel="noreferrer">
+                  Evidence <ExternalLink size={13} />
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <div className="acceptance-grid">
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Next actions
+              </h3>
+              <div className="acceptance-actions">
+                {matrix.nextActions.length > 0 ? (
+                  matrix.nextActions.map((action) => (
+                    <article key={action.id} className={action.priority}>
+                      <div>
+                        <strong>{action.id}</strong>
+                        <span>{action.priority}</span>
+                      </div>
+                      <p>{action.action}</p>
+                      <small>{action.owner} / {action.proof}</small>
+                    </article>
+                  ))
+                ) : (
+                  <article className="clear">
+                    <strong>All rows accepted</strong>
+                    <p>提出前の受入表としてそのまま見せられます。</p>
+                  </article>
+                )}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <ShieldCheck size={15} />
+                Digest
+              </h3>
+              <div className="acceptance-digest">
+                <span>{matrix.digest.algorithm}</span>
+                <strong>{matrix.digest.digest}</strong>
+                <p>{matrix.digest.verification}</p>
+              </div>
+              <h3>
+                <Terminal size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(matrix.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="acceptance-empty">
+          <BadgeCheck size={28} />
+          <strong>Build acceptance matrixで、必須技術、審査5項目、公開証拠、提出物をaccepted/watch/blockedの受入表にします。</strong>
+          <p>機能一覧ではなく、審査員が検収できる合否表としてMVP状態を説明します。</p>
         </div>
       )}
     </section>
@@ -4312,6 +4462,7 @@ export default function App() {
       <DemoReceiptPanel recommendation={recommendation} projectBrief={projectBrief} />
       <UserPilotPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeBriefPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <AcceptanceMatrixPanel recommendation={recommendation} projectBrief={projectBrief} />
       <AutonomyLedgerPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SecurityReviewPanel recommendation={recommendation} projectBrief={projectBrief} />
       <ImpactCasePanel recommendation={recommendation} projectBrief={projectBrief} />
