@@ -4,6 +4,10 @@
 
 Agent-To-Agent Marketplaceは、エージェントフレームワークやノーコードビルダーを置き換えない。勝ち筋は、開発チームが「どのAI能力を調達すべきか」を判断し、A2Aで委任し、Cloud Run運用までつなげる市場体験にある。
 
+## Moat Stress Test
+
+競合分析は資料で終わらせず、`POST /api/moat-stress` とアプリ内 `Stress-test moat` で審査員の反論へ変換する。各競合に対して「相手が強い点」「こちらの回答」「見せる証拠」「残リスク」「録画順」を返し、ADK/LangGraph/CrewAI/Dify/AgentOpsを否定せず、調達・A2A委任・公開証拠の体験へ話を戻す。
+
 ## Competitors
 
 | Competitor | Category | Strength | Counter-position |

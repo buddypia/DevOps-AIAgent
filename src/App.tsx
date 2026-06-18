@@ -43,6 +43,7 @@ import type { LiveEvidenceRun } from "./liveEvidence";
 import { CAPABILITY_LABELS, DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "./market";
 import type { MarketIntelReport } from "./marketIntel";
 import type { MissionRun } from "./mission";
+import type { MoatStressTest } from "./moatStress";
 import type { MvpAuditReport } from "./mvpAudit";
 import type { OpsDrill } from "./ops";
 import type { PitchRun } from "./pitch";
@@ -1201,6 +1202,148 @@ function LiveEvidencePanel({
           <Radar size={28} />
           <strong>Monitor evidenceで、Cloud Run、Agent Card、A2A、Squad Optimizer、CIを公開環境からライブ検証します。</strong>
           <p>「提出URLが動く」という主張を、審査員の前で再実行できる証拠に変えます。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function MoatStressPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [moat, setMoat] = useState<MoatStressTest | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function stressMoat() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/moat-stress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setMoat((await response.json()) as MoatStressTest);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="moat-stress">
+      <div className="moat-heading">
+        <div>
+          <span className="eyebrow">Competitive moat</span>
+          <h2>
+            <Crosshair size={20} />
+            Moat Stress Test
+          </h2>
+        </div>
+        <button className="icon-button" onClick={stressMoat} disabled={loading} title="競合反論をストレステスト">
+          <ShieldCheck size={17} />
+          {loading ? "Testing" : "Stress-test moat"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Moat stress request failed: {error}</p>}
+
+      {moat ? (
+        <div className="moat-body">
+          <div className="moat-summary">
+            <div>
+              <span className={cx("risk-chip", moat.verdict === "defensible" ? "low" : moat.verdict === "needs-proof" ? "medium" : "high")}>
+                {moat.verdict}
+              </span>
+              <h3>{moat.headline}</h3>
+              <p>{moat.hardTruth}</p>
+              <small>{new Date(moat.generatedAt).toLocaleString()}</small>
+            </div>
+            <div className="moat-score">
+              <strong>{moat.stressScore}</strong>
+              <span>moat score</span>
+            </div>
+          </div>
+
+          <div className="moat-scenarios">
+            {moat.scenarios.map((scenario) => (
+              <article key={scenario.id} className={scenario.verdict}>
+                <div>
+                  <span>{scenario.threatLevel}</span>
+                  <strong>{scenario.score}</strong>
+                </div>
+                <h3>{scenario.competitor}</h3>
+                <b>{scenario.objection}</b>
+                <p>{scenario.pressure}</p>
+                <strong>{scenario.answer}</strong>
+                <small>{scenario.proofToShow}</small>
+                <em>{scenario.residualRisk}</em>
+                <div className="moat-links">
+                  {scenario.evidenceLinks.map((link) => (
+                    <a key={`${scenario.id}-${link.label}`} href={link.url} target="_blank" rel="noreferrer">
+                      {link.label}
+                      <ExternalLink size={12} />
+                    </a>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="moat-grid">
+            <section>
+              <h3>
+                <Film size={15} />
+                Recording order
+              </h3>
+              <ol className="moat-order">
+                {moat.recordingOrder.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+            </section>
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Actions
+              </h3>
+              <div className="moat-actions">
+                {moat.actions.map((action) => (
+                  <article key={action.id} className={action.priority}>
+                    <div>
+                      <strong>{action.owner}</strong>
+                      <span>{action.priority}</span>
+                    </div>
+                    <p>{action.action}</p>
+                    <small>{action.proof}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(moat.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="moat-empty">
+          <Crosshair size={28} />
+          <strong>Stress-test moatで、ADK/LangGraph/CrewAI/Dify/AgentOpsからの反論に証拠付きで答えます。</strong>
+          <p>競合を否定せず、どの証拠をどの順番で見せるかまで審査導線に変換します。</p>
         </div>
       )}
     </section>
@@ -3999,6 +4142,7 @@ export default function App() {
 
       <JudgeTourPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SquadOptimizerPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <MoatStressPanel recommendation={recommendation} projectBrief={projectBrief} />
       <LiveEvidencePanel recommendation={recommendation} projectBrief={projectBrief} />
       <UserPilotPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeBriefPanel recommendation={recommendation} projectBrief={projectBrief} />

@@ -36,6 +36,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Contract Deskで、選択したAIの成果物、受入条件、SLA、検証コマンドを発行する
 - Winning Strategyで競合分析、SWOT、審査5項目、MVP proof、次に雇うべきAIを表示する
 - Market Intel Boardで、Gemini Enterprise、Google ADK、A2A、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較、差別化仮説、審査回答を表示する
+- Moat Stress Testで、ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsからの反論を先に受け、証拠付き回答と録画順を表示する
 - MVP Auditで、必須技術、審査5項目、DevOps証拠、提出3点をpass/watch/failで監査し、外部未発行URLを合格扱いにしない
 - Judge Briefで、競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページにまとめる
 - Judge Tourで、Judge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
@@ -68,6 +69,7 @@ React UI
   -> Express API
   -> Recommendation / Contract / Strategy / Mission engines
   -> Market Intel source-backed competitor board
+  -> Moat Stress Test competitor rebuttal board
   -> MVP Audit hard gates
   -> Judge Brief one-page judge readout
   -> Judge Tour 90-second judge walkthrough
@@ -99,8 +101,8 @@ React UI
 | --- | --- |
 | 0-4s | Judge Tourで90秒導線、5つのjudge claims、外部URL不足を最初に見せる |
 | 4-8s | Squad Optimizerで140予算内の最適編成、+22のUX追加ギャップ、swap planを見せる |
-| 8-12s | Live Evidence Monitorで公開Cloud Run、Agent Card、A2A、Optimizer、CIの5 probesを見せる |
-| 12-16s | Autonomy LedgerでAIがsense -> decide -> contract -> delegate -> verify -> operate -> submitした台帳を見せる |
+| 8-12s | Moat Stress Testで「既存ツールでよくない？」への反論と見せる証拠を競合別に出す |
+| 12-16s | Live Evidence Monitorで公開Cloud Run、Agent Card、A2A、Optimizer、CIの5 probesを見せる |
 | 16-21s | Security Sentinel Review、Impact Case、Submission Launch Gate、Judge Proofで安全境界、実用性KPI、外部URL、Gemini/Cloud Run/A2A/CI/DevOpsの証拠束を見せる |
 | 21-25s | Submission DossierでProtoPedia本文、提出リンク、録画順、最終チェックを見せる |
 | 25-28s | Marketplace、Winning Strategy、Mission、Opsで必要能力、SWOT、A2A委任、運用判断を見せる |
@@ -119,6 +121,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/strategy \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/market-intel \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/moat-stress \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mvp-audit \

@@ -19,6 +19,7 @@ import { buildLiveEvidenceRun, type LiveEvidenceStatus } from "../src/liveEviden
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market.js";
 import { buildMarketIntelReport } from "../src/marketIntel.js";
 import { buildMissionRun } from "../src/mission.js";
+import { buildMoatStressTest } from "../src/moatStress.js";
 import { buildMvpAudit } from "../src/mvpAudit.js";
 import { buildOpsDrill } from "../src/ops.js";
 import { buildPitchRun } from "../src/pitch.js";
@@ -141,6 +142,12 @@ function agentCard(baseUrl: string) {
         name: "Build source-backed market intelligence",
         description: "公式ソース付き競合比較、差別化仮説、審査回答、次アクションを提出向けに返す。",
         tags: ["market-intelligence", "competitive-analysis", "sources", "swot", "judge-score"]
+      },
+      {
+        id: "moat.stress",
+        name: "Stress-test competitive moat",
+        description: "ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsからの反論を想定し、証拠付き回答と録画順を返す。",
+        tags: ["competitive-analysis", "moat", "judge-qa", "swot", "proof"]
       },
       {
         id: "mvp.audit",
@@ -576,6 +583,31 @@ app.post("/api/market-intel", (req, res) => {
       baseUrl: publicBaseUrl(req),
       recommendation,
       strategy
+    })
+  );
+});
+
+app.post("/api/moat-stress", (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const marketIntel = buildMarketIntelReport({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy
+  });
+
+  res.json(
+    buildMoatStressTest({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy,
+      marketIntel
     })
   );
 });
@@ -1434,9 +1466,10 @@ app.post("/api/live-evidence", async (req, res) => {
         const skills = Array.isArray((payload as { skills?: unknown[] }).skills) ? ((payload as { skills: Array<{ id?: string }> }).skills) : [];
         const hasEvidence = skills.some((skill) => skill.id === "evidence.monitor");
         const hasOptimizer = skills.some((skill) => skill.id === "squad.optimize");
-        return hasEvidence && hasOptimizer && skills.length >= 28
-          ? { status: "passed", score: 100, evidence: `Agent Card exposes ${skills.length} skills including evidence.monitor and squad.optimize.` }
-          : { status: "watch", score: 72, evidence: `Agent Card exposes ${skills.length} skills; expected live evidence and optimizer skills.` };
+        const hasMoat = skills.some((skill) => skill.id === "moat.stress");
+        return hasEvidence && hasOptimizer && hasMoat && skills.length >= 29
+          ? { status: "passed", score: 100, evidence: `Agent Card exposes ${skills.length} skills including moat.stress, evidence.monitor, and squad.optimize.` }
+          : { status: "watch", score: 72, evidence: `Agent Card exposes ${skills.length} skills; expected moat, live evidence, and optimizer skills.` };
       }
     }),
     liveJsonProbe({
@@ -1477,9 +1510,9 @@ app.post("/api/live-evidence", async (req, res) => {
       },
       evaluate: (payload) => {
         const data = (payload as { result?: { artifacts?: Array<{ parts?: Array<{ data?: Record<string, unknown> }> }> } }).result?.artifacts?.[0]?.parts?.[0]?.data;
-        return data?.squadOptimizerEndpoint && data?.liveEvidenceEndpoint
-          ? { status: "passed", score: 100, evidence: "A2A artifact exposes squadOptimizerEndpoint and liveEvidenceEndpoint." }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but live evidence endpoint was not visible." };
+        return data?.squadOptimizerEndpoint && data?.liveEvidenceEndpoint && data?.moatStressEndpoint
+          ? { status: "passed", score: 100, evidence: "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, and moatStressEndpoint." }
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -2399,6 +2432,7 @@ app.post("/a2a", (req, res) => {
                 },
                 dossierEndpoint: `${publicBaseUrl(req)}/api/dossier`,
                 marketIntelEndpoint: `${publicBaseUrl(req)}/api/market-intel`,
+                moatStressEndpoint: `${publicBaseUrl(req)}/api/moat-stress`,
                 mvpAuditEndpoint: `${publicBaseUrl(req)}/api/mvp-audit`,
                 judgeBriefEndpoint: `${publicBaseUrl(req)}/api/judge-brief`,
                 autonomyLedgerEndpoint: `${publicBaseUrl(req)}/api/autonomy-ledger`,
