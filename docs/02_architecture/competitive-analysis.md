@@ -8,6 +8,10 @@ Agent-To-Agent Marketplaceは、エージェントフレームワークやノー
 
 競合分析は資料で終わらせず、`POST /api/moat-stress` とアプリ内 `Stress-test moat` で審査員の反論へ変換する。各競合に対して「相手が強い点」「こちらの回答」「見せる証拠」「残リスク」「録画順」を返し、ADK/LangGraph/CrewAI/Dify/AgentOpsを否定せず、調達・A2A委任・公開証拠の体験へ話を戻す。
 
+## Win Gap Radar
+
+`POST /api/win-gap-radar` は、競合分析/SWOT/MVP Audit/Finalist/Acceptance/Prize Strategyを横断し、優勝に必要なMVP gapをfeature betsへ変換する。現時点ではProtoPedia作品URLと動画URLが外部gapなので、`submission-closeout` を `close-now` として扱い、submit-readyとは呼ばない。
+
 ## Competitors
 
 | Competitor | Category | Strength | Counter-position |

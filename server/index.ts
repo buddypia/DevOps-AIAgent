@@ -44,6 +44,7 @@ import type { CiProof } from "../src/proof.js";
 import { buildWinningStrategy } from "../src/strategy.js";
 import type { GeminiRecommendation } from "../src/types.js";
 import { buildUserPilotLab } from "../src/userPilot.js";
+import { buildWinGapRadar } from "../src/winGapRadar.js";
 
 const app = express();
 const port = Number(process.env.PORT || 8080);
@@ -209,6 +210,12 @@ function agentCard(baseUrl: string) {
         name: "Build the prize strategy board",
         description: "審査5項目の目標点、現在証拠、足りない証拠、最終ピッチ順を優勝作戦へ束ねる。",
         tags: ["prize-strategy", "judge-score", "pitch", "swot", "proof"]
+      },
+      {
+        id: "win.gap.radar",
+        name: "Turn competitive analysis into MVP gap bets",
+        description: "競合分析、SWOT、MVP監査、最終候補判定、提出ゲートを横断し、勝つために閉じる機能仮説とcut listを返す。",
+        tags: ["mvp", "competitive-analysis", "swot", "gap-radar", "winning-strategy"]
       },
       {
         id: "judge.tour",
@@ -1640,6 +1647,7 @@ app.post("/api/live-evidence", async (req, res) => {
         const hasDemoConcierge = skills.some((skill) => skill.id === "demo.concierge");
         const hasJudgeCommand = skills.some((skill) => skill.id === "judge.command");
         const hasPrizeStrategy = skills.some((skill) => skill.id === "prize.strategy");
+        const hasWinGapRadar = skills.some((skill) => skill.id === "win.gap.radar");
         const hasDeployRecovery = skills.some((skill) => skill.id === "deploy.recover");
         return hasEvidence &&
           hasOptimizer &&
@@ -1652,17 +1660,18 @@ app.post("/api/live-evidence", async (req, res) => {
           hasDemoConcierge &&
           hasJudgeCommand &&
           hasPrizeStrategy &&
+          hasWinGapRadar &&
           hasDeployRecovery &&
-          skills.length >= 38
+          skills.length >= 39
           ? {
               status: "passed",
               score: 100,
-              evidence: `Agent Card exposes ${skills.length} skills including demo.concierge, prize.strategy, competitive.battlecard, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
+              evidence: `Agent Card exposes ${skills.length} skills including win.gap.radar, demo.concierge, prize.strategy, competitive.battlecard, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
             }
           : {
               status: "watch",
               score: 72,
-              evidence: `Agent Card exposes ${skills.length} skills; expected demo concierge, prize strategy, battlecard, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
+              evidence: `Agent Card exposes ${skills.length} skills; expected win gap radar, demo concierge, prize strategy, battlecard, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
             };
       }
     }),
@@ -1715,14 +1724,15 @@ app.post("/api/live-evidence", async (req, res) => {
           data?.demoConciergeEndpoint &&
           data?.judgeCommandEndpoint &&
           data?.prizeStrategyEndpoint &&
+          data?.winGapRadarEndpoint &&
           data?.deployRecoveryEndpoint
           ? {
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, prizeStrategyEndpoint, and deployRecoveryEndpoint."
+                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -1762,8 +1772,10 @@ async function buildReleaseDriftForTarget(input: {
     "acceptance.matrix",
     "release.drift",
     "pilot.economics",
+    "demo.concierge",
     "judge.command",
     "prize.strategy",
+    "win.gap.radar",
     "deploy.recover",
     "competitive.battlecard",
     "win.autopilot"
@@ -1854,14 +1866,15 @@ async function buildReleaseDriftForTarget(input: {
           data?.demoConciergeEndpoint &&
           data?.judgeCommandEndpoint &&
           data?.prizeStrategyEndpoint &&
+          data?.winGapRadarEndpoint &&
           data?.competitiveBattlecardEndpoint &&
           data?.deployRecoveryEndpoint
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, prizeStrategyEndpoint, competitiveBattlecardEndpoint, and deployRecoveryEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, competitiveBattlecardEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -2721,6 +2734,229 @@ app.post("/api/prize-strategy", async (req, res) => {
   );
 });
 
+app.post("/api/win-gap-radar", async (req, res) => {
+  const parsed = CommandCenterSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const baseUrl = publicBaseUrl(req);
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const marketIntel = buildMarketIntelReport({ baseUrl, recommendation, strategy });
+  const mission = buildMissionRun(recommendation, strategy, "競合/SWOTとMVP監査を、勝つために閉じる機能仮説へ変換する。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const pitch = buildPitchRun({ baseUrl, recommendation, strategy, mission, opsDrill });
+  const judgeDrill = buildJudgeDrill({ baseUrl, recommendation, strategy, mission, opsDrill, pitch });
+  const finalist = buildFinalistSimulation({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    judgeDrill,
+    squadContract
+  });
+  const publisher = buildProtoPediaPublisher({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist });
+  const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher });
+  const [geminiResult, ciResult] = await Promise.allSettled([
+    runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
+    fetchCiProof()
+  ]);
+  const gemini =
+    geminiResult.status === "fulfilled"
+      ? geminiResult.value
+      : localGeminiRecommendation(
+          recommendation,
+          geminiResult.reason instanceof Error ? geminiResult.reason.message : "Gemini request failed"
+        );
+  const ci = ciResult.status === "fulfilled" ? ciResult.value : ciUnavailable("CI status promise rejected");
+  const proof = buildJudgeProof({ baseUrl, recommendation, strategy, mission, opsDrill, gemini, ci });
+  const autopilot = buildWinningAutopilot({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    squadContract,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    proof
+  });
+  const dossier = buildSubmissionDossier({
+    recommendation,
+    strategy,
+    mission,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    autopilot,
+    proof
+  });
+  const mvpAudit = buildMvpAudit({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    finalist,
+    autopilot,
+    dossier,
+    proof,
+    marketIntel
+  });
+  const judgeBrief = buildJudgeBrief({
+    baseUrl,
+    recommendation,
+    strategy,
+    marketIntel,
+    mvpAudit,
+    autopilot,
+    dossier,
+    proof,
+    finalist
+  });
+  const securityReview = buildSecurityReview({
+    baseUrl,
+    recommendation,
+    strategy,
+    allowlist: ipAllowlistSummary,
+    ci,
+    geminiSecretConfigured: geminiSecretConfigured()
+  });
+  const impactCase = buildImpactCase({ recommendation, strategy, opsDrill, securityReview });
+  const userPilot = buildUserPilotLab({
+    recommendation,
+    strategy,
+    impactCase,
+    opsDrill,
+    securityReview,
+    squadContract
+  });
+  const pilotEconomics = buildPilotEconomics({
+    recommendation,
+    strategy,
+    impactCase,
+    userPilot,
+    squadContract,
+    opsDrill,
+    securityReview
+  });
+  const submissionLaunch = buildSubmissionLaunchGate({
+    protopediaUrl: parsed.data.protopediaUrl,
+    videoUrl: parsed.data.videoUrl,
+    mvpAudit,
+    dossier,
+    proof,
+    publisher
+  });
+  const judgeTour = buildJudgeTour({
+    baseUrl,
+    recommendation,
+    strategy,
+    marketIntel,
+    judgeBrief,
+    impactCase,
+    securityReview,
+    proof,
+    demoRunway,
+    submissionLaunch
+  });
+  const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
+  const competitiveBattlecard = buildCompetitiveBattlecard({
+    baseUrl,
+    strategy,
+    marketIntel,
+    moatStress
+  });
+  const squadOptimizer = buildSquadOptimizer({
+    projectBrief: parsed.data.projectBrief,
+    selectedAgentIds: parsed.data.selectedAgentIds,
+    budget: 140,
+    maxSquadSize: 4
+  });
+  const demoReceipt = buildJudgeDemoReceipt({
+    baseUrl,
+    recommendation,
+    strategy,
+    moatStress,
+    squadOptimizer
+  });
+  const releaseDrift = parsed.data.skipReleaseDrift
+    ? undefined
+    : await buildReleaseDriftForTarget({
+        currentBaseUrl: baseUrl,
+        targetBaseUrl: parsed.data.targetUrl || SUBMISSION_PROOF.deployedUrl,
+        projectBrief: parsed.data.projectBrief,
+        selectedAgentIds: parsed.data.selectedAgentIds,
+        forwardedHeaders: selfProbeHeaders(req)
+      });
+  const acceptance = buildJudgeAcceptanceMatrix({
+    baseUrl,
+    strategy,
+    marketIntel,
+    mvpAudit,
+    autopilot,
+    proof,
+    userPilot,
+    impactCase,
+    pilotEconomics,
+    securityReview,
+    demoReceipt,
+    releaseDrift
+  });
+  const command = buildJudgeCommandCenter({
+    baseUrl,
+    acceptance,
+    autopilot,
+    competitiveBattlecard,
+    judgeTour,
+    pilotEconomics,
+    releaseDrift
+  });
+  const demoConcierge = buildDemoConcierge({
+    baseUrl,
+    strategy,
+    acceptance,
+    command,
+    battlecard: competitiveBattlecard,
+    userPilot,
+    pilotEconomics
+  });
+  const prizeStrategy = buildPrizeStrategyBoard({
+    baseUrl,
+    strategy,
+    acceptance,
+    autopilot,
+    command,
+    battlecard: competitiveBattlecard,
+    demoConcierge,
+    pilotEconomics,
+    releaseDrift
+  });
+
+  res.json(
+    buildWinGapRadar({
+      baseUrl,
+      strategy,
+      marketIntel,
+      moatStress,
+      battlecard: competitiveBattlecard,
+      mvpAudit,
+      finalist,
+      acceptance,
+      prizeStrategy,
+      submissionLaunch
+    })
+  );
+});
+
 app.post("/api/autonomy-ledger", async (req, res) => {
   const parsed = RecommendSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -3417,6 +3653,18 @@ app.post("/a2a", async (req, res) => {
     pilotEconomics,
     releaseDrift
   });
+  const winGapRadar = buildWinGapRadar({
+    baseUrl: publicBaseUrl(req),
+    strategy,
+    marketIntel,
+    moatStress,
+    battlecard: competitiveBattlecard,
+    mvpAudit,
+    finalist,
+    acceptance,
+    prizeStrategy,
+    submissionLaunch
+  });
   const architecturePack = buildArchitecturePack({
     baseUrl: publicBaseUrl(req),
     recommendation,
@@ -3531,6 +3779,24 @@ app.post("/a2a", async (req, res) => {
                     priority: risk.priority,
                     owner: risk.owner
                   }))
+                },
+                winGapRadar: {
+                  id: winGapRadar.id,
+                  radarScore: winGapRadar.radarScore,
+                  readiness: winGapRadar.readiness,
+                  mvpDecision: winGapRadar.mvpDecision,
+                  lanes: winGapRadar.lanes.map((lane) => ({
+                    id: lane.id,
+                    status: lane.status,
+                    score: lane.score,
+                    priority: lane.priority
+                  })),
+                  featureBets: winGapRadar.featureBets.map((bet) => ({
+                    id: bet.id,
+                    priority: bet.priority,
+                    status: bet.status
+                  })),
+                  externalGaps: winGapRadar.externalGaps.map((gap) => gap.id)
                 },
                 mvpAudit: {
                   id: mvpAudit.id,
@@ -3888,6 +4154,7 @@ app.post("/a2a", async (req, res) => {
                 competitiveBattlecardEndpoint: `${publicBaseUrl(req)}/api/competitive-battlecard`,
                 demoConciergeEndpoint: `${publicBaseUrl(req)}/api/demo-concierge`,
                 prizeStrategyEndpoint: `${publicBaseUrl(req)}/api/prize-strategy`,
+                winGapRadarEndpoint: `${publicBaseUrl(req)}/api/win-gap-radar`,
                 mvpAuditEndpoint: `${publicBaseUrl(req)}/api/mvp-audit`,
                 judgeBriefEndpoint: `${publicBaseUrl(req)}/api/judge-brief`,
                 autonomyLedgerEndpoint: `${publicBaseUrl(req)}/api/autonomy-ledger`,

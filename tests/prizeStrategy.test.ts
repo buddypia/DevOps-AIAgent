@@ -59,6 +59,7 @@ const requiredSkillIds = [
   "demo.concierge",
   "judge.command",
   "prize.strategy",
+  "win.gap.radar",
   "deploy.recover",
   "competitive.battlecard",
   "win.autopilot"

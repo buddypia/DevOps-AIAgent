@@ -67,6 +67,7 @@ import { buildWinningStrategy } from "./strategy";
 import type { SwotQuadrant, WinningStrategy } from "./strategy";
 import type { CapabilityKey, GeminiRecommendation, MarketAgent, Recommendation } from "./types";
 import type { UserPilotLab } from "./userPilot";
+import type { WinGapRadar } from "./winGapRadar";
 import "./styles.css";
 
 const STAGE_LABELS: Record<string, string> = {
@@ -620,6 +621,179 @@ function PrizeStrategyPanel({
           <Crosshair size={28} />
           <strong>Build prize strategyで、審査5項目の目標点、現在証拠、最終ピッチ順、残リスクを優勝作戦にします。</strong>
           <p>MVPが足りるかではなく、どの証拠で採点を取りに行くかを固定します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function WinGapRadarPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [radar, setRadar] = useState<WinGapRadar | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildRadar() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/win-gap-radar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+          skipReleaseDrift: true
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setRadar((await response.json()) as WinGapRadar);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section id="win-gap-radar" className="win-gap-radar">
+      <div className="gap-heading">
+        <div>
+          <span className="eyebrow">Win gap radar</span>
+          <h2>
+            <Radar size={20} />
+            MVP gaps into feature bets
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildRadar} disabled={loading} title="競合/SWOTから勝つためのMVPギャップを生成">
+          <Crosshair size={17} />
+          {loading ? "Mapping" : "Build gap radar"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Win gap radar request failed: {error}</p>}
+
+      {radar ? (
+        <div className="gap-body">
+          <div className="gap-summary">
+            <div>
+              <span className={cx("risk-chip", radar.readiness === "winner-track" ? "low" : radar.readiness === "mvp-gap-watch" ? "medium" : "high")}>
+                {radar.readiness}
+              </span>
+              <h3>{radar.headline}</h3>
+              <p>{radar.hardTruth}</p>
+              <strong>{radar.mvpDecision}</strong>
+            </div>
+            <div className="gap-score">
+              <strong>{radar.radarScore}</strong>
+              <span>gap score</span>
+            </div>
+          </div>
+
+          <div className="gap-lanes">
+            {radar.lanes.map((lane) => (
+              <article key={lane.id} className={lane.status}>
+                <div>
+                  <span>{lane.priority}</span>
+                  <strong>{lane.score}</strong>
+                </div>
+                <h3>{lane.label}</h3>
+                <p>{lane.competitorPressure}</p>
+                <small>{lane.swotSignal.quadrant}: {lane.swotSignal.title}</small>
+                <b>{lane.featureHypothesis}</b>
+                <em>{lane.nextAction}</em>
+                <a href={lane.proofUrl} target="_blank" rel="noreferrer">
+                  Evidence <ExternalLink size={13} />
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <div className="gap-grid">
+            <section>
+              <h3>
+                <Lightbulb size={15} />
+                Feature bets
+              </h3>
+              <div className="gap-bets">
+                {radar.featureBets.map((bet) => (
+                  <article key={bet.id} className={bet.status}>
+                    <div>
+                      <strong>{bet.label}</strong>
+                      <span>{bet.priority}</span>
+                    </div>
+                    <p>{bet.why}</p>
+                    <small>{bet.build}</small>
+                    <b>{bet.acceptance}</b>
+                    <a href={bet.proofUrl} target="_blank" rel="noreferrer">
+                      Proof <ExternalLink size={13} />
+                    </a>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <AlertTriangle size={15} />
+                Cut list
+              </h3>
+              <div className="gap-cuts">
+                {radar.cutList.map((item) => (
+                  <article key={item.id}>
+                    <strong>{item.label}</strong>
+                    <p>{item.reason}</p>
+                  </article>
+                ))}
+              </div>
+              <h3>
+                <ClipboardCheck size={15} />
+                External gaps
+              </h3>
+              <div className="gap-external">
+                {radar.externalGaps.length > 0 ? (
+                  radar.externalGaps.map((gap) => (
+                    <article key={gap.id}>
+                      <strong>{gap.label}</strong>
+                      <p>{gap.action}</p>
+                      <small>{gap.proof}</small>
+                    </article>
+                  ))
+                ) : (
+                  <article className="banked">
+                    <strong>No external gaps</strong>
+                    <p>提出URLはすべて揃っています。</p>
+                  </article>
+                )}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Film size={15} />
+                Proof script
+              </h3>
+              <ol className="gap-script">
+                {radar.proofScript.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ol>
+              <h3>
+                <Terminal size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(radar.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="gap-empty">
+          <Radar size={28} />
+          <strong>Build gap radarで、競合分析、SWOT、MVP監査、最終候補判定を、次に閉じる機能仮説とcut listに変換します。</strong>
+          <p>「機能が足りるか」を感覚で判断せず、勝つために閉じるギャップだけを優先します。</p>
         </div>
       )}
     </section>
@@ -5725,6 +5899,7 @@ export default function App() {
       <JudgeCommandCenterPanel recommendation={recommendation} projectBrief={projectBrief} />
       <DemoConciergePanel recommendation={recommendation} projectBrief={projectBrief} />
       <PrizeStrategyPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <WinGapRadarPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeTourPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SquadOptimizerPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MoatStressPanel recommendation={recommendation} projectBrief={projectBrief} />
