@@ -5494,6 +5494,48 @@ function SubmissionLaunchPanel({
             ))}
           </div>
 
+          <div className="launch-final-lock">
+            <section>
+              <span
+                className={cx(
+                  "risk-chip",
+                  gate.finalSubmitLock.readiness === "findy-form-sealed"
+                    ? "low"
+                    : gate.finalSubmitLock.readiness === "external-url-watch"
+                      ? "medium"
+                      : "high"
+                )}
+              >
+                {gate.finalSubmitLock.readiness}
+              </span>
+              <h3>
+                <Rocket size={16} />
+                Final Submit Lock
+              </h3>
+              <p>{gate.finalSubmitLock.operatorLine}</p>
+              <small>deadline: {gate.finalSubmitLock.deadline}</small>
+            </section>
+            <div className="launch-final-score">
+              <strong>{gate.finalSubmitLock.lockScore}</strong>
+              <span>submit lock</span>
+              <small>
+                {gate.finalSubmitLock.readyCount} ready / {gate.finalSubmitLock.missingCount} missing / {gate.finalSubmitLock.invalidCount} invalid
+              </small>
+            </div>
+            <div className="launch-final-checks">
+              {gate.finalSubmitLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.target}</p>
+                  <small>{check.value || check.proof}</small>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="launch-grid">
             <section>
               <h3>

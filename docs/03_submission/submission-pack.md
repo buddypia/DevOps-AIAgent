@@ -60,7 +60,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Security Sentinel Reviewで、Secret Manager、IP allowlist、Zod入力制限、A2A信頼境界、CIを審査員向け安全性証拠にする
 - Impact Caseで、対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性・体験価値の証拠にする
 - Pilot Economicsで、導入費用、回収日数、価格レーン、買い手の反論、Pilot Evidence Lockを投資判断の証拠にする
-- Submission Launch Gateで、ProtoPedia作品URLと動画URLを入力し、提出3点、タグ、本文、CI、証拠receiptを最終判定する
+- Submission Launch Gateで、ProtoPedia作品URLと動画URLを入力し、提出3点、タグ、本文、CI、証拠receipt、Final Submit Lockを最終判定する
 - Mission Controlで、AIが弱点を検出し、A2A委任、検証runbook、提出パックを生成した証跡を見せる
 - Ops Drillで、Cloud Run公開デモの稼働シグナルから継続・ロールバック・追加雇用を判断する
 - Judge Proofで、Gemini Proof Lock、Usability Proof Lock、Cloud Run、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1クリックの証拠束にし、sha256 receiptで照合できるようにする
@@ -285,6 +285,7 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - Architecture Pack API: `POST /api/architecture-pack`
 - Gemini Proof Lock: run `POST /api/proof` and confirm `geminiProofLock.readiness` is `gemini-live` on Cloud Run before final submission
 - Usability Proof Lock: run `POST /api/proof` and confirm `usabilityProofLock.readiness` is `usability-budget-watch` or `usability-locked`; if it is `usability-budget-watch`, explain the +22 UX Guildmaster gap with Squad Optimizer
+- Final Submit Lock: run `POST /api/submission-launch` and confirm `finalSubmitLock.readiness` is `findy-form-sealed`; before real URLs exist it should remain `external-url-watch`, not submit-ready
 - Judge Rehearsal API: `POST /api/judge-rehearsal`
 - Final Pitch Defense Lock: run `POST /api/judge-rehearsal` and confirm `defenseLock` is not `needs-defense-proof` before recording final Q&A
 - Winner Proof Packet API: `POST /api/winner-packet`

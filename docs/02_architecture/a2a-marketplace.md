@@ -270,11 +270,12 @@
 
 ## Submission Launch Surface
 
-- `POST /api/submission-launch`: ProtoPedia作品URLと動画URLを受け取り、最終提出可否を判定する
-- URL gate: ProtoPediaは `protopedia.net`、動画はYouTube/Vimeo/Google Driveのhttps URL形式を検証する
+- `POST /api/submission-launch`: ProtoPedia作品URLと動画URLを受け取り、最終提出可否とFinal Submit Lockを判定する
+- URL gate: ProtoPediaは `protopedia.net`、動画はYouTube/Vimeoのhttps URL形式を検証する
 - Final checklist: GitHub、Cloud Run、ProtoPedia、動画、findy_hackathonタグ、CI、MVP hard gates、本文、Judge Proof receiptを並べる
 - Submit packet: Findy提出フォームに貼るGitHub URL、デプロイ済みURL、ProtoPedia URL、動画URL、タグを返す
-- A2A payload: `submission.launch` skillとしてlaunch score、readiness、URL status、checklist、submit packetを返す
+- Final Submit Lock: GitHub URL、Cloud Run URL、ProtoPedia URL、ProtoPedia側の動画URL、findy_hackathonタグ、完成ステータス、Judge Proof receipt、2026/7/10 23:59 JST締切をready/missing/invalidで固定する
+- A2A payload: `submission.launch` skillとしてlaunch score、readiness、URL status、checklist、Final Submit Lock、submit packetを返す
 
 ## Submission Closeout Surface
 
@@ -393,7 +394,7 @@
 - Win autopilot proof: `win.autopilot` skillとして、win score、12 lane scorecards、残ブロッカー、証拠デッキ、live evidence score、receipt digest、moat verdict、squad readinessをA2A payloadにも含める
 - Judge brief proof: `judge.brief` skillとして、審査員の初見用にkey metrics、proof ladder、30秒route、risk registerをA2A payloadにも含める
 - Autonomy ledger proof: `autonomy.ledger` skillとして、AIの判断連鎖、agent handoff、検証endpoint、sha256 receiptをA2A payloadにも含める
-- Submission launch proof: `submission.launch` skillとして、外部URL入力後のsubmit-ready判定と提出フォーム用packetをA2A payloadにも含める
+- Submission launch proof: `submission.launch` skillとして、外部URL入力後のsubmit-ready判定、Final Submit Lock、提出フォーム用packetをA2A payloadにも含める
 - Security review proof: `security.review` skillとして、Secret/IP/input/A2A/CIの安全境界をA2A payloadにも含める
 - Impact proof: `impact.case` skillとして、実用性の定量指標、ユーザー別KPI、導入計画をA2A payloadにも含める
 - Pilot economics proof: `pilot.economics` skillとして、Pilot Evidence Lock、導入費用、回収日数、価格レーン、買い手の反論をA2A payloadにも含める

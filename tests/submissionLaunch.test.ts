@@ -15,7 +15,7 @@ import { buildPitchRun } from "../src/pitch";
 import { buildJudgeProof } from "../src/proof";
 import type { CiProof } from "../src/proof";
 import { buildProtoPediaPublisher } from "../src/publisher";
-import { SUBMISSION_PROOF } from "../src/submission";
+import { HACKATHON_SUBMISSION_DEADLINE, SUBMISSION_PROOF } from "../src/submission";
 import { buildSubmissionLaunchGate } from "../src/submissionLaunch";
 import { buildWinningStrategy } from "../src/strategy";
 
@@ -102,11 +102,34 @@ describe("submission launch gate", () => {
     expect(launch.protopediaCompliance.find((item) => item.id === "story-problem")?.status).toBe("ready");
     expect(launch.protopediaCompliance.find((item) => item.id === "story-users")?.status).toBe("ready");
     expect(launch.protopediaCompliance.find((item) => item.id === "story-features")?.status).toBe("ready");
+    expect(launch.finalSubmitLock).toMatchObject({
+      readiness: "external-url-watch",
+      deadline: HACKATHON_SUBMISSION_DEADLINE,
+      readyCount: 6,
+      missingCount: 2,
+      invalidCount: 0
+    });
+    expect(launch.finalSubmitLock.checks.map((check) => check.id)).toEqual([
+      "github-url",
+      "deployed-url",
+      "protopedia-url",
+      "video-url",
+      "findy-tag",
+      "work-status",
+      "proof-receipt",
+      "deadline"
+    ]);
+    expect(launch.finalSubmitLock.checks.find((check) => check.id === "protopedia-url")?.status).toBe("missing");
     expect(launch.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "submission.launch",
       readiness: "needs-external-urls",
-      protopediaCompliance: expect.arrayContaining([expect.objectContaining({ id: "video-embed", status: "missing" })])
+      protopediaCompliance: expect.arrayContaining([expect.objectContaining({ id: "video-embed", status: "missing" })]),
+      finalSubmitLock: {
+        readiness: "external-url-watch",
+        deadline: HACKATHON_SUBMISSION_DEADLINE,
+        missingCount: 2
+      }
     });
   });
 
@@ -122,6 +145,14 @@ describe("submission launch gate", () => {
     expect(launch.urlStatuses.map((item) => item.status)).toEqual(["ready", "ready"]);
     expect(launch.checklist.every((item) => item.status === "ready")).toBe(true);
     expect(launch.protopediaCompliance.every((item) => item.status === "ready")).toBe(true);
+    expect(launch.finalSubmitLock).toMatchObject({
+      readiness: "findy-form-sealed",
+      readyCount: 8,
+      missingCount: 0,
+      invalidCount: 0
+    });
+    expect(launch.finalSubmitLock.checks.every((check) => check.status === "ready")).toBe(true);
+    expect(launch.finalSubmitLock.pasteOrder).toContain("Submit before 2026-07-10 23:59 JST.");
     expect(launch.submitPacket).toMatchObject({
       githubUrl: "https://github.com/buddypia/DevOps-AIAgent",
       deployedUrl: "https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app",
@@ -142,6 +173,9 @@ describe("submission launch gate", () => {
     expect(launch.readiness).toBe("invalid-urls");
     expect(launch.urlStatuses.map((item) => item.status)).toEqual(["invalid", "invalid"]);
     expect(launch.protopediaCompliance.find((item) => item.id === "video-embed")?.status).toBe("invalid");
+    expect(launch.finalSubmitLock.readiness).toBe("needs-form-fix");
+    expect(launch.finalSubmitLock.invalidCount).toBe(2);
+    expect(launch.finalSubmitLock.checks.find((check) => check.id === "video-url")?.status).toBe("invalid");
     expect(launch.verdict).toBe("Fix invalid external URL evidence");
   });
 
@@ -155,6 +189,8 @@ describe("submission launch gate", () => {
     expect(launch.readiness).toBe("invalid-urls");
     expect(launch.urlStatuses.find((item) => item.id === "video-url")?.status).toBe("invalid");
     expect(launch.protopediaCompliance.find((item) => item.id === "video-embed")?.status).toBe("invalid");
+    expect(launch.finalSubmitLock.readiness).toBe("needs-form-fix");
+    expect(launch.finalSubmitLock.checks.find((item) => item.id === "video-url")?.target).toBe("ProtoPedia media field");
     expect(launch.hardTruth).toContain("YouTube/Vimeo");
   });
 });

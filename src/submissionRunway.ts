@@ -1,8 +1,9 @@
 import type { SubmissionCloseoutWorkbench } from "./submissionCloseout.js";
 import type { SubmissionLaunchGate } from "./submissionLaunch.js";
+import { HACKATHON_SUBMISSION_DEADLINE } from "./submission.js";
 import type { WinnerProofPacket, WinnerPacketStatus } from "./winnerPacket.js";
 
-export const HACKATHON_SUBMISSION_DEADLINE = "2026-07-10T23:59:00+09:00";
+export { HACKATHON_SUBMISSION_DEADLINE } from "./submission.js";
 
 export type SubmissionRunwayReadiness = "on-track" | "deadline-risk" | "blocked";
 export type SubmissionRunwayStatus = "done" | "scheduled" | "due-now" | "blocked";

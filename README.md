@@ -264,11 +264,11 @@
 
 ## Submission Launch Gate
 
-`Submission Launch Gate` は、外部提出URLを曖昧に合格扱いしない最終ゲートです。ProtoPedia作品URLとYouTube/Vimeo動画URLを入力すると、提出3点、`findy_hackathon` タグ、作品ステータス、作品タイトル、概要、ストーリー3要素、構成図、CI、MVP hard gates、Judge Proof receiptをまとめて判定します。URL未入力なら `needs-external-urls`、形式不正または必須項目不備なら `invalid-urls`、全て揃ったときだけ `submit-ready` を返します。
+`Submission Launch Gate` は、外部提出URLを曖昧に合格扱いしない最終ゲートです。ProtoPedia作品URLとYouTube/Vimeo動画URLを入力すると、提出3点、`findy_hackathon` タグ、作品ステータス、作品タイトル、概要、ストーリー3要素、構成図、CI、MVP hard gates、Judge Proof receipt、Final Submit Lockをまとめて判定します。URL未入力なら `needs-external-urls`、形式不正または必須項目不備なら `invalid-urls`、全て揃ったときだけ `submit-ready` を返します。Final Submit LockはFindy提出フォームに貼るGitHub URL、Cloud Run URL、ProtoPedia作品URL、ProtoPedia側の動画URL、タグ、完成ステータス、receipt、2026/7/10 23:59 JST締切を1つのpaste orderに固定します。
 
 - API: `POST /api/submission-launch`
 - App UI: `Check launch gate`
-- Output: launch score、readiness、URL status、ProtoPedia compliance、final checklist、copy actions、submit packet、A2A `submission.launch` payload
+- Output: launch score、readiness、URL status、ProtoPedia compliance、Final Submit Lock、final checklist、copy actions、submit packet、A2A `submission.launch` payload
 
 ## Submission Closeout Workbench
 

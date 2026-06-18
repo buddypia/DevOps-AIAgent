@@ -338,8 +338,8 @@ function agentCard(baseUrl: string) {
       {
         id: "submission.launch",
         name: "Validate final submission launch gate",
-        description: "ProtoPedia作品URLと動画URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する。",
-        tags: ["submission", "launch-gate", "protopedia", "video", "mvp"]
+        description: "ProtoPedia作品URLと動画URLを受け取り、提出3点、タグ、本文、CI、証拠receipt、Final Submit Lockを最終判定する。",
+        tags: ["submission", "launch-gate", "final-submit-lock", "protopedia", "video", "mvp"]
       },
       {
         id: "external.evidence",
