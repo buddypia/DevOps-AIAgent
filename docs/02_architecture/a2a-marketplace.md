@@ -28,14 +28,15 @@
 20. `src/userPilot.ts` が開発リード、Platform/SRE、提出者の初回利用導線、摩擦、次クリックを検証する
 21. `src/squadOptimizer.ts` が予算内のAI編成を総当たりし、必須技術カバレッジ、交換計画、追加予算ギャップを返す
 22. `src/liveEvidence.ts` が公開Cloud Run、Agent Card、A2A、Squad Optimizer、CIのライブ証拠をスコア化する
-23. `src/demoReceipt.ts` が審査導線、競合反論、編成判断、公開証拠、外部提出URLをsha256 digest付き検収票にする
-24. `src/acceptanceMatrix.ts` が必須技術、審査5項目、公開証拠、提出物をaccepted/watch/blockedの受入表にする
-25. `src/autonomyLedger.ts` が市場探索、判断、契約、A2A委任、検証、運用、提出をAI自律性台帳にする
-26. `src/security.ts` がSecret Manager、IP allowlist、入力制限、A2A信頼境界、CIを審査用セキュリティ証拠にする
-27. `src/impact.ts` が対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性証拠にする
-28. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
-29. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-30. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+23. `src/releaseDrift.ts` が提出用Cloud Run URLのAgent Card、Acceptance Matrix、A2A artifactのrevision driftを検知する
+24. `src/demoReceipt.ts` が審査導線、競合反論、編成判断、公開証拠、外部提出URLをsha256 digest付き検収票にする
+25. `src/acceptanceMatrix.ts` が必須技術、審査5項目、公開証拠、提出物をaccepted/watch/blockedの受入表にする
+26. `src/autonomyLedger.ts` が市場探索、判断、契約、A2A委任、検証、運用、提出をAI自律性台帳にする
+27. `src/security.ts` がSecret Manager、IP allowlist、入力制限、A2A信頼境界、CIを審査用セキュリティ証拠にする
+28. `src/impact.ts` が対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性証拠にする
+29. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
+30. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+31. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -67,6 +68,7 @@
   - `user.pilot`
   - `squad.optimize`
   - `evidence.monitor`
+  - `release.drift`
   - `demo.receipt`
   - `acceptance.matrix`
 
@@ -140,6 +142,14 @@
 - Probes: 各証拠にstatus、score、latency、URL、evidenceを持たせる
 - Runbook: 審査員が同じ確認を再実行できるcurlを返す
 - A2A payload: `evidence.monitor` skillとしてlive proof score、probe statuses、next actionsを返す
+
+## Release Drift Surface
+
+- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Acceptance Matrix、A2A artifactを返しているかを検査する
+- Drift probes: target health、Agent Card skill surface、Acceptance Matrix endpoint、A2A artifact endpoints、latest main CIを同時に評価する
+- Verdict: 最新なら `release-current`、公開URLが古いなら `deploy-drift`、health/CIが落ちたら `release-blocked`
+- Runbook: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Acceptance Matrix、A2A artifactの再確認コマンドを返す
+- A2A payload: `release.drift` skillとしてdrift score、missing skills、redeploy action、target endpointを返す
 
 ## Demo Receipt Surface
 
@@ -222,6 +232,7 @@
 - `POST /api/user-pilot`: 実利用者3ペルソナの初回導線、摩擦、次クリックを返す
 - `POST /api/squad-optimizer`: 予算内の最適編成、追加予算ギャップ、交換計画を返す
 - `POST /api/live-evidence`: 公開URL、Agent Card、A2A、Optimizer、CIをライブ検証する
+- `POST /api/release-drift`: 提出用Cloud Run URLが最新revisionかを検査する
 - `POST /api/demo-receipt`: 審査デモのstamp、外部URL状態、sha256 digestを検収票として返す
 - `POST /api/acceptance-matrix`: 必須技術、審査5項目、公開証拠、提出物を受入表として返す
 - Release gate: Cloud Run SREが公開継続かrollbackかを判断する
@@ -252,6 +263,7 @@
 - User pilot proof: `user.pilot` skillとして、開発リード、Platform/SRE、提出者のfirst-run usabilityをA2A payloadにも含める
 - Squad optimizer proof: `squad.optimize` skillとして、予算制約下の自律編成判断、coverage gap、funding stepをA2A payloadにも含める
 - Live evidence proof: `evidence.monitor` skillとして、公開Cloud Run/A2A/CIの再実行可能なライブ証拠をA2A payloadにも含める
+- Release drift proof: `release.drift` skillとして、公開Cloud Runが最新Agent Card/Acceptance Matrix/A2A artifactを返すかをA2A payloadにも含める
 - Demo receipt proof: `demo.receipt` skillとして、審査導線、競合反論、編成判断、公開証拠、外部提出URL状態、sha256 digestをA2A payloadにも含める
 - Acceptance matrix proof: `acceptance.matrix` skillとして、必須技術、審査5項目、公開証拠、提出物の受入状態をA2A payloadにも含める
 - Moat stress proof: `moat.stress` skillとして、競合別の想定反論、反証、見せる証拠、録画順をA2A payloadにも含める
@@ -275,6 +287,7 @@
 - User pilot: `/api/user-pilot`
 - Squad optimizer: `/api/squad-optimizer`
 - Live evidence: `/api/live-evidence`
+- Release drift: `/api/release-drift`
 - Demo receipt: `/api/demo-receipt`
 - Acceptance matrix: `/api/acceptance-matrix`
 - Autonomy ledger: `/api/autonomy-ledger`
@@ -296,8 +309,8 @@
 
 ## Judging Angle
 
-- AIエージェントが価値の中心: 市場探索、購入判断、競合反論の証拠選択、予算内の編成最適化、A2A委任、ライブ証拠監視、審査デモreceipt、受入表、自律ミッション、運用ドリル、Gemini分析が体験の中心
+- AIエージェントが価値の中心: 市場探索、購入判断、競合反論の証拠選択、予算内の編成最適化、A2A委任、ライブ証拠監視、release drift検知、審査デモreceipt、受入表、自律ミッション、運用ドリル、Gemini分析が体験の中心
 - 課題アプローチ: AIを作るだけでなく、必要なAI能力を発見・調達・運用する問題を扱う
 - ユーザビリティ: 数値・価格・改善量・競合/SWOTに加え、Judge Tour、Squad Optimizer、User Pilot Labで審査員と実利用者の最初の導線まで意思決定できる
 - 実用性: 開発現場のエージェント選定、DevOps改善、公開後の異常検知とrollback判断に加え、Impact CaseとJudge Tourで時間短縮、提出信頼度、ユーザー別KPI、審査説明順を説明可能
-- 実装力: React、Gemini API、A2A Agent Card、Cloud Run、戦略API、ミッションAPI、ライブ証拠プローブ、sha256 receipt、acceptance digest、フォールバック、テストを含む
+- 実装力: React、Gemini API、A2A Agent Card、Cloud Run、戦略API、ミッションAPI、ライブ証拠プローブ、release drift検知、sha256 receipt、acceptance digest、フォールバック、テストを含む

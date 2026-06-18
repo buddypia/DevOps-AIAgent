@@ -51,7 +51,9 @@ import type { OpsDrill } from "./ops";
 import type { PitchRun } from "./pitch";
 import type { JudgeProof } from "./proof";
 import type { ProtoPediaPublisher } from "./publisher";
+import type { ReleaseDriftGuard } from "./releaseDrift";
 import type { SecurityReview } from "./security";
+import { SUBMISSION_PROOF } from "./submission";
 import type { OptimizedSquadCandidate, SquadOptimizerRun } from "./squadOptimizer";
 import type { SubmissionDossier } from "./dossier";
 import type { SubmissionLaunchGate } from "./submissionLaunch";
@@ -1204,6 +1206,169 @@ function LiveEvidencePanel({
           <Radar size={28} />
           <strong>Monitor evidenceで、Cloud Run、Agent Card、A2A、Squad Optimizer、CIを公開環境からライブ検証します。</strong>
           <p>「提出URLが動く」という主張を、審査員の前で再実行できる証拠に変えます。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ReleaseDriftPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [drift, setDrift] = useState<ReleaseDriftGuard | null>(null);
+  const [targetUrl, setTargetUrl] = useState<string>(SUBMISSION_PROOF.deployedUrl);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function checkDrift() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/release-drift", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+          targetUrl
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setDrift((await response.json()) as ReleaseDriftGuard);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="live-evidence release-drift">
+      <div className="evidence-heading">
+        <div>
+          <span className="eyebrow">Release drift guard</span>
+          <h2>
+            <Rocket size={20} />
+            Public revision check
+          </h2>
+        </div>
+        <button className="icon-button" onClick={checkDrift} disabled={loading} title="公開Cloud Runのrevision driftを検査">
+          <Activity size={17} />
+          {loading ? "Checking" : "Check release drift"}
+        </button>
+      </div>
+
+      <div className="drift-target-row">
+        <label htmlFor="release-target-url">Target Cloud Run URL</label>
+        <input id="release-target-url" value={targetUrl} onChange={(event) => setTargetUrl(event.target.value)} />
+      </div>
+
+      {error && <p className="error-text">Release drift request failed: {error}</p>}
+
+      {drift ? (
+        <div className="evidence-body">
+          <div className="evidence-summary">
+            <div>
+              <span className={cx("risk-chip", drift.verdict === "release-current" ? "low" : drift.verdict === "deploy-drift" ? "medium" : "high")}>
+                {drift.verdict}
+              </span>
+              <h3>{drift.summary}</h3>
+              <p>{drift.hardTruth}</p>
+              <small>
+                {drift.targetBaseUrl} / {new Date(drift.generatedAt).toLocaleString()}
+              </small>
+            </div>
+            <div className="evidence-score">
+              <strong>{drift.driftScore}</strong>
+              <span>release score</span>
+            </div>
+          </div>
+
+          <div className="drift-targets">
+            <article>
+              <span>expected skills</span>
+              <strong>{drift.expectedSkillCount}</strong>
+              <p>current local Agent Card surface</p>
+            </article>
+            <article>
+              <span>observed skills</span>
+              <strong>{drift.observedSkillCount}</strong>
+              <p>target Cloud Run Agent Card surface</p>
+            </article>
+            <article className={drift.missingSkills.length > 0 ? "watch" : "passed"}>
+              <span>missing required skills</span>
+              <strong>{drift.missingSkills.length}</strong>
+              <p>{drift.missingSkills.length > 0 ? drift.missingSkills.join(", ") : "none"}</p>
+            </article>
+          </div>
+
+          <div className="evidence-probes">
+            {drift.probes.map((probe) => (
+              <article key={probe.id} className={probe.status}>
+                <div>
+                  <strong>{probe.label}</strong>
+                  <span>{probe.status}</span>
+                </div>
+                <p>{probe.evidence}</p>
+                <small>{probe.latencyMs ? `${probe.latencyMs}ms` : "live"} / score {probe.score}</small>
+                <a href={probe.url} target="_blank" rel="noreferrer">
+                  Evidence <ExternalLink size={13} />
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <div className="evidence-grid">
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Next actions
+              </h3>
+              <div className="evidence-actions">
+                {drift.nextActions.length > 0 ? (
+                  drift.nextActions.map((action) => (
+                    <article key={action.id} className={action.priority}>
+                      <div>
+                        <strong>{action.id}</strong>
+                        <span>{action.priority}</span>
+                      </div>
+                      <p>{action.action}</p>
+                      <small>{action.owner} / {action.proof}</small>
+                    </article>
+                  ))
+                ) : (
+                  <article className="clear">
+                    <strong>Release is current</strong>
+                    <p>公開Cloud Runは最新skill surfaceを返しています。</p>
+                  </article>
+                )}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                Redeploy runbook
+              </h3>
+              <pre>{drift.runbook.join("\n")}</pre>
+            </section>
+            <section>
+              <h3>
+                <ShieldCheck size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(drift.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="evidence-empty">
+          <Rocket size={28} />
+          <strong>Check release driftで、公開Cloud Runが最新Agent Card、Acceptance Matrix、A2A artifactを出しているか確認します。</strong>
+          <p>CIが緑でも、提出URLが古いrevisionなら審査員には未実装に見えます。</p>
         </div>
       )}
     </section>
@@ -4459,6 +4624,7 @@ export default function App() {
       <SquadOptimizerPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MoatStressPanel recommendation={recommendation} projectBrief={projectBrief} />
       <LiveEvidencePanel recommendation={recommendation} projectBrief={projectBrief} />
+      <ReleaseDriftPanel recommendation={recommendation} projectBrief={projectBrief} />
       <DemoReceiptPanel recommendation={recommendation} projectBrief={projectBrief} />
       <UserPilotPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeBriefPanel recommendation={recommendation} projectBrief={projectBrief} />

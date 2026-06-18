@@ -30,7 +30,7 @@
   <g filter="url(#shadow)">
     <rect x="744" y="190" width="240" height="126" rx="12" fill="#0f766e"/>
     <text x="768" y="238" fill="#fffdf7" font-family="Avenir Next, Arial, sans-serif" font-size="24" font-weight="800">Agent Engines</text>
-    <text x="768" y="270" fill="#dcefe4" font-family="Avenir Next, Arial, sans-serif" font-size="15">SWOT / receipt / acceptance matrix</text>
+    <text x="768" y="270" fill="#dcefe4" font-family="Avenir Next, Arial, sans-serif" font-size="15">SWOT / release drift / acceptance</text>
   </g>
 
   <g filter="url(#shadow)">
@@ -69,6 +69,6 @@
     <rect x="96" y="666" width="1248" height="118" rx="14" fill="#172126"/>
     <text x="132" y="716" fill="#fffdf7" font-family="Avenir Next, Arial, sans-serif" font-size="24" font-weight="800">Mission Control + Ops Drill loop</text>
     <text x="132" y="752" fill="#dcefe4" font-family="Avenir Next, Arial, sans-serif" font-size="17">sense competitors -> delegate with A2A -> verify commands -> read Cloud Run signals -> decide rollback or continue</text>
-    <text x="132" y="780" fill="#f2b84b" font-family="Avenir Next, Arial, sans-serif" font-size="15" font-weight="800">Artifacts: story markdown / 30 second storyboard / acceptance matrix / verification runbook / architecture diagram</text>
+    <text x="132" y="780" fill="#f2b84b" font-family="Avenir Next, Arial, sans-serif" font-size="15" font-weight="800">Artifacts: storyboard / release drift guard / acceptance matrix / verification runbook / architecture diagram</text>
   </g>
 </svg>

@@ -43,6 +43,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - User Pilot Labで、開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証する
 - Squad Optimizerで、予算内のAI編成を総当たりし、現行維持、交換、追加予算ギャップを判断する
 - Live Evidence Monitorで、Cloud Run、Agent Card、A2A、Squad Optimizer、GitHub Actions CIを公開環境からライブ検証する
+- Release Drift Guardで、公開Cloud Runが最新Agent Card、Acceptance Matrix、A2A artifactを返しているかを検査する
 - Judge Demo Receiptで、審査導線、競合反論、編成判断、公開証拠、外部提出URL状態をsha256 digest付き検収票にする
 - Judge Acceptance Matrixで、必須技術、審査5項目、競合/SWOT、公開証拠、提出物をaccepted/watch/blockedの受入表にする
 - Autonomy Ledgerで、市場探索、判断、契約、A2A委任、検証、運用、提出を検収可能なAI自律性台帳として見せる
@@ -78,6 +79,7 @@ React UI
   -> User Pilot Lab first-run usability paths
   -> Squad Optimizer budget-aware squad search
   -> Live Evidence Monitor public proof probes
+  -> Release Drift Guard Cloud Run revision check
   -> Judge Demo Receipt sha256 demo seal
   -> Judge Acceptance Matrix acceptance rows
   -> Autonomy Ledger agent centrality audit
@@ -106,10 +108,11 @@ React UI
 | 0-4s | Judge Tourで90秒導線、5つのjudge claims、外部URL不足を最初に見せる |
 | 4-8s | Squad Optimizerで140予算内の最適編成、+22のUX追加ギャップ、swap planを見せる |
 | 8-12s | Moat Stress Testで「既存ツールでよくない？」への反論と見せる証拠を競合別に出す |
-| 12-16s | Live Evidence Monitorで公開Cloud Run、Agent Card、A2A、Optimizer、CIの5 probesを見せる |
-| 16-19s | Judge Demo Receiptでstamp、外部URLwatch、sha256 digestを控える |
-| 19-22s | Judge Acceptance Matrixで必須技術、審査5項目、公開証拠、提出物のaccepted/watchを見せる |
-| 22-25s | Security Sentinel Review、Impact Case、Submission Launch Gate、Judge Proofで安全境界、実用性KPI、外部URL、Gemini/Cloud Run/A2A/CI/DevOpsの証拠束を見せる |
+| 12-15s | Live Evidence Monitorで公開Cloud Run、Agent Card、A2A、Optimizer、CIの5 probesを見せる |
+| 15-18s | Release Drift Guardで提出URLが最新skill surfaceか、古いrevisionならdeploy-driftかを見せる |
+| 18-20s | Judge Demo Receiptでstamp、外部URLwatch、sha256 digestを控える |
+| 20-23s | Judge Acceptance Matrixで必須技術、審査5項目、公開証拠、提出物のaccepted/watchを見せる |
+| 23-25s | Security Sentinel Review、Impact Case、Submission Launch Gate、Judge Proofで安全境界、実用性KPI、外部URL、Gemini/Cloud Run/A2A/CI/DevOpsの証拠束を見せる |
 | 25-27s | Submission DossierでProtoPedia本文、提出リンク、録画順、最終チェックを見せる |
 | 27-28s | Marketplace、Winning Strategy、Mission、Opsで必要能力、SWOT、A2A委任、運用判断を見せる |
 | 28-30s | Cloud Run URL、GitHub Actions、Agent Card、構成図で締める |
@@ -150,6 +153,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/squad-optimizer \
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/live-evidence \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"budget":140,"maxSquadSize":4}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/release-drift \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"targetUrl":"https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app"}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/demo-receipt \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"protopediaUrl":"https://protopedia.net/prototype/999999","videoUrl":"https://youtu.be/demo1234567"}'

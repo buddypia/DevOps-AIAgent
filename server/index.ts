@@ -28,6 +28,7 @@ import { buildOpsDrill } from "../src/ops.js";
 import { buildPitchRun } from "../src/pitch.js";
 import { buildJudgeProof } from "../src/proof.js";
 import { buildProtoPediaPublisher } from "../src/publisher.js";
+import { buildReleaseDriftGuard, type ReleaseDriftProbe } from "../src/releaseDrift.js";
 import { buildSecurityReview } from "../src/security.js";
 import { buildSquadOptimizer } from "../src/squadOptimizer.js";
 import { buildSubmissionLaunchGate } from "../src/submissionLaunch.js";
@@ -71,6 +72,9 @@ const SquadOptimizerSchema = RecommendSchema.extend({
   maxSquadSize: z.number().int().min(1).max(6).default(4)
 });
 const LiveEvidenceSchema = SquadOptimizerSchema;
+const ReleaseDriftSchema = RecommendSchema.extend({
+  targetUrl: z.string().url().optional()
+});
 
 function publicBaseUrl(req: express.Request) {
   const configured = process.env.PUBLIC_BASE_URL;
@@ -193,6 +197,12 @@ function agentCard(baseUrl: string) {
         name: "Monitor live public proof",
         description: "Cloud Run health、Agent Card、A2A、Squad Optimizer、GitHub Actions CIを公開環境でプローブし、ライブ証拠スコアを返す。",
         tags: ["live-proof", "cloud-run", "a2a", "ci", "submission"]
+      },
+      {
+        id: "release.drift",
+        name: "Detect Cloud Run release drift",
+        description: "公開Cloud Runが最新Agent Card、Acceptance Matrix、A2A artifactを出しているかを検知し、古いrevisionを提出前に止める。",
+        tags: ["cloud-run", "release", "drift", "ci", "deployment"]
       },
       {
         id: "demo.receipt",
@@ -1517,9 +1527,10 @@ app.post("/api/live-evidence", async (req, res) => {
         const hasMoat = skills.some((skill) => skill.id === "moat.stress");
         const hasReceipt = skills.some((skill) => skill.id === "demo.receipt");
         const hasAcceptance = skills.some((skill) => skill.id === "acceptance.matrix");
-        return hasEvidence && hasOptimizer && hasMoat && hasReceipt && hasAcceptance && skills.length >= 31
-          ? { status: "passed", score: 100, evidence: `Agent Card exposes ${skills.length} skills including acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.` }
-          : { status: "watch", score: 72, evidence: `Agent Card exposes ${skills.length} skills; expected acceptance, receipt, moat, live evidence, and optimizer skills.` };
+        const hasReleaseDrift = skills.some((skill) => skill.id === "release.drift");
+        return hasEvidence && hasOptimizer && hasMoat && hasReceipt && hasAcceptance && hasReleaseDrift && skills.length >= 32
+          ? { status: "passed", score: 100, evidence: `Agent Card exposes ${skills.length} skills including release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.` }
+          : { status: "watch", score: 72, evidence: `Agent Card exposes ${skills.length} skills; expected release drift, acceptance, receipt, moat, live evidence, and optimizer skills.` };
       }
     }),
     liveJsonProbe({
@@ -1560,9 +1571,9 @@ app.post("/api/live-evidence", async (req, res) => {
       },
       evaluate: (payload) => {
         const data = (payload as { result?: { artifacts?: Array<{ parts?: Array<{ data?: Record<string, unknown> }> }> } }).result?.artifacts?.[0]?.parts?.[0]?.data;
-        return data?.squadOptimizerEndpoint && data?.liveEvidenceEndpoint && data?.moatStressEndpoint && data?.demoReceiptEndpoint && data?.acceptanceMatrixEndpoint
-          ? { status: "passed", score: 100, evidence: "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, demoReceiptEndpoint, and acceptanceMatrixEndpoint." }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but acceptance/receipt/moat/live evidence endpoints were not visible." };
+        return data?.squadOptimizerEndpoint && data?.liveEvidenceEndpoint && data?.moatStressEndpoint && data?.demoReceiptEndpoint && data?.acceptanceMatrixEndpoint && data?.releaseDriftEndpoint
+          ? { status: "passed", score: 100, evidence: "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, and releaseDriftEndpoint." }
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -1581,6 +1592,122 @@ app.post("/api/live-evidence", async (req, res) => {
     buildLiveEvidenceRun({
       baseUrl,
       probes: [healthProbe, cardProbe, optimizerProbe, a2aProbe, ciProbe]
+    })
+  );
+});
+
+app.post("/api/release-drift", async (req, res) => {
+  const parsed = ReleaseDriftSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const currentBaseUrl = publicBaseUrl(req);
+  const targetBaseUrl = (parsed.data.targetUrl || SUBMISSION_PROOF.deployedUrl).replace(/\/$/, "");
+  const expectedSkillIds = agentCard(currentBaseUrl).skills.map((skill) => skill.id);
+  const requiredSkillIds = ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "win.autopilot"];
+  let observedSkillIds: string[] = [];
+
+  const [healthProbe, cardProbe, acceptanceProbe, a2aProbe, ci] = await Promise.all([
+    liveJsonProbe({
+      id: "target-health",
+      label: "Target Cloud Run health",
+      url: `${targetBaseUrl}/api/healthz`,
+      required: true,
+      evaluate: (payload) => {
+        const body = payload as { ok?: boolean; service?: string };
+        return body.ok && body.service === "a2a-agent-marketplace"
+          ? { status: "passed", score: 100, evidence: "Target health endpoint returned ok for a2a-agent-marketplace." }
+          : { status: "missing", score: 24, evidence: "Target health payload did not match the expected service contract." };
+      }
+    }),
+    liveJsonProbe({
+      id: "agent-card-skill-surface",
+      label: "Target Agent Card skill surface",
+      url: `${targetBaseUrl}/.well-known/agent-card.json`,
+      required: true,
+      evaluate: (payload) => {
+        const skills = Array.isArray((payload as { skills?: unknown[] }).skills) ? ((payload as { skills: Array<{ id?: string }> }).skills) : [];
+        observedSkillIds = skills.map((skill) => skill.id).filter((id): id is string => Boolean(id));
+        const missing = requiredSkillIds.filter((skill) => !observedSkillIds.includes(skill));
+        const hasExpectedCount = observedSkillIds.length >= expectedSkillIds.length;
+        if (missing.length === 0 && hasExpectedCount) {
+          return {
+            status: "passed",
+            score: 100,
+            evidence: `Target Agent Card exposes ${observedSkillIds.length}/${expectedSkillIds.length} expected skills.`
+          };
+        }
+        return {
+          status: missing.length > 0 ? "watch" : "passed",
+          score: missing.length > 0 ? 58 : 92,
+          evidence: `Target Agent Card exposes ${observedSkillIds.length}/${expectedSkillIds.length} skills; missing ${missing.join(", ") || "none"}.`
+        };
+      }
+    }),
+    liveJsonProbe({
+      id: "acceptance-endpoint",
+      label: "Target Acceptance Matrix endpoint",
+      url: `${targetBaseUrl}/api/acceptance-matrix`,
+      required: true,
+      init: {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief: parsed.data.projectBrief,
+          selectedAgentIds: parsed.data.selectedAgentIds
+        })
+      },
+      evaluate: (payload) => {
+        const body = payload as { verdict?: string; rows?: unknown[]; a2aPayload?: { skill?: string } };
+        return body.a2aPayload?.skill === "acceptance.matrix" && Array.isArray(body.rows) && body.rows.length >= 12
+          ? { status: "passed", score: 100, evidence: `Acceptance Matrix returned ${body.verdict}; ${body.rows.length} rows.` }
+          : { status: "missing", score: 24, evidence: "Acceptance Matrix endpoint did not return the current acceptance.matrix JSON payload." };
+      }
+    }),
+    liveJsonProbe({
+      id: "a2a-artifact",
+      label: "Target A2A artifact endpoints",
+      url: `${targetBaseUrl}/a2a`,
+      required: true,
+      init: {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: "release-drift-guard",
+          method: "message/send",
+          params: { text: parsed.data.projectBrief }
+        })
+      },
+      evaluate: (payload) => {
+        const data = (payload as { result?: { artifacts?: Array<{ parts?: Array<{ data?: Record<string, unknown> }> }> } }).result?.artifacts?.[0]?.parts?.[0]?.data;
+        return data?.releaseDriftEndpoint && data?.acceptanceMatrixEndpoint && data?.demoReceiptEndpoint
+          ? { status: "passed", score: 100, evidence: "A2A artifact exposes releaseDriftEndpoint, acceptanceMatrixEndpoint, and demoReceiptEndpoint." }
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but release drift/acceptance/receipt endpoints are not all visible." };
+      }
+    }),
+    fetchCiProof()
+  ]);
+
+  const ciProbe: ReleaseDriftProbe = {
+    id: "ci-main",
+    label: "Latest main CI",
+    status: ci.status === "passed" ? "passed" : ci.status === "watch" ? "watch" : "missing",
+    score: ci.status === "passed" ? 100 : ci.status === "watch" ? 70 : 24,
+    url: ci.url,
+    evidence: ci.evidence,
+    required: true
+  };
+
+  res.json(
+    buildReleaseDriftGuard({
+      currentBaseUrl,
+      targetBaseUrl,
+      expectedSkillIds,
+      observedSkillIds,
+      requiredSkillIds,
+      probes: [healthProbe, cardProbe, acceptanceProbe, a2aProbe, ciProbe],
     })
   );
 });
@@ -2657,6 +2784,7 @@ app.post("/a2a", (req, res) => {
                 userPilotEndpoint: `${publicBaseUrl(req)}/api/user-pilot`,
                 squadOptimizerEndpoint: `${publicBaseUrl(req)}/api/squad-optimizer`,
                 liveEvidenceEndpoint: `${publicBaseUrl(req)}/api/live-evidence`,
+                releaseDriftEndpoint: `${publicBaseUrl(req)}/api/release-drift`,
                 demoReceiptEndpoint: `${publicBaseUrl(req)}/api/demo-receipt`,
                 acceptanceMatrixEndpoint: `${publicBaseUrl(req)}/api/acceptance-matrix`,
                 judgeTourEndpoint: `${publicBaseUrl(req)}/api/judge-tour`,
