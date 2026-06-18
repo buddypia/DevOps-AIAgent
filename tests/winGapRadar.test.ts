@@ -385,12 +385,35 @@ describe("win gap radar", () => {
       proofUrl: `${SUBMISSION_PROOF.deployedUrl}/api/competitive-battlecard`,
       acceptance: expect.stringContaining("Objection Replay")
     });
+    expect(radar.featureFreezeLock).toMatchObject({
+      readiness: "feature-freeze-external-watch",
+      shipNowCount: 0,
+      externalCount: 1,
+      cutCount: 3,
+      checks: expect.arrayContaining([
+        expect.objectContaining({ id: "core-scope-freeze", decision: "record-proof", status: "banked" }),
+        expect.objectContaining({ id: "submission-closeout", decision: "external-closeout", status: "watch" }),
+        expect.objectContaining({ id: "competitor-answer-replay", decision: "record-proof", status: "banked" }),
+        expect.objectContaining({ id: "cut-full-workflow-builder", decision: "cut", status: "banked" })
+      ])
+    });
+    expect(radar.featureFreezeLock.freezeScore).toBeGreaterThanOrEqual(90);
+    expect(radar.featureFreezeLock.operatorLine).toContain("Stop adding features");
+    expect(radar.featureFreezeLock.freezeOrder[0]).toContain("Do not add");
     expect(radar.cutList.map((item) => item.id)).toEqual(expect.arrayContaining(["full-workflow-builder", "marketplace-payments"]));
     expect(radar.externalGaps.map((gap) => gap.id)).toEqual(expect.arrayContaining(["protopedia", "video"]));
     expect(radar.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "win.gap.radar",
       readiness: "mvp-gap-watch",
+      featureFreezeLock: {
+        readiness: "feature-freeze-external-watch",
+        shipNowCount: 0,
+        externalCount: 1,
+        checks: expect.arrayContaining([
+          expect.objectContaining({ id: "submission-closeout", decision: "external-closeout", status: "watch" })
+        ])
+      },
       endpoints: {
         winGapRadar: `${SUBMISSION_PROOF.deployedUrl}/api/win-gap-radar`,
         competitiveBattlecard: `${SUBMISSION_PROOF.deployedUrl}/api/competitive-battlecard`,

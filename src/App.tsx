@@ -1598,6 +1598,56 @@ function WinGapRadarPanel({
             </div>
           </div>
 
+          <div className="gap-freeze-lock">
+            <div className="gap-freeze-copy">
+              <span
+                className={cx(
+                  "risk-chip",
+                  radar.featureFreezeLock.readiness === "feature-freeze-ready"
+                    ? "low"
+                    : radar.featureFreezeLock.readiness === "feature-freeze-external-watch"
+                      ? "medium"
+                      : "high"
+                )}
+              >
+                {radar.featureFreezeLock.readiness}
+              </span>
+              <h3>
+                <ClipboardCheck size={16} />
+                Feature Freeze Lock
+              </h3>
+              <p>{radar.featureFreezeLock.headline}</p>
+              <strong>{radar.featureFreezeLock.operatorLine}</strong>
+            </div>
+            <div className="gap-freeze-score">
+              <strong>{radar.featureFreezeLock.freezeScore}</strong>
+              <span>freeze score</span>
+              <small>
+                ship {radar.featureFreezeLock.shipNowCount} / record {radar.featureFreezeLock.recordCount} / external {radar.featureFreezeLock.externalCount} / cut {radar.featureFreezeLock.cutCount}
+              </small>
+            </div>
+            <div className="gap-freeze-checks">
+              {radar.featureFreezeLock.checks.slice(0, 6).map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.decision}</span>
+                  </div>
+                  <p>{check.action}</p>
+                  <small>{check.acceptance}</small>
+                  <a href={check.proofUrl} target="_blank" rel="noreferrer">
+                    Proof <ExternalLink size={13} />
+                  </a>
+                </article>
+              ))}
+            </div>
+            <ol className="gap-freeze-order">
+              {radar.featureFreezeLock.freezeOrder.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ol>
+          </div>
+
           <div className="gap-lanes">
             {radar.lanes.map((lane) => (
               <article key={lane.id} className={lane.status}>

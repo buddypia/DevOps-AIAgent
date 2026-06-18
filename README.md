@@ -19,7 +19,7 @@
 - Market Intel: Gemini Enterprise、ADK、A2A、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較とSource Freshness Lockで、差別化仮説、審査回答、ソース到達性を生成
 - Moat Stress Test: ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsからの反論を想定し、証拠付き回答と録画順を返す
 - Competitive Battlecard: 公式ソース、SWOT、競合反論、証拠routeを競合別の審査回答カードに束ね、Objection ReplayとCompetitive Proof Lockで最弱競合への30秒回答順と証拠完全性を固定する
-- Win Gap Radar: 競合/SWOT、MVP監査、最終候補判定、Prize Strategyを横断し、優勝に必要なMVP gapをfeature betsとcut listへ変換する
+- Win Gap Radar: 競合/SWOT、MVP監査、最終候補判定、Prize Strategyを横断し、優勝に必要なMVP gapをfeature bets、Feature Freeze Lock、cut listへ変換する
 - MVP Audit: 必須技術、審査5項目、DevOps証拠、提出3点をハードゲートで判定し、外部未発行URLをwatchとして残す
 - Judge Brief: 競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページに圧縮
 - Judge Command Center: Judge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
@@ -96,11 +96,11 @@
 
 ## Win Gap Radar
 
-`Win Gap Radar` は、競合分析/SWOTを「資料」ではなくMVP改善backlogに変換するパネルです。Competitive Battlecard、MVP Audit、Finalist Simulator、Judge Acceptance Matrix、Prize Strategy、Demo Concierge、Submission Launch Gateを横断し、審査5項目ごとのlane、今閉じるfeature bet、やらないcut list、外部提出gapを返します。ProtoPedia作品URLと動画URLが未入力なら、コード側のMVPがcredibleでも `submit-ready` とは呼ばず `submission-closeout` を `close-now` にします。
+`Win Gap Radar` は、競合分析/SWOTを「資料」ではなくMVP改善backlogに変換するパネルです。Competitive Battlecard、MVP Audit、Finalist Simulator、Judge Acceptance Matrix、Prize Strategy、Demo Concierge、Submission Launch Gateを横断し、審査5項目ごとのlane、今閉じるfeature bet、Feature Freeze Lock、やらないcut list、外部提出gapを返します。ProtoPedia作品URLと動画URLが未入力なら、コード側のMVPがcredibleでも `submit-ready` とは呼ばず `submission-closeout` を `close-now` にします。Feature Freeze Lockで、非外部のclose-nowが残る時だけ追加実装を許可し、外部提出だけが残る時はMVP本体を凍結して録画/公開検収へ集中します。
 
 - API: `POST /api/win-gap-radar`
 - App UI: `Build gap radar`
-- Output: radar score、readiness、MVP decision、gap lanes、feature bets、cut list、external gaps、A2A `win.gap.radar` payload
+- Output: radar score、readiness、MVP decision、gap lanes、feature bets、Feature Freeze Lock、cut list、external gaps、A2A `win.gap.radar` payload
 
 ## MVP Audit
 

@@ -13,6 +13,8 @@ import type { SwotItem, SwotQuadrant, WinningStrategy } from "./strategy.js";
 export type WinGapReadiness = "winner-track" | "mvp-gap-watch" | "not-mvp";
 export type WinGapStatus = "banked" | "watch" | "close-now";
 export type WinGapPriority = "now" | "next" | "later";
+export type FeatureFreezeReadiness = "feature-freeze-ready" | "feature-freeze-external-watch" | "needs-feature-freeze";
+export type FeatureFreezeDecision = "ship-now" | "record-proof" | "external-closeout" | "cut";
 
 export type WinGapSwotSignal = {
   quadrant: SwotQuadrant;
@@ -55,6 +57,31 @@ export type WinGapCut = {
   reason: string;
 };
 
+export type FeatureFreezeCheck = {
+  id: string;
+  label: string;
+  decision: FeatureFreezeDecision;
+  status: WinGapStatus;
+  reason: string;
+  action: string;
+  acceptance: string;
+  proofUrl: string;
+};
+
+export type FeatureFreezeLock = {
+  id: string;
+  freezeScore: number;
+  readiness: FeatureFreezeReadiness;
+  headline: string;
+  operatorLine: string;
+  shipNowCount: number;
+  recordCount: number;
+  externalCount: number;
+  cutCount: number;
+  checks: FeatureFreezeCheck[];
+  freezeOrder: string[];
+};
+
 export type WinGapRadar = {
   id: string;
   radarScore: number;
@@ -64,6 +91,7 @@ export type WinGapRadar = {
   mvpDecision: string;
   lanes: WinGapLane[];
   featureBets: WinGapFeatureBet[];
+  featureFreezeLock: FeatureFreezeLock;
   cutList: WinGapCut[];
   proofScript: string[];
   externalGaps: FinalistGap[];
@@ -123,6 +151,12 @@ function lanePriority(status: WinGapStatus): WinGapPriority {
   if (status === "close-now") return "now";
   if (status === "watch") return "next";
   return "later";
+}
+
+function freezeStatusScore(status: WinGapStatus) {
+  if (status === "banked") return 100;
+  if (status === "watch") return 82;
+  return 42;
 }
 
 function lane(input: {
@@ -186,6 +220,120 @@ function featureBetStatus(priority: WinGapPriority, blocked: boolean): WinGapSta
   if (blocked || priority === "now") return "close-now";
   if (priority === "next") return "watch";
   return "banked";
+}
+
+function buildFeatureFreezeLock(input: {
+  baseUrl: string;
+  radarScore: number;
+  lanes: WinGapLane[];
+  featureBets: WinGapFeatureBet[];
+  cutList: WinGapCut[];
+  externalGaps: FinalistGap[];
+  proofScript: string[];
+}): FeatureFreezeLock {
+  const { baseUrl, radarScore, lanes, featureBets, cutList, externalGaps, proofScript } = input;
+  const nonExternalNow = lanes.filter((lane) => lane.status === "close-now" && lane.id !== "submission-closeout");
+  const checkFromBet = (bet: WinGapFeatureBet): FeatureFreezeCheck => {
+    const isExternalCloseout = bet.id === "submission-closeout";
+    const decision: FeatureFreezeDecision =
+      isExternalCloseout && externalGaps.length > 0
+        ? "external-closeout"
+        : bet.status === "close-now"
+          ? "ship-now"
+          : "record-proof";
+    return {
+      id: bet.id,
+      label: bet.label,
+      decision,
+      status: decision === "external-closeout" ? "watch" : bet.status,
+      reason: bet.why,
+      action:
+        decision === "external-closeout"
+          ? "コード追加ではなく、ProtoPedia作品URLと動画URLを発行して提出ゲートへ貼る。"
+          : decision === "ship-now"
+            ? bet.build
+            : "新規実装を増やさず、録画と質疑でこの証拠を開く。",
+      acceptance: bet.acceptance,
+      proofUrl: bet.proofUrl
+    };
+  };
+  const checks: FeatureFreezeCheck[] = [
+    {
+      id: "core-scope-freeze",
+      label: "Core MVP scope",
+      decision: nonExternalNow.length > 0 ? "ship-now" : "record-proof",
+      status: nonExternalNow.length > 0 ? "close-now" : "banked",
+      reason:
+        nonExternalNow.length > 0
+          ? `${nonExternalNow.map((lane) => lane.label).join(" / ")} still has non-external close-now evidence.`
+          : "非外部の審査レーンはbanked。これ以上の新機能追加より、録画と公開検収へ寄せる。",
+      action:
+        nonExternalNow.length > 0
+          ? nonExternalNow.map((lane) => lane.nextAction).join(" / ")
+          : "Freeze core feature work and spend the next run on recording, release drift, and external closeout.",
+      acceptance: "非外部laneにclose-nowが残っていなければ、MVP本体はfeature freezeできる。",
+      proofUrl: absoluteUrl(baseUrl, "/api/win-gap-radar")
+    },
+    ...featureBets.map(checkFromBet),
+    {
+      id: "recording-script",
+      label: "Recording proof path",
+      decision: "record-proof",
+      status: proofScript.length >= 5 && nonExternalNow.length === 0 ? "banked" : "watch",
+      reason: `${proofScript.length} proof script steps are ready for the judge recording.`,
+      action: "Judge Rehearsal、Winner Packet、Prize Strategyの順に開き、証拠順だけを録画する。",
+      acceptance: "録画で開く証拠順が5ステップ以上あり、非外部close-nowが残っていない。",
+      proofUrl: absoluteUrl(baseUrl, "/api/judge-rehearsal")
+    },
+    ...cutList.map((item) => ({
+      id: `cut-${item.id}`,
+      label: item.label,
+      decision: "cut" as const,
+      status: "banked" as const,
+      reason: item.reason,
+      action: "ハッカソン提出前には実装しない。質問されたらcut理由を説明する。",
+      acceptance: "審査5項目に直接効かないため、提出前scopeから除外する。",
+      proofUrl: absoluteUrl(baseUrl, "/api/win-gap-radar")
+    }))
+  ];
+  const shipNowCount = checks.filter((check) => check.decision === "ship-now").length;
+  const recordCount = checks.filter((check) => check.decision === "record-proof").length;
+  const externalCount = checks.filter((check) => check.decision === "external-closeout").length;
+  const cutCount = checks.filter((check) => check.decision === "cut").length;
+  const readiness: FeatureFreezeReadiness =
+    checks.some((check) => check.decision === "ship-now" && check.status === "close-now")
+      ? "needs-feature-freeze"
+      : externalCount > 0 || checks.some((check) => check.status === "watch")
+        ? "feature-freeze-external-watch"
+        : "feature-freeze-ready";
+  const freezeScore = Math.round(clamp(average([radarScore, ...checks.map((check) => freezeStatusScore(check.status))])));
+
+  return {
+    id: `feature-freeze-lock-${freezeScore}-${readiness}`,
+    freezeScore,
+    readiness,
+    headline:
+      readiness === "feature-freeze-ready"
+        ? "MVP本体、録画証拠、cut範囲まで凍結できます。"
+        : readiness === "feature-freeze-external-watch"
+          ? "MVP本体は凍結できます。残りは外部提出URLと録画公開のwatchです。"
+          : "非外部のclose-nowが残っています。録画前にscopeを凍結できません。",
+    operatorLine:
+      readiness === "needs-feature-freeze"
+        ? "Ship the listed non-external checks before recording."
+        : "Stop adding features; record the proof path, close external URLs, and keep cut items out of scope.",
+    shipNowCount,
+    recordCount,
+    externalCount,
+    cutCount,
+    checks,
+    freezeOrder: [
+      "Do not add net-new core surfaces before the judge recording.",
+      "Record proof-only surfaces already banked in Win Gap Radar.",
+      "Close ProtoPedia/video URLs outside the codebase.",
+      "Keep cut-list items out of the final pitch unless asked."
+    ]
+  };
 }
 
 export function buildWinGapRadar(input: {
@@ -394,6 +542,23 @@ export function buildWinGapRadar(input: {
       proofUrl: absoluteUrl(base, input.observabilityOracle ? "/api/observability-oracle" : "/api/pilot-economics")
     }
   ];
+  const cutList: WinGapCut[] = [
+    {
+      id: "full-workflow-builder",
+      label: "汎用ワークフロービルダー",
+      reason: "Dify/LangGraphが強い領域。今は能力調達と審査証拠に集中する。"
+    },
+    {
+      id: "marketplace-payments",
+      label: "本番決済・販売導線",
+      reason: "Google Cloud Marketplaceが強い領域。ハッカソンMVPでは買う前の意思決定を証明する。"
+    },
+    {
+      id: "enterprise-auth",
+      label: "大規模OAuth/組織管理",
+      reason: "公開デモの信頼境界はSecurity Reviewで足りる。提出前は外部URLと証拠を優先する。"
+    }
+  ];
 
   const laneAverage = average(lanes.map((item) => item.score));
   const externalPenalty = externalGaps.length * 3;
@@ -417,6 +582,24 @@ export function buildWinGapRadar(input: {
         ? "not-mvp"
         : "mvp-gap-watch";
   const weakestLane = [...lanes].sort((left, right) => right.delta - left.delta)[0];
+  const proofScript = [
+    "Demo Conciergeで最初のクリックを固定する。",
+    ...(routeLock ? ["Judge Route Lockで0-90秒のlocked stepsと捨てる導線を見せる。"] : []),
+    "Competitive BattlecardのObjection Replayで最弱競合への短い回答、source、SWOT、proof routeを30秒で見せる。",
+    "Win Gap Radarで、MVP不足をfeature betsとcut listへ変換したことを見せる。",
+    ...(input.observabilityOracle ? ["Observability Oracleでbuyer SLO、公開運用判断、次のAI買い足しループを見せる。"] : []),
+    "Acceptance MatrixとRelease Driftで公開Cloud Runの検収を通す。",
+    "Submission Launch Gateで外部URLの状態を正直に示す。"
+  ];
+  const featureFreezeLock = buildFeatureFreezeLock({
+    baseUrl: base,
+    radarScore,
+    lanes,
+    featureBets,
+    cutList,
+    externalGaps,
+    proofScript
+  });
 
   return {
     id: `win-gap-radar-${radarScore}-${readiness}`,
@@ -438,32 +621,9 @@ export function buildWinGapRadar(input: {
           : `${weakestLane.label}を先に閉じる。${weakestLane.nextAction}`,
     lanes,
     featureBets,
-    cutList: [
-      {
-        id: "full-workflow-builder",
-        label: "汎用ワークフロービルダー",
-        reason: "Dify/LangGraphが強い領域。今は能力調達と審査証拠に集中する。"
-      },
-      {
-        id: "marketplace-payments",
-        label: "本番決済・販売導線",
-        reason: "Google Cloud Marketplaceが強い領域。ハッカソンMVPでは買う前の意思決定を証明する。"
-      },
-      {
-        id: "enterprise-auth",
-        label: "大規模OAuth/組織管理",
-        reason: "公開デモの信頼境界はSecurity Reviewで足りる。提出前は外部URLと証拠を優先する。"
-      }
-    ],
-    proofScript: [
-      "Demo Conciergeで最初のクリックを固定する。",
-      ...(routeLock ? ["Judge Route Lockで0-90秒のlocked stepsと捨てる導線を見せる。"] : []),
-      "Competitive BattlecardのObjection Replayで最弱競合への短い回答、source、SWOT、proof routeを30秒で見せる。",
-      "Win Gap Radarで、MVP不足をfeature betsとcut listへ変換したことを見せる。",
-      ...(input.observabilityOracle ? ["Observability Oracleでbuyer SLO、公開運用判断、次のAI買い足しループを見せる。"] : []),
-      "Acceptance MatrixとRelease Driftで公開Cloud Runの検収を通す。",
-      "Submission Launch Gateで外部URLの状態を正直に示す。"
-    ],
+    featureFreezeLock,
+    cutList,
+    proofScript,
     externalGaps,
     a2aPayload: {
       method: "message/send",
@@ -489,6 +649,20 @@ export function buildWinGapRadar(input: {
         status: item.status,
         acceptance: item.acceptance
       })),
+      featureFreezeLock: {
+        readiness: featureFreezeLock.readiness,
+        freezeScore: featureFreezeLock.freezeScore,
+        shipNowCount: featureFreezeLock.shipNowCount,
+        recordCount: featureFreezeLock.recordCount,
+        externalCount: featureFreezeLock.externalCount,
+        cutCount: featureFreezeLock.cutCount,
+        checks: featureFreezeLock.checks.map((check) => ({
+          id: check.id,
+          decision: check.decision,
+          status: check.status,
+          proofUrl: check.proofUrl
+        }))
+      },
       externalGaps: externalGaps.map((gap) => ({ id: gap.id, label: gap.label, action: gap.action })),
       endpoints: {
         app: base,

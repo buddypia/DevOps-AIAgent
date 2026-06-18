@@ -242,8 +242,8 @@ function agentCard(baseUrl: string) {
       {
         id: "win.gap.radar",
         name: "Turn competitive analysis into MVP gap bets",
-        description: "競合分析、SWOT、MVP監査、最終候補判定、提出ゲートを横断し、勝つために閉じる機能仮説とcut listを返す。",
-        tags: ["mvp", "competitive-analysis", "swot", "gap-radar", "winning-strategy"]
+        description: "競合分析、SWOT、MVP監査、最終候補判定、提出ゲートを横断し、勝つために閉じる機能仮説、Feature Freeze Lock、cut listを返す。",
+        tags: ["mvp", "competitive-analysis", "swot", "gap-radar", "feature-freeze-lock", "winning-strategy"]
       },
       {
         id: "judge.tour",

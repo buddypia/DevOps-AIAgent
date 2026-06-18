@@ -185,11 +185,12 @@
 
 ## Win Gap Radar Surface
 
-- `POST /api/win-gap-radar`: Competitive Battlecard、SWOT、MVP Audit、Finalist、Acceptance Matrix、Prize Strategy、Demo Concierge、Submission Launch Gateを横断し、優勝に必要なMVP gapをfeature betsへ変換する
+- `POST /api/win-gap-radar`: Competitive Battlecard、SWOT、MVP Audit、Finalist、Acceptance Matrix、Prize Strategy、Demo Concierge、Submission Launch Gateを横断し、優勝に必要なMVP gapをfeature betsとFeature Freeze Lockへ変換する
 - Gap lanes: AI中心性、競合アプローチ、初回UX、実用性、実装証拠、外部提出closeoutをscore/status/priority付きで返す
 - Feature bets: Judge Route Lock、Objection Replayなど、いま作るべき機能仮説、受入条件、証拠URLを返し、不要な汎用workflow builderや本番決済はcut listに落とす
+- Feature Freeze Lock: 非外部のclose-nowが残る時だけship-nowにし、外部提出だけが残る時はMVP本体を凍結してrecord-proof、external-closeout、cutへ分ける
 - Honest external gate: ProtoPedia作品URLと動画URLが未発行なら、`submission-closeout` を `close-now` とし、submit-ready/finalist-readyとは呼ばない
-- A2A payload: `win.gap.radar` skillとしてradar score、readiness、lane statuses、feature bets、external gapsを返す
+- A2A payload: `win.gap.radar` skillとしてradar score、readiness、lane statuses、feature bets、Feature Freeze Lock、external gapsを返す
 
 ## Judge Tour Surface
 
@@ -402,7 +403,7 @@
 - Pilot economics proof: `pilot.economics` skillとして、Pilot Evidence Lock、導入費用、回収日数、価格レーン、買い手の反論をA2A payloadにも含める
 - Demo concierge proof: `demo.concierge` skillとして、審査員/買い手/提出者のfirst click、証拠URL、成功条件、friction cutsをA2A payloadにも含める
 - Judge command proof: `judge.command` skillとして、最初の90秒で押す証拠、Competitive Battlecard、公開revision drift、MVP受入状態、導入採算、残ブロッカーをA2A payloadにも含める
-- Win gap radar proof: `win.gap.radar` skillとして、競合/SWOTから導いたMVP gap lanes、feature bets、cut list、外部提出closeoutをA2A payloadにも含める
+- Win gap radar proof: `win.gap.radar` skillとして、競合/SWOTから導いたMVP gap lanes、feature bets、Feature Freeze Lock、cut list、外部提出closeoutをA2A payloadにも含める
 - Judge tour proof: `judge.tour` skillとして、審査員が開く順番、反論、証拠リンク、外部URLギャップをA2A payloadにも含める
 - User pilot proof: `user.pilot` skillとして、開発リード、Platform/SRE、提出者のfirst-run usabilityをA2A payloadにも含める
 - Squad optimizer proof: `squad.optimize` skillとして、予算制約下の自律編成判断、coverage gap、funding stepをA2A payloadにも含める
