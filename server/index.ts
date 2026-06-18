@@ -46,7 +46,7 @@ import { buildMissionRun } from "../src/mission.js";
 import { buildMoatStressTest } from "../src/moatStress.js";
 import { buildMvpAudit } from "../src/mvpAudit.js";
 import { buildMvpSnapshot, renderMvpSnapshotHtml } from "../src/mvpSnapshot.js";
-import { buildObservabilityOracle } from "../src/observabilityOracle.js";
+import { buildObservabilityOracle, OBSERVABILITY_ORACLE_LOCK_TAG, OBSERVABILITY_ORACLE_REQUIRED_SIGNAL, OBSERVABILITY_ORACLE_SKILL_ID, renderObservabilityOracleHtml } from "../src/observabilityOracle.js";
 import { buildObjectionArena, renderObjectionArenaHtml } from "../src/objectionArena.js";
 import { buildOpsDrill } from "../src/ops.js";
 import { buildPilotEconomics } from "../src/pilotEconomics.js";
@@ -335,10 +335,10 @@ function agentCard(baseUrl: string) {
         tags: ["live-proof", "cloud-run", "a2a", "ci", "submission"]
       },
       {
-        id: "observability.oracle",
+        id: OBSERVABILITY_ORACLE_SKILL_ID,
         name: "Turn operations signals into buyer proof",
-        description: "Live Evidence、Ops Drill、Pilot Economicsを束ね、公開継続/復旧判断、買い手価値、次のAI雇用を運用証拠に変換する。",
-        tags: ["observability", "cloud-run", "ops", "roi", "a2a"]
+        description: "Live Evidence、Ops Drill、Pilot Economicsを束ね、公開継続/復旧判断、買い手価値、次のAI雇用をGET証拠ページへ変換する。",
+        tags: ["observability", "cloud-run", "ops", "roi", "a2a", OBSERVABILITY_ORACLE_LOCK_TAG, "get-proof"]
       },
       {
         id: "release.drift",
@@ -2877,12 +2877,13 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
           data?.submissionCloseoutEndpoint &&
           data?.deployRecoveryEndpoint &&
           data?.deployRecoveryPageEndpoint &&
-          data?.observabilityOracleEndpoint
+          data?.observabilityOracleEndpoint &&
+          data?.observabilityOraclePageEndpoint
           ? {
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, winnerSufficiencyEndpoint, winnerSufficiencyPageEndpoint, winAutopilotEndpoint, winAutopilotPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, submissionLaunchEndpoint, submissionLaunchPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, deployRecoveryEndpoint, and deployRecoveryPageEndpoint."
+                "A2A artifact exposes autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, observabilityOraclePageEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, winnerSufficiencyEndpoint, winnerSufficiencyPageEndpoint, winAutopilotEndpoint, winAutopilotPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, submissionLaunchEndpoint, submissionLaunchPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, deployRecoveryEndpoint, and deployRecoveryPageEndpoint."
             }
           : { status: "watch", score: 72, evidence: "A2A artifact returned, but autonomy snapshot/observability oracle/external evidence/task board/winner packet/winner sufficiency/win autopilot/submission runway/submission assets/submission launch/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/MVP snapshot/deploy recovery page/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
@@ -2915,21 +2916,36 @@ app.post("/api/live-evidence", async (req, res) => {
   res.json(await buildLiveEvidenceForRequest(req, parsed.data));
 });
 
-app.post("/api/observability-oracle", async (req, res) => {
-  const parsed = LiveEvidenceSchema.safeParse(req.body);
+function observabilityOracleQueryInput(req: express.Request) {
+  const selectedAgentIds =
+    typeof req.query.selectedAgentIds === "string"
+      ? req.query.selectedAgentIds
+          .split(",")
+          .map((id) => id.trim())
+          .filter(Boolean)
+      : ["market-broker", "gemini-strategist", "cloud-run-sre"];
+  const parsed = LiveEvidenceSchema.safeParse({
+    projectBrief: typeof req.query.projectBrief === "string" ? req.query.projectBrief : DEFAULT_PROJECT_BRIEF,
+    selectedAgentIds,
+    budget: typeof req.query.budget === "string" ? Number(req.query.budget) : 140,
+    maxSquadSize: typeof req.query.maxSquadSize === "string" ? Number(req.query.maxSquadSize) : 4
+  });
   if (!parsed.success) {
-    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
-    return;
+    return { error: { error: "invalid_request", issues: parsed.error.issues } };
   }
+  return { input: parsed.data };
+}
 
-  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+async function buildObservabilityOracleForInput(req: express.Request, input: z.infer<typeof LiveEvidenceSchema>) {
+  const baseUrl = publicBaseUrl(req);
+  const recommendation = recommendSquad(input.projectBrief, input.selectedAgentIds);
   const strategy = buildWinningStrategy(recommendation);
   const mission = buildMissionRun(recommendation, strategy, "公開運用シグナルを読み、継続/復旧/買い手価値/次のAI雇用を1つのObservability Oracleに束ねる。");
   const opsDrill = buildOpsDrill(recommendation, strategy);
   const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
-  const [liveEvidence, ci] = await Promise.all([buildLiveEvidenceForRequest(req, parsed.data), fetchCiProof()]);
+  const [liveEvidence, ci] = await Promise.all([buildLiveEvidenceForRequest(req, input), fetchCiProof()]);
   const securityReview = buildSecurityReview({
-    baseUrl: publicBaseUrl(req),
+    baseUrl,
     recommendation,
     strategy,
     allowlist: ipAllowlistSummary,
@@ -2955,16 +2971,42 @@ app.post("/api/observability-oracle", async (req, res) => {
     securityReview
   });
 
-  res.json(
-    buildObservabilityOracle({
-      baseUrl: publicBaseUrl(req),
-      recommendation,
-      strategy,
-      liveEvidence,
-      opsDrill,
-      pilotEconomics
-    })
-  );
+  return buildObservabilityOracle({
+    baseUrl,
+    recommendation,
+    strategy,
+    liveEvidence,
+    opsDrill,
+    pilotEconomics
+  });
+}
+
+app.get("/api/observability-oracle", async (req, res) => {
+  const result = observabilityOracleQueryInput(req);
+  if ("error" in result) {
+    res.status(400).json(result.error);
+    return;
+  }
+  res.json(await buildObservabilityOracleForInput(req, result.input));
+});
+
+app.get("/observability-oracle", async (req, res) => {
+  const result = observabilityOracleQueryInput(req);
+  if ("error" in result) {
+    res.status(400).json(result.error);
+    return;
+  }
+  res.type("html").send(renderObservabilityOracleHtml(await buildObservabilityOracleForInput(req, result.input)));
+});
+
+app.post("/api/observability-oracle", async (req, res) => {
+  const parsed = LiveEvidenceSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  res.json(await buildObservabilityOracleForInput(req, parsed.data));
 });
 
 app.post("/api/external-evidence", async (req, res) => {
@@ -3047,6 +3089,7 @@ async function buildReleaseDriftForTarget(input: {
     FIRST_CLICK_SMOKE_REQUIRED_SIGNAL,
     "mvp.snapshot:tag:get-proof",
     "autonomy.snapshot:tag:get-proof",
+    OBSERVABILITY_ORACLE_REQUIRED_SIGNAL,
     "recording.script:tag:get-proof",
     "submission.launch:tag:get-proof",
     "submission.package:tag:get-proof",
@@ -3142,6 +3185,7 @@ async function buildReleaseDriftForTarget(input: {
         const firstClickSmoke = skills.find((skill) => skill.id === FIRST_CLICK_SMOKE_SKILL_ID);
         const mvpSnapshot = skills.find((skill) => skill.id === "mvp.snapshot");
         const autonomySnapshot = skills.find((skill) => skill.id === "autonomy.snapshot");
+        const observabilityOracle = skills.find((skill) => skill.id === OBSERVABILITY_ORACLE_SKILL_ID);
         const recordingScript = skills.find((skill) => skill.id === "recording.script");
         const submissionLaunch = skills.find((skill) => skill.id === "submission.launch");
         const submissionPackage = skills.find((skill) => skill.id === "submission.package");
@@ -3164,6 +3208,7 @@ async function buildReleaseDriftForTarget(input: {
           ...(firstClickSmoke?.tags?.includes(FIRST_CLICK_SMOKE_LOCK_TAG) ? [FIRST_CLICK_SMOKE_REQUIRED_SIGNAL] : []),
           ...(mvpSnapshot?.tags?.includes("get-proof") ? ["mvp.snapshot:tag:get-proof"] : []),
           ...(autonomySnapshot?.tags?.includes("get-proof") ? ["autonomy.snapshot:tag:get-proof"] : []),
+          ...(observabilityOracle?.tags?.includes(OBSERVABILITY_ORACLE_LOCK_TAG) ? [OBSERVABILITY_ORACLE_REQUIRED_SIGNAL] : []),
           ...(recordingScript?.tags?.includes("get-proof") ? ["recording.script:tag:get-proof"] : []),
           ...(submissionLaunch?.tags?.includes("get-proof") ? ["submission.launch:tag:get-proof"] : []),
           ...(submissionPackage?.tags?.includes("get-proof") ? ["submission.package:tag:get-proof"] : []),
@@ -3382,12 +3427,13 @@ async function buildReleaseDriftForTarget(input: {
           data?.autonomySnapshotEndpoint &&
           data?.autonomySnapshotJsonEndpoint &&
           data?.observabilityOracleEndpoint &&
+          data?.observabilityOraclePageEndpoint &&
           data?.deployRecoveryEndpoint &&
           data?.deployRecoveryPageEndpoint
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, winnerSufficiencyEndpoint, winnerSufficiencyPageEndpoint, winAutopilotEndpoint, winAutopilotPageEndpoint, objectionArenaEndpoint, objectionArenaPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, submissionLaunchEndpoint, submissionLaunchPageEndpoint, architecturePackEndpoint, architecturePackPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, firstClickProof, firstClickSmokeEndpoint, firstClickSmokePageEndpoint, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, deployRecoveryEndpoint, and deployRecoveryPageEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, winnerSufficiencyEndpoint, winnerSufficiencyPageEndpoint, winAutopilotEndpoint, winAutopilotPageEndpoint, objectionArenaEndpoint, objectionArenaPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, submissionLaunchEndpoint, submissionLaunchPageEndpoint, architecturePackEndpoint, architecturePackPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, firstClickProof, firstClickSmokeEndpoint, firstClickSmokePageEndpoint, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, observabilityOraclePageEndpoint, deployRecoveryEndpoint, and deployRecoveryPageEndpoint."
             }
           : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but autonomy snapshot/observability oracle/external evidence/task board/winner packet/winner sufficiency/win autopilot/objection arena/submission runway/submission assets/submission launch/architecture pack/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/first-click proof/first-click smoke/MVP snapshot/deploy recovery page/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
@@ -7215,6 +7261,7 @@ app.post("/a2a", async (req, res) => {
                 pilotValueSnapshotEndpoint: `${publicBaseUrl(req)}/pilot-value`,
                 pilotValueSnapshotJsonEndpoint: `${publicBaseUrl(req)}/api/pilot-value`,
                 observabilityOracleEndpoint: `${publicBaseUrl(req)}/api/observability-oracle`,
+                observabilityOraclePageEndpoint: `${publicBaseUrl(req)}/observability-oracle`,
                 judgeCommandEndpoint: `${publicBaseUrl(req)}/api/judge-command-center`,
                 deployRecoveryEndpoint: `${publicBaseUrl(req)}/api/deploy-recovery`,
                 deployRecoveryPageEndpoint: `${publicBaseUrl(req)}/deploy-recovery`,

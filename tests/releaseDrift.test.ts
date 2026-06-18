@@ -55,6 +55,7 @@ const requiredAgentCardSignals = [
   "judge.first-click-smoke:tag:first-click-smoke-lock",
   "mvp.snapshot:tag:get-proof",
   "autonomy.snapshot:tag:get-proof",
+  "observability.oracle:tag:observability-oracle-lock",
   "recording.script:tag:get-proof",
   "submission.launch:tag:get-proof",
   "submission.package:tag:get-proof",
@@ -172,7 +173,7 @@ describe("release drift guard", () => {
           ...passedProbe("agent-card-skill-surface"),
           status: "watch",
           score: 58,
-          evidence: "Target Agent Card exposes all skill ids but is missing autonomy.snapshot:tag:get-proof, competitive.battlecard:tag:criteria-duel, competitive.battlecard:tag:win-loss-lock, competitive.snapshot:tag:get-proof, deploy.recover:tag:get-proof, judge.first-click-smoke:tag:first-click-smoke-lock, judge.first-click:tag:first-click-route-lock, judge.objection-arena:tag:objection-lock, judge.snapshot:tag:get-proof, mvp.snapshot:tag:get-proof, recording.script:tag:get-proof, submission.launch:tag:get-proof, submission.package:tag:get-proof, win.autopilot:tag:win-autopilot-lock, winner.sufficiency:tag:winner-sufficiency-lock, and pilot.value.snapshot:tag:get-proof."
+          evidence: "Target Agent Card exposes all skill ids but is missing autonomy.snapshot:tag:get-proof, competitive.battlecard:tag:criteria-duel, competitive.battlecard:tag:win-loss-lock, competitive.snapshot:tag:get-proof, deploy.recover:tag:get-proof, judge.first-click-smoke:tag:first-click-smoke-lock, judge.first-click:tag:first-click-route-lock, judge.objection-arena:tag:objection-lock, judge.snapshot:tag:get-proof, mvp.snapshot:tag:get-proof, observability.oracle:tag:observability-oracle-lock, recording.script:tag:get-proof, submission.launch:tag:get-proof, submission.package:tag:get-proof, win.autopilot:tag:win-autopilot-lock, winner.sufficiency:tag:winner-sufficiency-lock, and pilot.value.snapshot:tag:get-proof."
         },
         passedProbe("acceptance-endpoint"),
         passedProbe("a2a-artifact"),
@@ -193,6 +194,7 @@ describe("release drift guard", () => {
       "judge.objection-arena:tag:objection-lock",
       "judge.snapshot:tag:get-proof",
       "mvp.snapshot:tag:get-proof",
+      "observability.oracle:tag:observability-oracle-lock",
       "pilot.value.snapshot:tag:get-proof",
       "recording.script:tag:get-proof",
       "submission.launch:tag:get-proof",
@@ -201,7 +203,7 @@ describe("release drift guard", () => {
       "winner.packet:tag:get-proof",
       "winner.sufficiency:tag:winner-sufficiency-lock"
     ]);
-    expect(guard.summary).toContain("0 required skills and 17 required Agent Card signals");
+    expect(guard.summary).toContain("0 required skills and 18 required Agent Card signals");
     expect(guard.runbook.join("\n")).toContain('or .id=="autonomy.snapshot" or .id=="recording.script" or .id=="submission.launch"');
     expect(guard.runbook.join("\n")).toContain('or .id=="win.autopilot"');
     expect(guard.runbook.join("\n")).toContain('or .id=="winner.sufficiency"');
@@ -210,6 +212,7 @@ describe("release drift guard", () => {
     expect(guard.runbook.join("\n")).toContain("/winner-sufficiency");
     expect(guard.runbook.join("\n")).toContain("/api/mvp-readiness");
     expect(guard.runbook.join("\n")).toContain("/api/autonomy-snapshot");
+    expect(guard.runbook.join("\n")).toContain("/observability-oracle");
     expect(guard.runbook.join("\n")).toContain("/api/recording-script");
     expect(guard.runbook.join("\n")).toContain("/api/submission-launch");
     expect(guard.runbook.join("\n")).toContain("/api/pilot-value");
@@ -228,6 +231,7 @@ describe("release drift guard", () => {
         "judge.objection-arena:tag:objection-lock",
         "judge.snapshot:tag:get-proof",
         "mvp.snapshot:tag:get-proof",
+        "observability.oracle:tag:observability-oracle-lock",
         "pilot.value.snapshot:tag:get-proof",
         "recording.script:tag:get-proof",
         "submission.launch:tag:get-proof",

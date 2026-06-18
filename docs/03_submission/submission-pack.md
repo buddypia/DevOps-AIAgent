@@ -186,6 +186,8 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/squad-optimizer \
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/live-evidence \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"budget":140,"maxSquadSize":4}'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/observability-oracle | rg 'Observability Oracle Proof|Operate Loop'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/api/observability-oracle | jq '{readiness, oracleScore, receipts: (.receipts | length), loop: (.loop | length)}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/observability-oracle \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"budget":140,"maxSquadSize":4}'

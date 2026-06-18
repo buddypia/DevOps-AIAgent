@@ -5,7 +5,7 @@ import { buildImpactCase } from "../src/impact";
 import { buildLiveEvidenceRun, type LiveEvidenceProbe } from "../src/liveEvidence";
 import { DEFAULT_PROJECT_BRIEF } from "../src/market";
 import { buildMissionRun } from "../src/mission";
-import { buildObservabilityOracle } from "../src/observabilityOracle";
+import { buildObservabilityOracle, OBSERVABILITY_ORACLE_REQUIRED_SIGNAL, OBSERVABILITY_ORACLE_SKILL_ID, renderObservabilityOracleHtml } from "../src/observabilityOracle";
 import { buildOpsDrill } from "../src/ops";
 import { buildPilotEconomics } from "../src/pilotEconomics";
 import type { CiProof } from "../src/proof";
@@ -110,9 +110,22 @@ describe("observability oracle", () => {
     expect(oracle.loop.map((step) => step.phase)).toEqual(["observe", "decide", "monetize", "rebuy", "seal"]);
     expect(oracle.a2aPayload).toMatchObject({
       method: "message/send",
-      skill: "observability.oracle",
-      readiness: "operator-ready"
+      skill: OBSERVABILITY_ORACLE_SKILL_ID,
+      readiness: "operator-ready",
+      endpoints: {
+        observabilityOraclePage: `${SUBMISSION_PROOF.deployedUrl}/observability-oracle`
+      }
     });
+    expect(OBSERVABILITY_ORACLE_REQUIRED_SIGNAL).toBe("observability.oracle:tag:observability-oracle-lock");
+
+    const html = renderObservabilityOracleHtml({
+      ...oracle,
+      headline: "<script>alert('ops')</script>"
+    });
+    expect(html).toContain("Observability Oracle Proof");
+    expect(html).toContain("Operate Loop");
+    expect(html).toContain("&lt;script&gt;alert(&#39;ops&#39;)&lt;/script&gt;");
+    expect(html).not.toContain("<script>alert('ops')</script>");
   });
 
   test("requires recovery when live proof or runtime signals fail", () => {

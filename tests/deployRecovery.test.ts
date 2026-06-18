@@ -46,6 +46,7 @@ const requiredAgentCardSignals = [
   "judge.snapshot:tag:get-proof",
   "mvp.snapshot:tag:get-proof",
   "autonomy.snapshot:tag:get-proof",
+  "observability.oracle:tag:observability-oracle-lock",
   "recording.script:tag:get-proof",
   "pilot.value.snapshot:tag:get-proof"
 ];
@@ -201,6 +202,7 @@ describe("deploy recovery plan", () => {
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("judge.snapshot:tag:get-proof");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("mvp.snapshot:tag:get-proof");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("autonomy.snapshot:tag:get-proof");
+    expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("observability.oracle:tag:observability-oracle-lock");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("recording.script:tag:get-proof");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("pilot.value.snapshot:tag:get-proof");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("competitive.snapshot:tag:get-proof");
@@ -213,7 +215,9 @@ describe("deploy recovery plan", () => {
     });
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="winner.sufficiency"');
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="win.autopilot"');
-    expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="autonomy.snapshot" or .id=="recording.script"');
+    expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="observability.oracle"');
+    expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="autonomy.snapshot"');
+    expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="recording.script"');
     expect(plan.commands.find((command) => command.id === "verify-mvp-readiness")?.command).toContain("/api/mvp-readiness");
     expect(plan.commands.find((command) => command.id === "verify-autonomy-snapshot")?.why).toContain("Autonomy Snapshot");
     expect(plan.commands.find((command) => command.id === "verify-recording-script")?.why).toContain("Recording Script");
@@ -226,6 +230,8 @@ describe("deploy recovery plan", () => {
     expect(plan.judgeScript.join("\n")).toContain("mvp.snapshot:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("autonomy.snapshot:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("/api/autonomy-snapshot");
+    expect(plan.judgeScript.join("\n")).toContain("observability.oracle:tag:observability-oracle-lock");
+    expect(plan.judgeScript.join("\n")).toContain("/observability-oracle");
     expect(plan.judgeScript.join("\n")).toContain("recording.script:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("pilot.value.snapshot:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("winner.packet:tag:get-proof");
@@ -244,6 +250,7 @@ describe("deploy recovery plan", () => {
           "competitive.snapshot:tag:get-proof",
           "judge.snapshot:tag:get-proof",
           "mvp.snapshot:tag:get-proof",
+          "observability.oracle:tag:observability-oracle-lock",
           "pilot.value.snapshot:tag:get-proof",
           "recording.script:tag:get-proof",
           "win.autopilot:tag:win-autopilot-lock",

@@ -134,8 +134,8 @@
 
 - `GET /judge-snapshot`: Judge Proof、Competitive Battlecard、Criteria Duel、Competitive SWOT、Autonomy Snapshot、MVP Readiness、Deploy Recovery、Pilot Value、Recording Script、Architecture Pack、Submission Launch、Submission Assets、Agent Card、CI、深掘り用POST curlを、審査員が直接読める初回HTML証拠ページへ束ねる
 - `GET /api/judge-snapshot`: 同じ証拠をA2A/自動検証用のJSONとして返す
-- Judge First-Click Strip: Cloud Runトップ画面直下で `/judge-snapshot`、`/winner-packet`、`/objection-arena`、`/competitive-swot`、`/mvp-readiness`、`/deploy-recovery`、`/autonomy-snapshot`、`/pilot-value`、`/recording-script`、`/architecture-pack`、`/submission-launch`、`/submission-assets` をPOSTなしの証拠入口として固定し、Agent Cardの `judge.first-click` / `first-click-route-lock` とA2A artifactの `firstClickProof` で自動検収する
-- First-Click Smoke Lock: `/api/first-click-smoke` と `/first-click-smoke` が12本のGET証拠ページに固有title sentinelが含まれるかを検査し、SPA fallbackの200を `smoke-failed` として検出する
+- Judge First-Click Strip: Cloud Runトップ画面直下で `/win-autopilot`、`/judge-snapshot`、`/winner-packet`、`/objection-arena`、`/competitive-swot`、`/mvp-readiness`、`/deploy-recovery`、`/autonomy-snapshot`、`/pilot-value`、`/recording-script`、`/architecture-pack`、`/submission-launch`、`/submission-assets` をPOSTなしの証拠入口として固定し、Agent Cardの `judge.first-click` / `first-click-route-lock` とA2A artifactの `firstClickProof` で自動検収する
+- First-Click Smoke Lock: `/api/first-click-smoke` と `/first-click-smoke` が13本のGET証拠ページに固有title sentinelが含まれるかを検査し、SPA fallbackの200を `smoke-failed` として検出する
 - Direct-open proof: ProtoPediaや提出本文に貼ったリンクが、POST method errorや生JSONではなくreadiness、proof score、競合/SWOT証拠、運用証拠を返す
 - Live drift option: `/api/judge-snapshot?live=1` の時だけRelease Drift Guardを実行し、通常HTMLは初回表示の安定性を優先する
 - A2A payload: `judge.snapshot` skillとしてdirectOpen、readiness、proof score、Criteria Duel score、GET証拠endpoint群、POST深掘りendpoint群を返す
@@ -296,8 +296,8 @@
 
 ## Release Drift Surface
 
-- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Feature Freeze Lock tag、Winner Release Lock tag、Winner Sufficiency Lock tag、Objection Lock tag、First-Click Smoke Lock tag、Finalist Release Drift tag、Criteria Duel tag、GET Proof Snapshot tag、Recording Script tag、Submission Launch tag、Architecture Pack tag、Pilot Value tag、Deploy Recovery GET Proof tag、Acceptance Matrix、A2A artifactを返しているかを検査する
-- Drift probes: target health、Agent Card skill surface、Acceptance Matrix endpoint、MVP Readiness endpoint、Recording Script endpoint、Architecture Pack endpoint、Submission Launch endpoint、Pilot Value endpoint、Objection Arena endpoint、First-Click Smoke endpoint、Winner Sufficiency page、Deploy Recovery page、A2A artifact endpoints、latest main CIを同時に評価する
+- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Feature Freeze Lock tag、Winner Release Lock tag、Winner Sufficiency Lock tag、Observability Oracle Lock tag、Objection Lock tag、First-Click Smoke Lock tag、Finalist Release Drift tag、Criteria Duel tag、GET Proof Snapshot tag、Recording Script tag、Submission Launch tag、Architecture Pack tag、Pilot Value tag、Deploy Recovery GET Proof tag、Acceptance Matrix、A2A artifactを返しているかを検査する
+- Drift probes: target health、Agent Card skill surface、Acceptance Matrix endpoint、MVP Readiness endpoint、Observability Oracle page、Recording Script endpoint、Architecture Pack endpoint、Submission Launch endpoint、Pilot Value endpoint、Objection Arena endpoint、First-Click Smoke endpoint、Winner Sufficiency page、Deploy Recovery page、A2A artifact endpoints、latest main CIを同時に評価する
 - Verdict: 最新なら `release-current`、公開URLが古いなら `deploy-drift`、health/CIが落ちたら `release-blocked`
 - Runbook: `gcloud auth login`、Cloud Build submit、Agent Card skill count、MVP Readiness、Recording Script、Pilot Value、Acceptance Matrix、A2A artifactの再確認コマンドを返す
 - A2A payload: `release.drift` skillとしてdrift score、missing skills、redeploy action、target endpointを返す
@@ -308,7 +308,7 @@
 - `GET /api/deploy-recovery`: 同じ復旧計画をA2A/自動検証用JSONとして返す
 - `POST /api/deploy-recovery`: project brief、選択agent、target URL、直近gcloudエラーを受け取り、再デプロイ復旧計画に変換する
 - Checks: target health、skill surface、Cloud Build auth、A2A artifact、latest main CIをready/watch/blockedで返す
-- Commands: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Recording Lock / Feature Freeze Lock / Winner Release Lock / Finalist Release Drift / Criteria Duel / GET Proof Snapshot / MVP Readiness Snapshot / Recording Script / Pilot Value / Deploy Recovery のrequired signal tags、`/api/mvp-readiness`、`/api/recording-script`、`/api/pilot-value`、`/deploy-recovery`、`/api/deploy-recovery`、A2A `recordingScriptPageEndpoint` / `pilotValueSnapshotEndpoint` / `deployRecoveryEndpoint` / `deployRecoveryPageEndpoint` の再検証コマンドを返す
+- Commands: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Recording Lock / Feature Freeze Lock / Winner Release Lock / Observability Oracle Lock / Finalist Release Drift / Criteria Duel / GET Proof Snapshot / MVP Readiness Snapshot / Recording Script / Pilot Value / Deploy Recovery のrequired signal tags、`/observability-oracle`、`/api/mvp-readiness`、`/api/recording-script`、`/api/pilot-value`、`/deploy-recovery`、`/api/deploy-recovery`、A2A `observabilityOraclePageEndpoint` / `recordingScriptPageEndpoint` / `pilotValueSnapshotEndpoint` / `deployRecoveryEndpoint` / `deployRecoveryPageEndpoint` の再検証コマンドを返す
 - A2A payload: `deploy.recover` skillとしてrecovery score、readiness、blocking commands、blockersを返す
 
 ## Demo Receipt Surface
@@ -458,6 +458,13 @@
 - Rebuy loop: A2A Market BrokerがObservability Oracle / Test Forge / Security Sentinelの買い足しを推薦する
 - Runbook: `/api/healthz`、ops drill、Cloud Run describe、Cloud Logging、traffic updateコマンドを提示する
 - A2A payload: `ops.drill` skillとしてseverity、signals、rollbackRecommended、nextOpsAgentを返す
+
+## Observability Oracle Surface
+
+- `GET /observability-oracle`: Live Evidence、Ops Drill、Pilot Economicsを束ね、AIの継続/復旧判断、買い手価値SLO、次のAI雇用を審査員が直接読めるHTMLで返す
+- `GET /api/observability-oracle`: 同じ運用判断をA2A/自動検証用JSONとして返す
+- `POST /api/observability-oracle`: project brief、選択agent、予算条件を受け取り、運用観測を買い手価値のreceiptへ変換する
+- A2A payload: `observability.oracle` skillとしてreadiness、oracle score、receipts、operate loop、`observabilityOraclePage` endpointを返す
 
 ## Proof Surface
 
