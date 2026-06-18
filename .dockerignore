@@ -7,3 +7,5 @@ raw
 coverage
 test-results
 playwright-report
+.playwright-cli
+.tmp
