@@ -3,7 +3,14 @@ import type { JudgeDrill, JudgeObjection } from "./judgeDrill.js";
 import type { MissionRun } from "./mission.js";
 import type { OpsDrill } from "./ops.js";
 import type { PitchChecklistItem, PitchRun } from "./pitch.js";
-import { SUBMISSION_PROOF, hasSubmissionUrl } from "./submission.js";
+import {
+  SUBMISSION_PROOF,
+  hasSubmissionUrl,
+  normalizeSubmissionUrl,
+  type SubmissionUrlEvidence,
+  validProtoPediaUrl,
+  validVideoUrl
+} from "./submission.js";
 import type { JudgeCriterion, WinningStrategy } from "./strategy.js";
 import type { Recommendation } from "./types.js";
 
@@ -32,6 +39,15 @@ export type FinalistGap = {
   owner: string;
   action: string;
   proof: string;
+};
+
+type ExternalUrlState = "ready" | "missing" | "invalid";
+
+type FinalistSubmissionState = {
+  protopediaUrl: string;
+  protopedia: ExternalUrlState;
+  videoUrl: string;
+  video: ExternalUrlState;
 };
 
 export type FinalistInternalLockCheck = {
@@ -144,30 +160,91 @@ function panel(input: {
   };
 }
 
-function checklistGaps(items: PitchChecklistItem[]) {
-  return items
-    .filter((item) => item.status === "watch")
-    .map((item) => ({
-      id: item.id,
-      label: item.label,
-      severity: item.id === "protopedia" || item.id === "video" ? "external" : "watch",
-      owner: item.id === "video" ? "Pitch Director" : "Submission owner",
-      action: item.id === "video" ? "30秒リールを録画し、動画URLを提出欄へ貼る" : `${item.label}を提出欄へ貼る`,
-      proof: item.proof
-    })) satisfies FinalistGap[];
+function urlState(value: string, valid: boolean): ExternalUrlState {
+  if (!value) return "missing";
+  return valid ? "ready" : "invalid";
 }
 
-function submissionGaps(strategy: WinningStrategy) {
+function buildSubmissionState(urls: SubmissionUrlEvidence | undefined): FinalistSubmissionState {
+  const protopediaUrl = normalizeSubmissionUrl(urls?.protopediaUrl ?? SUBMISSION_PROOF.protopediaUrl);
+  const videoUrl = normalizeSubmissionUrl(urls?.videoUrl ?? SUBMISSION_PROOF.videoUrl);
+  return {
+    protopediaUrl,
+    protopedia: urlState(protopediaUrl, validProtoPediaUrl(protopediaUrl)),
+    videoUrl,
+    video: urlState(videoUrl, validVideoUrl(videoUrl))
+  };
+}
+
+function submissionUrlGap(id: "protopedia" | "video", state: ExternalUrlState): FinalistGap | null {
+  if (state === "ready") return null;
+  if (id === "protopedia") {
+    return {
+      id,
+      label: "ProtoPedia作品",
+      severity: state === "invalid" ? "blocker" : "external",
+      owner: "Submission owner",
+      action:
+        state === "invalid"
+          ? "https://protopedia.net/prototype/... の作品URLを入力する"
+          : "競合/SWOT/審査スコア画面を構成図とストーリーに入れる",
+      proof: state === "invalid" ? "ProtoPedia URL is not a valid protopedia.net https URL." : "作品ページ、動画、構成図、タグ findy_hackathon は提出直前作業。"
+    };
+  }
+  return {
+    id,
+    label: "Video URL",
+    severity: state === "invalid" ? "blocker" : "external",
+    owner: "Pitch Director",
+    action: state === "invalid" ? "YouTubeまたはVimeoのhttps動画URLを入力する" : "30秒リールを録画し、動画URLを提出欄へ貼る",
+    proof: state === "invalid" ? "Video URL is not a valid YouTube or Vimeo https URL." : "Demo RunwayとPitch Directorの30秒構成を録画して貼る。"
+  };
+}
+
+function checklistGaps(items: PitchChecklistItem[], submissionState: FinalistSubmissionState) {
+  return items
+    .filter((item) => item.status === "watch")
+    .flatMap((item) => {
+      if (item.id === "protopedia") {
+        const gap = submissionUrlGap("protopedia", submissionState.protopedia);
+        return gap ? [gap] : [];
+      }
+      if (item.id === "video") {
+        const gap = submissionUrlGap("video", submissionState.video);
+        return gap ? [gap] : [];
+      }
+      return [
+        {
+          id: item.id,
+          label: item.label,
+          severity: "watch",
+          owner: "Submission owner",
+          action: `${item.label}を提出欄へ貼る`,
+          proof: item.proof
+        } satisfies FinalistGap
+      ];
+    });
+}
+
+function submissionGaps(strategy: WinningStrategy, submissionState: FinalistSubmissionState) {
   return strategy.submissionItems
     .filter((item) => !item.done)
-    .map((item) => ({
-      id: item.id,
-      label: item.label,
-      severity: item.id === "protopedia" ? "external" : "watch",
-      owner: "Submission owner",
-      action: item.nextAction,
-      proof: item.proof
-    })) satisfies FinalistGap[];
+    .flatMap((item) => {
+      if (item.id === "protopedia") {
+        const gap = submissionUrlGap("protopedia", submissionState.protopedia);
+        return gap ? [gap] : [];
+      }
+      return [
+        {
+          id: item.id,
+          label: item.label,
+          severity: "watch",
+          owner: "Submission owner",
+          action: item.nextAction,
+          proof: item.proof
+        } satisfies FinalistGap
+      ];
+    });
 }
 
 function uniqueGaps(gaps: FinalistGap[]) {
@@ -194,6 +271,7 @@ function buildInternalLock(input: {
   const holdCount = input.panels.filter((panel) => panel.verdict === "hold").length;
   const externalGapCount = input.gaps.filter((gap) => gap.severity === "external").length;
   const externalBlockerCount = input.gaps.filter((gap) => gap.severity === "blocker").length;
+  const externalTruthGaps = input.gaps.filter((gap) => gap.severity === "external" || gap.severity === "blocker");
   const swotCount =
     input.strategy.swot.strengths.length +
     input.strategy.swot.weaknesses.length +
@@ -241,8 +319,10 @@ function buildInternalLock(input: {
       label: "External submission truth stays visible",
       status: externalBlockerCount > 0 ? "blocked" : externalGapCount > 0 ? "watch" : "sealed",
       proof:
-        externalGapCount > 0
-          ? `${externalGapCount} external gaps remain: ${input.gaps.map((gap) => gap.id).join(", ")}.`
+        externalBlockerCount > 0
+          ? `${externalBlockerCount} invalid external URL gaps remain: ${externalTruthGaps.map((gap) => gap.id).join(", ")}.`
+          : externalGapCount > 0
+            ? `${externalGapCount} external gaps remain: ${externalTruthGaps.map((gap) => gap.id).join(", ")}.`
           : "ProtoPedia and video submission gaps are closed.",
       evidenceUrl: absoluteUrl(base, "/api/submission-closeout")
     })
@@ -288,8 +368,9 @@ export function buildFinalistSimulation(input: {
   pitch: PitchRun;
   judgeDrill: JudgeDrill;
   squadContract: SquadContract;
+  submissionUrls?: SubmissionUrlEvidence;
 }): FinalistSimulation {
-  const { baseUrl, recommendation, strategy, mission, opsDrill, pitch, judgeDrill, squadContract } = input;
+  const { baseUrl, recommendation, strategy, mission, opsDrill, pitch, judgeDrill, squadContract, submissionUrls } = input;
   const appUrl = mission.submissionPack.deployedUrl || baseUrl;
   const proofUrl = absoluteUrl(baseUrl, "/api/proof");
   const finalistUrl = absoluteUrl(baseUrl, "/api/finalist");
@@ -299,8 +380,9 @@ export function buildFinalistSimulation(input: {
   const pitchUrl = absoluteUrl(baseUrl, "/api/pitch");
   const contractUrl = absoluteUrl(baseUrl, "/api/contracts");
   const ciReady = hasSubmissionUrl(SUBMISSION_PROOF.ciWorkflowUrl) ? 100 : 45;
-  const externalGaps = uniqueGaps([...submissionGaps(strategy), ...checklistGaps(pitch.recordingChecklist)]);
-  const externalPenalty = externalGaps.filter((gap) => gap.severity === "external").length * 2;
+  const submissionState = buildSubmissionState(submissionUrls);
+  const externalGaps = uniqueGaps([...submissionGaps(strategy, submissionState), ...checklistGaps(pitch.recordingChecklist, submissionState)]);
+  const externalPenalty = externalGaps.filter((gap) => gap.severity === "external").length * 2 + externalGaps.filter((gap) => gap.severity === "blocker").length * 18;
   const selectedAgentNames = recommendation.selected.map((agent) => agent.name).join(" / ") || "A2A Market Broker";
 
   const agentCentrality = criterion(strategy, "agentCentrality");
@@ -441,6 +523,16 @@ export function buildFinalistSimulation(input: {
         severity: gap.severity,
         action: gap.action
       })),
+      submissionUrls: {
+        protopedia: {
+          status: submissionState.protopedia,
+          url: submissionState.protopediaUrl || null
+        },
+        video: {
+          status: submissionState.video,
+          url: submissionState.videoUrl || null
+        }
+      },
       internalLock: {
         lockScore: internalLock.lockScore,
         internalScore: internalLock.internalScore,

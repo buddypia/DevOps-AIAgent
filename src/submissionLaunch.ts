@@ -2,7 +2,7 @@ import type { SubmissionDossier } from "./dossier.js";
 import type { MvpAuditReport } from "./mvpAudit.js";
 import type { JudgeProof } from "./proof.js";
 import type { ProtoPediaPublisher } from "./publisher.js";
-import { SUBMISSION_PROOF } from "./submission.js";
+import { normalizeSubmissionUrl, SUBMISSION_PROOF, validProtoPediaUrl, validVideoUrl } from "./submission.js";
 
 export type LaunchReadiness = "submit-ready" | "needs-external-urls" | "invalid-urls";
 export type LaunchItemStatus = "ready" | "missing" | "invalid";
@@ -81,32 +81,6 @@ function average(values: number[]) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-function trimUrl(value: string | undefined) {
-  return value?.trim() ?? "";
-}
-
-function parsedHttpsUrl(value: string) {
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === "https:" ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-function validProtoPediaUrl(value: string) {
-  const parsed = parsedHttpsUrl(value);
-  if (!parsed) return false;
-  return parsed.hostname === "protopedia.net" || parsed.hostname.endsWith(".protopedia.net");
-}
-
-function validVideoUrl(value: string) {
-  const parsed = parsedHttpsUrl(value);
-  if (!parsed) return false;
-  const host = parsed.hostname.replace(/^www\./, "");
-  return host === "youtube.com" || host === "youtu.be" || host === "vimeo.com";
-}
-
 function statusScore(status: LaunchItemStatus) {
   if (status === "ready") return 100;
   if (status === "missing") return 58;
@@ -168,8 +142,8 @@ export function buildSubmissionLaunchGate(input: {
   proof: JudgeProof;
   publisher: ProtoPediaPublisher;
 }): SubmissionLaunchGate {
-  const protopediaUrl = trimUrl(input.protopediaUrl);
-  const videoUrl = trimUrl(input.videoUrl);
+  const protopediaUrl = normalizeSubmissionUrl(input.protopediaUrl);
+  const videoUrl = normalizeSubmissionUrl(input.videoUrl);
   const copyBlock = (id: string) => input.dossier.copyBlocks.find((block) => block.id === id);
   const pasteField = (id: string) => input.publisher.pasteFields.find((field) => field.id === id);
   const tags = pasteField("tags")?.value ?? "";

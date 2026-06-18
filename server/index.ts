@@ -120,6 +120,13 @@ function selfProbeHeaders(req: express.Request, extraHeaders: Record<string, str
   };
 }
 
+function submissionUrlEvidence(input: { protopediaUrl?: string; videoUrl?: string }) {
+  return {
+    protopediaUrl: input.protopediaUrl,
+    videoUrl: input.videoUrl
+  };
+}
+
 function agentCard(baseUrl: string) {
   return {
     protocolVersion: "0.3.0",
@@ -403,8 +410,8 @@ function agentCard(baseUrl: string) {
       {
         id: "finalist.simulate",
         name: "Simulate finalist judging panel",
-        description: "審査員5役の模擬判定で、最終候補スコア、Finalist Internal Lock、残ギャップ、次の一手を返す。",
-        tags: ["finalist", "judge-panel", "mvp", "scorecard", "submission", "internal-lock"]
+        description: "審査員5役の模擬判定で、最終候補スコア、Finalist Internal Lock、外部URL status、次の一手を返す。",
+        tags: ["finalist", "judge-panel", "mvp", "scorecard", "submission", "internal-lock", "submission-url"]
       },
       {
         id: "judge.proof",
@@ -1696,7 +1703,8 @@ app.post("/api/judge-tour", async (req, res) => {
     opsDrill,
     pitch,
     judgeDrill,
-    squadContract
+    squadContract,
+    submissionUrls: submissionUrlEvidence(parsed.data)
   });
   const publisher = buildProtoPediaPublisher({
     baseUrl,
@@ -2474,7 +2482,8 @@ app.post("/api/acceptance-matrix", async (req, res) => {
     opsDrill,
     pitch,
     judgeDrill,
-    squadContract
+    squadContract,
+    submissionUrls: submissionUrlEvidence(parsed.data)
   });
   const publisher = buildProtoPediaPublisher({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist });
   const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher });
@@ -2639,7 +2648,8 @@ app.post("/api/judge-command-center", async (req, res) => {
     opsDrill,
     pitch,
     judgeDrill,
-    squadContract
+    squadContract,
+    submissionUrls: submissionUrlEvidence(parsed.data)
   });
   const publisher = buildProtoPediaPublisher({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist });
   const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher });
@@ -2839,7 +2849,8 @@ app.post("/api/demo-concierge", async (req, res) => {
     opsDrill,
     pitch,
     judgeDrill,
-    squadContract
+    squadContract,
+    submissionUrls: submissionUrlEvidence(parsed.data)
   });
   const publisher = buildProtoPediaPublisher({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist });
   const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher });
@@ -3048,7 +3059,8 @@ app.post("/api/prize-strategy", async (req, res) => {
     opsDrill,
     pitch,
     judgeDrill,
-    squadContract
+    squadContract,
+    submissionUrls: submissionUrlEvidence(parsed.data)
   });
   const publisher = buildProtoPediaPublisher({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist });
   const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher });
@@ -3269,7 +3281,8 @@ app.post("/api/win-gap-radar", async (req, res) => {
     opsDrill,
     pitch,
     judgeDrill,
-    squadContract
+    squadContract,
+    submissionUrls: submissionUrlEvidence(parsed.data)
   });
   const publisher = buildProtoPediaPublisher({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist });
   const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher });
@@ -3592,7 +3605,8 @@ app.post("/api/submission-launch", async (req, res) => {
     opsDrill,
     pitch,
     judgeDrill,
-    squadContract
+    squadContract,
+    submissionUrls: submissionUrlEvidence(parsed.data)
   });
   const publisher = buildProtoPediaPublisher({
     baseUrl: publicBaseUrl(req),
@@ -3709,7 +3723,8 @@ app.post("/api/submission-closeout", async (req, res) => {
     opsDrill,
     pitch,
     judgeDrill,
-    squadContract
+    squadContract,
+    submissionUrls: submissionUrlEvidence(parsed.data)
   });
   const publisher = buildProtoPediaPublisher({
     baseUrl,
@@ -3825,7 +3840,8 @@ app.post("/api/judge-rehearsal", async (req, res) => {
     opsDrill,
     pitch,
     judgeDrill,
-    squadContract
+    squadContract,
+    submissionUrls: submissionUrlEvidence(parsed.data)
   });
   const publisher = buildProtoPediaPublisher({
     baseUrl,
@@ -4056,7 +4072,8 @@ app.post("/api/winner-packet", async (req, res) => {
     opsDrill,
     pitch,
     judgeDrill,
-    squadContract
+    squadContract,
+    submissionUrls: submissionUrlEvidence(parsed.data)
   });
   const publisher = buildProtoPediaPublisher({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist });
   const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher });
@@ -4293,7 +4310,8 @@ app.post("/api/submission-runway", async (req, res) => {
     opsDrill,
     pitch,
     judgeDrill,
-    squadContract
+    squadContract,
+    submissionUrls: submissionUrlEvidence(parsed.data)
   });
   const publisher = buildProtoPediaPublisher({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist });
   const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher });
@@ -4680,7 +4698,7 @@ app.post("/api/judge-drill", (req, res) => {
 });
 
 app.post("/api/finalist", (req, res) => {
-  const parsed = RecommendSchema.safeParse(req.body);
+  const parsed = LaunchSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
     return;
@@ -4716,7 +4734,8 @@ app.post("/api/finalist", (req, res) => {
       opsDrill,
       pitch,
       judgeDrill,
-      squadContract
+      squadContract,
+      submissionUrls: submissionUrlEvidence(parsed.data)
     })
   );
 });

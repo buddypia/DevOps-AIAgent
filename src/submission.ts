@@ -6,6 +6,39 @@ export const SUBMISSION_PROOF = {
   videoUrl: ""
 } as const;
 
+export type SubmissionUrlEvidence = {
+  protopediaUrl?: string;
+  videoUrl?: string;
+};
+
 export function hasSubmissionUrl(value: string) {
   return value.startsWith("https://");
+}
+
+export function normalizeSubmissionUrl(value: string | undefined) {
+  return value?.trim() ?? "";
+}
+
+function parsedHttpsUrl(value: string | undefined) {
+  const trimmed = normalizeSubmissionUrl(value);
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "https:" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function validProtoPediaUrl(value: string | undefined) {
+  const parsed = parsedHttpsUrl(value);
+  if (!parsed) return false;
+  return parsed.hostname === "protopedia.net" || parsed.hostname.endsWith(".protopedia.net");
+}
+
+export function validVideoUrl(value: string | undefined) {
+  const parsed = parsedHttpsUrl(value);
+  if (!parsed) return false;
+  const host = parsed.hostname.replace(/^www\./, "");
+  return host === "youtube.com" || host === "youtu.be" || host === "vimeo.com";
 }
