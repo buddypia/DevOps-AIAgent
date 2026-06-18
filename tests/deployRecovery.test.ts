@@ -7,6 +7,7 @@ const expectedSkillIds = [
   "task.delegate",
   "external.evidence",
   "evidence.monitor",
+  "observability.oracle",
   "demo.receipt",
   "acceptance.matrix",
   "release.drift",
@@ -51,7 +52,7 @@ describe("deploy recovery plan", () => {
           ...passedProbe("agent-card-skill-surface"),
           status: "watch",
           score: 58,
-          evidence: "Target Agent Card exposes 29/43 skills."
+          evidence: "Target Agent Card exposes 29/44 skills."
         },
         {
           ...passedProbe("acceptance-endpoint"),

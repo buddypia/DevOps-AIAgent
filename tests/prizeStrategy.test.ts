@@ -54,6 +54,7 @@ const requiredSkillIds = [
   "task.delegate",
   "external.evidence",
   "evidence.monitor",
+  "observability.oracle",
   "demo.receipt",
   "acceptance.matrix",
   "release.drift",

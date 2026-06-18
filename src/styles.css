@@ -3874,6 +3874,46 @@ h1 {
     linear-gradient(90deg, #2f2d24, #6a5d36);
 }
 
+.observability-oracle .evidence-heading {
+  background:
+    linear-gradient(90deg, #18312f, #415d40);
+}
+
+.evidence-probes article.clear {
+  border-top-color: var(--green);
+  background: #f2f8ec;
+}
+
+.evidence-probes article.blocked {
+  border-top-color: var(--rose);
+  background: #fff1f2;
+}
+
+.evidence-probes article.clear span {
+  color: var(--green);
+}
+
+.evidence-probes article.blocked span {
+  color: #9d2d2d;
+}
+
+.oracle-receipts b {
+  color: #414a4d;
+  font-size: 0.76rem;
+  line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+
+.oracle-grid a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  color: var(--teal);
+  font-weight: 850;
+  text-decoration: none;
+}
+
 .drift-target-row {
   display: grid;
   grid-template-columns: minmax(180px, 0.24fr) minmax(260px, 1fr);

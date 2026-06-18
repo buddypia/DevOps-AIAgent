@@ -49,6 +49,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - User Pilot Labで、開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証する
 - Squad Optimizerで、予算内のAI編成を総当たりし、現行維持、交換、追加予算ギャップを判断する
 - Live Evidence Monitorで、Cloud Run、Agent Card、A2A、Squad Optimizer、GitHub Actions CIを公開環境からライブ検証する
+- Observability Oracleで、Live Evidence、Ops Drill、Pilot Economicsをつなぎ、運用観測を継続/復旧判断、買い手価値、次のAI雇用へ変換する
 - External Evidence Verifierで、公開GitHub、Cloud Run、ProtoPedia作品URL、動画URLが審査員から開けるかを検証する
 - Release Drift Guardで、公開Cloud Runが最新Agent Card、Acceptance Matrix、A2A artifactを返しているかを検査する
 - Deploy Recoveryで、release drift、gcloud認証、Cloud Build、公開再検証を復旧コマンドに変換する
@@ -126,8 +127,9 @@ React UI
 | 8-11s | Judge Tourで90秒導線、5つのjudge claims、外部URL不足を見せる |
 | 11-14s | Squad Optimizerで140予算内の最適編成、+22のUX追加ギャップ、swap planを見せる |
 | 14-16s | Moat Stress Testで「既存ツールでよくない？」への反論と見せる証拠を競合別に出す |
-| 16-19s | Live Evidence Monitorで公開Cloud Run、Agent Card、A2A、Optimizer、CIの5 probesを見せる |
-| 19-21s | Release Drift Guardで提出URLが最新skill surfaceか、古いrevisionならdeploy-driftかを見せる |
+| 16-18s | Live Evidence Monitorで公開Cloud Run、Agent Card、A2A、Optimizer、CIの5 probesを見せる |
+| 18-20s | Observability Oracleで公開証拠、継続/復旧判断、買い手価値SLO、次のAI雇用を見せる |
+| 20-21s | Release Drift Guardで提出URLが最新skill surfaceか、古いrevisionならdeploy-driftかを見せる |
 | 21-23s | Competitive Battlecardで競合別の短い回答、公式ソース、SWOT receiptsを見せる |
 | 23-24s | Deploy Recoveryでgcloud認証、Cloud Build、公開再検証コマンドを見せる |
 | 24-25s | Judge Demo Receiptでstamp、外部URLwatch、sha256 digestを控える |
@@ -180,6 +182,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/squad-optimizer \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"budget":140,"maxSquadSize":4}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/live-evidence \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"budget":140,"maxSquadSize":4}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/observability-oracle \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"budget":140,"maxSquadSize":4}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/external-evidence \

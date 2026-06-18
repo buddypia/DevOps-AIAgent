@@ -31,6 +31,7 @@ import { buildMarketIntelReport } from "../src/marketIntel.js";
 import { buildMissionRun } from "../src/mission.js";
 import { buildMoatStressTest } from "../src/moatStress.js";
 import { buildMvpAudit } from "../src/mvpAudit.js";
+import { buildObservabilityOracle } from "../src/observabilityOracle.js";
 import { buildOpsDrill } from "../src/ops.js";
 import { buildPilotEconomics } from "../src/pilotEconomics.js";
 import { buildPitchRun } from "../src/pitch.js";
@@ -261,6 +262,12 @@ function agentCard(baseUrl: string) {
         name: "Monitor live public proof",
         description: "Cloud Run health、Agent Card、A2A、Squad Optimizer、GitHub Actions CIを公開環境でプローブし、ライブ証拠スコアを返す。",
         tags: ["live-proof", "cloud-run", "a2a", "ci", "submission"]
+      },
+      {
+        id: "observability.oracle",
+        name: "Turn operations signals into buyer proof",
+        description: "Live Evidence、Ops Drill、Pilot Economicsを束ね、公開継続/復旧判断、買い手価値、次のAI雇用を運用証拠に変換する。",
+        tags: ["observability", "cloud-run", "ops", "roi", "a2a"]
       },
       {
         id: "release.drift",
@@ -1857,15 +1864,9 @@ app.post("/api/squad-optimizer", (req, res) => {
   );
 });
 
-app.post("/api/live-evidence", async (req, res) => {
-  const parsed = LiveEvidenceSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
-    return;
-  }
-
+async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<typeof LiveEvidenceSchema>) {
   const baseUrl = publicBaseUrl(req);
-  const selectedAgentIds = parsed.data.selectedAgentIds;
+  const selectedAgentIds = input.selectedAgentIds;
   const forwardedHeaders = selfProbeHeaders(req);
   const [healthProbe, cardProbe, optimizerProbe, a2aProbe, ci] = await Promise.all([
     liveJsonProbe({
@@ -1908,6 +1909,7 @@ app.post("/api/live-evidence", async (req, res) => {
         const hasSubmissionRunway = skills.some((skill) => skill.id === "submission.runway");
         const hasExternalEvidence = skills.some((skill) => skill.id === "external.evidence");
         const hasDeployRecovery = skills.some((skill) => skill.id === "deploy.recover");
+        const hasObservabilityOracle = skills.some((skill) => skill.id === "observability.oracle");
         return hasTaskDelegate &&
           hasEvidence &&
           hasOptimizer &&
@@ -1927,16 +1929,17 @@ app.post("/api/live-evidence", async (req, res) => {
           hasSubmissionRunway &&
           hasExternalEvidence &&
           hasDeployRecovery &&
-          skills.length >= 44
+          hasObservabilityOracle &&
+          skills.length >= 45
           ? {
               status: "passed",
               score: 100,
-              evidence: `Agent Card exposes ${skills.length} skills including task.delegate, external.evidence, winner.packet, submission.runway, judge.rehearsal, submission.closeout, win.gap.radar, demo.concierge, prize.strategy, competitive.battlecard, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
+              evidence: `Agent Card exposes ${skills.length} skills including observability.oracle, task.delegate, external.evidence, winner.packet, submission.runway, judge.rehearsal, submission.closeout, win.gap.radar, demo.concierge, prize.strategy, competitive.battlecard, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
             }
           : {
               status: "watch",
               score: 72,
-              evidence: `Agent Card exposes ${skills.length} skills; expected task delegate, external evidence, winner packet, submission runway, judge rehearsal, submission closeout, win gap radar, demo concierge, prize strategy, battlecard, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
+              evidence: `Agent Card exposes ${skills.length} skills; expected observability oracle, task delegate, external evidence, winner packet, submission runway, judge rehearsal, submission closeout, win gap radar, demo concierge, prize strategy, battlecard, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
             };
       }
     }),
@@ -1949,10 +1952,10 @@ app.post("/api/live-evidence", async (req, res) => {
         method: "POST",
         headers: selfProbeHeaders(req, { "Content-Type": "application/json" }),
         body: JSON.stringify({
-          projectBrief: parsed.data.projectBrief,
+          projectBrief: input.projectBrief,
           selectedAgentIds,
-          budget: parsed.data.budget,
-          maxSquadSize: parsed.data.maxSquadSize
+          budget: input.budget,
+          maxSquadSize: input.maxSquadSize
         })
       },
       evaluate: (payload) => {
@@ -1973,7 +1976,7 @@ app.post("/api/live-evidence", async (req, res) => {
         body: JSON.stringify({
           id: "live-evidence-monitor",
           method: "message/send",
-          params: { text: parsed.data.projectBrief }
+          params: { text: input.projectBrief }
         })
       },
       evaluate: (payload) => {
@@ -1996,14 +1999,15 @@ app.post("/api/live-evidence", async (req, res) => {
           data?.prizeStrategyEndpoint &&
           data?.winGapRadarEndpoint &&
           data?.submissionCloseoutEndpoint &&
-          data?.deployRecoveryEndpoint
+          data?.deployRecoveryEndpoint &&
+          data?.observabilityOracleEndpoint
           ? {
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
+                "A2A artifact exposes observabilityOracleEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but external evidence/task board/winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but observability oracle/external evidence/task board/winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -2018,10 +2022,70 @@ app.post("/api/live-evidence", async (req, res) => {
     required: true
   };
 
+  return buildLiveEvidenceRun({
+    baseUrl,
+    probes: [healthProbe, cardProbe, optimizerProbe, a2aProbe, ciProbe]
+  });
+}
+
+app.post("/api/live-evidence", async (req, res) => {
+  const parsed = LiveEvidenceSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  res.json(await buildLiveEvidenceForRequest(req, parsed.data));
+});
+
+app.post("/api/observability-oracle", async (req, res) => {
+  const parsed = LiveEvidenceSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "公開運用シグナルを読み、継続/復旧/買い手価値/次のAI雇用を1つのObservability Oracleに束ねる。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const [liveEvidence, ci] = await Promise.all([buildLiveEvidenceForRequest(req, parsed.data), fetchCiProof()]);
+  const securityReview = buildSecurityReview({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    allowlist: ipAllowlistSummary,
+    ci,
+    geminiSecretConfigured: geminiSecretConfigured()
+  });
+  const impactCase = buildImpactCase({ recommendation, strategy, opsDrill, securityReview });
+  const userPilot = buildUserPilotLab({
+    recommendation,
+    strategy,
+    impactCase,
+    opsDrill,
+    securityReview,
+    squadContract
+  });
+  const pilotEconomics = buildPilotEconomics({
+    recommendation,
+    strategy,
+    impactCase,
+    userPilot,
+    squadContract,
+    opsDrill,
+    securityReview
+  });
+
   res.json(
-    buildLiveEvidenceRun({
-      baseUrl,
-      probes: [healthProbe, cardProbe, optimizerProbe, a2aProbe, ciProbe]
+    buildObservabilityOracle({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy,
+      liveEvidence,
+      opsDrill,
+      pilotEconomics
     })
   );
 });
@@ -2093,6 +2157,7 @@ async function buildReleaseDriftForTarget(input: {
     "task.delegate",
     "external.evidence",
     "evidence.monitor",
+    "observability.oracle",
     "demo.receipt",
     "acceptance.matrix",
     "release.drift",
@@ -2203,13 +2268,14 @@ async function buildReleaseDriftForTarget(input: {
           data?.winGapRadarEndpoint &&
           data?.submissionCloseoutEndpoint &&
           data?.competitiveBattlecardEndpoint &&
+          data?.observabilityOracleEndpoint &&
           data?.deployRecoveryEndpoint
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, and deployRecoveryEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but external evidence/task board/winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but observability oracle/external evidence/task board/winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -4579,9 +4645,10 @@ app.post("/a2a", async (req, res) => {
     "DevOps x AI Agent marketplace request";
   const baseUrl = publicBaseUrl(req);
   const isReleaseDriftGuardProbe = id === "release-drift-guard";
+  const isEndpointSurfaceProbe = isReleaseDriftGuardProbe || id === "live-evidence-monitor";
   const recommendation = recommendSquad(String(text), ["market-broker", "gemini-strategist", "cloud-run-sre"], 140);
   const strategy = buildWinningStrategy(recommendation);
-  const ci = isReleaseDriftGuardProbe ? ciUnavailable("A2A release-drift probe skips live CI to avoid recursive proof calls") : await fetchCiProof();
+  const ci = isEndpointSurfaceProbe ? ciUnavailable("A2A endpoint-surface probe skips live CI to avoid recursive proof calls") : await fetchCiProof();
   const mission = buildMissionRun(recommendation, strategy, String(text));
   const opsDrill = buildOpsDrill(recommendation, strategy);
   const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
@@ -4756,6 +4823,46 @@ app.post("/a2a", async (req, res) => {
     opsDrill,
     securityReview
   });
+  const artifactLiveEvidence = buildLiveEvidenceRun({
+    baseUrl: publicBaseUrl(req),
+    probes: [
+      {
+        id: "agent-card",
+        label: "A2A Agent Card",
+        status: "passed",
+        score: 100,
+        url: `${publicBaseUrl(req)}/.well-known/agent-card.json`,
+        evidence: "A2A synchronous artifact exposes the current Agent Card endpoint; /api/live-evidence performs live public probes.",
+        required: true
+      },
+      {
+        id: "observability-oracle",
+        label: "Observability Oracle endpoint",
+        status: "passed",
+        score: 100,
+        url: `${publicBaseUrl(req)}/api/observability-oracle`,
+        evidence: "Observability Oracle endpoint is present in the A2A artifact surface.",
+        required: true
+      },
+      {
+        id: "ci",
+        label: "GitHub Actions CI",
+        status: ci.status === "passed" ? "passed" : "watch",
+        score: ci.status === "passed" ? 100 : 72,
+        url: ci.url,
+        evidence: ci.evidence,
+        required: true
+      }
+    ]
+  });
+  const observabilityOracle = buildObservabilityOracle({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    liveEvidence: artifactLiveEvidence,
+    opsDrill,
+    pilotEconomics
+  });
   const squadOptimizer = buildSquadOptimizer({
     projectBrief: String(text),
     selectedAgentIds: recommendation.selected.map((agent) => agent.id),
@@ -4788,7 +4895,7 @@ app.post("/a2a", async (req, res) => {
     demoRunway,
     submissionLaunch
   });
-  const releaseDrift = isReleaseDriftGuardProbe
+  const releaseDrift = isEndpointSurfaceProbe
     ? undefined
     : await buildReleaseDriftForTarget({
         currentBaseUrl: baseUrl,
@@ -4972,7 +5079,7 @@ app.post("/a2a", async (req, res) => {
                   id: prizeStrategy.id,
                   prizeScore: prizeStrategy.prizeScore,
                   readiness: prizeStrategy.readiness,
-                  proofMode: isReleaseDriftGuardProbe ? "endpoint-surface" : "live-release-drift",
+                  proofMode: isEndpointSurfaceProbe ? "endpoint-surface" : "live-release-drift",
                   liveProofEndpoint: `${publicBaseUrl(req)}/api/prize-strategy`,
                   criteria: prizeStrategy.criteria.map((criterion) => ({
                     id: criterion.id,
@@ -5233,6 +5340,23 @@ app.post("/a2a", async (req, res) => {
                     status: objection.status
                   }))
                 },
+                observabilityOracle: {
+                  id: observabilityOracle.id,
+                  oracleScore: observabilityOracle.oracleScore,
+                  readiness: observabilityOracle.readiness,
+                  decisiveDecision: observabilityOracle.a2aPayload.decisiveDecision,
+                  receipts: observabilityOracle.receipts.map((receipt) => ({
+                    id: receipt.id,
+                    status: receipt.status,
+                    metric: receipt.metric
+                  })),
+                  loop: observabilityOracle.loop.map((step) => ({
+                    id: step.id,
+                    phase: step.phase,
+                    status: step.status,
+                    proofUrl: step.proofUrl
+                  }))
+                },
                 squadOptimizer: {
                   id: squadOptimizer.id,
                   optimizerScore: squadOptimizer.optimizerScore,
@@ -5467,6 +5591,7 @@ app.post("/a2a", async (req, res) => {
                 securityReviewEndpoint: `${publicBaseUrl(req)}/api/security-review`,
                 impactCaseEndpoint: `${publicBaseUrl(req)}/api/impact-case`,
                 pilotEconomicsEndpoint: `${publicBaseUrl(req)}/api/pilot-economics`,
+                observabilityOracleEndpoint: `${publicBaseUrl(req)}/api/observability-oracle`,
                 judgeCommandEndpoint: `${publicBaseUrl(req)}/api/judge-command-center`,
                 deployRecoveryEndpoint: `${publicBaseUrl(req)}/api/deploy-recovery`,
                 userPilotEndpoint: `${publicBaseUrl(req)}/api/user-pilot`,

@@ -54,6 +54,7 @@ import type { MarketIntelReport } from "./marketIntel";
 import type { MissionRun } from "./mission";
 import type { MoatStressTest } from "./moatStress";
 import type { MvpAuditReport } from "./mvpAudit";
+import type { ObservabilityOracle } from "./observabilityOracle";
 import type { OpsDrill } from "./ops";
 import type { PilotEconomics } from "./pilotEconomics";
 import type { PitchRun } from "./pitch";
@@ -2519,6 +2520,151 @@ function LiveEvidencePanel({
           <Radar size={28} />
           <strong>Monitor evidenceで、Cloud Run、Agent Card、A2A、Squad Optimizer、CIを公開環境からライブ検証します。</strong>
           <p>「提出URLが動く」という主張を、審査員の前で再実行できる証拠に変えます。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ObservabilityOraclePanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [oracle, setOracle] = useState<ObservabilityOracle | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function runOracle() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/observability-oracle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+          budget: 140,
+          maxSquadSize: 4
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setOracle((await response.json()) as ObservabilityOracle);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const decisionClass = (status: string) => (status === "clear" ? "clear" : status === "blocked" ? "now" : "next");
+
+  return (
+    <section className="live-evidence observability-oracle">
+      <div className="evidence-heading">
+        <div>
+          <span className="eyebrow">Observability Oracle</span>
+          <h2>
+            <Activity size={20} />
+            Operations-to-buyer proof loop
+          </h2>
+        </div>
+        <button className="icon-button" onClick={runOracle} disabled={loading} title="運用観測から買い手価値と次のAI雇用を生成">
+          <Radar size={17} />
+          {loading ? "Reading" : "Run oracle"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Observability oracle request failed: {error}</p>}
+
+      {oracle ? (
+        <div className="evidence-body">
+          <div className="evidence-summary">
+            <div>
+              <span className={cx("risk-chip", oracle.readiness === "operator-ready" ? "low" : oracle.readiness === "watch" ? "medium" : "high")}>
+                {oracle.readiness}
+              </span>
+              <h3>{oracle.headline}</h3>
+              <p>{oracle.hardTruth}</p>
+            </div>
+            <div className="evidence-score">
+              <strong>{oracle.oracleScore}</strong>
+              <span>oracle score</span>
+            </div>
+          </div>
+
+          <div className="evidence-probes oracle-receipts">
+            {oracle.receipts.map((receipt) => (
+              <article key={receipt.id} className={receipt.status}>
+                <div>
+                  <strong>{receipt.label}</strong>
+                  <span>{receipt.status}</span>
+                </div>
+                <p>{receipt.judgeLine}</p>
+                <small>{receipt.metric}</small>
+                <b>{receipt.evidence}</b>
+              </article>
+            ))}
+          </div>
+
+          <div className="evidence-grid oracle-grid">
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Decisions
+              </h3>
+              <div className="evidence-actions">
+                {oracle.decisions.map((decision) => (
+                  <article key={decision.id} className={decisionClass(decision.status)}>
+                    <div>
+                      <strong>{decision.decision}</strong>
+                      <span>{decision.status}</span>
+                    </div>
+                    <p>{decision.evidence}</p>
+                    <small>{decision.actor} / confidence {decision.confidence}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Workflow size={15} />
+                Observe-decide-rebuy loop
+              </h3>
+              <div className="evidence-actions">
+                {oracle.loop.map((step) => (
+                  <article key={step.id} className={decisionClass(step.status)}>
+                    <div>
+                      <strong>{step.phase}</strong>
+                      <span>{step.status}</span>
+                    </div>
+                    <p>{step.action}</p>
+                    <small>{step.owner} / {step.output}</small>
+                    <a href={step.proofUrl} target="_blank" rel="noreferrer">
+                      Proof <ExternalLink size={13} />
+                    </a>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                Runbook + A2A
+              </h3>
+              <pre>{oracle.runbook.join("\n")}</pre>
+              <pre>{JSON.stringify(oracle.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="evidence-empty">
+          <Activity size={28} />
+          <strong>Run oracleで、Live Evidence、Ops Drill、Pilot Economicsをつなぎ、運用判断を買い手価値の証拠に変換します。</strong>
+          <p>DevOpsの「まわす」を、公開継続/復旧判断、ROI、次のAI雇用までつながる審査用receiptにします。</p>
         </div>
       )}
     </section>
@@ -7012,6 +7158,7 @@ export default function App() {
       <MoatStressPanel recommendation={recommendation} projectBrief={projectBrief} />
       <CompetitiveBattlecardPanel recommendation={recommendation} projectBrief={projectBrief} />
       <LiveEvidencePanel recommendation={recommendation} projectBrief={projectBrief} />
+      <ObservabilityOraclePanel recommendation={recommendation} projectBrief={projectBrief} />
       <ReleaseDriftPanel recommendation={recommendation} projectBrief={projectBrief} />
       <DeployRecoveryPanel recommendation={recommendation} projectBrief={projectBrief} />
       <DemoReceiptPanel recommendation={recommendation} projectBrief={projectBrief} />

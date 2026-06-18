@@ -8,6 +8,7 @@ const expectedSkillIds = [
   "task.delegate",
   "external.evidence",
   "evidence.monitor",
+  "observability.oracle",
   "demo.receipt",
   "acceptance.matrix",
   "release.drift",
@@ -46,7 +47,7 @@ describe("release drift guard", () => {
   "evidence.monitor", "win.autopilot"],
       requiredSkillIds: ["task.delegate",
   "external.evidence",
-  "evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"],
+  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"],
       generatedAt: "2026-06-18T00:00:00.000Z",
       probes: [
         passedProbe("target-health"),
@@ -93,7 +94,7 @@ describe("release drift guard", () => {
       observedSkillIds: expectedSkillIds,
       requiredSkillIds: ["task.delegate",
   "external.evidence",
-  "evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"],
+  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"],
       probes: [
         passedProbe("target-health"),
         passedProbe("agent-card-skill-surface"),

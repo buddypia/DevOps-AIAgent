@@ -123,7 +123,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
       { name: "gcloud-runner", tools: ["deploy", "describe_service", "read_logs"], maturity: 86 },
       { name: "github-actions", tools: ["check_run", "annotate"], maturity: 80 }
     ],
-    a2aSkillIds: ["cloudrun.deploy", "ops.observe", "release.rollback", "evidence.monitor"],
+    a2aSkillIds: ["cloudrun.deploy", "ops.observe", "release.rollback", "evidence.monitor", "observability.oracle"],
     synergyTags: ["cloud-run", "devops", "operate", "submission"]
   },
   {
