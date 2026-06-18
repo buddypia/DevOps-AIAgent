@@ -52,6 +52,7 @@
   - `strategy.audit`
   - `market.intel`
   - `moat.stress`
+  - `competitive.battlecard`
   - `mvp.audit`
   - `mission.run`
   - `autonomy.ledger`
@@ -100,6 +101,14 @@
 - Proof routes: 各反論に対してMarket Intel、Judge Tour、Live Evidence、Agent Cardのどれを見せるかを返す
 - Recording order: 競合/SWOT、Moat Stress、Live Evidence、Submission Launch Gateを録画順に変換する
 - A2A payload: `moat.stress` skillとしてmoat score、scenario verdicts、next actionsを返す
+
+## Competitive Battlecard Surface
+
+- `POST /api/competitive-battlecard`: Market Intel、Moat Stress、SWOTを競合別の審査回答カードへ束ねる
+- Cards: 競合ごとに「審査員の質問」「短い回答」「相手が勝つ領域」「こちらが勝つ領域」「見せる証拠route」を返す
+- Source/SWOT receipts: 公式ソースURLとSWOT項目を同じカードに載せ、競合分析が主張だけで終わらないようにする
+- Judge script: 質疑で話す順番を「相手の強みを認める → 調達体験へずらす → 証拠を開く」に固定する
+- A2A payload: `competitive.battlecard` skillとしてbattle score、readiness、card verdicts、top risksを返す
 
 ## MVP Audit Surface
 
@@ -246,6 +255,7 @@
 - `POST /api/contracts`: AI契約、受入条件、SLA、検証コマンド、支払い条件を評価する
 - `POST /api/market-intel`: ソース付き競合比較、審査回答、差別化次アクションを評価する
 - `POST /api/moat-stress`: 主要競合からの反論、証拠付き回答、録画順を評価する
+- `POST /api/competitive-battlecard`: 公式ソース、SWOT、競合反論、証拠routeを審査回答カードとして評価する
 - `POST /api/mvp-audit`: MVPハードゲート、審査lane、提出blockerを評価する
 - `POST /api/judge-command-center`: 初回審査用の証拠ボタン、90秒timeline、残ブロッカーを評価する
 - `POST /api/pitch`: 30秒動画のshot list、voiceover、lower thirds、recording checklist、提出残リスクを返す
@@ -299,6 +309,7 @@
 - Demo receipt proof: `demo.receipt` skillとして、審査導線、競合反論、編成判断、公開証拠、外部提出URL状態、sha256 digestをA2A payloadにも含める
 - Acceptance matrix proof: `acceptance.matrix` skillとして、必須技術、審査5項目、公開証拠、提出物の受入状態をA2A payloadにも含める
 - Moat stress proof: `moat.stress` skillとして、競合別の想定反論、反証、見せる証拠、録画順をA2A payloadにも含める
+- Competitive battlecard proof: `competitive.battlecard` skillとして、競合別の短い回答、公式ソース、SWOT receipts、top risksをA2A payloadにも含める
 
 ## Submission Surface
 
@@ -313,6 +324,7 @@
 - Health check: `/api/healthz` (`/healthz` もローカル互換で提供)
 - Market intel: `/api/market-intel`
 - Moat stress: `/api/moat-stress`
+- Competitive battlecard: `/api/competitive-battlecard`
 - MVP audit: `/api/mvp-audit`
 - Judge brief: `/api/judge-brief`
 - Judge command center: `/api/judge-command-center`

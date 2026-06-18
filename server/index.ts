@@ -9,6 +9,7 @@ import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js
 import { buildWinningAutopilot } from "../src/autopilot.js";
 import { buildAutonomyLedger } from "../src/autonomyLedger.js";
 import { ciStatusFromBadge } from "../src/ciProof.js";
+import { buildCompetitiveBattlecard } from "../src/competitiveBattlecard.js";
 import { buildSquadContract } from "../src/contracts.js";
 import { buildDeployRecoveryPlan } from "../src/deployRecovery.js";
 import { buildJudgeDemoReceipt } from "../src/demoReceipt.js";
@@ -169,6 +170,12 @@ function agentCard(baseUrl: string) {
         name: "Stress-test competitive moat",
         description: "ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsからの反論を想定し、証拠付き回答と録画順を返す。",
         tags: ["competitive-analysis", "moat", "judge-qa", "swot", "proof"]
+      },
+      {
+        id: "competitive.battlecard",
+        name: "Build competitor battlecards",
+        description: "公式ソース、SWOT、競合反論、見せる証拠を競合別の審査回答カードに束ねる。",
+        tags: ["competitive-analysis", "battlecard", "swot", "judge-qa", "proof"]
       },
       {
         id: "mvp.audit",
@@ -698,6 +705,37 @@ app.post("/api/moat-stress", (req, res) => {
       recommendation,
       strategy,
       marketIntel
+    })
+  );
+});
+
+app.post("/api/competitive-battlecard", (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const marketIntel = buildMarketIntelReport({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy
+  });
+  const moatStress = buildMoatStressTest({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    marketIntel
+  });
+
+  res.json(
+    buildCompetitiveBattlecard({
+      baseUrl: publicBaseUrl(req),
+      strategy,
+      marketIntel,
+      moatStress
     })
   );
 });
@@ -1557,6 +1595,7 @@ app.post("/api/live-evidence", async (req, res) => {
         const hasEvidence = skills.some((skill) => skill.id === "evidence.monitor");
         const hasOptimizer = skills.some((skill) => skill.id === "squad.optimize");
         const hasMoat = skills.some((skill) => skill.id === "moat.stress");
+        const hasBattlecard = skills.some((skill) => skill.id === "competitive.battlecard");
         const hasReceipt = skills.some((skill) => skill.id === "demo.receipt");
         const hasAcceptance = skills.some((skill) => skill.id === "acceptance.matrix");
         const hasReleaseDrift = skills.some((skill) => skill.id === "release.drift");
@@ -1566,22 +1605,23 @@ app.post("/api/live-evidence", async (req, res) => {
         return hasEvidence &&
           hasOptimizer &&
           hasMoat &&
+          hasBattlecard &&
           hasReceipt &&
           hasAcceptance &&
           hasReleaseDrift &&
           hasPilotEconomics &&
           hasJudgeCommand &&
           hasDeployRecovery &&
-          skills.length >= 35
+          skills.length >= 36
           ? {
               status: "passed",
               score: 100,
-              evidence: `Agent Card exposes ${skills.length} skills including deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
+              evidence: `Agent Card exposes ${skills.length} skills including competitive.battlecard, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
             }
           : {
               status: "watch",
               score: 72,
-              evidence: `Agent Card exposes ${skills.length} skills; expected deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
+              evidence: `Agent Card exposes ${skills.length} skills; expected battlecard, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
             };
       }
     }),
@@ -1626,6 +1666,7 @@ app.post("/api/live-evidence", async (req, res) => {
         return data?.squadOptimizerEndpoint &&
           data?.liveEvidenceEndpoint &&
           data?.moatStressEndpoint &&
+          data?.competitiveBattlecardEndpoint &&
           data?.demoReceiptEndpoint &&
           data?.acceptanceMatrixEndpoint &&
           data?.releaseDriftEndpoint &&
@@ -1636,9 +1677,9 @@ app.post("/api/live-evidence", async (req, res) => {
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, pilotEconomicsEndpoint, judgeCommandEndpoint, and deployRecoveryEndpoint."
+                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, pilotEconomicsEndpoint, judgeCommandEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -1670,7 +1711,17 @@ async function buildReleaseDriftForTarget(input: {
   const currentBaseUrl = input.currentBaseUrl.replace(/\/$/, "");
   const targetBaseUrl = input.targetBaseUrl.replace(/\/$/, "");
   const expectedSkillIds = agentCard(currentBaseUrl).skills.map((skill) => skill.id);
-  const requiredSkillIds = ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command", "deploy.recover", "win.autopilot"];
+  const requiredSkillIds = [
+    "evidence.monitor",
+    "demo.receipt",
+    "acceptance.matrix",
+    "release.drift",
+    "pilot.economics",
+    "judge.command",
+    "deploy.recover",
+    "competitive.battlecard",
+    "win.autopilot"
+  ];
   let observedSkillIds: string[] = [];
 
   const [healthProbe, cardProbe, acceptanceProbe, a2aProbe, ci] = await Promise.all([
@@ -1752,13 +1803,14 @@ async function buildReleaseDriftForTarget(input: {
           data?.demoReceiptEndpoint &&
           data?.pilotEconomicsEndpoint &&
           data?.judgeCommandEndpoint &&
+          data?.competitiveBattlecardEndpoint &&
           data?.deployRecoveryEndpoint
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, judgeCommandEndpoint, and deployRecoveryEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, judgeCommandEndpoint, competitiveBattlecardEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -2812,6 +2864,12 @@ app.post("/a2a", (req, res) => {
     maxSquadSize: 4
   });
   const moatStress = buildMoatStressTest({ baseUrl: publicBaseUrl(req), recommendation, strategy, marketIntel });
+  const competitiveBattlecard = buildCompetitiveBattlecard({
+    baseUrl: publicBaseUrl(req),
+    strategy,
+    marketIntel,
+    moatStress
+  });
   const demoReceipt = buildJudgeDemoReceipt({
     baseUrl: publicBaseUrl(req),
     recommendation,
@@ -2902,6 +2960,22 @@ app.post("/a2a", (req, res) => {
                     id: move.id,
                     priority: move.priority,
                     action: move.action
+                  }))
+                },
+                competitiveBattlecard: {
+                  id: competitiveBattlecard.id,
+                  battleScore: competitiveBattlecard.battleScore,
+                  readiness: competitiveBattlecard.readiness,
+                  cards: competitiveBattlecard.cards.map((card) => ({
+                    id: card.id,
+                    competitor: card.competitor,
+                    status: card.status,
+                    score: card.score,
+                    sourceCount: card.sourceUrls.length
+                  })),
+                  topRisks: competitiveBattlecard.topRisks.map((risk) => ({
+                    id: risk.id,
+                    severity: risk.severity
                   }))
                 },
                 mvpAudit: {
@@ -3213,6 +3287,7 @@ app.post("/a2a", (req, res) => {
                 dossierEndpoint: `${publicBaseUrl(req)}/api/dossier`,
                 marketIntelEndpoint: `${publicBaseUrl(req)}/api/market-intel`,
                 moatStressEndpoint: `${publicBaseUrl(req)}/api/moat-stress`,
+                competitiveBattlecardEndpoint: `${publicBaseUrl(req)}/api/competitive-battlecard`,
                 mvpAuditEndpoint: `${publicBaseUrl(req)}/api/mvp-audit`,
                 judgeBriefEndpoint: `${publicBaseUrl(req)}/api/judge-brief`,
                 autonomyLedgerEndpoint: `${publicBaseUrl(req)}/api/autonomy-ledger`,

@@ -117,9 +117,10 @@ React UI
 | 10-12s | Moat Stress Testで「既存ツールでよくない？」への反論と見せる証拠を競合別に出す |
 | 12-15s | Live Evidence Monitorで公開Cloud Run、Agent Card、A2A、Optimizer、CIの5 probesを見せる |
 | 15-17s | Release Drift Guardで提出URLが最新skill surfaceか、古いrevisionならdeploy-driftかを見せる |
-| 17-18s | Deploy Recoveryでgcloud認証、Cloud Build、公開再検証コマンドを見せる |
-| 18-20s | Judge Demo Receiptでstamp、外部URLwatch、sha256 digestを控える |
-| 20-23s | Judge Acceptance Matrixで必須技術、審査5項目、公開証拠、提出物のaccepted/watchを見せる |
+| 17-18s | Competitive Battlecardで競合別の短い回答、公式ソース、SWOT receiptsを見せる |
+| 18-19s | Deploy Recoveryでgcloud認証、Cloud Build、公開再検証コマンドを見せる |
+| 19-21s | Judge Demo Receiptでstamp、外部URLwatch、sha256 digestを控える |
+| 21-23s | Judge Acceptance Matrixで必須技術、審査5項目、公開証拠、提出物のaccepted/watchを見せる |
 | 23-25s | Security Sentinel Review、Impact Case、Pilot Economics、Submission Launch Gate、Judge Proofで安全境界、実用性KPI、payback、外部URL、Gemini/Cloud Run/A2A/CI/DevOpsの証拠束を見せる |
 | 25-27s | Submission DossierでProtoPedia本文、提出リンク、録画順、最終チェックを見せる |
 | 27-28s | Marketplace、Winning Strategy、Mission、Opsで必要能力、SWOT、A2A委任、運用判断を見せる |
@@ -141,6 +142,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/market-intel \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/moat-stress \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/competitive-battlecard \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mvp-audit \

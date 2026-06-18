@@ -203,9 +203,9 @@ function fixture(options: { staleRelease?: boolean } = {}) {
     ? buildReleaseDriftGuard({
         currentBaseUrl: "http://127.0.0.1:8080",
         targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
-        expectedSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command", "deploy.recover"],
+        expectedSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command", "deploy.recover", "competitive.battlecard"],
         observedSkillIds: ["evidence.monitor"],
-        requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command", "deploy.recover"],
+        requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command", "deploy.recover", "competitive.battlecard"],
         probes: [
           passedProbe("target-health"),
           {

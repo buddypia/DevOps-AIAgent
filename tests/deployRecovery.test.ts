@@ -11,6 +11,7 @@ const expectedSkillIds = [
   "pilot.economics",
   "judge.command",
   "deploy.recover",
+  "competitive.battlecard",
   "win.autopilot"
 ];
 
@@ -39,7 +40,7 @@ describe("deploy recovery plan", () => {
           ...passedProbe("agent-card-skill-surface"),
           status: "watch",
           score: 58,
-          evidence: "Target Agent Card exposes 29/35 skills."
+          evidence: "Target Agent Card exposes 29/36 skills."
         },
         {
           ...passedProbe("acceptance-endpoint"),

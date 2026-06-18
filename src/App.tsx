@@ -33,6 +33,7 @@ import type { JudgeAcceptanceMatrix } from "./acceptanceMatrix";
 import { recommendSquad } from "./agentEngine";
 import type { AutonomyLedger } from "./autonomyLedger";
 import type { WinningAutopilotRun } from "./autopilot";
+import type { CompetitiveBattlecard } from "./competitiveBattlecard";
 import type { SquadContract } from "./contracts";
 import type { DeployRecoveryPlan } from "./deployRecovery";
 import type { JudgeDemoReceipt } from "./demoReceipt";
@@ -1852,6 +1853,170 @@ function MoatStressPanel({
           <Crosshair size={28} />
           <strong>Stress-test moatで、ADK/LangGraph/CrewAI/Dify/AgentOpsからの反論に証拠付きで答えます。</strong>
           <p>競合を否定せず、どの証拠をどの順番で見せるかまで審査導線に変換します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function CompetitiveBattlecardPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [battlecard, setBattlecard] = useState<CompetitiveBattlecard | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildBattlecard() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/competitive-battlecard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setBattlecard((await response.json()) as CompetitiveBattlecard);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="battlecard-panel">
+      <div className="battle-heading">
+        <div>
+          <span className="eyebrow">Competitive battlecard</span>
+          <h2>
+            <Network size={20} />
+            Judge-ready competitor answers
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildBattlecard} disabled={loading} title="競合別の審査回答カードを生成">
+          <ClipboardCheck size={17} />
+          {loading ? "Building" : "Build battlecard"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Competitive battlecard request failed: {error}</p>}
+
+      {battlecard ? (
+        <div className="battle-body">
+          <div className="battle-summary">
+            <div>
+              <span className={cx("risk-chip", battlecard.readiness === "judge-ready" ? "low" : battlecard.readiness === "needs-proof" ? "medium" : "high")}>
+                {battlecard.readiness}
+              </span>
+              <h3>{battlecard.headline}</h3>
+              <p>{battlecard.hardTruth}</p>
+              <small>{battlecard.thesis}</small>
+            </div>
+            <div className="battle-score">
+              <strong>{battlecard.battleScore}</strong>
+              <span>battle score</span>
+            </div>
+          </div>
+
+          <div className="battle-cards">
+            {battlecard.cards.map((card) => (
+              <article key={card.id} className={card.status}>
+                <div>
+                  <span>{card.threatLevel}</span>
+                  <strong>{card.score}</strong>
+                </div>
+                <h3>{card.competitor}</h3>
+                <small>{card.category}</small>
+                <b>{card.judgeQuestion}</b>
+                <p>{card.whereTheyWin}</p>
+                <strong>{card.shortAnswer}</strong>
+                <em>{card.whereWeWin}</em>
+                <small>{card.proofRoute}</small>
+                <div className="battle-sources">
+                  {card.sourceUrls.map((source) => (
+                    <a key={`${card.id}-${source.url}`} href={source.url} target="_blank" rel="noreferrer">
+                      {source.label}
+                      <ExternalLink size={12} />
+                    </a>
+                  ))}
+                </div>
+                <div className="battle-swot-chips">
+                  {card.swotLinks.map((link) => (
+                    <span key={`${card.id}-${link.quadrant}-${link.title}`} className={link.signal}>
+                      {link.quadrant}: {link.title}
+                    </span>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="battle-grid">
+            <section>
+              <h3>
+                <AlertTriangle size={15} />
+                Top risks
+              </h3>
+              <div className="battle-risks">
+                {battlecard.topRisks.map((risk) => (
+                  <article key={risk.id} className={risk.severity}>
+                    <div>
+                      <strong>{risk.id}</strong>
+                      <span>{risk.severity}</span>
+                    </div>
+                    <p>{risk.risk}</p>
+                    <small>{risk.response}</small>
+                    <b>{risk.proof}</b>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Trophy size={15} />
+                SWOT receipts
+              </h3>
+              <div className="battle-receipts">
+                {battlecard.swotReceipts.map((receipt) => (
+                  <article key={`${receipt.quadrant}-${receipt.title}`} className={receipt.signal}>
+                    <span>{receipt.quadrant}</span>
+                    <strong>{receipt.title}</strong>
+                    <p>{receipt.detail}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Film size={15} />
+                Judge script
+              </h3>
+              <ol className="battle-script">
+                {battlecard.judgeScript.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ol>
+              <h3>
+                <Terminal size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(battlecard.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="battle-empty">
+          <Network size={28} />
+          <strong>Build battlecardで、競合別の質問、短い回答、SWOT根拠、公式ソース、録画で見せる証拠を1枚に束ねます。</strong>
+          <p>Moat Stressの反論を、審査員がそのまま質問しても返せるbattlecardに圧縮します。</p>
         </div>
       )}
     </section>
@@ -5153,6 +5318,7 @@ export default function App() {
       <JudgeTourPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SquadOptimizerPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MoatStressPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <CompetitiveBattlecardPanel recommendation={recommendation} projectBrief={projectBrief} />
       <LiveEvidencePanel recommendation={recommendation} projectBrief={projectBrief} />
       <ReleaseDriftPanel recommendation={recommendation} projectBrief={projectBrief} />
       <DeployRecoveryPanel recommendation={recommendation} projectBrief={projectBrief} />
