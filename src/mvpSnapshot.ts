@@ -147,6 +147,7 @@ export function buildMvpSnapshot(input: {
   const deployRecoveryUrl = endpoint(baseUrl, "/api/deploy-recovery");
   const winGapRadarUrl = endpoint(baseUrl, "/api/win-gap-radar");
   const judgeCommandUrl = endpoint(baseUrl, "/api/judge-command-center");
+  const autonomySnapshotUrl = endpoint(baseUrl, "/autonomy-snapshot");
   const recordingScriptUrl = endpoint(baseUrl, "/recording-script");
   const pilotValueUrl = endpoint(baseUrl, "/pilot-value");
   const targetBaseUrl = input.releaseDrift?.targetBaseUrl ?? baseUrl;
@@ -249,6 +250,13 @@ export function buildMvpSnapshot(input: {
         purpose: "競合分析、SWOT、Criteria Duel、公式ソースの直接証拠。"
       },
       {
+        id: "autonomy-snapshot",
+        label: "Autonomy Snapshot",
+        method: "GET",
+        url: autonomySnapshotUrl,
+        purpose: "AIエージェント中心性、A2A委任、検証receiptを直接読むHTML証拠。"
+      },
+      {
         id: "submission-assets",
         label: "Submission Assets",
         method: "GET",
@@ -302,7 +310,7 @@ export function buildMvpSnapshot(input: {
         ? "公開revision driftはPOST /api/release-drift、または /mvp-readiness?live=1 で最終確認する。"
         : `Release Drift verdict: ${releaseVerdict}; missing skills ${input.releaseDrift?.missingSkills.length ?? 0}; missing signals ${input.releaseDrift?.missingAgentCardSignals.length ?? 0}.`,
       gaps > 0 ? `外部提出gapは${gaps}件。Submission AssetsとRecording ScriptでProtoPedia作品URLと動画URLを閉じる。` : "外部提出gapはありません。",
-      "深掘りはMVP Audit、Acceptance Matrix、Pilot Value、Win Gap Radar、Judge Command Centerの証拠を再実行する。"
+      "深掘りはAutonomy Snapshot、MVP Audit、Acceptance Matrix、Pilot Value、Win Gap Radar、Judge Command Centerの証拠を再実行する。"
     ],
     a2aPayload: {
       method: "message/send",
@@ -326,6 +334,8 @@ export function buildMvpSnapshot(input: {
         judgeCommand: judgeCommandUrl,
         judgeSnapshot: endpoint(baseUrl, "/judge-snapshot"),
         competitiveSwotSnapshot: endpoint(baseUrl, "/competitive-swot"),
+        autonomySnapshot: autonomySnapshotUrl,
+        autonomySnapshotJson: endpoint(baseUrl, "/api/autonomy-snapshot"),
         submissionAssetsPage: endpoint(baseUrl, "/submission-assets"),
         recordingScript: recordingScriptUrl,
         recordingScriptJson: endpoint(baseUrl, "/api/recording-script"),

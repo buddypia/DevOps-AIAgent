@@ -6886,6 +6886,7 @@ function JudgeProofBundle({
               </h3>
               <div className="proof-links">
                 <a href="/mvp-readiness" target="_blank" rel="noreferrer">MVP Readiness</a>
+                <a href="/autonomy-snapshot" target="_blank" rel="noreferrer">Autonomy Snapshot</a>
                 <a href="/judge-snapshot" target="_blank" rel="noreferrer">Judge Snapshot</a>
                 <a href="/competitive-swot" target="_blank" rel="noreferrer">Competitive SWOT</a>
                 <a href="/submission-assets" target="_blank" rel="noreferrer">Submission Assets</a>

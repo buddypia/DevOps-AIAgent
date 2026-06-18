@@ -74,6 +74,7 @@ function actionFromProbe(probe: ReleaseDriftProbe): ReleaseDriftAction {
     probe.id === "agent-card-skill-surface" ||
     probe.id === "acceptance-endpoint" ||
     probe.id === "mvp-readiness-endpoint" ||
+    probe.id === "autonomy-snapshot-endpoint" ||
     probe.id === "recording-script-endpoint" ||
     probe.id === "pilot-value-endpoint" ||
     probe.id === "a2a-artifact";
@@ -154,8 +155,9 @@ export function buildReleaseDriftGuard(input: {
       "gcloud auth login",
       "gcloud builds submit --config cloudbuild.yaml --substitutions _REGION=asia-northeast1,_SERVICE=a2a-agent-marketplace,_REPOSITORY=cloud-run-source-deploy,_GEMINI_SECRET=gemini-api-key-a2a-marketplace",
       `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills | length'`,
-      `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="mvp.snapshot" or .id=="recording.script" or .id=="pilot.value.snapshot") | {id, tags}'`,
+      `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="mvp.snapshot" or .id=="autonomy.snapshot" or .id=="recording.script" or .id=="pilot.value.snapshot") | {id, tags}'`,
       `curl -s ${targetBaseUrl}/api/mvp-readiness | jq '{readiness, mvp: .summary.mvpScore, acceptance: .summary.acceptanceScore, release: .summary.releaseVerdict}'`,
+      `curl -s ${targetBaseUrl}/api/autonomy-snapshot | jq '{readiness, ledger: .summary.ledgerScore, task: .summary.taskScore, chain: .summary.verifiedChainCount}'`,
       `curl -s ${targetBaseUrl}/api/recording-script | jq '{readiness, chapters: .summary.chapterCount, videoLock: .summary.videoLockReadiness}'`,
       `curl -s ${targetBaseUrl}/api/pilot-value | jq '{readiness, payback: .summary.paybackDays, firstValue: .summary.timeToValueSeconds}'`,
       `curl -s -X POST ${targetBaseUrl}/api/acceptance-matrix -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}' | jq '{verdict, acceptanceScore, rows: (.rows | length)}'`,
@@ -180,6 +182,7 @@ export function buildReleaseDriftGuard(input: {
         releaseDrift: `${currentBaseUrl}/api/release-drift`,
         targetAcceptanceMatrix: `${targetBaseUrl}/api/acceptance-matrix`,
         targetMvpReadiness: `${targetBaseUrl}/api/mvp-readiness`,
+        targetAutonomySnapshot: `${targetBaseUrl}/api/autonomy-snapshot`,
         targetRecordingScript: `${targetBaseUrl}/api/recording-script`,
         targetPilotValue: `${targetBaseUrl}/api/pilot-value`
       }

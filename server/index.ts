@@ -9,6 +9,7 @@ import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js
 import { buildArchitecturePack } from "../src/architecturePack.js";
 import { buildWinningAutopilot } from "../src/autopilot.js";
 import { buildAutonomyLedger } from "../src/autonomyLedger.js";
+import { buildAutonomySnapshot, renderAutonomySnapshotHtml } from "../src/autonomySnapshot.js";
 import { ciStatusFromBadge } from "../src/ciProof.js";
 import { buildCompetitiveBattlecard } from "../src/competitiveBattlecard.js";
 import { buildCompetitiveSnapshot, renderCompetitiveSnapshotHtml } from "../src/competitiveSnapshot.js";
@@ -322,6 +323,12 @@ function agentCard(baseUrl: string) {
         name: "Build the agent autonomy ledger",
         description: "市場探索、判断、契約、A2A委任、検証、運用、提出の連鎖を審査員向けの自律性台帳にする。",
         tags: ["autonomy", "agent-centrality", "a2a", "evidence", "devops"]
+      },
+      {
+        id: "autonomy.snapshot",
+        name: "Open the agent autonomy snapshot",
+        description: "Autonomy LedgerとAgent Task Boardを束ね、AIが価値の中心だとGETで読める審査用HTML証拠にする。",
+        tags: ["autonomy", "agent-centrality", "a2a", "get-proof", "judge-score"]
       },
       {
         id: "mission.run",
@@ -1308,6 +1315,61 @@ app.get("/mvp-readiness", async (req, res) => {
     return;
   }
   res.type("html").send(renderMvpSnapshotHtml(result.snapshot));
+});
+
+async function buildAutonomySnapshotForRequest(req: express.Request) {
+  const baseUrl = publicBaseUrl(req);
+  const selectedAgentIds = ["market-broker", "gemini-strategist", "cloud-run-sre"];
+  const projectBrief = DEFAULT_PROJECT_BRIEF;
+  const recommendation = recommendSquad(projectBrief, selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "AIエージェント中心性を、判断、委任、検証、運用、提出のGET証拠に束ねる。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const ci = await fetchCiProof();
+  const proof = buildJudgeProof({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    gemini: localGeminiRecommendation(recommendation, "GET /autonomy-snapshot keeps first-click proof stable; POST /api/autonomy-ledger runs live Gemini."),
+    ci
+  });
+  const autonomyLedger = buildAutonomyLedger({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    squadContract,
+    proof
+  });
+  const taskBoard = buildAgentTaskBoard({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    squadContract
+  });
+
+  return buildAutonomySnapshot({
+    baseUrl,
+    projectBrief,
+    selectedAgentIds,
+    autonomyLedger,
+    taskBoard,
+    mission
+  });
+}
+
+app.get("/api/autonomy-snapshot", async (req, res) => {
+  res.json(await buildAutonomySnapshotForRequest(req));
+});
+
+app.get("/autonomy-snapshot", async (req, res) => {
+  res.type("html").send(renderAutonomySnapshotHtml(await buildAutonomySnapshotForRequest(req)));
 });
 
 app.post("/api/mission", (req, res) => {
@@ -2424,6 +2486,7 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
         const hasReceipt = skills.some((skill) => skill.id === "demo.receipt");
         const hasAcceptance = skills.some((skill) => skill.id === "acceptance.matrix");
         const hasReleaseDrift = skills.some((skill) => skill.id === "release.drift");
+        const hasAutonomySnapshot = skills.some((skill) => skill.id === "autonomy.snapshot");
         const hasPilotEconomics = skills.some((skill) => skill.id === "pilot.economics");
         const hasPilotValueSnapshot = skills.some((skill) => skill.id === "pilot.value.snapshot");
         const hasDemoConcierge = skills.some((skill) => skill.id === "demo.concierge");
@@ -2450,6 +2513,7 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
           hasReceipt &&
           hasAcceptance &&
           hasReleaseDrift &&
+          hasAutonomySnapshot &&
           hasPilotEconomics &&
           hasPilotValueSnapshot &&
           hasDemoConcierge &&
@@ -2465,16 +2529,16 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
           hasExternalEvidence &&
           hasDeployRecovery &&
           hasObservabilityOracle &&
-          skills.length >= 51
+          skills.length >= 52
           ? {
               status: "passed",
               score: 100,
-              evidence: `Agent Card exposes ${skills.length} skills including observability.oracle, task.delegate, external.evidence, winner.packet, submission.runway, submission.assets, recording.script, pilot.value.snapshot, judge.rehearsal, submission.closeout, win.gap.radar, demo.concierge, prize.strategy, competitive.battlecard, competitive.snapshot, judge.snapshot, mvp.snapshot, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
+              evidence: `Agent Card exposes ${skills.length} skills including autonomy.snapshot, observability.oracle, task.delegate, external.evidence, winner.packet, submission.runway, submission.assets, recording.script, pilot.value.snapshot, judge.rehearsal, submission.closeout, win.gap.radar, demo.concierge, prize.strategy, competitive.battlecard, competitive.snapshot, judge.snapshot, mvp.snapshot, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
             }
           : {
               status: "watch",
               score: 72,
-              evidence: `Agent Card exposes ${skills.length} skills; expected observability oracle, task delegate, external evidence, winner packet, submission runway, submission assets, recording script, pilot value snapshot, judge rehearsal, submission closeout, win gap radar, demo concierge, prize strategy, battlecard, competitive snapshot, judge snapshot, MVP snapshot, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
+              evidence: `Agent Card exposes ${skills.length} skills; expected autonomy snapshot, observability oracle, task delegate, external evidence, winner packet, submission runway, submission assets, recording script, pilot value snapshot, judge rehearsal, submission closeout, win gap radar, demo concierge, prize strategy, battlecard, competitive snapshot, judge snapshot, MVP snapshot, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
             };
       }
     }),
@@ -2524,6 +2588,8 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
           data?.judgeSnapshotEndpoint &&
           data?.judgeSnapshotPageEndpoint &&
           data?.mvpReadinessSnapshotEndpoint &&
+          data?.autonomySnapshotEndpoint &&
+          data?.autonomySnapshotJsonEndpoint &&
           data?.demoReceiptEndpoint &&
           data?.acceptanceMatrixEndpoint &&
           data?.releaseDriftEndpoint &&
@@ -2549,9 +2615,9 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes observabilityOracleEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
+                "A2A artifact exposes autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but observability oracle/external evidence/task board/winner packet/submission runway/submission assets/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but autonomy snapshot/observability oracle/external evidence/task board/winner packet/submission runway/submission assets/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -2706,6 +2772,7 @@ async function buildReleaseDriftForTarget(input: {
     "competitive.snapshot:tag:get-proof",
     "judge.snapshot:tag:get-proof",
     "mvp.snapshot:tag:get-proof",
+    "autonomy.snapshot:tag:get-proof",
     "recording.script:tag:get-proof",
     "pilot.value.snapshot:tag:get-proof"
   ];
@@ -2718,6 +2785,7 @@ async function buildReleaseDriftForTarget(input: {
     "acceptance.matrix",
     "release.drift",
     "mvp.snapshot",
+    "autonomy.snapshot",
     "pilot.economics",
     "pilot.value.snapshot",
     "demo.concierge",
@@ -2739,7 +2807,7 @@ async function buildReleaseDriftForTarget(input: {
   let observedSkillIds: string[] = [];
   let observedAgentCardSignals: string[] = [];
 
-  const [healthProbe, cardProbe, acceptanceProbe, mvpReadinessProbe, recordingScriptProbe, pilotValueProbe, a2aProbe, ci] = await Promise.all([
+  const [healthProbe, cardProbe, acceptanceProbe, mvpReadinessProbe, autonomySnapshotProbe, recordingScriptProbe, pilotValueProbe, a2aProbe, ci] = await Promise.all([
     liveJsonProbe({
       id: "target-health",
       label: "Target Cloud Run health",
@@ -2772,6 +2840,7 @@ async function buildReleaseDriftForTarget(input: {
         const competitiveSnapshot = skills.find((skill) => skill.id === "competitive.snapshot");
         const judgeSnapshot = skills.find((skill) => skill.id === "judge.snapshot");
         const mvpSnapshot = skills.find((skill) => skill.id === "mvp.snapshot");
+        const autonomySnapshot = skills.find((skill) => skill.id === "autonomy.snapshot");
         const recordingScript = skills.find((skill) => skill.id === "recording.script");
         const pilotValueSnapshot = skills.find((skill) => skill.id === "pilot.value.snapshot");
         observedAgentCardSignals = [
@@ -2783,6 +2852,7 @@ async function buildReleaseDriftForTarget(input: {
           ...(competitiveSnapshot?.tags?.includes("get-proof") ? ["competitive.snapshot:tag:get-proof"] : []),
           ...(judgeSnapshot?.tags?.includes("get-proof") ? ["judge.snapshot:tag:get-proof"] : []),
           ...(mvpSnapshot?.tags?.includes("get-proof") ? ["mvp.snapshot:tag:get-proof"] : []),
+          ...(autonomySnapshot?.tags?.includes("get-proof") ? ["autonomy.snapshot:tag:get-proof"] : []),
           ...(recordingScript?.tags?.includes("get-proof") ? ["recording.script:tag:get-proof"] : []),
           ...(pilotValueSnapshot?.tags?.includes("get-proof") ? ["pilot.value.snapshot:tag:get-proof"] : [])
         ];
@@ -2837,6 +2907,20 @@ async function buildReleaseDriftForTarget(input: {
         return body.a2aPayload?.skill === "mvp.snapshot" && typeof body.readiness === "string"
           ? { status: "passed", score: 100, evidence: `MVP Readiness Snapshot returned ${body.readiness}.` }
           : { status: "missing", score: 24, evidence: "MVP Readiness endpoint did not return the current mvp.snapshot JSON payload." };
+      }
+    }),
+    liveJsonProbe({
+      id: "autonomy-snapshot-endpoint",
+      label: "Target Autonomy Snapshot endpoint",
+      url: `${targetBaseUrl}/api/autonomy-snapshot`,
+      required: true,
+      timeoutMs: 16000,
+      init: targetProbeHeaders ? { headers: targetProbeHeaders } : undefined,
+      evaluate: (payload) => {
+        const body = payload as { readiness?: string; a2aPayload?: { skill?: string } };
+        return body.a2aPayload?.skill === "autonomy.snapshot" && typeof body.readiness === "string"
+          ? { status: "passed", score: 100, evidence: `Autonomy Snapshot returned ${body.readiness}.` }
+          : { status: "missing", score: 24, evidence: "Autonomy Snapshot endpoint did not return the current autonomy.snapshot JSON payload." };
       }
     }),
     liveJsonProbe({
@@ -2907,14 +2991,16 @@ async function buildReleaseDriftForTarget(input: {
           data?.judgeSnapshotEndpoint &&
           data?.judgeSnapshotPageEndpoint &&
           data?.mvpReadinessSnapshotEndpoint &&
+          data?.autonomySnapshotEndpoint &&
+          data?.autonomySnapshotJsonEndpoint &&
           data?.observabilityOracleEndpoint &&
           data?.deployRecoveryEndpoint
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but observability oracle/external evidence/task board/winner packet/submission runway/submission assets/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but autonomy snapshot/observability oracle/external evidence/task board/winner packet/submission runway/submission assets/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -2938,7 +3024,7 @@ async function buildReleaseDriftForTarget(input: {
     requiredSkillIds,
     requiredAgentCardSignals,
     observedAgentCardSignals,
-    probes: [healthProbe, cardProbe, acceptanceProbe, mvpReadinessProbe, recordingScriptProbe, pilotValueProbe, a2aProbe, ciProbe]
+    probes: [healthProbe, cardProbe, acceptanceProbe, mvpReadinessProbe, autonomySnapshotProbe, recordingScriptProbe, pilotValueProbe, a2aProbe, ciProbe]
   });
 }
 
@@ -6481,6 +6567,8 @@ app.post("/a2a", async (req, res) => {
                 judgeSnapshotPageEndpoint: `${publicBaseUrl(req)}/judge-snapshot`,
                 mvpReadinessSnapshotEndpoint: `${publicBaseUrl(req)}/mvp-readiness`,
                 mvpReadinessSnapshotJsonEndpoint: `${publicBaseUrl(req)}/api/mvp-readiness`,
+                autonomySnapshotEndpoint: `${publicBaseUrl(req)}/autonomy-snapshot`,
+                autonomySnapshotJsonEndpoint: `${publicBaseUrl(req)}/api/autonomy-snapshot`,
                 demoConciergeEndpoint: `${publicBaseUrl(req)}/api/demo-concierge`,
                 prizeStrategyEndpoint: `${publicBaseUrl(req)}/api/prize-strategy`,
                 judgeRehearsalEndpoint: `${publicBaseUrl(req)}/api/judge-rehearsal`,

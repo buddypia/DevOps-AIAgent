@@ -12,6 +12,7 @@ const expectedSkillIds = [
   "acceptance.matrix",
   "release.drift",
   "mvp.snapshot",
+  "autonomy.snapshot",
   "pilot.economics",
   "pilot.value.snapshot",
   "demo.concierge",
@@ -40,6 +41,7 @@ const requiredAgentCardSignals = [
   "competitive.snapshot:tag:get-proof",
   "judge.snapshot:tag:get-proof",
   "mvp.snapshot:tag:get-proof",
+  "autonomy.snapshot:tag:get-proof",
   "recording.script:tag:get-proof",
   "pilot.value.snapshot:tag:get-proof"
 ];
@@ -99,6 +101,7 @@ describe("deploy recovery plan", () => {
     expect(plan.recoveryScore).toBe(73);
     expect(plan.primaryAction).toContain("gcloud auth login");
     expect(plan.commands.find((command) => command.id === "auth-login")).toMatchObject({ blocking: true, copyGroup: "auth" });
+    expect(plan.commands.find((command) => command.id === "verify-autonomy-snapshot")?.command).toContain("/api/autonomy-snapshot");
     expect(plan.commands.find((command) => command.id === "verify-recording-script")?.command).toContain("/api/recording-script");
     expect(plan.commands.find((command) => command.id === "verify-pilot-value")?.command).toContain("/api/pilot-value");
     expect(plan.commands.find((command) => command.id === "verify-recovery-endpoint")?.command).toContain("/api/deploy-recovery");
@@ -160,7 +163,7 @@ describe("deploy recovery plan", () => {
           ...passedProbe("agent-card-skill-surface"),
           status: "watch",
           score: 58,
-          evidence: "Agent Card exposes all skills but misses competitive.battlecard:tag:criteria-duel, competitive.snapshot:tag:get-proof, judge.snapshot:tag:get-proof, mvp.snapshot:tag:get-proof, recording.script:tag:get-proof, and pilot.value.snapshot:tag:get-proof."
+          evidence: "Agent Card exposes all skills but misses autonomy.snapshot:tag:get-proof, competitive.battlecard:tag:criteria-duel, competitive.snapshot:tag:get-proof, judge.snapshot:tag:get-proof, mvp.snapshot:tag:get-proof, recording.script:tag:get-proof, and pilot.value.snapshot:tag:get-proof."
         },
         passedProbe("acceptance-endpoint"),
         passedProbe("a2a-artifact"),
@@ -180,6 +183,7 @@ describe("deploy recovery plan", () => {
     });
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("judge.snapshot:tag:get-proof");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("mvp.snapshot:tag:get-proof");
+    expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("autonomy.snapshot:tag:get-proof");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("recording.script:tag:get-proof");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("pilot.value.snapshot:tag:get-proof");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("competitive.snapshot:tag:get-proof");
@@ -187,8 +191,9 @@ describe("deploy recovery plan", () => {
       blocking: true,
       copyGroup: "verify"
     });
-    expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="recording.script" or .id=="pilot.value.snapshot"');
+    expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="autonomy.snapshot" or .id=="recording.script"');
     expect(plan.commands.find((command) => command.id === "verify-mvp-readiness")?.command).toContain("/api/mvp-readiness");
+    expect(plan.commands.find((command) => command.id === "verify-autonomy-snapshot")?.why).toContain("Autonomy Snapshot");
     expect(plan.commands.find((command) => command.id === "verify-recording-script")?.why).toContain("Recording Script");
     expect(plan.commands.find((command) => command.id === "verify-pilot-value")?.why).toContain("Pilot Value");
     expect(plan.steps.find((step) => step.id === "skill-surface")?.status).toBe("blocked");
@@ -197,6 +202,8 @@ describe("deploy recovery plan", () => {
     expect(plan.judgeScript.join("\n")).toContain("competitive.snapshot:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("judge.snapshot:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("mvp.snapshot:tag:get-proof");
+    expect(plan.judgeScript.join("\n")).toContain("autonomy.snapshot:tag:get-proof");
+    expect(plan.judgeScript.join("\n")).toContain("/api/autonomy-snapshot");
     expect(plan.judgeScript.join("\n")).toContain("recording.script:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("pilot.value.snapshot:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("/api/recording-script");
@@ -205,6 +212,7 @@ describe("deploy recovery plan", () => {
       skill: "deploy.recover",
       releaseDrift: {
         missingAgentCardSignals: [
+          "autonomy.snapshot:tag:get-proof",
           "competitive.battlecard:tag:criteria-duel",
           "competitive.snapshot:tag:get-proof",
           "judge.snapshot:tag:get-proof",

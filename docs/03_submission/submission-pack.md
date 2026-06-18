@@ -57,6 +57,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Judge Demo Receiptで、審査導線、競合反論、編成判断、公開証拠、外部提出URL状態をReceipt Integrity Lockとsha256 digest付き検収票にする
 - Judge Acceptance Matrixで、必須技術、審査5項目、競合/SWOT、公開証拠、提出物をaccepted/watch/blockedの受入表にする
 - Autonomy Ledgerで、市場探索、判断、契約、A2A委任、検証、運用、提出を検収可能なAI自律性台帳として見せる
+- Autonomy Snapshotで、AI中心性、A2A委任、検証コマンド、receiptをGETで直接開ける審査証拠として見せる
 - Agent Task Boardで、`task.delegate` を目的、検収条件、proof URL付きのA2A `message/send` payloadとして見せる
 - Security Sentinel Reviewで、Secret Manager、IP allowlist、Zod入力制限、A2A信頼境界、CIを審査員向け安全性証拠にする
 - Impact Caseで、対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性・体験価値の証拠にする
@@ -206,6 +207,7 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/acceptance-matrix 
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/autonomy-ledger \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/api/autonomy-snapshot
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/task-board \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
@@ -295,6 +297,7 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - Judge Recording Lock: run `POST /api/judge-rehearsal` and confirm `recordingLock.readiness` is `recording-external-watch` before recording; after real ProtoPedia/video URLs exist it should become `recording-ready`
 - Winner Proof Packet API: `POST /api/winner-packet`
 - Final Submission Runway API: `POST /api/submission-runway`
+- Autonomy Snapshot Page: `GET /autonomy-snapshot`
 - Agent Task Board API: `POST /api/task-board`
 - External Evidence API: `POST /api/external-evidence`
 - Required tag: `findy_hackathon`

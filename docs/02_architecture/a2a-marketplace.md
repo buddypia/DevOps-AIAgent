@@ -60,6 +60,7 @@
   - `mvp.snapshot`
   - `mission.run`
   - `autonomy.ledger`
+  - `autonomy.snapshot`
   - `submission.publish`
   - `submission.dossier`
   - `submission.launch`
@@ -306,6 +307,13 @@
 - Judge challenges: 「単なるダッシュボードではないか」「なぜAIが必然か」「DevOpsサイクルが閉じているか」への反証を返す
 - A2A payload: `autonomy.ledger` skillとしてledger score、verdict、phases、handoffs、receiptを返す
 
+## Autonomy Snapshot Surface
+
+- `GET /autonomy-snapshot`: Autonomy LedgerとAgent Task Boardを、審査員が直接開けるAI中心性HTMLへ束ねる
+- `GET /api/autonomy-snapshot`: readiness、ledger score、task score、verified chain、work orders、challenge answers、receiptsを返す
+- First-click proof: sense、decide、contract、delegate、verify、operate、submitの判断連鎖をA2A work orderと同じ画面で検収する
+- A2A payload: `autonomy.snapshot` skillとしてAI中心性のreadiness、endpoint群、receipt digestを返す
+
 ## Submission Launch Surface
 
 - `POST /api/submission-launch`: ProtoPedia作品URLと動画URLを受け取り、最終提出可否とFinal Submit Lockを判定する
@@ -435,6 +443,7 @@
 - Win autopilot proof: `win.autopilot` skillとして、win score、12 lane scorecards、残ブロッカー、証拠デッキ、live evidence score、receipt digest、moat verdict、squad readinessをA2A payloadにも含める
 - Judge brief proof: `judge.brief` skillとして、審査員の初見用にkey metrics、proof ladder、30秒route、risk registerをA2A payloadにも含める
 - Autonomy ledger proof: `autonomy.ledger` skillとして、AIの判断連鎖、agent handoff、検証endpoint、sha256 receiptをA2A payloadにも含める
+- Autonomy snapshot proof: `autonomy.snapshot` skillとして、Autonomy LedgerとTask BoardをGETで開けるAI中心性HTMLにも含める
 - Submission launch proof: `submission.launch` skillとして、外部URL入力後のsubmit-ready判定、Final Submit Lock、提出フォーム用packetをA2A payloadにも含める
 - Security review proof: `security.review` skillとして、Secret/IP/input/A2A/CIの安全境界をA2A payloadにも含める
 - Impact proof: `impact.case` skillとして、実用性の定量指標、ユーザー別KPI、導入計画をA2A payloadにも含める
@@ -495,6 +504,7 @@
 - Demo receipt: `/api/demo-receipt`
 - Acceptance matrix: `/api/acceptance-matrix`
 - Autonomy ledger: `/api/autonomy-ledger`
+- Autonomy snapshot: `/api/autonomy-snapshot` / `/autonomy-snapshot`
 - Agent task board: `/api/task-board`
 - Submission launch: `/api/submission-launch`
 - Submission closeout: `/api/submission-closeout`
