@@ -316,7 +316,7 @@
 
 - API: `POST /api/dossier`
 - App UI: `Run submission dossier`
-- Output: dossier score、copy blocks、submission links、recording plan、final checks、Markdown、A2A `submission.dossier` payload
+- Output: dossier score、copy blocks、submission links、recording plan、handoff packet、final checks、Markdown、A2A `submission.dossier` payload
 
 ## GitHub Actions CI
 

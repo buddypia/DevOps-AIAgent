@@ -3562,6 +3562,16 @@ app.post("/a2a", async (req, res) => {
                   readiness: dossier.readiness,
                   copyBlocks: dossier.copyBlocks.map((block) => block.id),
                   missingLinks: dossier.links.filter((link) => link.status === "watch").map((link) => link.id),
+                  handoffPacket: {
+                    submitFields: dossier.handoffPacket.submitFields.map((field) => ({ id: field.id, status: field.status })),
+                    videoChapters: dossier.handoffPacket.videoChapters.map((chapter) => ({
+                      id: chapter.id,
+                      timeRange: chapter.timeRange,
+                      screen: chapter.screen,
+                      status: chapter.status
+                    })),
+                    missingOnly: dossier.handoffPacket.missingOnly.map((item) => item.id)
+                  },
                   finalChecks: dossier.finalChecks.map((check) => ({
                     id: check.id,
                     status: check.status

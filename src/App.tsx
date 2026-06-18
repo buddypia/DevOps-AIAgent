@@ -4023,6 +4023,40 @@ function SubmissionDossierPanel({
             </div>
           </div>
 
+          <div className="dossier-handoff">
+            <section>
+              <h3>
+                <ExternalLink size={15} />
+                Submit fields
+              </h3>
+              <div>
+                {dossier.handoffPacket.submitFields.map((field) => (
+                  <article key={field.id} className={field.status}>
+                    <strong>{field.label}</strong>
+                    <span>{field.status}</span>
+                    <p>{field.target}</p>
+                    <small>{field.value || field.proof}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Film size={15} />
+                Video chapters
+              </h3>
+              <div>
+                {dossier.handoffPacket.videoChapters.slice(0, 5).map((chapter) => (
+                  <article key={chapter.id} className={chapter.status}>
+                    <strong>{chapter.timeRange}</strong>
+                    <span>{chapter.screen}</span>
+                    <p>{chapter.narration}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </div>
+
           <div className="dossier-copy">
             {dossier.copyBlocks.map((block) => (
               <article key={block.id} className={block.status}>

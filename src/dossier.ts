@@ -4,6 +4,7 @@ import type { MissionRun } from "./mission.js";
 import type { PitchRun } from "./pitch.js";
 import type { JudgeProof } from "./proof.js";
 import type { ProtoPediaPublisher, PublisherStatus } from "./publisher.js";
+import { SUBMISSION_PROOF } from "./submission.js";
 import type { WinningAutopilotRun } from "./autopilot.js";
 import type { WinningStrategy } from "./strategy.js";
 import type { Recommendation } from "./types.js";
@@ -34,6 +35,32 @@ export type DossierCheck = {
   proof: string;
 };
 
+export type DossierHandoffField = {
+  id: string;
+  label: string;
+  target: string;
+  value: string;
+  status: PublisherStatus;
+  proof: string;
+};
+
+export type DossierVideoChapter = {
+  id: string;
+  timeRange: string;
+  screen: string;
+  narration: string;
+  evidenceUrl: string;
+  status: PublisherStatus;
+};
+
+export type DossierHandoffPacket = {
+  submitFields: DossierHandoffField[];
+  protopediaFields: DossierHandoffField[];
+  videoChapters: DossierVideoChapter[];
+  proofLinks: DossierLink[];
+  missingOnly: Array<{ id: string; label: string; target: string; action: string }>;
+};
+
 export type SubmissionDossier = {
   id: string;
   dossierScore: number;
@@ -44,6 +71,7 @@ export type SubmissionDossier = {
   links: DossierLink[];
   recordingPlan: string[];
   finalChecks: DossierCheck[];
+  handoffPacket: DossierHandoffPacket;
   markdown: string;
   a2aPayload: Record<string, unknown>;
 };
@@ -143,6 +171,81 @@ export function buildSubmissionDossier(input: {
     "8-12s: Win Autopilotでwin score、残アクション、証拠デッキを見せる",
     ...demoRunway.recordingCues
   ];
+  const submitFields: DossierHandoffField[] = [
+    {
+      id: "github-url",
+      label: "公開GitHubリポジトリURL",
+      target: "Findy submission form",
+      value: SUBMISSION_PROOF.publicGitHubUrl,
+      status: "ready",
+      proof: "公開リポジトリURL"
+    },
+    {
+      id: "deployed-url",
+      label: "デプロイ済みURL",
+      target: "Findy submission form",
+      value: SUBMISSION_PROOF.deployedUrl,
+      status: "ready",
+      proof: "Cloud Run公開URL"
+    },
+    {
+      id: "protopedia-url",
+      label: "ProtoPedia作品URL",
+      target: "Findy submission form",
+      value: SUBMISSION_PROOF.protopediaUrl,
+      status: SUBMISSION_PROOF.protopediaUrl ? "ready" : "watch",
+      proof: SUBMISSION_PROOF.protopediaUrl || "外部公開後に貼る"
+    },
+    {
+      id: "video-url",
+      label: "動画URL",
+      target: "ProtoPedia media",
+      value: SUBMISSION_PROOF.videoUrl,
+      status: SUBMISSION_PROOF.videoUrl ? "ready" : "watch",
+      proof: SUBMISSION_PROOF.videoUrl || "Demo Runwayの順番で録画して貼る"
+    },
+    {
+      id: "findy-tag",
+      label: "必須タグ",
+      target: "ProtoPedia tags",
+      value: "findy_hackathon",
+      status: "ready",
+      proof: "Hackathon required tag"
+    }
+  ];
+  const protopediaFields: DossierHandoffField[] = copyBlocks.map((item) =>
+    ({
+      id: item.id,
+      label: item.label,
+      target: item.target,
+      value: item.value,
+      status: item.status,
+      proof: "copy-ready"
+    })
+  );
+  const videoChapters: DossierVideoChapter[] = demoRunway.steps.map((step) => ({
+    id: step.id,
+    timeRange: step.timeRange,
+    screen: step.screen,
+    narration: step.narration,
+    evidenceUrl: step.evidenceUrl,
+    status: step.status
+  }));
+  const missingOnly = [
+    ...submitFields
+      .filter((item) => item.status === "watch")
+      .map((item) => ({ id: item.id, label: item.label, target: item.target, action: item.proof })),
+    ...finalChecks
+      .filter((item) => item.status === "watch")
+      .map((item) => ({ id: item.id, label: item.label, target: "Submission checklist", action: item.action }))
+  ];
+  const handoffPacket: DossierHandoffPacket = {
+    submitFields,
+    protopediaFields,
+    videoChapters,
+    proofLinks: links,
+    missingOnly
+  };
   const dossierScore = Math.round(
     clamp(
       average([
@@ -176,6 +279,16 @@ export function buildSubmissionDossier(input: {
     markdownSection("30秒動画録画順", markdownList(recordingPlan)),
     "",
     markdownSection(
+      "提出フォームパケット",
+      submitFields.map((field) => `- ${field.label}: ${field.value || "needs external URL"} (${field.target} / ${field.status})`).join("\n")
+    ),
+    "",
+    markdownSection(
+      "動画チャプター",
+      videoChapters.map((chapter) => `- ${chapter.timeRange}: ${chapter.screen} / ${chapter.narration}`).join("\n")
+    ),
+    "",
+    markdownSection(
       "提出リンク",
       links.map((link) => `- ${link.label}: ${link.url ?? "needs external URL"} (${link.status})`).join("\n")
     ),
@@ -198,6 +311,7 @@ export function buildSubmissionDossier(input: {
     links,
     recordingPlan,
     finalChecks,
+    handoffPacket,
     markdown,
     a2aPayload: {
       method: "message/send",
@@ -208,6 +322,12 @@ export function buildSubmissionDossier(input: {
       selectedAgents: recommendation.selected.map((agent) => agent.id),
       copyBlocks: copyBlocks.map((item) => ({ id: item.id, target: item.target, status: item.status })),
       missingLinks: links.filter((item) => item.status === "watch").map((item) => item.id),
+      handoffPacket: {
+        submitFields: submitFields.map((item) => ({ id: item.id, target: item.target, status: item.status })),
+        protopediaFields: protopediaFields.map((item) => ({ id: item.id, target: item.target, status: item.status })),
+        videoChapters: videoChapters.map((item) => ({ id: item.id, timeRange: item.timeRange, screen: item.screen, status: item.status })),
+        missingOnly: missingOnly.map((item) => ({ id: item.id, target: item.target }))
+      },
       finalChecks: finalChecks.map((item) => ({ id: item.id, status: item.status }))
     }
   };

@@ -83,12 +83,27 @@ describe("submission dossier", () => {
     expect(dossier.recordingPlan[0]).toContain("Market Intel");
     expect(dossier.recordingPlan[1]).toContain("MVP Audit");
     expect(dossier.recordingPlan[2]).toContain("Win Autopilot");
+    expect(dossier.handoffPacket.submitFields.map((field) => field.id)).toEqual(["github-url", "deployed-url", "protopedia-url", "video-url", "findy-tag"]);
+    expect(dossier.handoffPacket.submitFields.find((field) => field.id === "findy-tag")).toMatchObject({
+      value: "findy_hackathon",
+      status: "ready"
+    });
+    expect(dossier.handoffPacket.protopediaFields.map((field) => field.id)).toEqual(expect.arrayContaining(["problem", "features", "technology", "tags"]));
+    expect(dossier.handoffPacket.videoChapters.length).toBeGreaterThanOrEqual(8);
+    expect(dossier.handoffPacket.missingOnly.map((item) => item.id)).toEqual(expect.arrayContaining(["protopedia-url", "video-url"]));
     expect(dossier.markdown).toContain("30秒動画録画順");
+    expect(dossier.markdown).toContain("提出フォームパケット");
+    expect(dossier.markdown).toContain("動画チャプター");
     expect(dossier.markdown).toContain("needs external URL");
     expect(dossier.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "submission.dossier",
-      readiness: "needs-external-urls"
+      readiness: "needs-external-urls",
+      handoffPacket: {
+        submitFields: expect.arrayContaining([expect.objectContaining({ id: "github-url", status: "ready" })]),
+        videoChapters: expect.arrayContaining([expect.objectContaining({ id: "proof-first" })]),
+        missingOnly: expect.arrayContaining([expect.objectContaining({ id: "protopedia-url" })])
+      }
     });
   });
 });

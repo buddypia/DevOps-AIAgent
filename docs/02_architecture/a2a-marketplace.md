@@ -273,7 +273,7 @@
 - `POST /api/judge-drill`: 審査5項目ごとの厳しめ質問、回答、証拠リンク、デモ画面を返す
 - `POST /api/finalist`: 審査員5役の最終候補判定、落選理由、残ギャップ、次の一手を返す
 - `POST /api/publisher`: ProtoPediaに貼る本文、タグ、URL、動画台本、提出チェックリストを返す
-- `POST /api/dossier`: ProtoPedia本文、動画録画順、提出リンク、証拠デッキ、最終チェックを返す
+- `POST /api/dossier`: ProtoPedia本文、動画録画順、提出フォームhandoff packet、提出リンク、証拠デッキ、最終チェックを返す
 - `POST /api/demo-run`: Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線にする
 - `POST /api/win-run`: 競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を一括実行し、勝てる状態と残アクションを返す
 - `POST /api/impact-case`: 実用性のbefore/after、ユーザー別KPI、導入計画、審査回答を返す
@@ -301,7 +301,7 @@
 - Judge drill: `judge.drill` skillとして、審査員の反論に対する回答と証拠リンクをA2A payloadにも含める
 - Finalist proof: `finalist.simulate` skillとして、最終候補スコア、judge consensus、残ギャップをA2A payloadにも含める
 - Publisher proof: `submission.publish` skillとして、ProtoPedia貼り付け本文、メディアURL、未完了外部作業をA2A payloadにも含める
-- Dossier proof: `submission.dossier` skillとして、提出コピー欄、録画順、提出リンク、MarkdownドシエをA2A payloadにも含める
+- Dossier proof: `submission.dossier` skillとして、提出コピー欄、録画順、提出フォームhandoff packet、提出リンク、MarkdownドシエをA2A payloadにも含める
 - Demo runway proof: `demo.runway` skillとして、30秒デモ順、証拠リンク、録画キュー、外部残リスクをA2A payloadにも含める
 - Win autopilot proof: `win.autopilot` skillとして、win score、12 lane scorecards、残ブロッカー、証拠デッキ、live evidence score、receipt digest、moat verdict、squad readinessをA2A payloadにも含める
 - Judge brief proof: `judge.brief` skillとして、審査員の初見用にkey metrics、proof ladder、30秒route、risk registerをA2A payloadにも含める
