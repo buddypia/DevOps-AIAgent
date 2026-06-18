@@ -45,7 +45,7 @@
 - Impact Case: 対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性・体験価値の証拠に変換
 - Pilot Economics: 時間短縮、導入費用、回収日数、価格レーン、買い手の反論を投資判断の証拠に変換
 - Submission Launch Gate: ProtoPedia作品URLとYouTube/Vimeo動画URLを入力し、提出3点、必須タグ、本文、構成図、ストーリー、CI、証拠receiptを最終判定
-- Submission Closeout Workbench: ProtoPedia貼付、ProtoPedia Quality Lock、構成図、30秒動画、Video Proof Lock、外部URL、最終提出フォームを順番付きの作業台に束ねる
+- Submission Closeout Workbench: ProtoPedia貼付、ProtoPedia Quality Lock、構成図、30秒動画、Video Proof Lock、Submission Dry Run Lock、外部URL、最終提出フォームを順番付きの作業台に束ねる
 - Autonomy: Mission Controlが審査で弱い項目を検出し、A2A委任、検証runbook、ProtoPedia提出パックを生成
 - Operate: Ops DrillがCloud Run公開デモの稼働シグナルを読み、継続・ロールバック・追加雇用を判断
 - Proof: Judge ProofがGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1クリックで証拠束にする
@@ -272,11 +272,11 @@
 
 ## Submission Closeout Workbench
 
-`Submission Closeout Workbench` は、Win Gap Radarが `close-now` とした外部提出作業を実際の順番へ落とします。Submission Dossier、Submission Publisher、Demo Runway、Judge Proof、Submission Launch Gateを束ね、ProtoPedia貼付、ProtoPedia Quality Lock、構成図添付、30秒動画、Video Proof Lock、作品URL、最終提出フォーム、receipt確認を `ready` / `watch` / `blocked` の作業項目として返します。動画URLが未発行でも、公開Cloud Run開始、30秒導線、Judge Proof receipt、競合反論、提出handoffの録画受入条件を先に固定します。
+`Submission Closeout Workbench` は、Win Gap Radarが `close-now` とした外部提出作業を実際の順番へ落とします。Submission Dossier、Submission Publisher、Demo Runway、Judge Proof、Submission Launch Gateを束ね、ProtoPedia貼付、ProtoPedia Quality Lock、構成図添付、30秒動画、Video Proof Lock、Submission Dry Run Lock、作品URL、最終提出フォーム、receipt確認を `ready` / `watch` / `blocked` の作業項目として返します。動画URLが未発行でも、公開Cloud Run開始、30秒導線、Judge Proof receipt、競合反論、提出handoffの録画受入条件と、外部URL以外の提出dry runを先に固定します。
 
 - API: `POST /api/submission-closeout`
 - App UI: `Build closeout`
-- Output: closeout score、readiness、next action、work items、copy tray、ProtoPedia Quality Lock、video run、Video Proof Lock、submit packet、A2A `submission.closeout` payload
+- Output: closeout score、readiness、next action、work items、copy tray、ProtoPedia Quality Lock、video run、Video Proof Lock、Submission Dry Run Lock、submit packet、A2A `submission.closeout` payload
 
 ## Security Sentinel Review
 

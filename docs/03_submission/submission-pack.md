@@ -280,6 +280,7 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - Video URL: needs YouTube or Vimeo URL
 - ProtoPedia Quality Lock: run `POST /api/publisher` or `POST /api/submission-closeout` and confirm `qualityLock` / `protopediaQualityLock` is `copy-locked` before publishing the work page
 - Video Proof Lock: run `POST /api/submission-closeout` and use the `videoProofLock` checks before publishing the video URL
+- Submission Dry Run Lock: run `POST /api/submission-closeout` and confirm `dryRunLock.readiness` is `submit-dry-run-ready` before recording; after publishing ProtoPedia/video URLs it should become `submit-dry-run-sealed`
 - System architecture diagram: `public/assets/a2a-marketplace-architecture.svg`
 - Architecture Pack API: `POST /api/architecture-pack`
 - Gemini Proof Lock: run `POST /api/proof` and confirm `geminiProofLock.readiness` is `gemini-live` on Cloud Run before final submission

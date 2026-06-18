@@ -37,6 +37,7 @@ export type CloseoutVideoStep = {
 };
 
 export type CloseoutVideoLockReadiness = "video-url-ready" | "recording-locked" | "needs-recording-proof" | "blocked-video-url";
+export type CloseoutDryRunReadiness = "submit-dry-run-sealed" | "submit-dry-run-ready" | "needs-dry-run-fix";
 
 export type CloseoutVideoLockCheck = {
   id: string;
@@ -65,6 +66,27 @@ export type CloseoutVideoProofLock = {
   captions: CloseoutVideoCaption[];
 };
 
+export type CloseoutDryRunCheck = {
+  id: string;
+  label: string;
+  status: CloseoutStatus;
+  proof: string;
+  evidenceUrl: string;
+  acceptance: string;
+};
+
+export type CloseoutDryRunLock = {
+  id: string;
+  lockScore: number;
+  readiness: CloseoutDryRunReadiness;
+  readyCount: number;
+  watchCount: number;
+  blockedCount: number;
+  operatorLine: string;
+  runbook: string[];
+  checks: CloseoutDryRunCheck[];
+};
+
 export type SubmissionCloseoutWorkbench = {
   id: string;
   closeoutScore: number;
@@ -78,6 +100,7 @@ export type SubmissionCloseoutWorkbench = {
   videoSteps: CloseoutVideoStep[];
   protopediaQualityLock: ProtoPediaQualityLock;
   videoProofLock: CloseoutVideoProofLock;
+  dryRunLock: CloseoutDryRunLock;
   submitPacket: SubmissionLaunchGate["submitPacket"];
   proofScript: string[];
   a2aPayload: Record<string, unknown>;
@@ -138,6 +161,12 @@ function workScore(item: CloseoutWorkItem) {
 }
 
 function lockScore(item: CloseoutVideoLockCheck) {
+  if (item.status === "ready") return 100;
+  if (item.status === "watch") return 70;
+  return 20;
+}
+
+function dryRunCheckScore(item: CloseoutDryRunCheck) {
   if (item.status === "ready") return 100;
   if (item.status === "watch") return 70;
   return 20;
@@ -283,6 +312,133 @@ function buildCloseoutQualityLock(input: { publisher: ProtoPediaPublisher; launc
   };
 }
 
+function buildDryRunLock(input: {
+  base: string;
+  workItems: CloseoutWorkItem[];
+  copyFields: CloseoutCopyField[];
+  videoSteps: CloseoutVideoStep[];
+  protopediaQualityLock: ProtoPediaQualityLock;
+  videoProofLock: CloseoutVideoProofLock;
+  launchGate: SubmissionLaunchGate;
+  proof: JudgeProof;
+}): CloseoutDryRunLock {
+  const workItem = (id: string) => input.workItems.find((item) => item.id === id);
+  const copyReady = input.copyFields.length >= 8 && input.copyFields.every((field) => field.status === "ready");
+  const videoRouteReady = input.videoSteps.length >= 7 && input.videoProofLock.readiness !== "needs-recording-proof";
+  const submitPacketReady =
+    input.launchGate.submitPacket.githubUrl.length > 0 &&
+    input.launchGate.submitPacket.deployedUrl.length > 0 &&
+    input.launchGate.submitPacket.title.length > 0 &&
+    input.launchGate.submitPacket.protoPediaTag === "findy_hackathon" &&
+    input.launchGate.submitPacket.protoPediaStatus === "完成" &&
+    input.launchGate.submitPacket.submitterMemo.length > 0;
+  const externalStatus: CloseoutStatus =
+    input.launchGate.readiness === "submit-ready" ? "ready" : input.launchGate.readiness === "invalid-urls" ? "blocked" : "watch";
+  const checks: CloseoutDryRunCheck[] = [
+    {
+      id: "copy-fields",
+      label: "Copy fields ready",
+      status: copyReady ? "ready" : "watch",
+      proof: `${input.copyFields.filter((field) => field.status === "ready").length}/${input.copyFields.length} ProtoPedia fields ready.`,
+      evidenceUrl: absoluteUrl(input.base, "/api/dossier"),
+      acceptance: "ProtoPediaへ貼るタイトル、概要、課題、ユーザー、特徴、技術構成、タグ、URL欄が揃っている。"
+    },
+    {
+      id: "architecture-asset",
+      label: "Architecture asset ready",
+      status: workItem("attach-architecture")?.status ?? "watch",
+      proof: workItem("attach-architecture")?.proof ?? "Architecture diagram proof is missing.",
+      evidenceUrl: absoluteUrl(input.base, "/api/architecture-pack"),
+      acceptance: "構成図URLをProtoPediaへ添付できる。"
+    },
+    {
+      id: "video-route",
+      label: "Video route locked",
+      status: input.videoProofLock.readiness === "blocked-video-url" ? "blocked" : videoRouteReady ? "ready" : "watch",
+      proof: `${input.videoProofLock.lockScore} / ${input.videoProofLock.readiness}; ${input.videoSteps.length} chapters.`,
+      evidenceUrl: absoluteUrl(input.base, "/api/demo-run"),
+      acceptance: "公開Cloud Runから始まり、競合反論、Judge Proof、提出handoffまで30秒で辿れる。"
+    },
+    {
+      id: "protopedia-copy-lock",
+      label: "ProtoPedia copy locked",
+      status:
+        input.protopediaQualityLock.readiness === "submit-page-ready" || input.protopediaQualityLock.readiness === "copy-locked"
+          ? "ready"
+          : "watch",
+      proof: `${input.protopediaQualityLock.qualityScore} / ${input.protopediaQualityLock.readiness}`,
+      evidenceUrl: absoluteUrl(input.base, "/api/publisher"),
+      acceptance: "本文が課題、対象ユーザー、特徴、必須技術、競合/SWOT、公開証拠を満たす。"
+    },
+    {
+      id: "proof-receipt",
+      label: "Judge proof receipt ready",
+      status: input.proof.receipt.digest ? "ready" : "watch",
+      proof: input.proof.receipt.digest || "Judge Proof receipt digest is missing.",
+      evidenceUrl: absoluteUrl(input.base, "/api/proof"),
+      acceptance: "動画説明または提出メモへsha256 receiptを残せる。"
+    },
+    {
+      id: "submit-packet",
+      label: "Submit packet handoff ready",
+      status: submitPacketReady ? "ready" : "watch",
+      proof: `${input.launchGate.submitPacket.title}; ${input.launchGate.submitPacket.protoPediaStatus}; ${input.launchGate.submitPacket.protoPediaTag}; ${externalStatus === "ready" ? "external URLs pasted" : "external URL slots reserved"}.`,
+      evidenceUrl: absoluteUrl(input.base, "/api/submission-launch"),
+      acceptance: "GitHub、Cloud Run、タイトル、完成ステータス、findy_hackathonタグ、提出メモ、外部URLの貼付枠が明確である。実URLの有無はexternal-url-handoffで判定する。"
+    },
+    {
+      id: "external-url-handoff",
+      label: "External URL handoff",
+      status: externalStatus,
+      proof:
+        externalStatus === "ready"
+          ? "ProtoPedia and video URLs are present and valid."
+          : externalStatus === "blocked"
+            ? "External URLs are malformed and must be corrected before submission."
+            : "ProtoPedia work URL and video URL still need to be published and pasted.",
+      evidenceUrl: absoluteUrl(input.base, "/api/submission-launch"),
+      acceptance: "URL未入力はwatchとして残し、不正URLはblockedとして提出完了扱いにしない。"
+    }
+  ];
+  const nonExternalChecks = checks.filter((check) => check.id !== "external-url-handoff");
+  const readyCount = checks.filter((check) => check.status === "ready").length;
+  const watchCount = checks.filter((check) => check.status === "watch").length;
+  const blockedCount = checks.filter((check) => check.status === "blocked").length;
+  const readiness: CloseoutDryRunReadiness =
+    blockedCount > 0
+      ? "needs-dry-run-fix"
+      : checks.every((check) => check.status === "ready")
+        ? "submit-dry-run-sealed"
+        : nonExternalChecks.every((check) => check.status === "ready")
+          ? "submit-dry-run-ready"
+          : "needs-dry-run-fix";
+  const lockScoreValue = Math.round(clamp(average(checks.map(dryRunCheckScore))));
+
+  return {
+    id: `submission-dry-run-lock-${lockScoreValue}-${readiness}`,
+    lockScore: lockScoreValue,
+    readiness,
+    readyCount,
+    watchCount,
+    blockedCount,
+    operatorLine:
+      readiness === "submit-dry-run-sealed"
+        ? "All submission assets, URLs, receipts, and final handoff fields are sealed for final submit."
+        : readiness === "submit-dry-run-ready"
+          ? "Submission dry run is ready: copy, architecture, video route, quality, receipt, and submit packet are locked; only external published URLs remain."
+          : "Submission dry run still has an internal asset or malformed URL issue; fix it before recording.",
+    runbook: [
+      "Open Submission Closeout Workbench on the public Cloud Run URL.",
+      "Paste the copy fields into ProtoPedia and attach the architecture diagram.",
+      "Record the video route in order and publish it to YouTube or Vimeo.",
+      "Paste the ProtoPedia and video URLs into Submission Launch Gate.",
+      "Confirm Submission Launch Gate returns submit-ready.",
+      "Paste GitHub, Cloud Run, and ProtoPedia URLs into the final Findy form."
+    ],
+    checks
+  };
+}
+
 export function buildSubmissionCloseoutWorkbench(input: {
   baseUrl: string;
   publisher: ProtoPediaPublisher;
@@ -362,22 +518,6 @@ export function buildSubmissionCloseoutWorkbench(input: {
       priority: receiptReady ? "later" : "next"
     })
   ];
-  const blocked = workItems.some((entry) => entry.status === "blocked");
-  const openItems = workItems.filter((entry) => entry.status !== "ready");
-  const readiness: CloseoutReadiness = blocked ? "invalid-evidence" : openItems.length === 0 ? "ready-to-submit" : "needs-closeout";
-  const closeoutScore = Math.round(
-    clamp(
-      average([
-        input.launchGate.launchScore,
-        input.dossier.dossierScore,
-        input.publisher.publishScore,
-        protopediaQualityLock.qualityScore,
-        input.demoRunway.demoScore,
-        input.proof.overallScore,
-        average(workItems.map(workScore))
-      ])
-    )
-  );
   const copyFields = input.dossier.handoffPacket.protopediaFields.slice(0, 9).map((field) => ({
     id: field.id,
     label: field.label,
@@ -402,6 +542,33 @@ export function buildSubmissionCloseoutWorkbench(input: {
     videoSteps,
     videoStatus
   });
+  const dryRunLock = buildDryRunLock({
+    base,
+    workItems,
+    copyFields,
+    videoSteps,
+    protopediaQualityLock,
+    videoProofLock,
+    launchGate: input.launchGate,
+    proof: input.proof
+  });
+  const blocked = workItems.some((entry) => entry.status === "blocked");
+  const openItems = workItems.filter((entry) => entry.status !== "ready");
+  const readiness: CloseoutReadiness = blocked ? "invalid-evidence" : openItems.length === 0 ? "ready-to-submit" : "needs-closeout";
+  const closeoutScore = Math.round(
+    clamp(
+      average([
+        input.launchGate.launchScore,
+        input.dossier.dossierScore,
+        input.publisher.publishScore,
+        protopediaQualityLock.qualityScore,
+        input.demoRunway.demoScore,
+        input.proof.overallScore,
+        dryRunLock.lockScore,
+        average(workItems.map(workScore))
+      ])
+    )
+  );
   const nextAction =
     workItems.find((entry) => entry.status === "blocked") ??
     workItems.find((entry) => entry.status === "watch") ??
@@ -426,11 +593,13 @@ export function buildSubmissionCloseoutWorkbench(input: {
     videoSteps,
     protopediaQualityLock,
     videoProofLock,
+    dryRunLock,
     submitPacket: input.launchGate.submitPacket,
     proofScript: [
       "Submission Closeout Workbenchで残作業をnow/watch/readyに分ける。",
       `ProtoPedia Quality Lockで${protopediaQualityLock.qualityScore}点の本文受入条件を固定する。`,
       `Video Proof Lockで${videoProofLock.lockScore}点の録画受入条件を固定する。`,
+      `Submission Dry Run Lockで${dryRunLock.lockScore}点の外部URL以外の提出リハーサルを固定する。`,
       "Copy fieldsをProtoPediaへ貼り、構成図を添付する。",
       "Video chaptersの順番で30秒動画を録画し、動画URLを入力する。",
       "ProtoPedia作品URLを入力し、Submission Launch Gateをsubmit-readyにする。",
@@ -462,6 +631,14 @@ export function buildSubmissionCloseoutWorkbench(input: {
         readiness: videoProofLock.readiness,
         targetDurationSeconds: videoProofLock.targetDurationSeconds,
         checks: videoProofLock.checks.map((check) => ({ id: check.id, status: check.status, evidenceUrl: check.evidenceUrl }))
+      },
+      dryRunLock: {
+        lockScore: dryRunLock.lockScore,
+        readiness: dryRunLock.readiness,
+        readyCount: dryRunLock.readyCount,
+        watchCount: dryRunLock.watchCount,
+        blockedCount: dryRunLock.blockedCount,
+        checks: dryRunLock.checks.map((check) => ({ id: check.id, status: check.status, evidenceUrl: check.evidenceUrl }))
       },
       urls: input.launchGate.urlStatuses.map((status) => ({
         id: status.id,

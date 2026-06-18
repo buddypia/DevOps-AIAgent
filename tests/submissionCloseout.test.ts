@@ -173,6 +173,18 @@ describe("submission closeout workbench", () => {
       status: "watch",
       evidenceUrl: `${SUBMISSION_PROOF.deployedUrl}/api/submission-launch`
     });
+    expect(closeout.dryRunLock).toMatchObject({
+      readiness: "submit-dry-run-ready",
+      lockScore: 96,
+      readyCount: 6,
+      watchCount: 1,
+      blockedCount: 0,
+      checks: expect.arrayContaining([
+        expect.objectContaining({ id: "copy-fields", status: "ready" }),
+        expect.objectContaining({ id: "video-route", status: "ready" }),
+        expect.objectContaining({ id: "external-url-handoff", status: "watch" })
+      ])
+    });
     expect(closeout.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "submission.closeout",
@@ -187,6 +199,10 @@ describe("submission closeout workbench", () => {
           expect.objectContaining({ id: "competitive-objection", status: "ready" }),
           expect.objectContaining({ id: "publish-url", status: "watch" })
         ])
+      },
+      dryRunLock: {
+        readiness: "submit-dry-run-ready",
+        checks: expect.arrayContaining([expect.objectContaining({ id: "external-url-handoff", status: "watch" })])
       },
       endpoints: {
         closeout: `${SUBMISSION_PROOF.deployedUrl}/api/submission-closeout`,
@@ -207,6 +223,9 @@ describe("submission closeout workbench", () => {
     expect(closeout.protopediaQualityLock.checks.find((check) => check.id === "external-url-closure")?.status).toBe("ready");
     expect(closeout.videoProofLock.readiness).toBe("video-url-ready");
     expect(closeout.videoProofLock.checks.find((check) => check.id === "publish-url")?.status).toBe("ready");
+    expect(closeout.dryRunLock.readiness).toBe("submit-dry-run-sealed");
+    expect(closeout.dryRunLock.lockScore).toBe(100);
+    expect(closeout.dryRunLock.checks.every((check) => check.status === "ready")).toBe(true);
     expect(closeout.submitPacket).toMatchObject({
       protopediaUrl: "https://protopedia.net/prototype/999999",
       videoUrl: "https://youtu.be/demo1234567"
@@ -225,5 +244,7 @@ describe("submission closeout workbench", () => {
     expect(closeout.workItems.find((item) => item.id === "publish-protopedia")?.status).toBe("blocked");
     expect(closeout.videoProofLock.readiness).toBe("blocked-video-url");
     expect(closeout.videoProofLock.checks.find((check) => check.id === "publish-url")?.status).toBe("blocked");
+    expect(closeout.dryRunLock.readiness).toBe("needs-dry-run-fix");
+    expect(closeout.dryRunLock.checks.find((check) => check.id === "external-url-handoff")?.status).toBe("blocked");
   });
 });

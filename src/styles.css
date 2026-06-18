@@ -8716,6 +8716,124 @@ h1 {
   text-transform: uppercase;
 }
 
+.closeout-dry-run-lock {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.42fr) minmax(520px, 1fr);
+  gap: 1px;
+  background: #bed2c6;
+}
+
+.closeout-dry-run-lock > section,
+.closeout-dry-run-lock > div {
+  min-width: 0;
+  padding: 14px;
+  background: #fffdf9;
+}
+
+.closeout-dry-run-lock > section {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  border-top: 5px solid #12312b;
+}
+
+.closeout-dry-run-lock > section > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.closeout-dry-run-lock > section strong {
+  color: #12312b;
+  font-size: 2.7rem;
+  line-height: 1;
+}
+
+.closeout-dry-run-lock h3 {
+  font-size: 1.1rem;
+}
+
+.closeout-dry-run-lock > section p,
+.closeout-dry-run-lock > section small {
+  color: #374a42;
+  line-height: 1.46;
+  overflow-wrap: anywhere;
+}
+
+.closeout-dry-run-lock > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.closeout-dry-run-lock article {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #bed2c6;
+  border-left: 4px solid var(--teal);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.closeout-dry-run-lock article.watch {
+  border-left-color: var(--amber);
+  background: #fff8e6;
+}
+
+.closeout-dry-run-lock article.blocked {
+  border-left-color: var(--rose);
+  background: #fff1f2;
+}
+
+.closeout-dry-run-lock article > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.closeout-dry-run-lock article * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.closeout-dry-run-lock article span {
+  color: var(--teal);
+  font-size: 0.7rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.closeout-dry-run-lock article.watch span {
+  color: #8a5b17;
+}
+
+.closeout-dry-run-lock article.blocked span {
+  color: #9d2d2d;
+}
+
+.closeout-dry-run-lock article p,
+.closeout-dry-run-lock article small {
+  color: #374a42;
+  line-height: 1.42;
+}
+
+.closeout-dry-run-lock article a {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--blue);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
 .closeout-video-lock {
   display: grid;
   grid-template-columns: minmax(320px, 0.42fr) minmax(520px, 1fr);
@@ -12642,6 +12760,7 @@ pre {
 
   .publisher-quality-lock > div,
   .dossier-quality-lock > div,
+  .closeout-dry-run-lock > div,
   .closeout-quality-lock > div {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -12757,6 +12876,7 @@ pre {
   .gap-grid,
   .closeout-inputs,
   .closeout-summary,
+  .closeout-dry-run-lock,
   .closeout-quality-lock,
   .closeout-video-lock,
   .closeout-grid,
@@ -12891,6 +13011,7 @@ pre {
 
   .publisher-quality-lock > div,
   .dossier-quality-lock > div,
+  .closeout-dry-run-lock > div,
   .closeout-quality-lock > div,
   .economics-evidence-lock > div {
     grid-template-columns: 1fr;

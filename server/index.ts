@@ -343,8 +343,8 @@ function agentCard(baseUrl: string) {
       {
         id: "submission.closeout",
         name: "Close out external submission work",
-        description: "ProtoPedia貼付、構成図、30秒動画、外部URL、最終提出フォームを順番付きの作業台に束ねる。",
-        tags: ["submission", "closeout", "protopedia", "video", "launch-gate"]
+        description: "ProtoPedia貼付、構成図、30秒動画、外部URL、最終提出フォームを順番付きの作業台に束ね、Submission Dry Run Lockで検収する。",
+        tags: ["submission", "closeout", "protopedia", "video", "launch-gate", "dry-run-lock"]
       },
       {
         id: "submission.runway",

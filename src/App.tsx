@@ -5528,6 +5528,46 @@ function SubmissionCloseoutPanel({
             </div>
           </div>
 
+          <div className="closeout-dry-run-lock">
+            <section>
+              <div>
+                <span
+                  className={cx(
+                    "risk-chip",
+                    workbench.dryRunLock.readiness === "submit-dry-run-sealed"
+                      ? "low"
+                      : workbench.dryRunLock.readiness === "submit-dry-run-ready"
+                        ? "medium"
+                        : "high"
+                  )}
+                >
+                  {workbench.dryRunLock.readiness}
+                </span>
+                <strong>{workbench.dryRunLock.lockScore}</strong>
+              </div>
+              <h3>Submission Dry Run Lock</h3>
+              <p>{workbench.dryRunLock.operatorLine}</p>
+              <small>
+                ready {workbench.dryRunLock.readyCount} / watch {workbench.dryRunLock.watchCount} / blocked {workbench.dryRunLock.blockedCount}
+              </small>
+            </section>
+            <div>
+              {workbench.dryRunLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.acceptance}</p>
+                  <small>{check.proof}</small>
+                  <a href={check.evidenceUrl} target="_blank" rel="noreferrer">
+                    Evidence <ExternalLink size={13} />
+                  </a>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="closeout-quality-lock">
             <section>
               <div>
