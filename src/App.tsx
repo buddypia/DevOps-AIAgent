@@ -4915,6 +4915,26 @@ function SubmissionLaunchPanel({
             </section>
             <section>
               <h3>
+                <FileText size={15} />
+                ProtoPedia compliance
+              </h3>
+              <div className="launch-compliance">
+                {gate.protopediaCompliance.map((item) => (
+                  <article key={item.id} className={item.status}>
+                    <div>
+                      <strong>{item.label}</strong>
+                      <span>{item.status}</span>
+                    </div>
+                    <p>{item.proof}</p>
+                    <small>
+                      {item.source}: {item.action}
+                    </small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
                 <ExternalLink size={15} />
                 Copy actions
               </h3>

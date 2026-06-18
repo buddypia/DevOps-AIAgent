@@ -7518,7 +7518,8 @@ h1 {
 }
 
 .launch-url-grid article > div,
-.launch-checklist article > div {
+.launch-checklist article > div,
+.launch-compliance article > div {
   display: flex;
   align-items: start;
   justify-content: space-between;
@@ -7526,7 +7527,8 @@ h1 {
 }
 
 .launch-url-grid span,
-.launch-checklist span {
+.launch-checklist span,
+.launch-compliance span {
   color: var(--teal);
   font-size: 0.72rem;
   font-weight: 950;
@@ -7535,12 +7537,14 @@ h1 {
 
 .launch-url-grid article.missing span,
 .launch-checklist article.missing span,
+.launch-compliance article.missing span,
 .launch-actions article.missing small {
   color: #8a5b17;
 }
 
 .launch-url-grid article.invalid span,
 .launch-checklist article.invalid span,
+.launch-compliance article.invalid span,
 .launch-actions article.invalid small {
   color: #9d2d2d;
 }
@@ -7548,6 +7552,8 @@ h1 {
 .launch-url-grid p,
 .launch-url-grid small,
 .launch-checklist p,
+.launch-compliance p,
+.launch-compliance small,
 .launch-actions p,
 .launch-actions small,
 .launch-empty p {
@@ -7568,7 +7574,7 @@ h1 {
 
 .launch-grid {
   display: grid;
-  grid-template-columns: minmax(360px, 1fr) minmax(340px, 0.92fr) minmax(360px, 1fr);
+  grid-template-columns: repeat(4, minmax(260px, 1fr));
   gap: 1px;
   background: #dfd6a6;
 }
@@ -7593,6 +7599,7 @@ h1 {
 }
 
 .launch-checklist,
+.launch-compliance,
 .launch-actions {
   display: grid;
   gap: 8px;
@@ -7600,6 +7607,7 @@ h1 {
 }
 
 .launch-checklist article,
+.launch-compliance article,
 .launch-actions article {
   display: grid;
   gap: 7px;
@@ -7612,18 +7620,21 @@ h1 {
 }
 
 .launch-checklist article *,
+.launch-compliance article *,
 .launch-actions article * {
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
 .launch-checklist article.missing,
+.launch-compliance article.missing,
 .launch-actions article.missing {
   border-left-color: var(--amber);
   background: #fff8e6;
 }
 
 .launch-checklist article.invalid,
+.launch-compliance article.invalid,
 .launch-actions article.invalid {
   border-left-color: var(--rose);
   background: #fff1f2;

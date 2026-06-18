@@ -43,7 +43,7 @@
 - Security Sentinel Review: Secret Manager、IP allowlist、Zod入力制限、A2A信頼境界、CIを安全性証拠に変換
 - Impact Case: 対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性・体験価値の証拠に変換
 - Pilot Economics: 時間短縮、導入費用、回収日数、価格レーン、買い手の反論を投資判断の証拠に変換
-- Submission Launch Gate: ProtoPedia作品URLと動画URLを入力し、提出3点、タグ、本文、CI、証拠receiptを最終判定
+- Submission Launch Gate: ProtoPedia作品URLとYouTube/Vimeo動画URLを入力し、提出3点、必須タグ、本文、構成図、ストーリー、CI、証拠receiptを最終判定
 - Submission Closeout Workbench: ProtoPedia貼付、構成図、30秒動画、外部URL、最終提出フォームを順番付きの作業台に束ねる
 - Autonomy: Mission Controlが審査で弱い項目を検出し、A2A委任、検証runbook、ProtoPedia提出パックを生成
 - Operate: Ops DrillがCloud Run公開デモの稼働シグナルを読み、継続・ロールバック・追加雇用を判断
@@ -255,11 +255,11 @@
 
 ## Submission Launch Gate
 
-`Submission Launch Gate` は、外部提出URLを曖昧に合格扱いしない最終ゲートです。ProtoPedia作品URLと動画URLを入力すると、提出3点、`findy_hackathon` タグ、ProtoPedia本文、CI、MVP hard gates、Judge Proof receiptをまとめて判定します。URL未入力なら `needs-external-urls`、形式不正なら `invalid-urls`、両方揃ったときだけ `submit-ready` を返します。
+`Submission Launch Gate` は、外部提出URLを曖昧に合格扱いしない最終ゲートです。ProtoPedia作品URLとYouTube/Vimeo動画URLを入力すると、提出3点、`findy_hackathon` タグ、作品ステータス、作品タイトル、概要、ストーリー3要素、構成図、CI、MVP hard gates、Judge Proof receiptをまとめて判定します。URL未入力なら `needs-external-urls`、形式不正または必須項目不備なら `invalid-urls`、全て揃ったときだけ `submit-ready` を返します。
 
 - API: `POST /api/submission-launch`
 - App UI: `Check launch gate`
-- Output: launch score、readiness、URL status、final checklist、copy actions、submit packet、A2A `submission.launch` payload
+- Output: launch score、readiness、URL status、ProtoPedia compliance、final checklist、copy actions、submit packet、A2A `submission.launch` payload
 
 ## Submission Closeout Workbench
 

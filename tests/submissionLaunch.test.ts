@@ -95,10 +95,18 @@ describe("submission launch gate", () => {
     expect(launch.urlStatuses.map((item) => item.status)).toEqual(["missing", "missing"]);
     expect(launch.checklist.find((item) => item.id === "protopedia-url")?.status).toBe("missing");
     expect(launch.checklist.find((item) => item.id === "video-url")?.status).toBe("missing");
+    expect(launch.checklist.find((item) => item.id === "protopedia-compliance")?.status).toBe("missing");
+    expect(launch.protopediaCompliance).toHaveLength(9);
+    expect(launch.protopediaCompliance.find((item) => item.id === "video-embed")?.status).toBe("missing");
+    expect(launch.protopediaCompliance.find((item) => item.id === "architecture-diagram")?.status).toBe("ready");
+    expect(launch.protopediaCompliance.find((item) => item.id === "story-problem")?.status).toBe("ready");
+    expect(launch.protopediaCompliance.find((item) => item.id === "story-users")?.status).toBe("ready");
+    expect(launch.protopediaCompliance.find((item) => item.id === "story-features")?.status).toBe("ready");
     expect(launch.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "submission.launch",
-      readiness: "needs-external-urls"
+      readiness: "needs-external-urls",
+      protopediaCompliance: expect.arrayContaining([expect.objectContaining({ id: "video-embed", status: "missing" })])
     });
   });
 
@@ -113,11 +121,13 @@ describe("submission launch gate", () => {
     expect(launch.readiness).toBe("submit-ready");
     expect(launch.urlStatuses.map((item) => item.status)).toEqual(["ready", "ready"]);
     expect(launch.checklist.every((item) => item.status === "ready")).toBe(true);
+    expect(launch.protopediaCompliance.every((item) => item.status === "ready")).toBe(true);
     expect(launch.submitPacket).toMatchObject({
       githubUrl: "https://github.com/buddypia/DevOps-AIAgent",
       deployedUrl: "https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app",
       protopediaUrl: "https://protopedia.net/prototype/999999",
       videoUrl: "https://youtu.be/demo1234567",
+      protoPediaStatus: "完成",
       protoPediaTag: "findy_hackathon"
     });
   });
@@ -131,6 +141,20 @@ describe("submission launch gate", () => {
 
     expect(launch.readiness).toBe("invalid-urls");
     expect(launch.urlStatuses.map((item) => item.status)).toEqual(["invalid", "invalid"]);
+    expect(launch.protopediaCompliance.find((item) => item.id === "video-embed")?.status).toBe("invalid");
     expect(launch.verdict).toBe("Fix invalid external URL evidence");
+  });
+
+  test("keeps Google Drive videos out of submit-ready because the hackathon requires YouTube or Vimeo", () => {
+    const launch = buildSubmissionLaunchGate({
+      ...fixture(),
+      protopediaUrl: "https://protopedia.net/prototype/999999",
+      videoUrl: "https://drive.google.com/file/d/demo/view"
+    });
+
+    expect(launch.readiness).toBe("invalid-urls");
+    expect(launch.urlStatuses.find((item) => item.id === "video-url")?.status).toBe("invalid");
+    expect(launch.protopediaCompliance.find((item) => item.id === "video-embed")?.status).toBe("invalid");
+    expect(launch.hardTruth).toContain("YouTube/Vimeo");
   });
 });
