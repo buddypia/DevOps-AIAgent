@@ -270,7 +270,7 @@ describe("prize strategy board", () => {
     const board = fixture();
 
     expect(board.prizeScore).toBeGreaterThanOrEqual(88);
-    expect(board.readiness).toBe("needs-proof");
+    expect(board.readiness).toBe("finalist-track");
     expect(board.criteria.map((criterion) => criterion.id)).toEqual([
       "agent-centrality",
       "approach",
@@ -279,7 +279,7 @@ describe("prize strategy board", () => {
       "implementation"
     ]);
     expect(board.criteria.every((criterion) => criterion.targetScore === 92)).toBe(true);
-    expect(board.criteria.some((criterion) => criterion.status === "needs-proof")).toBe(true);
+    expect(board.criteria.find((criterion) => criterion.id === "usability")?.status).toBe("finalist-track");
     expect(board.proofMoves.map((move) => move.id)).toEqual(["command", "battlecard", "truth-table", "public-release", "buyer-value"]);
     expect(board.pitchOrder).toHaveLength(5);
     expect(board.risks.map((risk) => risk.id)).toEqual(expect.arrayContaining(["submission-assets", "demo-receipt"]));

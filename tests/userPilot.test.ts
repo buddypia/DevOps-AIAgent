@@ -64,7 +64,7 @@ describe("user pilot lab", () => {
     expect(userPilot.paths.map((path) => path.id)).toEqual(["dev-lead", "platform-sre", "hackathon-submitter"]);
     expect(Math.max(...userPilot.paths.map((path) => path.timeToValueSeconds))).toBeLessThanOrEqual(180);
     expect(userPilot.frictions.map((friction) => friction.id)).toContain("ux-capability-gap");
-    expect(userPilot.nextClicks.map((click) => click.id)).toEqual(expect.arrayContaining(["build-tour", "issue-contracts", "run-impact", "hire-next"]));
+    expect(userPilot.nextClicks.map((click) => click.id)).toEqual(expect.arrayContaining(["build-prize-strategy", "build-tour", "issue-contracts", "run-impact", "hire-next"]));
     expect(userPilot.validationChecklist.every((item) => item.status !== "blocked")).toBe(true);
     expect(userPilot.a2aPayload).toMatchObject({
       method: "message/send",

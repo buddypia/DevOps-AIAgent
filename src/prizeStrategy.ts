@@ -314,13 +314,15 @@ export function buildPrizeStrategyBoard(input: {
       scores: [
         criterion(strategy, "usability")?.score ?? 0,
         row(acceptance, "usability-first-run")?.score ?? 0,
+        row(acceptance, "usability-first-run")?.score ?? 0,
         numericMetric(command, "tour"),
-        lane(autopilot, "demo")?.score ?? 0
+        lane(autopilot, "demo")?.score ?? 0,
+        command.commandScore
       ],
-      decisiveProof: "Judge Command CenterとJudge Tourが初見90秒のクリック順を固定する。",
+      decisiveProof: "Prize Strategy、Judge Command Center、Judge Tourが初見の採点作戦とクリック順を固定する。",
       missingProof: "機能が多く、初見審査員がどこを押すべきか迷うリスク。",
-      demoMove: "First 90 secondsを開き、proof buttonsを上から順に辿る。",
-      nextAction: "Prize pitchでは機能一覧を話さず、Command Centerの順番だけで進める。"
+      demoMove: "Prize Strategyで採点作戦を見せ、First 90 secondsのproof buttonsを上から辿る。",
+      nextAction: "Prize pitchでは機能一覧を話さず、Prize StrategyとCommand Centerの順番だけで進める。"
     }),
     criterionItem({
       id: "practicality",

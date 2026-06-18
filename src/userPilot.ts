@@ -237,19 +237,19 @@ export function buildUserPilotLab(input: {
       id: "hackathon-submitter",
       persona: submitter.persona,
       goal: "審査員に見せる順番と提出物の残作業を迷わず閉じる。",
-      timeToValueSeconds: hasUx ? 120 : 165,
+      timeToValueSeconds: hasUx ? 105 : 135,
       successMetric: submitter.kpi,
       proof: submitter.proof,
       tasks: [
         {
-          id: "open-judge-tour",
+          id: "open-prize-strategy",
           order: 1,
-          label: "Open judge route",
-          screen: "Judge Tour",
-          action: "90秒導線、5 claims、反論、外部URL不足を確認する",
-          successSignal: "six-step judge route",
-          seconds: 40,
-          status: statusFromScore(usability)
+          label: "Open scoring plan",
+          screen: "Prize Strategy Board",
+          action: "審査5項目のtarget score、現在証拠、最終ピッチ順、残リスクを確認する",
+          successSignal: "five-criterion prize board",
+          seconds: 35,
+          status: statusFromScore(average([strategy.judgeScore, impactCase.impactScore, usability]))
         },
         {
           id: "quantify-impact",
@@ -268,7 +268,7 @@ export function buildUserPilotLab(input: {
           screen: "Submission Launch Gate",
           action: "ProtoPedia作品URLと動画URLが揃うまで提出完了扱いしない",
           successSignal: "external URLs remain explicit blockers",
-          seconds: 80,
+          seconds: 65,
           status: strategy.submissionItems.every((item) => item.done) ? "clear" : "watch"
         }
       ]
@@ -286,7 +286,7 @@ export function buildUserPilotLab(input: {
             label: "初回利用の導線密度",
             severity: uxSeverity,
             evidence: `Usability criterion ${usability}; UX Guildmaster ${hasUx ? "selected" : "not selected"}.`,
-            fix: "UX Guildmasterを雇い、Marketplace -> Strategy -> Contract -> Proofの初回導線をさらに短縮する",
+            fix: "Prize Strategy Boardを先頭に開き、余裕があればUX Guildmasterを雇って初回導線をさらに短縮する",
             owner: "UX Guildmaster"
           }
         ]
@@ -346,6 +346,14 @@ export function buildUserPilotLab(input: {
   const usabilityLift = Math.round(clamp(100 - usability + (hasUx ? 6 : 0), 0, 40));
 
   const nextClicks: UserPilotNextClick[] = [
+    {
+      id: "build-prize-strategy",
+      label: "採点作戦を先に固定",
+      screen: "Prize Strategy Board",
+      button: "Build prize strategy",
+      reason: "審査5項目のtarget score、現在証拠、最終ピッチ順を最初に揃えるため。",
+      expectedEvidence: "five criteria, proof moves, final pitch order"
+    },
     {
       id: "build-tour",
       label: "審査順を先に固定",
