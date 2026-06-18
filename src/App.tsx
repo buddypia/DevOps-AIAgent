@@ -429,6 +429,42 @@ function DemoConciergePanel({
             </div>
           </div>
 
+          <div className="concierge-focus-lock">
+            <section>
+              <div>
+                <span
+                  className={cx(
+                    "risk-chip",
+                    concierge.focusLock.readiness === "focus-locked"
+                      ? "low"
+                      : concierge.focusLock.readiness === "focus-external-watch"
+                        ? "medium"
+                        : "high"
+                  )}
+                >
+                  {concierge.focusLock.readiness}
+                </span>
+                <strong>{concierge.focusLock.focusScore}</strong>
+              </div>
+              <h3>First-Run Focus Lock</h3>
+              <p>{concierge.focusLock.operatorScript}</p>
+              <small>
+                first: {concierge.focusLock.firstScreen} / {concierge.focusLock.visibleCount} visible /{" "}
+                {concierge.focusLock.deferredCount} deferred
+              </small>
+            </section>
+            <div>
+              {concierge.focusLock.rules.map((rule) => (
+                <article key={rule.id} className={rule.status}>
+                  <span>{rule.action}</span>
+                  <strong>{rule.target}</strong>
+                  <p>{rule.timeRange}</p>
+                  <small>{rule.instruction}</small>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="concierge-lanes">
             {concierge.lanes.map((lane) => (
               <article key={lane.id}>

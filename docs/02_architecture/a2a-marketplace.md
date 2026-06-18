@@ -140,11 +140,12 @@
 
 ## Demo Concierge Surface
 
-- `POST /api/demo-concierge`: 審査員、買い手、提出者の最初の1クリック、話す台詞、証拠URL、成功条件を固定し、Judge Route Lockで0-90秒の一本道に圧縮する
+- `POST /api/demo-concierge`: 審査員、買い手、提出者の最初の1クリック、話す台詞、証拠URL、成功条件を固定し、Judge Route LockとFirst-Run Focus Lockで0-90秒の一本道に圧縮する
 - Persona lanes: 初見審査員、Platform/SRE buyer、ハッカソン提出者ごとにentry question、first click、value moment、score lift、step endpointを返す
 - Route lock: judge/buyer/submitter laneからlocked steps、proof URL到達率、ひと息台詞、捨てる導線を返し、初見審査員の自由探索を防ぐ
+- Focus lock: 0-90秒で見せる画面、後回しにする画面、外部URL watchを隠さないルールをscore/readiness付きで返す
 - Friction cuts: 機能過多、実用性説明、競合差別化の迷いを、どの証拠順で減らすかを返す
-- A2A payload: `demo.concierge` skillとしてconcierge score、readiness、single next click、route lock、persona lanes、success criteriaを返す
+- A2A payload: `demo.concierge` skillとしてconcierge score、readiness、single next click、route lock、focus lock、persona lanes、success criteriaを返す
 
 ## Judge Rehearsal Surface
 

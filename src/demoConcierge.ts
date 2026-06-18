@@ -8,6 +8,8 @@ import type { UserPilotLab } from "./userPilot.js";
 export type DemoConciergeReadiness = "guided" | "external-watch" | "needs-focus";
 export type DemoConciergeStatus = "ready" | "watch" | "blocked";
 export type DemoRouteLockReadiness = "locked" | "locked-external-watch" | "needs-route-fix";
+export type DemoFocusLockReadiness = "focus-locked" | "focus-external-watch" | "needs-focus-fix";
+export type DemoFocusAction = "show" | "defer" | "keep-visible";
 
 export type DemoConciergeStep = {
   id: string;
@@ -51,6 +53,30 @@ export type DemoRouteLock = {
   bypassedDistractions: Array<{ id: string; cut: string; reason: string }>;
 };
 
+export type DemoFocusRule = {
+  id: string;
+  action: DemoFocusAction;
+  target: string;
+  timeRange: string;
+  instruction: string;
+  proof: string;
+  status: DemoConciergeStatus;
+};
+
+export type DemoFocusLock = {
+  id: string;
+  focusScore: number;
+  readiness: DemoFocusLockReadiness;
+  visibleCount: number;
+  deferredCount: number;
+  watchCount: number;
+  blockedCount: number;
+  firstScreen: string;
+  oneMinutePath: string[];
+  rules: DemoFocusRule[];
+  operatorScript: string;
+};
+
 export type DemoConcierge = {
   id: string;
   conciergeScore: number;
@@ -59,6 +85,7 @@ export type DemoConcierge = {
   hardTruth: string;
   singleNextClick: string;
   routeLock: DemoRouteLock;
+  focusLock: DemoFocusLock;
   lanes: DemoConciergeLane[];
   successCriteria: Array<{ id: string; label: string; status: DemoConciergeStatus; proof: string }>;
   frictionCuts: Array<{ id: string; before: string; after: string; proof: string }>;
@@ -114,8 +141,129 @@ function routeLockReadiness(input: { score: number; blockedCount: number; extern
   return "locked";
 }
 
+function focusLockReadiness(input: { score: number; blockedCount: number; watchCount: number }): DemoFocusLockReadiness {
+  if (input.blockedCount > 0) return "needs-focus-fix";
+  if (input.watchCount > 0 || input.score < 92) return "focus-external-watch";
+  return "focus-locked";
+}
+
 function shortText(value: string, max = 180) {
   return value.length <= max ? value : `${value.slice(0, max - 1)}...`;
+}
+
+function buildFocusLock(input: {
+  routeLock: DemoRouteLock;
+  externalWatchCount: number;
+  command: JudgeCommandCenter;
+  acceptance: JudgeAcceptanceMatrix;
+  battlecard: CompetitiveBattlecard;
+  pilotEconomics: PilotEconomics;
+  successCriteria: DemoConcierge["successCriteria"];
+}): DemoFocusLock {
+  const routeStepById = new Map(input.routeLock.lockedSteps.map((step) => [step.id, step]));
+  const statusFor = (id: string, fallback: DemoConciergeStatus = "ready") => routeStepById.get(id)?.status ?? fallback;
+  const proofFor = (id: string, fallback: string) => routeStepById.get(id)?.proofUrl ?? fallback;
+  const rules: DemoFocusRule[] = [
+    {
+      id: "show-command-first",
+      action: "show",
+      target: "Judge Command Center",
+      timeRange: "0-18s",
+      instruction: "Start on the command center and say the opening move before showing any feature list.",
+      proof: proofFor("judge-command", input.command.proofButtons[0]?.endpoint ?? "/api/judge-command-center"),
+      status: statusFor("judge-command")
+    },
+    {
+      id: "show-acceptance-second",
+      action: "show",
+      target: "Acceptance Matrix",
+      timeRange: "18-34s",
+      instruction: "Show accepted/watch rows so MVP truth and external gaps are visible together.",
+      proof: proofFor("judge-acceptance", "/api/acceptance-matrix"),
+      status: statusFor("judge-acceptance")
+    },
+    {
+      id: "show-objection-third",
+      action: "show",
+      target: "Competitive Battlecard",
+      timeRange: "34-50s",
+      instruction: "Answer the strongest competitor objection before opening marketplace browsing.",
+      proof: proofFor("submitter-battlecard", "/api/competitive-battlecard"),
+      status: statusFor("submitter-battlecard")
+    },
+    {
+      id: "show-buyer-fourth",
+      action: "show",
+      target: "Pilot Economics",
+      timeRange: "50-68s",
+      instruction: "Translate the demo into buyer payback and practical value.",
+      proof: proofFor("buyer-economics", "/api/pilot-economics"),
+      status: statusFor("buyer-economics", statusFromScore(input.pilotEconomics.economicsScore))
+    },
+    {
+      id: "show-prize-close",
+      action: "show",
+      target: "Prize Strategy Board",
+      timeRange: "68-90s",
+      instruction: "Close on the five judging criteria and the honest remaining external work.",
+      proof: proofFor("submitter-prize", "/api/prize-strategy"),
+      status: statusFor("submitter-prize")
+    },
+    {
+      id: "defer-marketplace-browsing",
+      action: "defer",
+      target: "Marketplace browsing and agent cards",
+      timeRange: "After 90s",
+      instruction: "Do not browse every agent before the judge has seen acceptance, objection, and buyer proof.",
+      proof: `${input.routeLock.lockedSteps.length} locked proof steps before free exploration.`,
+      status: input.routeLock.lockedSteps.length >= 5 ? "ready" : "watch"
+    },
+    {
+      id: "defer-raw-json",
+      action: "defer",
+      target: "Raw A2A payload JSON",
+      timeRange: "Q&A only",
+      instruction: "Keep JSON evidence available, but do not make it the first-run explanation.",
+      proof: `${input.routeLock.proofLinkScore} proof-link score.`,
+      status: input.routeLock.proofLinkScore >= 100 ? "ready" : "watch"
+    },
+    {
+      id: "keep-external-gaps-visible",
+      action: "keep-visible",
+      target: "ProtoPedia and video URL watch rows",
+      timeRange: "Entire run",
+      instruction: "Never claim submit-ready until the external URLs are real.",
+      proof:
+        input.externalWatchCount > 0
+          ? `${input.externalWatchCount} external submission rows remain watch.`
+          : "External submission rows are closed.",
+      status: input.externalWatchCount > 0 ? "watch" : "ready"
+    }
+  ];
+  const visibleCount = rules.filter((rule) => rule.action === "show" || rule.action === "keep-visible").length;
+  const deferredCount = rules.filter((rule) => rule.action === "defer").length;
+  const watchCount = rules.filter((rule) => rule.status === "watch").length;
+  const blockedCount = rules.filter((rule) => rule.status === "blocked").length;
+  const ruleScore = average(rules.map((rule) => scoreFromStatus(rule.status)));
+  const successScore = average(input.successCriteria.map((item) => scoreFromStatus(item.status)));
+  const focusScore = Math.round(clamp(average([input.routeLock.lockScore, ruleScore, successScore, input.acceptance.acceptanceScore])));
+  const readiness = focusLockReadiness({ score: focusScore, blockedCount, watchCount });
+
+  return {
+    id: `demo-focus-lock-${readiness}-${focusScore}`,
+    focusScore,
+    readiness,
+    visibleCount,
+    deferredCount,
+    watchCount,
+    blockedCount,
+    firstScreen: "Judge Command Center",
+    oneMinutePath: rules.filter((rule) => rule.action === "show").slice(0, 4).map((rule) => rule.target),
+    rules,
+    operatorScript: shortText(
+      `Start with ${input.command.openingMove} Then show ${input.acceptance.verdict}, ${input.battlecard.objectionReplay.weakestCompetitor}, and ${input.pilotEconomics.unitEconomics.paybackDays}d payback.`
+    )
+  };
 }
 
 export function buildDemoConcierge(input: {
@@ -345,6 +493,15 @@ export function buildDemoConcierge(input: {
       }
     ]
   };
+  const focusLock = buildFocusLock({
+    routeLock,
+    externalWatchCount,
+    command,
+    acceptance,
+    battlecard,
+    pilotEconomics,
+    successCriteria
+  });
 
   const singleNextClick =
     readiness === "needs-focus"
@@ -367,6 +524,7 @@ export function buildDemoConcierge(input: {
       "機能を増やすほど、審査員には迷いが増えます。勝つには、誰が来ても最初の1クリック、言う台詞、見る証拠URLを固定する必要があります。",
     singleNextClick,
     routeLock,
+    focusLock,
     lanes,
     successCriteria,
     frictionCuts,
@@ -382,6 +540,15 @@ export function buildDemoConcierge(input: {
         routeStepScore: routeLock.routeStepScore,
         proofLinkScore: routeLock.proofLinkScore,
         lockedSteps: routeLock.lockedSteps.map((step) => ({ id: step.id, status: step.status, proofUrl: step.proofUrl }))
+      },
+      focusLock: {
+        focusScore: focusLock.focusScore,
+        readiness: focusLock.readiness,
+        firstScreen: focusLock.firstScreen,
+        visibleCount: focusLock.visibleCount,
+        deferredCount: focusLock.deferredCount,
+        watchCount: focusLock.watchCount,
+        rules: focusLock.rules.map((rule) => ({ id: rule.id, action: rule.action, status: rule.status }))
       },
       lanes: lanes.map((lane) => ({
         id: lane.id,

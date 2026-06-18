@@ -5236,6 +5236,17 @@ app.post("/a2a", async (req, res) => {
                       proofUrl: step.proofUrl
                     }))
                   },
+                  focusLock: {
+                    focusScore: demoConcierge.focusLock.focusScore,
+                    readiness: demoConcierge.focusLock.readiness,
+                    firstScreen: demoConcierge.focusLock.firstScreen,
+                    deferredCount: demoConcierge.focusLock.deferredCount,
+                    rules: demoConcierge.focusLock.rules.map((rule) => ({
+                      id: rule.id,
+                      action: rule.action,
+                      status: rule.status
+                    }))
+                  },
                   lanes: demoConcierge.lanes.map((lane) => ({
                     id: lane.id,
                     persona: lane.persona,

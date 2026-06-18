@@ -239,6 +239,34 @@ describe("demo concierge", () => {
       "submitter-prize"
     ]);
     expect(concierge.routeLock.bypassedDistractions.map((item) => item.id)).toEqual(["feature-tour", "free-navigation", "external-gap-hiding"]);
+    expect(concierge.focusLock).toMatchObject({
+      readiness: "focus-external-watch",
+      firstScreen: "Judge Command Center",
+      visibleCount: 6,
+      deferredCount: 2,
+      blockedCount: 0
+    });
+    expect(concierge.focusLock.focusScore).toBeGreaterThanOrEqual(92);
+    expect(concierge.focusLock.oneMinutePath).toEqual([
+      "Judge Command Center",
+      "Acceptance Matrix",
+      "Competitive Battlecard",
+      "Pilot Economics"
+    ]);
+    expect(concierge.focusLock.rules.map((rule) => rule.id)).toEqual([
+      "show-command-first",
+      "show-acceptance-second",
+      "show-objection-third",
+      "show-buyer-fourth",
+      "show-prize-close",
+      "defer-marketplace-browsing",
+      "defer-raw-json",
+      "keep-external-gaps-visible"
+    ]);
+    expect(concierge.focusLock.rules.find((rule) => rule.id === "keep-external-gaps-visible")).toMatchObject({
+      action: "keep-visible",
+      status: "watch"
+    });
     expect(concierge.successCriteria.map((item) => item.id)).toEqual([
       "single-next-click",
       "three-persona-lanes",
@@ -258,6 +286,11 @@ describe("demo concierge", () => {
             proofUrl: `${SUBMISSION_PROOF.deployedUrl}/api/judge-command-center`
           })
         ])
+      },
+      focusLock: {
+        readiness: "focus-external-watch",
+        firstScreen: "Judge Command Center",
+        deferredCount: 2
       },
       endpoints: {
         demoConcierge: `${SUBMISSION_PROOF.deployedUrl}/api/demo-concierge`
