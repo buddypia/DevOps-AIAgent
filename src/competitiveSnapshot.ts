@@ -27,6 +27,7 @@ export type CompetitiveSnapshot = {
     battleScore: number;
     moatScore: number;
     criteriaDuelScore: number;
+    winLossScore: number;
     proofLockScore: number;
     competitorCount: number;
     highThreatCount: number;
@@ -56,6 +57,7 @@ export type CompetitiveSnapshot = {
     swotLinks: CompetitiveBattlecardCard["swotLinks"];
   }>;
   criteriaDuel: CompetitiveBattlecard["criteriaDuel"];
+  winLossLock: CompetitiveBattlecard["winLossLock"];
   proofLock: CompetitiveBattlecard["proofLock"];
   objectionReplay: CompetitiveBattlecard["objectionReplay"];
   sourceLedger: MarketSourceLedgerItem[];
@@ -91,6 +93,7 @@ function postCurl(url: string, projectBrief: string, selectedAgentIds: string[])
 function readinessFor(input: { battlecard: CompetitiveBattlecard; marketIntel: MarketIntelReport }): CompetitiveSnapshotReadiness {
   if (
     input.battlecard.readiness === "exposed" ||
+    input.battlecard.winLossLock.readiness === "needs-positioning" ||
     input.battlecard.proofLock.readiness === "needs-counterproof" ||
     input.battlecard.criteriaDuel.rows.some((row) => row.status === "exposed")
   ) {
@@ -98,6 +101,7 @@ function readinessFor(input: { battlecard: CompetitiveBattlecard; marketIntel: M
   }
   if (
     input.battlecard.readiness === "needs-proof" ||
+    input.battlecard.winLossLock.readiness === "win-loss-watch" ||
     input.battlecard.proofLock.readiness === "proof-watch" ||
     input.marketIntel.sourceProofLock.readiness !== "source-lock-live"
   ) {
@@ -181,6 +185,7 @@ export function buildCompetitiveSnapshot(input: {
       battleScore: input.battlecard.battleScore,
       moatScore: input.strategy.moatScore,
       criteriaDuelScore: input.battlecard.criteriaDuel.duelScore,
+      winLossScore: input.battlecard.winLossLock.winLossScore,
       proofLockScore: input.battlecard.proofLock.proofScore,
       competitorCount: input.battlecard.cards.length,
       highThreatCount: input.battlecard.cards.filter((card) => card.threatLevel === "high").length,
@@ -243,14 +248,16 @@ export function buildCompetitiveSnapshot(input: {
       swotLinks: card.swotLinks
     })),
     criteriaDuel: input.battlecard.criteriaDuel,
+    winLossLock: input.battlecard.winLossLock,
     proofLock: input.battlecard.proofLock,
     objectionReplay: input.battlecard.objectionReplay,
     sourceLedger: input.marketIntel.sourceLedger,
     postApis,
     judgeScript: [
       "最初に Competitive SWOT Snapshot を開き、6競合とSWOT 4象限が1画面にあることを見せる。",
-      `Battle score ${input.battlecard.battleScore}、Criteria Duel ${input.battlecard.criteriaDuel.duelScore}、Proof Lock ${input.battlecard.proofLock.proofScore} を読み上げる。`,
+      `Battle score ${input.battlecard.battleScore}、Criteria Duel ${input.battlecard.criteriaDuel.duelScore}、Win/Loss ${input.battlecard.winLossLock.winLossScore}、Proof Lock ${input.battlecard.proofLock.proofScore} を読み上げる。`,
       `最弱質問は ${input.battlecard.objectionReplay.weakestCompetitor}: ${input.battlecard.objectionReplay.openingObjection}`,
+      "Win/Loss Lockで、競合ごとに譲る強み、反撃、必ず開く証拠URL、MVP actionがあることを確認する。",
       "Source Ledgerで公式ソースを見せてから、SWOT signal、公開proof routeの順に進む。",
       "最後にJudge Snapshotへ戻り、競合/SWOTが審査5項目と実装証拠へ接続していることを示す。"
     ],
@@ -263,6 +270,7 @@ export function buildCompetitiveSnapshot(input: {
       competitorCount: input.battlecard.cards.length,
       sourceUrlCount,
       swotQuadrantCount,
+      winLossReadiness: input.battlecard.winLossLock.readiness,
       sourceLockReadiness: input.marketIntel.sourceProofLock.readiness,
       endpoints: {
         competitiveSwotSnapshot: competitiveSnapshotUrl,
@@ -278,8 +286,8 @@ export function buildCompetitiveSnapshot(input: {
 }
 
 function statusTone(status: string) {
-  if (["competitive-swot-ready", "lead", "win", "sealed", "proof-locked", "duel-locked", "replay-ready"].includes(status)) return "good";
-  if (["competitive-swot-exposed", "risk", "exposed", "missing", "needs-counterproof", "needs-duel-proof"].includes(status)) return "bad";
+  if (["competitive-swot-ready", "lead", "win", "sealed", "proof-locked", "duel-locked", "replay-ready", "win-loss-locked"].includes(status)) return "good";
+  if (["competitive-swot-exposed", "risk", "exposed", "missing", "needs-counterproof", "needs-duel-proof", "loss-risk", "needs-positioning"].includes(status)) return "bad";
   return "watch";
 }
 
@@ -343,6 +351,17 @@ export function renderCompetitiveSnapshotHtml(snapshot: CompetitiveSnapshot) {
           <td>${escapeHtml(row.targetCompetitor)}</td>
           <td>${escapeHtml(row.ourCounter)}</td>
           <td>${escapeHtml(row.swotSignal.quadrant)}: ${escapeHtml(row.swotSignal.title)}<small>${escapeHtml(row.sourceCount)} sources</small></td>
+        </tr>`
+    )
+    .join("");
+  const winLossRows = snapshot.winLossLock.rows
+    .map(
+      (row) => `
+        <tr>
+          <td><strong>${escapeHtml(row.competitor)}</strong><span>${escapeHtml(row.status)} / ${escapeHtml(row.score)}</span></td>
+          <td>${escapeHtml(row.concededStrength)}</td>
+          <td>${escapeHtml(row.counterPosition)}<small>${escapeHtml(row.swotSignal.quadrant)}: ${escapeHtml(row.swotSignal.title)}</small></td>
+          <td><a href="${escapeHtml(row.mustShowProofUrl)}">${escapeHtml(row.mustShowProofUrl)}</a><small>${escapeHtml(row.mvpAction)}</small></td>
         </tr>`
     )
     .join("");
@@ -416,7 +435,7 @@ export function renderCompetitiveSnapshotHtml(snapshot: CompetitiveSnapshot) {
         display: grid;
         gap: 12px;
       }
-      .metric-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 22px; }
+      .metric-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); margin-top: 22px; }
       .metric, .section, .swot-card, .competitor-card, .proof-check, .source-ledger, .api-row {
         background: var(--panel);
         border: 1px solid var(--line);
@@ -491,6 +510,7 @@ export function renderCompetitiveSnapshotHtml(snapshot: CompetitiveSnapshot) {
         <div class="metric ${statusTone(snapshot.readiness)}"><span>Readiness</span><strong>${escapeHtml(snapshot.readiness)}</strong></div>
         <div class="metric good"><span>Battle</span><strong>${escapeHtml(snapshot.summary.battleScore)}</strong></div>
         <div class="metric good"><span>Criteria Duel</span><strong>${escapeHtml(snapshot.summary.criteriaDuelScore)}</strong></div>
+        <div class="metric ${statusTone(snapshot.winLossLock.readiness)}"><span>Win/Loss</span><strong>${escapeHtml(snapshot.summary.winLossScore)}</strong></div>
         <div class="metric watch"><span>Source Lock</span><strong>${escapeHtml(snapshot.summary.sourceLockReadiness)}</strong></div>
         <div class="metric good"><span>SWOT</span><strong>${escapeHtml(snapshot.summary.swotQuadrantCount)}/4</strong></div>
       </div>
@@ -518,6 +538,14 @@ export function renderCompetitiveSnapshotHtml(snapshot: CompetitiveSnapshot) {
         <table>
           <thead><tr><th>Criterion</th><th>Competitor</th><th>Counter</th><th>SWOT</th></tr></thead>
           <tbody>${duelRows}</tbody>
+        </table>
+      </section>
+      <section class="section">
+        <h2>Win/Loss Lock</h2>
+        <p>${escapeHtml(snapshot.winLossLock.judgeLine)}</p>
+        <table>
+          <thead><tr><th>Competitor</th><th>Concede</th><th>Counter</th><th>Must-show Proof</th></tr></thead>
+          <tbody>${winLossRows}</tbody>
         </table>
       </section>
       <section class="section">

@@ -8,6 +8,11 @@ export type CompetitiveProofLockStatus = "sealed" | "watch" | "missing";
 export type CompetitiveProofLockReadiness = "proof-locked" | "proof-watch" | "needs-counterproof";
 export type CompetitiveCriteriaDuelStatus = "win" | "contest" | "exposed";
 export type CompetitiveCriteriaDuelReadiness = "duel-locked" | "duel-watch" | "needs-duel-proof";
+export type CompetitiveWinLossStatus = "win" | "contest" | "loss-risk";
+export type CompetitiveWinLossReadiness = "win-loss-locked" | "win-loss-watch" | "needs-positioning";
+
+export const COMPETITIVE_WIN_LOSS_LOCK_TAG = "win-loss-lock";
+export const COMPETITIVE_WIN_LOSS_REQUIRED_SIGNAL = `competitive.battlecard:tag:${COMPETITIVE_WIN_LOSS_LOCK_TAG}`;
 
 export type BattlecardSwotLink = {
   quadrant: SwotQuadrant;
@@ -129,6 +134,32 @@ export type CompetitiveCriteriaDuel = {
   rows: CompetitiveCriteriaDuelRow[];
 };
 
+export type CompetitiveWinLossRow = {
+  id: string;
+  competitor: string;
+  status: CompetitiveWinLossStatus;
+  score: number;
+  concededStrength: string;
+  counterPosition: string;
+  judgeCriterionId: string;
+  judgeCriterionLabel: string;
+  mustShowProofUrl: string;
+  swotSignal: BattlecardSwotLink;
+  mvpAction: string;
+  recordingCue: string;
+};
+
+export type CompetitiveWinLossLock = {
+  id: string;
+  winLossScore: number;
+  readiness: CompetitiveWinLossReadiness;
+  winCount: number;
+  contestCount: number;
+  lossRiskCount: number;
+  judgeLine: string;
+  rows: CompetitiveWinLossRow[];
+};
+
 export type CompetitiveBattlecard = {
   id: string;
   battleScore: number;
@@ -143,6 +174,7 @@ export type CompetitiveBattlecard = {
   objectionReplay: CompetitiveObjectionReplay;
   proofLock: CompetitiveProofLock;
   criteriaDuel: CompetitiveCriteriaDuel;
+  winLossLock: CompetitiveWinLossLock;
   judgeScript: string[];
   a2aPayload: Record<string, unknown>;
 };
@@ -345,6 +377,15 @@ const CRITERIA_DUEL_CONFIG: Record<string, { competitorId: string; proofPath: st
     proofPath: "/api/release-drift",
     recordingCue: "Release Drift Guardで、公開Cloud Runが最新証拠を返すかを検収する。"
   }
+};
+
+const WIN_LOSS_CONFIG: Record<string, { criterionId: string; proofPath: string }> = {
+  "google-adk": { criterionId: "approach", proofPath: "/api/competitive-battlecard" },
+  "a2a-marketplace": { criterionId: "agentCentrality", proofPath: "/.well-known/agent-card.json" },
+  langgraph: { criterionId: "implementation", proofPath: "/api/release-drift" },
+  crewai: { criterionId: "agentCentrality", proofPath: "/api/autonomy-snapshot" },
+  dify: { criterionId: "usability", proofPath: "/api/demo-concierge" },
+  agentops: { criterionId: "practicality", proofPath: "/api/pilot-economics" }
 };
 
 function buildObjectionReplay(input: {
@@ -592,6 +633,74 @@ function buildCriteriaDuel(input: { baseUrl: string; strategy: WinningStrategy; 
   };
 }
 
+function winLossStatus(score: number, card: CompetitiveBattlecardCard): CompetitiveWinLossStatus {
+  if (score >= 88 && card.status !== "risk") return "win";
+  if (score >= 76) return "contest";
+  return "loss-risk";
+}
+
+function mvpActionFor(status: CompetitiveWinLossStatus, card: CompetitiveBattlecardCard, criterionLabel: string) {
+  if (status === "win") {
+    return `${card.competitor}の強みを認めた上で、${criterionLabel}の証拠URLを録画に固定する。`;
+  }
+  if (status === "contest") {
+    return `${card.competitor}への反論は成立。録画では先に証拠URLを開き、SWOT signalを読み上げる。`;
+  }
+  return `${card.competitor}に負けて見える角度が残る。MVP本体を増やす前に、${criterionLabel}の公開証拠と短い回答を補強する。`;
+}
+
+function buildWinLossLock(input: { baseUrl: string; strategy: WinningStrategy; cards: CompetitiveBattlecardCard[] }): CompetitiveWinLossLock {
+  const normalizedBase = input.baseUrl.replace(/\/$/, "");
+  const rows = input.cards.map((card): CompetitiveWinLossRow => {
+    const config = WIN_LOSS_CONFIG[card.id] ?? { criterionId: "approach", proofPath: "/api/competitive-battlecard" };
+    const criterion = input.strategy.judgeCriteria.find((item) => item.id === config.criterionId) ?? input.strategy.judgeCriteria[0];
+    const sourceScore = card.sourceUrls.length >= 2 ? 100 : card.sourceUrls.length === 1 ? 84 : 45;
+    const swotScore = card.swotLinks.length >= 3 ? 100 : card.swotLinks.length >= 2 ? 88 : 62;
+    const proofScore = config.proofPath.startsWith("/") ? 100 : 72;
+    const score = Math.round(clamp(average([card.score, criterion?.score ?? input.strategy.judgeScore, sourceScore, swotScore, proofScore])));
+    const status = winLossStatus(score, card);
+    const swotSignal = fallbackSwotSignal(card);
+    const criterionLabel = criterion?.label ?? "審査基準";
+
+    return {
+      id: card.id,
+      competitor: card.competitor,
+      status,
+      score,
+      concededStrength: card.whereTheyWin,
+      counterPosition: card.shortAnswer,
+      judgeCriterionId: criterion?.id ?? "approach",
+      judgeCriterionLabel: criterionLabel,
+      mustShowProofUrl: `${normalizedBase}${config.proofPath}`,
+      swotSignal,
+      mvpAction: mvpActionFor(status, card, criterionLabel),
+      recordingCue: `${card.competitor}: ${criterionLabel}で、相手の強み -> こちらの反論 -> ${normalizedBase}${config.proofPath} の順に見せる。`
+    };
+  });
+  const winLossScore = Math.round(clamp(average(rows.map((row) => row.score))));
+  const winCount = rows.filter((row) => row.status === "win").length;
+  const contestCount = rows.filter((row) => row.status === "contest").length;
+  const lossRiskCount = rows.filter((row) => row.status === "loss-risk").length;
+  const readiness: CompetitiveWinLossReadiness =
+    lossRiskCount > 0 ? "needs-positioning" : contestCount > 0 ? "win-loss-watch" : "win-loss-locked";
+
+  return {
+    id: `competitive-win-loss-${winLossScore}-${readiness}`,
+    winLossScore,
+    readiness,
+    winCount,
+    contestCount,
+    lossRiskCount,
+    judgeLine:
+      readiness === "win-loss-locked"
+        ? "全競合について、譲る強み、反撃ポジション、必ず開く証拠URL、MVP actionが固定されています。"
+        : readiness === "win-loss-watch"
+          ? "競合別の勝敗線は見えています。contest行は録画で証拠URLを先に開いて補強します。"
+          : "競合に負けて見える行があります。MVP追加より先にpositioningと公開証拠を補強してください。",
+    rows
+  };
+}
+
 export function buildCompetitiveBattlecard(input: {
   baseUrl: string;
   strategy: WinningStrategy;
@@ -609,12 +718,12 @@ export function buildCompetitiveBattlecard(input: {
   );
   const sourceCoverage = (new Set(input.marketIntel.comparisons.flatMap((comparison) => comparison.sourceIds)).size / input.marketIntel.sources.length) * 100;
   const battleScore = Math.round(clamp(average([input.marketIntel.marketScore, input.moatStress.stressScore, input.strategy.moatScore, input.strategy.judgeScore, sourceCoverage])));
-  const readiness = readinessFor(battleScore, input.moatStress.scenarios);
   const topRisks = buildTopRisks(cards, input.moatStress);
   const swotReceipts = buildSwotReceipts(input.strategy);
   const objectionReceipts = buildObjectionReceipts(cards);
   const objectionReplay = buildObjectionReplay({ baseUrl: normalizedBase, battleScore, cards, objectionReceipts });
   const criteriaDuel = buildCriteriaDuel({ baseUrl: normalizedBase, strategy: input.strategy, cards });
+  const winLossLock = buildWinLossLock({ baseUrl: normalizedBase, strategy: input.strategy, cards });
   const proofLock = buildProofLock({
     baseUrl: normalizedBase,
     strategy: input.strategy,
@@ -624,6 +733,7 @@ export function buildCompetitiveBattlecard(input: {
     objectionReceipts,
     objectionReplay
   });
+  const readiness = winLossLock.readiness === "needs-positioning" ? "exposed" : readinessFor(battleScore, input.moatStress.scenarios);
 
   return {
     id: `competitive-battlecard-${battleScore}-${readiness}`,
@@ -645,10 +755,12 @@ export function buildCompetitiveBattlecard(input: {
     objectionReplay,
     proofLock,
     criteriaDuel,
+    winLossLock,
     judgeScript: [
       "まず競合の強みを認める: 作る基盤、workflow、observabilityは既存ツールが強い。",
       `Objection Replayで${objectionReplay.weakestCompetitor}への質問を、source、SWOT、proof routeの30秒順に固定する。`,
       `Criteria Duelで審査5項目ごとに、競合の勝ち筋とこちらの証拠URLを1行ずつ確認する。`,
+      `Win/Loss Lockで${winLossLock.rows.length}競合それぞれの譲る強み、反撃、必ず開く証拠URL、MVP actionを確認する。`,
       `Competitive Proof Lockで${proofLock.coverage.competitorCount}競合、${proofLock.coverage.sourceUrlCount}公式ソース、${proofLock.coverage.swotLinkCount} SWOTリンクを確認する。`,
       "次にずらす: このプロダクトはAI能力を選び、雇い、A2A委任し、DevOps証拠で検収する市場体験です。",
       "Battlecardで最も強い競合質問を1つ開き、source、SWOT、proof routeを同時に見せる。",
@@ -698,6 +810,19 @@ export function buildCompetitiveBattlecard(input: {
           proofUrl: row.proofUrl,
           sourceCount: row.sourceCount,
           swot: row.swotSignal.quadrant
+        }))
+      },
+      winLossLock: {
+        winLossScore: winLossLock.winLossScore,
+        readiness: winLossLock.readiness,
+        rows: winLossLock.rows.map((row) => ({
+          id: row.id,
+          status: row.status,
+          score: row.score,
+          judgeCriterionId: row.judgeCriterionId,
+          mustShowProofUrl: row.mustShowProofUrl,
+          swot: row.swotSignal.quadrant,
+          mvpAction: row.mvpAction
         }))
       },
       proofLock: {

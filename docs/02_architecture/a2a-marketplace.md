@@ -122,9 +122,10 @@
 - Source/SWOT receipts: 公式ソースURLとSWOT項目を同じカードに載せ、競合分析が主張だけで終わらないようにする
 - Objection Replay: 最弱競合への質問、source ledger、SWOT receipt、Live Evidence proof routeを0-30秒のready/watch/blocked stepsに固定する
 - Criteria Duel: AI中心性、課題アプローチ、ユーザビリティ、実用性、実装力ごとに、疑われる競合、相手の勝ち筋、こちらの証拠URL、SWOT signalを1行にする
+- Win/Loss Lock: 競合ごとに譲る強み、反撃ポジション、必ず開く証拠URL、MVP actionをwin/contest/loss-riskで検収する
 - Competitive Proof Lock: 競合カバレッジ、公式ソース、SWOT mapping、反論receipt、Objection Replay、live source lockをsealed/watch/missingで検収する
 - Judge script: 質疑で話す順番を「相手の強みを認める → 調達体験へずらす → 証拠を開く」に固定する
-- A2A payload: `competitive.battlecard` skillとしてbattle score、readiness、card verdicts、top risks、proof lockを返す
+- A2A payload: `competitive.battlecard` skillとしてbattle score、readiness、card verdicts、top risks、Win/Loss Lock、proof lockを返す
 
 ## Public Judge Snapshot Surface
 
@@ -480,8 +481,8 @@
 - Acceptance matrix proof: `acceptance.matrix` skillとして、必須技術、審査5項目、公開証拠、提出物の受入状態をA2A payloadにも含める
 - Task board proof: `task.delegate` skillとして、agent work orders、execution order、verification queue、receipt digestをA2A payloadにも含める
 - Moat stress proof: `moat.stress` skillとして、競合別の想定反論、反証、見せる証拠、録画順をA2A payloadにも含める
-- Competitive battlecard proof: `competitive.battlecard` skillとして、競合別の短い回答、公式ソース、SWOT receipts、Criteria Duel、Objection Replay、top risksをA2A payloadにも含める
-- Competitive SWOT snapshot proof: `competitive.snapshot` skillとして、6競合、SWOT 4象限、公式ソース、Criteria Duel、Proof LockをGETで開ける審査用HTMLにも含める
+- Competitive battlecard proof: `competitive.battlecard` skillとして、競合別の短い回答、公式ソース、SWOT receipts、Criteria Duel、Win/Loss Lock、Objection Replay、top risksをA2A payloadにも含める
+- Competitive SWOT snapshot proof: `competitive.snapshot` skillとして、6競合、SWOT 4象限、公式ソース、Criteria Duel、Win/Loss Lock、Proof LockをGETで開ける審査用HTMLにも含める
 - MVP readiness snapshot proof: `mvp.snapshot` skillとして、MVP Audit、Acceptance Matrix、Release Drift、Deploy Recovery、外部提出gapをGETで開ける提出可否HTMLにも含める
 - Recording script proof: `recording.script` skillとして、30秒動画の台本、字幕、証拠URL、Video Proof LockをGETで開ける録画用HTMLにも含める
 

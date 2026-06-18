@@ -70,6 +70,26 @@ describe("competitive battlecard", () => {
     });
     expect(battlecard.criteriaDuel.rows).toHaveLength(5);
     expect(battlecard.criteriaDuel.rows.every((row) => row.status !== "exposed")).toBe(true);
+    expect(battlecard.winLossLock).toMatchObject({
+      readiness: "win-loss-locked",
+      winLossScore: expect.any(Number),
+      winCount: 6,
+      contestCount: 0,
+      lossRiskCount: 0
+    });
+    expect(battlecard.winLossLock.winLossScore).toBeGreaterThanOrEqual(90);
+    expect(battlecard.winLossLock.rows).toHaveLength(6);
+    expect(battlecard.winLossLock.rows.find((row) => row.id === "google-adk")).toMatchObject({
+      status: "win",
+      judgeCriterionId: "approach",
+      mustShowProofUrl: `${baseUrl}/api/competitive-battlecard`,
+      mvpAction: expect.stringContaining("証拠URL")
+    });
+    expect(battlecard.winLossLock.rows.find((row) => row.id === "a2a-marketplace")).toMatchObject({
+      status: "win",
+      judgeCriterionId: "agentCentrality",
+      mustShowProofUrl: `${baseUrl}/.well-known/agent-card.json`
+    });
     expect(battlecard.proofLock).toMatchObject({
       readiness: "proof-watch",
       proofScore: 95,
@@ -129,6 +149,16 @@ describe("competitive battlecard", () => {
           expect.objectContaining({
             id: "implementation",
             proofUrl: `${baseUrl}/api/release-drift`
+          })
+        ])
+      },
+      winLossLock: {
+        winLossScore: expect.any(Number),
+        readiness: "win-loss-locked",
+        rows: expect.arrayContaining([
+          expect.objectContaining({
+            id: "google-adk",
+            mustShowProofUrl: `${baseUrl}/api/competitive-battlecard`
           })
         ])
       },

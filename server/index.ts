@@ -11,7 +11,7 @@ import { buildWinningAutopilot } from "../src/autopilot.js";
 import { buildAutonomyLedger } from "../src/autonomyLedger.js";
 import { buildAutonomySnapshot, renderAutonomySnapshotHtml } from "../src/autonomySnapshot.js";
 import { ciStatusFromBadge } from "../src/ciProof.js";
-import { buildCompetitiveBattlecard } from "../src/competitiveBattlecard.js";
+import { buildCompetitiveBattlecard, COMPETITIVE_WIN_LOSS_LOCK_TAG, COMPETITIVE_WIN_LOSS_REQUIRED_SIGNAL } from "../src/competitiveBattlecard.js";
 import { buildCompetitiveSnapshot, renderCompetitiveSnapshotHtml } from "../src/competitiveSnapshot.js";
 import { buildSquadContract } from "../src/contracts.js";
 import { buildDeployRecoveryPlan } from "../src/deployRecovery.js";
@@ -217,7 +217,7 @@ function agentCard(baseUrl: string) {
         id: "competitive.battlecard",
         name: "Build competitor battlecards",
         description: "公式ソース、SWOT、競合反論、Criteria Duel、見せる証拠を競合別の審査回答カードに束ね、Competitive Proof Lockで検収する。",
-        tags: ["competitive-analysis", "battlecard", "swot", "judge-qa", "criteria-duel", "proof", "proof-lock"]
+        tags: ["competitive-analysis", "battlecard", "swot", "judge-qa", "criteria-duel", COMPETITIVE_WIN_LOSS_LOCK_TAG, "proof", "proof-lock"]
       },
       {
         id: "competitive.snapshot",
@@ -2862,6 +2862,7 @@ async function buildReleaseDriftForTarget(input: {
     "judge.objection-arena:tag:objection-lock",
     "finalist.simulate:tag:release-drift",
     "competitive.battlecard:tag:criteria-duel",
+    COMPETITIVE_WIN_LOSS_REQUIRED_SIGNAL,
     "competitive.snapshot:tag:get-proof",
     "judge.snapshot:tag:get-proof",
     FIRST_CLICK_REQUIRED_SIGNAL,
@@ -2964,6 +2965,7 @@ async function buildReleaseDriftForTarget(input: {
           ...(objectionArena?.tags?.includes("objection-lock") ? ["judge.objection-arena:tag:objection-lock"] : []),
           ...(finalistSimulate?.tags?.includes("release-drift") ? ["finalist.simulate:tag:release-drift"] : []),
           ...(competitiveBattlecard?.tags?.includes("criteria-duel") ? ["competitive.battlecard:tag:criteria-duel"] : []),
+          ...(competitiveBattlecard?.tags?.includes(COMPETITIVE_WIN_LOSS_LOCK_TAG) ? [COMPETITIVE_WIN_LOSS_REQUIRED_SIGNAL] : []),
           ...(competitiveSnapshot?.tags?.includes("get-proof") ? ["competitive.snapshot:tag:get-proof"] : []),
           ...(judgeSnapshot?.tags?.includes("get-proof") ? ["judge.snapshot:tag:get-proof"] : []),
           ...(firstClick?.tags?.includes(FIRST_CLICK_ROUTE_LOCK_TAG) ? [FIRST_CLICK_REQUIRED_SIGNAL] : []),
@@ -6256,6 +6258,17 @@ app.post("/a2a", async (req, res) => {
                       id: step.id,
                       status: step.status,
                       proofUrl: step.proofUrl
+                    }))
+                  },
+                  winLossLock: {
+                    winLossScore: competitiveBattlecard.winLossLock.winLossScore,
+                    readiness: competitiveBattlecard.winLossLock.readiness,
+                    lossRiskCount: competitiveBattlecard.winLossLock.lossRiskCount,
+                    rows: competitiveBattlecard.winLossLock.rows.map((row) => ({
+                      id: row.id,
+                      status: row.status,
+                      mustShowProofUrl: row.mustShowProofUrl,
+                      judgeCriterionId: row.judgeCriterionId
                     }))
                   }
                 },

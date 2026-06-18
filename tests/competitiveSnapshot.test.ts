@@ -38,15 +38,26 @@ describe("competitive SWOT snapshot", () => {
       competitorCount: 6,
       highThreatCount: 2,
       sourceUrlCount: 11,
+      winLossScore: expect.any(Number),
       swotQuadrantCount: 4,
       sourceLockReadiness: "source-lock-declared"
     });
+    expect(snapshot.summary.winLossScore).toBeGreaterThanOrEqual(90);
     expect(snapshot.swotMatrix.map((group) => group.quadrant)).toEqual(["strengths", "weaknesses", "opportunities", "threats"]);
     expect(snapshot.competitors.map((card) => card.id)).toEqual(expect.arrayContaining(["google-adk", "a2a-marketplace", "langgraph", "crewai", "dify", "agentops"]));
     expect(snapshot.competitors.find((card) => card.id === "google-adk")?.sourceUrls.map((source) => source.url)).toEqual(
       expect.arrayContaining(["https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/adk"])
     );
     expect(snapshot.criteriaDuel.rows).toHaveLength(5);
+    expect(snapshot.winLossLock).toMatchObject({
+      readiness: "win-loss-locked",
+      rows: expect.arrayContaining([
+        expect.objectContaining({
+          id: "google-adk",
+          mustShowProofUrl: `${baseUrl}/api/competitive-battlecard`
+        })
+      ])
+    });
     expect(snapshot.proofLock.checks.map((check) => check.id)).toEqual(
       expect.arrayContaining(["competitor-coverage", "official-source-coverage", "swot-mapping", "objection-replay"])
     );
@@ -75,6 +86,8 @@ describe("competitive SWOT snapshot", () => {
     expect(html).toContain("<!doctype html>");
     expect(html).toContain("Competitive SWOT Snapshot");
     expect(html).toContain("SWOT Matrix");
+    expect(html).toContain("Win/Loss Lock");
+    expect(html).toContain(`${baseUrl}/api/competitive-battlecard`);
     expect(html).toContain("Google ADK / Gemini Enterprise");
     expect(html).toContain(`${baseUrl}/judge-snapshot`);
     expect(html).toContain("&lt;script&gt;alert(&#39;swot&#39;)&lt;/script&gt;");
