@@ -112,6 +112,7 @@ function yen(value: number) {
 function FirstClickIcon({ link }: { link: FirstClickProofLink }) {
   if (link.id === "judge-snapshot") return <Trophy size={18} />;
   if (link.id === "winner-packet") return <BadgeCheck size={18} />;
+  if (link.id === "objection-arena") return <AlertTriangle size={18} />;
   if (link.id === "competitive-swot") return <Crosshair size={18} />;
   if (link.id === "mvp-readiness") return <ClipboardCheck size={18} />;
   if (link.id === "autonomy-snapshot") return <Workflow size={18} />;

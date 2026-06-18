@@ -60,6 +60,14 @@ export const FIRST_CLICK_PROOF_LINKS: FirstClickProofLink[] = [
     tone: "primary"
   },
   {
+    id: "objection-arena",
+    label: "Objection Arena",
+    href: "/objection-arena",
+    signal: "judge-qa-lock",
+    judgeValue: "ADKで十分では、AI中心性は本物か、公開URLは最新かを証拠URL付きで即答する。",
+    tone: "primary"
+  },
+  {
     id: "competitive-swot",
     label: "Competitive SWOT",
     href: "/competitive-swot",
@@ -113,7 +121,7 @@ export const FIRST_CLICK_SCORECARDS: FirstClickScorecard[] = [
   {
     id: "no-post-first",
     label: "No POST required",
-    value: "8 GET links",
+    value: "9 GET links",
     proof: "初回審査はcurlやJSONを知らなくても主要証拠に到達できる。"
   },
   {

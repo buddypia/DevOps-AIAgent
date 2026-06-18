@@ -22,11 +22,12 @@
 - Win Gap Radar: 競合/SWOT、MVP監査、最終候補判定、Prize Strategyを横断し、優勝に必要なMVP gapをfeature bets、Feature Freeze Lock、cut listへ変換する
 - MVP Audit: 必須技術、審査5項目、DevOps証拠、提出3点をハードゲートで判定し、外部未発行URLをwatchとして残す
 - Judge Brief: 競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページに圧縮
-- Judge First-Click Strip: Cloud Runのトップ画面直下からJudge Snapshot、Winner Packet、Competitive SWOT、MVP Readiness、Autonomy、Pilot Value、Recording、Submission AssetsへPOSTなしで移動できる入口を固定し、Agent Card/A2A/Release Driftでも `judge.first-click` として検収する
+- Judge First-Click Strip: Cloud Runのトップ画面直下からJudge Snapshot、Winner Packet、Objection Arena、Competitive SWOT、MVP Readiness、Autonomy、Pilot Value、Recording、Submission AssetsへPOSTなしで移動できる入口を固定し、Agent Card/A2A/Release Driftでも `judge.first-click` として検収する
 - Judge Command Center: Judge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
 - Demo Concierge: 審査員、買い手、提出者ごとの最初の1クリック、台詞、証拠URL、成功条件を固定し、Judge Route LockとFirst-Run Focus Lockで0-90秒の一本道に圧縮する
 - Judge Rehearsal Room: 90秒の開く画面、話す台詞、想定質問、録画チェックを1つのrun roomに束ねる
 - Winner Proof Packet: 審査5項目ごとの主張、証拠URL、競合/SWOT反論、録画cue、提出copyを1枚に束ねる
+- Objection Arena: Winner Packetから競合/SWOT、AI中心性、実用性、公開revisionへの厳しい質問を抽出し、最終質疑で開く証拠URL付きの反論レーンへ束ねる
 - Final Submission Runway: 2026/7/10 23:59 JSTから逆算し、動画、ProtoPedia、構成図、最終フォームを検収順に束ねる
 - External Evidence Verifier: 公開GitHub、Cloud Run、ProtoPedia作品URL、動画URLが審査員から開けるかをライブ検証する
 - Prize Strategy Board: 審査5項目の目標点、現在証拠、足りない証拠、Prize Criteria Lock、最終ピッチ順を優勝作戦として束ねる
@@ -109,7 +110,7 @@
 
 ## Public Judge Snapshot
 
-`Public Judge Snapshot` は、POST専用の深い証拠APIとGETで直接開ける証拠ページを、審査員の初回入口へ束ねます。トップ画面のJudge First-Click StripからJudge Snapshot、Winner Packet、Competitive SWOT、Autonomy Snapshot、MVP Readiness、Pilot Value、Recording Script、Submission AssetsへPOSTなしで移動できます。Judge Proof、Competitive Battlecard、Criteria Duel、Agent Card、CI、Cloud Run、深掘り用curlをHTMLで表示し、`/api/judge-snapshot?live=1` を付けた時だけRelease Drift Guardもライブ実行します。これによりProtoPediaや提出本文に貼った証拠URLをクリックしただけで、競合/SWOT・AI中心性・実用性・実装証拠・運用証拠の全体像を確認できます。
+`Public Judge Snapshot` は、POST専用の深い証拠APIとGETで直接開ける証拠ページを、審査員の初回入口へ束ねます。トップ画面のJudge First-Click StripからJudge Snapshot、Winner Packet、Objection Arena、Competitive SWOT、Autonomy Snapshot、MVP Readiness、Pilot Value、Recording Script、Submission AssetsへPOSTなしで移動できます。Judge Proof、Competitive Battlecard、Criteria Duel、Agent Card、CI、Cloud Run、深掘り用curlをHTMLで表示し、`/api/judge-snapshot?live=1` を付けた時だけRelease Drift Guardもライブ実行します。これによりProtoPediaや提出本文に貼った証拠URLをクリックしただけで、競合/SWOT・AI中心性・実用性・実装証拠・運用証拠の全体像を確認できます。
 
 - Page: `GET /judge-snapshot`
 - API: `GET /api/judge-snapshot`
@@ -192,6 +193,15 @@
 - App UI: `Build packet`
 - Output: human-readable proof page、packet score、readiness、Winner Release Lock、5 criteria proof cards、objection answers、recording order、submission copy、A2A `winner.packet` payload
 
+## Objection Arena
+
+`Objection Arena` は、Winner Proof Packetを最終質疑の反論レーンへ変換します。「ADKやLangGraphで十分では？」「これは単なるダッシュボードでは？」「ROIが机上では？」「提出URLは最新か？」のような厳しい質問に対して、短い回答、開く証拠URL、follow-up、公開revision状態を1ページに固定します。GETページは審査員が直接読めるHTML、APIはA2A/Release Drift用JSONとして返し、`judge.objection-arena` / `objection-lock` が公開Agent Cardに載らなければ最新releaseとして扱いません。
+
+- Page: `GET /objection-arena`
+- JSON: `GET /api/objection-arena`
+- Deep API: `POST /api/objection-arena`
+- Output: arena score、readiness、answered/blocked count、judge objection lanes、proof URLs、A2A `judge.objection-arena` payload
+
 ## Final Submission Runway
 
 `Final Submission Runway` は、Winner Proof PacketとSubmission Closeoutを、2026/7/10 23:59 JSTの提出締切から逆算した実行計画へ変換します。動画録画、ProtoPedia貼付、構成図添付、Launch Gate、最終フォーム提出を、due date、owner、acceptance、proof URL付きのworkback planとして返します。
@@ -267,7 +277,7 @@
 
 ## Release Drift Guard
 
-`Release Drift Guard` は、提出用Cloud Run URLが最新mainの機能を本当に返しているかを検査します。公開healthが通っていても、Agent Cardのskill数、`judge.command`、`deploy.recover`、`acceptance.matrix`、`mvp.snapshot`、`autonomy.snapshot`、`recording.script`、`pilot.value.snapshot`、`demo.receipt`、`release.drift`、`pilot.economics`、`judge.rehearsal` の `recording-lock` tag、`win.gap.radar` の `feature-freeze-lock` tag、`winner.packet` の `winner-release-lock` / `get-proof` tag、`judge.first-click` の `first-click-route-lock` tag、`finalist.simulate` の `release-drift` tag、`competitive.battlecard` の `criteria-duel` tag、`competitive.snapshot` / `judge.snapshot` / `mvp.snapshot` / `autonomy.snapshot` / `recording.script` / `pilot.value.snapshot` の `get-proof` tag、A2A artifact、Acceptance Matrix endpoint、MVP Readiness endpoint、Autonomy Snapshot endpoint、Recording Script endpoint、Pilot Value endpointが古ければ `deploy-drift` として止めます。
+`Release Drift Guard` は、提出用Cloud Run URLが最新mainの機能を本当に返しているかを検査します。公開healthが通っていても、Agent Cardのskill数、`judge.command`、`deploy.recover`、`acceptance.matrix`、`mvp.snapshot`、`autonomy.snapshot`、`recording.script`、`pilot.value.snapshot`、`demo.receipt`、`release.drift`、`pilot.economics`、`judge.rehearsal` の `recording-lock` tag、`win.gap.radar` の `feature-freeze-lock` tag、`winner.packet` の `winner-release-lock` / `get-proof` tag、`judge.objection-arena` の `objection-lock` tag、`judge.first-click` の `first-click-route-lock` tag、`finalist.simulate` の `release-drift` tag、`competitive.battlecard` の `criteria-duel` tag、`competitive.snapshot` / `judge.snapshot` / `mvp.snapshot` / `autonomy.snapshot` / `recording.script` / `pilot.value.snapshot` の `get-proof` tag、A2A artifact、Acceptance Matrix endpoint、MVP Readiness endpoint、Autonomy Snapshot endpoint、Recording Script endpoint、Pilot Value endpoint、Objection Arena endpointが古ければ `deploy-drift` として止めます。
 
 - API: `POST /api/release-drift`
 - App UI: `Check release drift`

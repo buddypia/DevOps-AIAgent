@@ -360,6 +360,8 @@ export function buildWinnerProofPacket(input: {
       endpoints: {
         winnerPacketPage: absoluteUrl(base, "/winner-packet"),
         winnerPacket: absoluteUrl(base, "/api/winner-packet"),
+        objectionArenaPage: absoluteUrl(base, "/objection-arena"),
+        objectionArena: absoluteUrl(base, "/api/objection-arena"),
         judgeRehearsal: absoluteUrl(base, "/api/judge-rehearsal"),
         competitiveBattlecard: absoluteUrl(base, "/api/competitive-battlecard"),
         pilotEconomics: absoluteUrl(base, "/api/pilot-economics"),

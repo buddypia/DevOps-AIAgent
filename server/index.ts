@@ -38,6 +38,7 @@ import { buildMoatStressTest } from "../src/moatStress.js";
 import { buildMvpAudit } from "../src/mvpAudit.js";
 import { buildMvpSnapshot, renderMvpSnapshotHtml } from "../src/mvpSnapshot.js";
 import { buildObservabilityOracle } from "../src/observabilityOracle.js";
+import { buildObjectionArena, renderObjectionArenaHtml } from "../src/objectionArena.js";
 import { buildOpsDrill } from "../src/ops.js";
 import { buildPilotEconomics } from "../src/pilotEconomics.js";
 import { buildPilotValueSnapshot, renderPilotValueSnapshotHtml } from "../src/pilotValueSnapshot.js";
@@ -222,7 +223,7 @@ function agentCard(baseUrl: string) {
         id: FIRST_CLICK_SKILL_ID,
         name: "Route the judge first click",
         description: "トップ画面直下から8本のGET証拠ページへ迷わず到達できる初回審査導線を固定する。",
-        tags: ["first-click", FIRST_CLICK_ROUTE_LOCK_TAG, "get-proof", "judge-snapshot", "winner-packet", "mvp-readiness"]
+        tags: ["first-click", FIRST_CLICK_ROUTE_LOCK_TAG, "get-proof", "judge-snapshot", "winner-packet", "objection-arena", "mvp-readiness"]
       },
       {
         id: "mvp.audit",
@@ -265,6 +266,12 @@ function agentCard(baseUrl: string) {
         name: "Package winner proof for the five judge criteria",
         description: "審査5項目ごとに主張、証拠URL、競合/SWOT反論、録画cue、Winner Release Lock、提出copyを1枚の勝ち証拠packetへ束ねる。",
         tags: ["winner-packet", "judge-score", "proof", "swot", "pitch", "winner-release-lock", "release-drift", "get-proof"]
+      },
+      {
+        id: "judge.objection-arena",
+        name: "Answer final judge objections",
+        description: "Winner Packetから、競合/SWOT、AI中心性、実用性、公開revisionへの厳しい質問を証拠URL付きの最終質疑レーンへ束ねる。",
+        tags: ["judge-qa", "objection-lock", "competitive-analysis", "swot", "get-proof"]
       },
       {
         id: "prize.strategy",
@@ -2777,6 +2784,7 @@ async function buildReleaseDriftForTarget(input: {
     "win.gap.radar:tag:feature-freeze-lock",
     "winner.packet:tag:winner-release-lock",
     "winner.packet:tag:get-proof",
+    "judge.objection-arena:tag:objection-lock",
     "finalist.simulate:tag:release-drift",
     "competitive.battlecard:tag:criteria-duel",
     "competitive.snapshot:tag:get-proof",
@@ -2803,6 +2811,7 @@ async function buildReleaseDriftForTarget(input: {
     "judge.command",
     "judge.rehearsal",
     "winner.packet",
+    "judge.objection-arena",
     "submission.runway",
     "submission.assets",
     "recording.script",
@@ -2819,7 +2828,18 @@ async function buildReleaseDriftForTarget(input: {
   let observedSkillIds: string[] = [];
   let observedAgentCardSignals: string[] = [];
 
-  const [healthProbe, cardProbe, acceptanceProbe, mvpReadinessProbe, autonomySnapshotProbe, recordingScriptProbe, pilotValueProbe, a2aProbe, ci] = await Promise.all([
+  const [
+    healthProbe,
+    cardProbe,
+    acceptanceProbe,
+    mvpReadinessProbe,
+    autonomySnapshotProbe,
+    recordingScriptProbe,
+    pilotValueProbe,
+    objectionArenaProbe,
+    a2aProbe,
+    ci
+  ] = await Promise.all([
     liveJsonProbe({
       id: "target-health",
       label: "Target Cloud Run health",
@@ -2847,6 +2867,7 @@ async function buildReleaseDriftForTarget(input: {
         const judgeRehearsal = skills.find((skill) => skill.id === "judge.rehearsal");
         const winGapRadar = skills.find((skill) => skill.id === "win.gap.radar");
         const winnerPacket = skills.find((skill) => skill.id === "winner.packet");
+        const objectionArena = skills.find((skill) => skill.id === "judge.objection-arena");
         const finalistSimulate = skills.find((skill) => skill.id === "finalist.simulate");
         const competitiveBattlecard = skills.find((skill) => skill.id === "competitive.battlecard");
         const competitiveSnapshot = skills.find((skill) => skill.id === "competitive.snapshot");
@@ -2861,6 +2882,7 @@ async function buildReleaseDriftForTarget(input: {
           ...(winGapRadar?.tags?.includes("feature-freeze-lock") ? ["win.gap.radar:tag:feature-freeze-lock"] : []),
           ...(winnerPacket?.tags?.includes("winner-release-lock") ? ["winner.packet:tag:winner-release-lock"] : []),
           ...(winnerPacket?.tags?.includes("get-proof") ? ["winner.packet:tag:get-proof"] : []),
+          ...(objectionArena?.tags?.includes("objection-lock") ? ["judge.objection-arena:tag:objection-lock"] : []),
           ...(finalistSimulate?.tags?.includes("release-drift") ? ["finalist.simulate:tag:release-drift"] : []),
           ...(competitiveBattlecard?.tags?.includes("criteria-duel") ? ["competitive.battlecard:tag:criteria-duel"] : []),
           ...(competitiveSnapshot?.tags?.includes("get-proof") ? ["competitive.snapshot:tag:get-proof"] : []),
@@ -2967,6 +2989,20 @@ async function buildReleaseDriftForTarget(input: {
       }
     }),
     liveJsonProbe({
+      id: "objection-arena-endpoint",
+      label: "Target Objection Arena endpoint",
+      url: `${targetBaseUrl}/api/objection-arena`,
+      required: true,
+      timeoutMs: 16000,
+      init: targetProbeHeaders ? { headers: targetProbeHeaders } : undefined,
+      evaluate: (payload) => {
+        const body = payload as { readiness?: string; a2aPayload?: { skill?: string }; lanes?: unknown[] };
+        return body.a2aPayload?.skill === "judge.objection-arena" && typeof body.readiness === "string" && Array.isArray(body.lanes)
+          ? { status: "passed", score: 100, evidence: `Objection Arena returned ${body.readiness}; ${body.lanes.length} Q&A lanes.` }
+          : { status: "missing", score: 24, evidence: "Objection Arena endpoint did not return the current judge.objection-arena JSON payload." };
+      }
+    }),
+    liveJsonProbe({
       id: "a2a-artifact",
       label: "Target A2A artifact endpoints",
       url: `${targetBaseUrl}/a2a`,
@@ -3007,6 +3043,8 @@ async function buildReleaseDriftForTarget(input: {
           data?.judgeSnapshotEndpoint &&
           data?.judgeSnapshotPageEndpoint &&
           data?.firstClickProof &&
+          data?.objectionArenaEndpoint &&
+          data?.objectionArenaPageEndpoint &&
           data?.mvpReadinessSnapshotEndpoint &&
           data?.autonomySnapshotEndpoint &&
           data?.autonomySnapshotJsonEndpoint &&
@@ -3015,9 +3053,9 @@ async function buildReleaseDriftForTarget(input: {
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, firstClickProof, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, objectionArenaEndpoint, objectionArenaPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, firstClickProof, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but autonomy snapshot/observability oracle/external evidence/task board/winner packet/submission runway/submission assets/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/first-click proof/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but autonomy snapshot/observability oracle/external evidence/task board/winner packet/objection arena/submission runway/submission assets/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/first-click proof/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -3041,7 +3079,7 @@ async function buildReleaseDriftForTarget(input: {
     requiredSkillIds,
     requiredAgentCardSignals,
     observedAgentCardSignals,
-    probes: [healthProbe, cardProbe, acceptanceProbe, mvpReadinessProbe, autonomySnapshotProbe, recordingScriptProbe, pilotValueProbe, a2aProbe, ciProbe]
+    probes: [healthProbe, cardProbe, acceptanceProbe, mvpReadinessProbe, autonomySnapshotProbe, recordingScriptProbe, pilotValueProbe, objectionArenaProbe, a2aProbe, ciProbe]
   });
 }
 
@@ -4998,6 +5036,38 @@ app.post("/api/winner-packet", async (req, res) => {
   res.json(await buildWinnerPacketForRequest(req, parsed.data));
 });
 
+async function buildObjectionArenaForRequest(req: express.Request, input: CommandCenterInput) {
+  return buildObjectionArena(await buildWinnerPacketForRequest(req, input));
+}
+
+app.get("/api/objection-arena", async (req, res) => {
+  const result = winnerPacketQueryInput(req);
+  if ("error" in result) {
+    res.status(400).json(result.error);
+    return;
+  }
+  res.json(await buildObjectionArenaForRequest(req, result.input));
+});
+
+app.get("/objection-arena", async (req, res) => {
+  const result = winnerPacketQueryInput(req);
+  if ("error" in result) {
+    res.status(400).json(result.error);
+    return;
+  }
+  res.type("html").send(renderObjectionArenaHtml(await buildObjectionArenaForRequest(req, result.input)));
+});
+
+app.post("/api/objection-arena", async (req, res) => {
+  const parsed = CommandCenterSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  res.json(await buildObjectionArenaForRequest(req, parsed.data));
+});
+
 app.post("/api/submission-runway", async (req, res) => {
   const parsed = CommandCenterSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -6630,6 +6700,8 @@ app.post("/a2a", async (req, res) => {
                 winnerPacketEndpoint: `${publicBaseUrl(req)}/api/winner-packet`,
                 winnerPacketPageEndpoint: `${publicBaseUrl(req)}/winner-packet`,
                 winnerPacketJsonEndpoint: `${publicBaseUrl(req)}/api/winner-packet`,
+                objectionArenaEndpoint: `${publicBaseUrl(req)}/api/objection-arena`,
+                objectionArenaPageEndpoint: `${publicBaseUrl(req)}/objection-arena`,
                 submissionRunwayEndpoint: `${publicBaseUrl(req)}/api/submission-runway`,
                 submissionAssetsPageEndpoint: `${publicBaseUrl(req)}/submission-assets`,
                 recordingScriptPageEndpoint: `${publicBaseUrl(req)}/recording-script`,
