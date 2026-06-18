@@ -244,6 +244,8 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/submission-runway 
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mission \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/win-autopilot | rg 'Win Autopilot Proof|Evidence Lanes'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/api/win-autopilot | jq '{readiness, winScore, lanes: (.lanes | length), openActions: ([.nextActions[] | select(.priority!="later")] | length)}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/win-run \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'

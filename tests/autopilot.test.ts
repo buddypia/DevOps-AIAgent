@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine";
-import { buildWinningAutopilot } from "../src/autopilot";
+import { buildWinningAutopilot, renderWinningAutopilotHtml, WIN_AUTOPILOT_REQUIRED_SIGNAL, WIN_AUTOPILOT_SKILL_ID } from "../src/autopilot";
 import { buildSquadContract } from "../src/contracts";
 import { buildDemoRunway } from "../src/demoRunway";
 import { buildFinalistSimulation } from "../src/finalist";
@@ -99,7 +99,7 @@ describe("winning autopilot", () => {
     expect(autopilot.judgeNarrative).toContain("Judge Demo Receipt");
     expect(autopilot.a2aPayload).toMatchObject({
       method: "message/send",
-      skill: "win.autopilot",
+      skill: WIN_AUTOPILOT_SKILL_ID,
       readiness: "external-gaps",
       decisiveProof: {
         moatVerdict: "defensible",
@@ -107,5 +107,16 @@ describe("winning autopilot", () => {
       }
     });
     expect((autopilot.a2aPayload as { decisiveProof?: { receiptDigest?: string } }).decisiveProof?.receiptDigest).toMatch(/^[a-f0-9]{64}$/);
+    expect(WIN_AUTOPILOT_REQUIRED_SIGNAL).toBe("win.autopilot:tag:win-autopilot-lock");
+
+    const html = renderWinningAutopilotHtml({
+      ...autopilot,
+      headline: "<script>alert('win')</script>"
+    });
+    expect(html).toContain("Win Autopilot Proof");
+    expect(html).toContain("Evidence Lanes");
+    expect(html).toContain("Autonomy Trace");
+    expect(html).toContain("&lt;script&gt;alert(&#39;win&#39;)&lt;/script&gt;");
+    expect(html).not.toContain("<script>alert('win')</script>");
   });
 });

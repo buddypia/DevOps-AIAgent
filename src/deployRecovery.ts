@@ -201,7 +201,7 @@ export function buildDeployRecoveryPlan(input: {
     {
       id: "verify-agent-card-signals",
       label: "Verify Agent Card signals",
-      command: `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="winner.sufficiency" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="mvp.snapshot" or .id=="autonomy.snapshot" or .id=="recording.script" or .id=="pilot.value.snapshot" or .id=="deploy.recover") | {id, tags}'`,
+      command: `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="winner.sufficiency" or .id=="win.autopilot" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="mvp.snapshot" or .id=="autonomy.snapshot" or .id=="recording.script" or .id=="pilot.value.snapshot" or .id=="deploy.recover") | {id, tags}'`,
       why: "Recording Lock、Feature Freeze Lock、Winner Release Lock、Finalist Release Drift、Criteria Duel、Competitive SWOT GET proof、Judge GET proof、MVP readiness GET proof、Autonomy Snapshot GET proof、Recording Script GET proof、Pilot Value GET proofが公開Agent Cardに載ったことを確認します。",
       copyGroup: "verify",
       blocking: input.releaseDrift.missingAgentCardSignals.length > 0
@@ -331,7 +331,7 @@ export function buildDeployRecoveryPlan(input: {
     `Release drift: ${input.releaseDrift.observedSkillCount}/${input.releaseDrift.expectedSkillCount} skills, ${input.releaseDrift.verdict}.`,
     `Agent Card signals: missing ${input.releaseDrift.missingAgentCardSignals.join(", ") || "none"}.`,
     `Auth: ${authBlocked ? "manual gcloud auth login required" : "no auth failure provided"}.`,
-    `After deploy: verify Agent Card count, /winner-sufficiency, /api/mvp-readiness, /api/autonomy-snapshot, /api/recording-script, /api/pilot-value, /deploy-recovery, /api/deploy-recovery, and A2A autonomySnapshot/recordingScript/pilotValue/deployRecovery endpoints.`
+    `After deploy: verify Agent Card count, /win-autopilot, /winner-sufficiency, /api/mvp-readiness, /api/autonomy-snapshot, /api/recording-script, /api/pilot-value, /deploy-recovery, /api/deploy-recovery, and A2A autonomySnapshot/recordingScript/pilotValue/deployRecovery endpoints.`
   ];
 
   return {

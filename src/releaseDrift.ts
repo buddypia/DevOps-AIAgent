@@ -159,8 +159,9 @@ export function buildReleaseDriftGuard(input: {
       "gcloud auth login",
       "gcloud builds submit --config cloudbuild.yaml --substitutions _REGION=asia-northeast1,_SERVICE=a2a-agent-marketplace,_REPOSITORY=cloud-run-source-deploy,_GEMINI_SECRET=gemini-api-key-a2a-marketplace",
       `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills | length'`,
-      `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="winner.sufficiency" or .id=="judge.objection-arena" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="judge.first-click" or .id=="mvp.snapshot" or .id=="autonomy.snapshot" or .id=="recording.script" or .id=="submission.launch" or .id=="submission.package" or .id=="pilot.value.snapshot" or .id=="deploy.recover") | {id, tags}'`,
+      `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="winner.sufficiency" or .id=="win.autopilot" or .id=="judge.objection-arena" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="judge.first-click" or .id=="mvp.snapshot" or .id=="autonomy.snapshot" or .id=="recording.script" or .id=="submission.launch" or .id=="submission.package" or .id=="pilot.value.snapshot" or .id=="deploy.recover") | {id, tags}'`,
       `curl -s ${targetBaseUrl}/ | rg 'Judge first click|Start with proof, not feature hunting'`,
+      `curl -s ${targetBaseUrl}/win-autopilot | rg 'Win Autopilot Proof|Evidence Lanes'`,
       `curl -s ${targetBaseUrl}/winner-sufficiency | rg 'Winner Sufficiency Lock|Sufficiency Checks'`,
       `curl -s ${targetBaseUrl}/api/mvp-readiness | jq '{readiness, mvp: .summary.mvpScore, acceptance: .summary.acceptanceScore, release: .summary.releaseVerdict}'`,
       `curl -s ${targetBaseUrl}/api/autonomy-snapshot | jq '{readiness, ledger: .summary.ledgerScore, task: .summary.taskScore, chain: .summary.verifiedChainCount}'`,
@@ -201,6 +202,7 @@ export function buildReleaseDriftGuard(input: {
         targetPilotValue: `${targetBaseUrl}/api/pilot-value`,
         targetObjectionArena: `${targetBaseUrl}/api/objection-arena`,
         targetFirstClickSmoke: `${targetBaseUrl}/api/first-click-smoke`,
+        targetWinAutopilotPage: `${targetBaseUrl}/win-autopilot`,
         targetWinnerSufficiencyPage: `${targetBaseUrl}/winner-sufficiency`,
         targetDeployRecoveryPage: `${targetBaseUrl}/deploy-recovery`
       }

@@ -440,7 +440,9 @@
 - `POST /api/dossier`: ProtoPedia本文、動画録画順、提出フォームhandoff packet、構成図パケット、提出リンク、証拠デッキ、最終チェックを返す
 - `POST /api/architecture-pack`: 構成図URL、Mermaid、ノード/エッジ、必須技術対応表、ProtoPedia貼り付けチェックリストを返す
 - `POST /api/demo-run`: Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線にする
-- `POST /api/win-run`: 競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を一括実行し、勝てる状態と残アクションを返す
+- `GET /win-autopilot`: 競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を束ねたWin Autopilotを審査員が直接読めるHTMLで返す
+- `GET /api/win-autopilot`: 同じWin Autopilot判定をA2A/自動検証用JSONとして返す
+- `POST /api/win-run`: 競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を一括実行し、勝てる状態と残アクションを返す互換API
 - `POST /api/impact-case`: 実用性のbefore/after、ユーザー別KPI、導入計画、審査回答を返す
 - `POST /api/judge-tour`: 初見審査員向けに90秒の画面順、反論、証拠リンク、残ブロッカーを返す
 - `POST /api/user-pilot`: 実利用者3ペルソナの初回導線、摩擦、次クリックを返す
@@ -475,7 +477,7 @@
 - Closeout proof: `submission.closeout` skillとして、外部提出の残作業、copy tray、Publication Policy Lock、video run、Video Proof Lock、Submission Dry Run Lock、Submission Asset Lock、submit packetをA2A payloadにも含める
 - Architecture proof: `submission.package` skillとして、システム構成図、Mermaid、必須技術対応表、ProtoPedia checklistをA2A payloadにも含める
 - Demo runway proof: `demo.runway` skillとして、30秒デモ順、証拠リンク、録画キュー、外部残リスクをA2A payloadにも含める
-- Win autopilot proof: `win.autopilot` skillとして、win score、12 lane scorecards、残ブロッカー、証拠デッキ、live evidence score、receipt digest、moat verdict、squad readinessをA2A payloadにも含める
+- Win autopilot proof: `win.autopilot` skillとして、GET証拠ページ、win score、12 lane scorecards、残ブロッカー、証拠デッキ、live evidence score、receipt digest、moat verdict、squad readinessをA2A payloadにも含める
 - Judge brief proof: `judge.brief` skillとして、審査員の初見用にkey metrics、proof ladder、30秒route、risk registerをA2A payloadにも含める
 - Autonomy ledger proof: `autonomy.ledger` skillとして、AIの判断連鎖、agent handoff、検証endpoint、sha256 receiptをA2A payloadにも含める
 - Autonomy snapshot proof: `autonomy.snapshot` skillとして、Autonomy LedgerとTask BoardをGETで開けるAI中心性HTMLにも含める
@@ -559,7 +561,7 @@
 - Publisher: `/api/publisher`
 - Submission dossier: `/api/dossier`
 - Demo runway: `/api/demo-run`
-- Win autopilot: `/api/win-run`
+- Win autopilot: `/win-autopilot`, `/api/win-autopilot`, and `/api/win-run`
 - Pitch director: `/api/pitch`
 - Judge drill: `/api/judge-drill`
 - Finalist simulator: `/api/finalist`

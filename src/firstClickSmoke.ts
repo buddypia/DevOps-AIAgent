@@ -38,6 +38,7 @@ export const FIRST_CLICK_SMOKE_LOCK_TAG = "first-click-smoke-lock";
 export const FIRST_CLICK_SMOKE_REQUIRED_SIGNAL = `${FIRST_CLICK_SMOKE_SKILL_ID}:tag:${FIRST_CLICK_SMOKE_LOCK_TAG}`;
 
 export const FIRST_CLICK_SMOKE_SENTINELS: FirstClickSmokeSentinel[] = [
+  { id: "win-autopilot", href: "/win-autopilot", label: "Win Autopilot", sentinel: "Win Autopilot Proof" },
   { id: "judge-snapshot", href: "/judge-snapshot", label: "Judge Snapshot", sentinel: "Public Judge Snapshot" },
   { id: "winner-packet", href: "/winner-packet", label: "Winner Packet", sentinel: "Winner Proof Packet" },
   { id: "objection-arena", href: "/objection-arena", label: "Objection Arena", sentinel: "Objection Arena" },

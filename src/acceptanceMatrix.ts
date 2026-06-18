@@ -483,6 +483,8 @@ export function buildJudgeAcceptanceMatrix(input: {
         acceptanceMatrix: absoluteUrl(base, "/api/acceptance-matrix"),
         mvpAudit: absoluteUrl(base, "/api/mvp-audit"),
         winRun: absoluteUrl(base, "/api/win-run"),
+        winAutopilot: absoluteUrl(base, "/api/win-autopilot"),
+        winAutopilotPage: absoluteUrl(base, "/win-autopilot"),
         pilotEconomics: absoluteUrl(base, "/api/pilot-economics"),
         observabilityOracle: absoluteUrl(base, "/api/observability-oracle"),
         releaseDrift: absoluteUrl(base, "/api/release-drift"),

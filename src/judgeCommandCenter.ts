@@ -286,7 +286,7 @@ export function buildJudgeCommandCenter(input: {
       id: "win-autopilot",
       label: "Win Autopilot",
       buttonLabel: "Run win verdict",
-      endpoint: absoluteUrl(baseUrl, "/api/win-run"),
+      endpoint: absoluteUrl(baseUrl, "/win-autopilot"),
       status: proofStatusForReadiness(autopilot.readiness),
       score: autopilot.winScore,
       reason: autopilot.headline

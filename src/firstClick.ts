@@ -44,6 +44,14 @@ export const FIRST_CLICK_REQUIRED_SIGNAL = `${FIRST_CLICK_SKILL_ID}:tag:${FIRST_
 
 export const FIRST_CLICK_PROOF_LINKS: FirstClickProofLink[] = [
   {
+    id: "win-autopilot",
+    label: "Win Autopilot",
+    href: "/win-autopilot",
+    signal: "agentic-win-run",
+    judgeValue: "競合/SWOT、証拠、運用、提出、残アクションをAIが一括判定する入口。",
+    tone: "primary"
+  },
+  {
     id: "judge-snapshot",
     label: "Judge Snapshot",
     href: "/judge-snapshot",
@@ -145,7 +153,7 @@ export const FIRST_CLICK_SCORECARDS: FirstClickScorecard[] = [
   {
     id: "no-post-first",
     label: "No POST required",
-    value: "12 GET links",
+    value: "13 GET links",
     proof: "初回審査はcurlやJSONを知らなくても主要証拠に到達できる。"
   },
   {

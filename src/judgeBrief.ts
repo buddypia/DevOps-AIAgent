@@ -128,7 +128,7 @@ export function buildJudgeBrief(input: {
       id: "win-autopilot",
       label: "What to do next",
       proof: `${autopilot.lanes.length} lanes, ${autopilot.blockers.length} blockers, ${autopilot.readiness}.`,
-      url: absoluteUrl(baseUrl, "/api/win-run"),
+      url: absoluteUrl(baseUrl, "/win-autopilot"),
       tone: autopilot.readiness === "needs-build" ? "block" : "watch"
     },
     {

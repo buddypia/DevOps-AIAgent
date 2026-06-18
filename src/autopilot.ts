@@ -65,6 +65,10 @@ export type WinningAutopilotRun = {
   a2aPayload: Record<string, unknown>;
 };
 
+export const WIN_AUTOPILOT_SKILL_ID = "win.autopilot";
+export const WIN_AUTOPILOT_LOCK_TAG = "win-autopilot-lock";
+export const WIN_AUTOPILOT_REQUIRED_SIGNAL = `${WIN_AUTOPILOT_SKILL_ID}:tag:${WIN_AUTOPILOT_LOCK_TAG}`;
+
 function clamp(value: number, min = 0, max = 100) {
   return Math.max(min, Math.min(max, value));
 }
@@ -95,6 +99,21 @@ function normalizedId(id: string) {
   if (id.includes("video")) return "record-video";
   if (id.includes("protopedia")) return "publish-protopedia";
   return id;
+}
+
+function escapeHtml(value: unknown) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function tone(status: string) {
+  if (["finalist-ready", "passed", "later"].includes(status)) return "good";
+  if (["needs-build", "blocked"].includes(status)) return "bad";
+  return "watch";
 }
 
 function actionFromPublisher(item: PublisherStep): AutopilotAction {
@@ -486,7 +505,7 @@ export function buildWinningAutopilot(input: {
     ].join("\n"),
     a2aPayload: {
       method: "message/send",
-      skill: "win.autopilot",
+      skill: WIN_AUTOPILOT_SKILL_ID,
       winScore,
       readiness,
       selectedAgents: selectedAgentIds,
@@ -501,4 +520,128 @@ export function buildWinningAutopilot(input: {
       }
     }
   };
+}
+
+export function renderWinningAutopilotHtml(run: WinningAutopilotRun) {
+  const metrics = [
+    { label: "Readiness", value: run.readiness, status: run.readiness },
+    { label: "Win Score", value: run.winScore, status: run.readiness },
+    { label: "Lanes", value: run.lanes.length, status: "passed" },
+    { label: "Open Actions", value: run.nextActions.filter((action) => action.priority !== "later").length, status: run.nextActions.some((action) => action.priority === "now") ? "watch" : "passed" }
+  ]
+    .map(
+      (metric) => `
+        <article class="metric ${tone(String(metric.status))}">
+          <span>${escapeHtml(metric.label)}</span>
+          <strong>${escapeHtml(metric.value)}</strong>
+        </article>`
+    )
+    .join("");
+  const lanes = run.lanes
+    .map(
+      (lane) => `
+        <article class="lane ${tone(lane.status)}">
+          <div><strong>${escapeHtml(lane.label)}</strong><span>${escapeHtml(lane.status)} / ${escapeHtml(lane.score)}</span></div>
+          <p>${escapeHtml(lane.proof)}</p>
+          <p>${escapeHtml(lane.action)}</p>
+          <a href="${escapeHtml(lane.evidenceUrl)}">${escapeHtml(lane.evidenceUrl)}</a>
+        </article>`
+    )
+    .join("");
+  const actions = run.nextActions
+    .map(
+      (action) => `
+        <tr>
+          <td><strong>${escapeHtml(action.label)}</strong><span>${escapeHtml(action.priority)}</span></td>
+          <td>${escapeHtml(action.owner)}</td>
+          <td>${escapeHtml(action.command)}</td>
+          <td>${escapeHtml(action.proof)}</td>
+        </tr>`
+    )
+    .join("");
+  const trace = run.autonomyTrace
+    .map(
+      (step) => `
+        <article class="trace">
+          <span>${escapeHtml(step.phase)}</span>
+          <strong>${escapeHtml(step.actor)}</strong>
+          <p>${escapeHtml(step.decision)}</p>
+          <small>${escapeHtml(step.proof)}</small>
+        </article>`
+    )
+    .join("");
+  const deck = run.evidenceDeck
+    .map((item) => `<li><a href="${escapeHtml(item.url)}">${escapeHtml(item.label)}</a><span>${escapeHtml(item.proof)}</span></li>`)
+    .join("");
+  const narrative = run.judgeNarrative
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => `<li>${escapeHtml(line)}</li>`)
+    .join("");
+
+  return `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Win Autopilot Proof</title>
+    <style>
+      :root { color-scheme: light; --ink: #17211f; --muted: #61706a; --line: #dbe6df; --paper: #fbfcfa; --panel: #fff; --green: #13715d; --mint: #e6f4ed; --amber: #8a620d; --amber-bg: #fff4d4; --coral: #b24735; --coral-bg: #fff0ec; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; }
+      a { color: inherit; overflow-wrap: anywhere; }
+      header, main, footer { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
+      header { padding: 40px 0 20px; }
+      .eyebrow { color: var(--green); font-size: .78rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0; }
+      h1 { margin: 8px 0 10px; font-size: clamp(2rem, 5vw, 4.1rem); line-height: 1; letter-spacing: 0; max-width: 980px; }
+      h2 { margin: 28px 0 10px; font-size: 1.12rem; }
+      p { color: var(--muted); }
+      .metrics, .lanes, .trace-grid { display: grid; gap: 12px; }
+      .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 22px; }
+      .lanes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .trace-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .metric, .lane, .trace, .panel { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 16px; box-shadow: 0 10px 24px rgba(23, 33, 31, .06); min-width: 0; }
+      .metric span, .lane span, .trace span { color: var(--muted); font-size: .74rem; font-weight: 900; text-transform: uppercase; }
+      .metric strong { display: block; margin-top: 6px; font-size: 1.45rem; overflow-wrap: anywhere; }
+      .lane div { display: flex; gap: 12px; justify-content: space-between; align-items: start; }
+      .lane strong, .lane p, .trace strong, .trace p, .trace small, td, li { overflow-wrap: anywhere; }
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      th, td { text-align: left; border-bottom: 1px solid var(--line); padding: 10px 8px; vertical-align: top; }
+      th { font-size: .78rem; text-transform: uppercase; color: var(--muted); }
+      td span, li span { display: block; color: var(--muted); font-size: .78rem; }
+      .good { border-color: #a9d8c2; background: var(--mint); }
+      .watch { border-color: #ead39a; background: var(--amber-bg); }
+      .bad { border-color: #efb7aa; background: var(--coral-bg); }
+      ol, ul { margin: 8px 0 0; padding-left: 20px; }
+      footer { padding: 20px 0 40px; color: var(--muted); }
+      @media (max-width: 900px) { .metrics, .lanes, .trace-grid { grid-template-columns: 1fr; } .lane div, table, thead, tbody, tr, th, td { display: block; } thead { display: none; } tr { border-top: 1px solid var(--line); padding: 8px 0; } td { border-bottom: 0; padding: 8px 0; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="eyebrow">Win Autopilot Proof</div>
+      <h1>${escapeHtml(run.headline)}</h1>
+      <p>${escapeHtml(run.summary)}</p>
+      <section class="metrics">${metrics}</section>
+    </header>
+    <main>
+      <h2>Evidence Lanes</h2>
+      <section class="lanes">${lanes}</section>
+      <h2>Next Actions</h2>
+      <section class="panel">
+        <table>
+          <thead><tr><th>Action</th><th>Owner</th><th>Command</th><th>Proof</th></tr></thead>
+          <tbody>${actions}</tbody>
+        </table>
+      </section>
+      <h2>Autonomy Trace</h2>
+      <section class="trace-grid">${trace}</section>
+      <h2>Evidence Deck</h2>
+      <section class="panel"><ul>${deck}</ul></section>
+      <h2>Judge Narrative</h2>
+      <section class="panel"><ol>${narrative}</ol></section>
+    </main>
+    <footer>${escapeHtml(run.id)} / A2A skill ${WIN_AUTOPILOT_SKILL_ID}</footer>
+  </body>
+</html>`;
 }

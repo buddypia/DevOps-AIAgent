@@ -4,11 +4,12 @@ import { buildFirstClickProof, FIRST_CLICK_PROOF_LINKS, FIRST_CLICK_REQUIRED_SIG
 describe("judge first-click proof strip", () => {
   test("keeps the first judge path on direct-open GET proof pages", () => {
     expect(FIRST_CLICK_PROOF_LINKS[0]).toMatchObject({
-      id: "judge-snapshot",
-      href: "/judge-snapshot",
+      id: "win-autopilot",
+      href: "/win-autopilot",
       tone: "primary"
     });
     expect(FIRST_CLICK_PROOF_LINKS.map((link) => link.href)).toEqual([
+      "/win-autopilot",
       "/judge-snapshot",
       "/winner-packet",
       "/objection-arena",
@@ -29,7 +30,7 @@ describe("judge first-click proof strip", () => {
   test("summarizes why the root page is MVP-ready for judges", () => {
     expect(FIRST_CLICK_SCORECARDS.map((card) => card.id)).toEqual(["no-post-first", "criteria-covered", "drift-honesty"]);
     expect(FIRST_CLICK_SCORECARDS.find((card) => card.id === "criteria-covered")?.value).toBe("5/5 covered");
-    expect(FIRST_CLICK_SCORECARDS.find((card) => card.id === "no-post-first")?.value).toBe("12 GET links");
+    expect(FIRST_CLICK_SCORECARDS.find((card) => card.id === "no-post-first")?.value).toBe("13 GET links");
     expect(FIRST_CLICK_SCORECARDS.find((card) => card.id === "drift-honesty")?.proof).toContain("Release Drift");
   });
 
@@ -41,12 +42,13 @@ describe("judge first-click proof strip", () => {
       directOpen: true,
       routeLock: {
         noPostRequired: true,
-        proofPathCount: 12,
-        firstProofPath: "/judge-snapshot",
+        proofPathCount: 13,
+        firstProofPath: "/win-autopilot",
         requiredAgentCardSignal: FIRST_CLICK_REQUIRED_SIGNAL
       }
     });
     expect(proof.proofLinks.map((link) => link.url)).toEqual([
+      "https://a2a-agent-marketplace.example.com/win-autopilot",
       "https://a2a-agent-marketplace.example.com/judge-snapshot",
       "https://a2a-agent-marketplace.example.com/winner-packet",
       "https://a2a-agent-marketplace.example.com/objection-arena",
