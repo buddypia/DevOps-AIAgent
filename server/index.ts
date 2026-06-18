@@ -15,6 +15,7 @@ import { buildImpactCase } from "../src/impact.js";
 import { buildJudgeBrief } from "../src/judgeBrief.js";
 import { buildJudgeDrill } from "../src/judgeDrill.js";
 import { buildJudgeTour } from "../src/judgeTour.js";
+import { buildLiveEvidenceRun, type LiveEvidenceStatus } from "../src/liveEvidence.js";
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market.js";
 import { buildMarketIntelReport } from "../src/marketIntel.js";
 import { buildMissionRun } from "../src/mission.js";
@@ -65,6 +66,7 @@ const SquadOptimizerSchema = RecommendSchema.extend({
   budget: z.number().int().positive().max(300).default(140),
   maxSquadSize: z.number().int().min(1).max(6).default(4)
 });
+const LiveEvidenceSchema = SquadOptimizerSchema;
 
 function publicBaseUrl(req: express.Request) {
   const configured = process.env.PUBLIC_BASE_URL;
@@ -160,6 +162,12 @@ function agentCard(baseUrl: string) {
         name: "Optimize the winning squad under budget",
         description: "予算内のエージェント編成を総当たりし、審査スコア、必須技術カバレッジ、交換計画、追加予算ギャップを返す。",
         tags: ["squad", "optimizer", "budget", "judge-score", "marketplace"]
+      },
+      {
+        id: "evidence.monitor",
+        name: "Monitor live public proof",
+        description: "Cloud Run health、Agent Card、A2A、Squad Optimizer、GitHub Actions CIを公開環境でプローブし、ライブ証拠スコアを返す。",
+        tags: ["live-proof", "cloud-run", "a2a", "ci", "submission"]
       },
       {
         id: "autonomy.ledger",
@@ -443,6 +451,66 @@ async function fetchCiProof(): Promise<CiProof> {
     };
   } catch (error) {
     return ciUnavailable(error instanceof Error ? error.message : "request failed");
+  }
+}
+
+function evidenceScore(status: LiveEvidenceStatus) {
+  if (status === "passed") return 100;
+  if (status === "watch") return 72;
+  return 30;
+}
+
+async function liveJsonProbe(input: {
+  id: string;
+  label: string;
+  url: string;
+  required: boolean;
+  init?: RequestInit;
+  evaluate: (payload: unknown) => { status: LiveEvidenceStatus; score?: number; evidence: string };
+}) {
+  const startedAt = Date.now();
+  try {
+    const response = await fetch(input.url, {
+      ...input.init,
+      signal: AbortSignal.timeout(3500)
+    });
+    const latencyMs = Date.now() - startedAt;
+    if (!response.ok) {
+      return {
+        id: input.id,
+        label: input.label,
+        status: "missing" as const,
+        score: 30,
+        url: input.url,
+        evidence: `HTTP ${response.status}`,
+        latencyMs,
+        required: input.required
+      };
+    }
+
+    const payload = (await response.json()) as unknown;
+    const evaluated = input.evaluate(payload);
+    return {
+      id: input.id,
+      label: input.label,
+      status: evaluated.status,
+      score: evaluated.score ?? evidenceScore(evaluated.status),
+      url: input.url,
+      evidence: evaluated.evidence,
+      latencyMs,
+      required: input.required
+    };
+  } catch (error) {
+    return {
+      id: input.id,
+      label: input.label,
+      status: "missing" as const,
+      score: 30,
+      url: input.url,
+      evidence: error instanceof Error ? error.message : "probe failed",
+      latencyMs: Date.now() - startedAt,
+      required: input.required
+    };
   }
 }
 
@@ -1319,6 +1387,105 @@ app.post("/api/squad-optimizer", (req, res) => {
       selectedAgentIds: parsed.data.selectedAgentIds,
       budget: parsed.data.budget,
       maxSquadSize: parsed.data.maxSquadSize
+    })
+  );
+});
+
+app.post("/api/live-evidence", async (req, res) => {
+  const parsed = LiveEvidenceSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const baseUrl = publicBaseUrl(req);
+  const selectedAgentIds = parsed.data.selectedAgentIds;
+  const [healthProbe, cardProbe, optimizerProbe, a2aProbe, ci] = await Promise.all([
+    liveJsonProbe({
+      id: "health",
+      label: "Cloud Run health endpoint",
+      url: `${baseUrl}/api/healthz`,
+      required: true,
+      evaluate: (payload) => {
+        const body = payload as { ok?: boolean; service?: string };
+        return body.ok && body.service === "a2a-agent-marketplace"
+          ? { status: "passed", score: 100, evidence: "Health endpoint returned ok for a2a-agent-marketplace." }
+          : { status: "missing", score: 30, evidence: "Health payload did not match expected service contract." };
+      }
+    }),
+    liveJsonProbe({
+      id: "agent-card",
+      label: "A2A Agent Card",
+      url: `${baseUrl}/.well-known/agent-card.json`,
+      required: true,
+      evaluate: (payload) => {
+        const skills = Array.isArray((payload as { skills?: unknown[] }).skills) ? ((payload as { skills: Array<{ id?: string }> }).skills) : [];
+        const hasEvidence = skills.some((skill) => skill.id === "evidence.monitor");
+        const hasOptimizer = skills.some((skill) => skill.id === "squad.optimize");
+        return hasEvidence && hasOptimizer && skills.length >= 28
+          ? { status: "passed", score: 100, evidence: `Agent Card exposes ${skills.length} skills including evidence.monitor and squad.optimize.` }
+          : { status: "watch", score: 72, evidence: `Agent Card exposes ${skills.length} skills; expected live evidence and optimizer skills.` };
+      }
+    }),
+    liveJsonProbe({
+      id: "squad-optimizer",
+      label: "Squad Optimizer API",
+      url: `${baseUrl}/api/squad-optimizer`,
+      required: true,
+      init: {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief: parsed.data.projectBrief,
+          selectedAgentIds,
+          budget: parsed.data.budget,
+          maxSquadSize: parsed.data.maxSquadSize
+        })
+      },
+      evaluate: (payload) => {
+        const body = payload as { readiness?: string; budgetGap?: number; a2aPayload?: { skill?: string } };
+        return body.a2aPayload?.skill === "squad.optimize" && typeof body.readiness === "string"
+          ? { status: "passed", score: 100, evidence: `Optimizer returned ${body.readiness}; budget gap ${body.budgetGap ?? 0}.` }
+          : { status: "missing", score: 30, evidence: "Optimizer payload did not include squad.optimize evidence." };
+      }
+    }),
+    liveJsonProbe({
+      id: "a2a",
+      label: "A2A JSON-RPC artifact",
+      url: `${baseUrl}/a2a`,
+      required: true,
+      init: {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: "live-evidence-monitor",
+          method: "message/send",
+          params: { text: parsed.data.projectBrief }
+        })
+      },
+      evaluate: (payload) => {
+        const data = (payload as { result?: { artifacts?: Array<{ parts?: Array<{ data?: Record<string, unknown> }> }> } }).result?.artifacts?.[0]?.parts?.[0]?.data;
+        return data?.squadOptimizerEndpoint && data?.liveEvidenceEndpoint
+          ? { status: "passed", score: 100, evidence: "A2A artifact exposes squadOptimizerEndpoint and liveEvidenceEndpoint." }
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but live evidence endpoint was not visible." };
+      }
+    }),
+    fetchCiProof()
+  ]);
+  const ciProbe = {
+    id: "ci",
+    label: "GitHub Actions CI",
+    status: ci.status === "passed" ? ("passed" as const) : ci.status,
+    score: ci.status === "passed" ? 100 : evidenceScore(ci.status),
+    url: ci.url,
+    evidence: ci.evidence,
+    required: true
+  };
+
+  res.json(
+    buildLiveEvidenceRun({
+      baseUrl,
+      probes: [healthProbe, cardProbe, optimizerProbe, a2aProbe, ciProbe]
     })
   );
 });
@@ -2228,6 +2395,7 @@ app.post("/a2a", (req, res) => {
                 impactCaseEndpoint: `${publicBaseUrl(req)}/api/impact-case`,
                 userPilotEndpoint: `${publicBaseUrl(req)}/api/user-pilot`,
                 squadOptimizerEndpoint: `${publicBaseUrl(req)}/api/squad-optimizer`,
+                liveEvidenceEndpoint: `${publicBaseUrl(req)}/api/live-evidence`,
                 judgeTourEndpoint: `${publicBaseUrl(req)}/api/judge-tour`,
                 winRunEndpoint: `${publicBaseUrl(req)}/api/win-run`,
                 demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,

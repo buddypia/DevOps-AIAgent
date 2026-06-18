@@ -39,6 +39,7 @@ import type { ImpactCase } from "./impact";
 import type { JudgeBrief } from "./judgeBrief";
 import type { JudgeDrill } from "./judgeDrill";
 import type { JudgeTour } from "./judgeTour";
+import type { LiveEvidenceRun } from "./liveEvidence";
 import { CAPABILITY_LABELS, DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "./market";
 import type { MarketIntelReport } from "./marketIntel";
 import type { MissionRun } from "./mission";
@@ -1062,6 +1063,144 @@ function SquadOptimizerPanel({
           <ShoppingCart size={28} />
           <strong>Optimize squadで、予算内の最適編成、交換計画、追加予算ギャップを生成します。</strong>
           <p>単体の次候補ではなく、審査5項目と必須技術を同時に満たす組み合わせを探索します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function LiveEvidencePanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [evidence, setEvidence] = useState<LiveEvidenceRun | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function monitorEvidence() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/live-evidence", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+          budget: 140,
+          maxSquadSize: 4
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setEvidence((await response.json()) as LiveEvidenceRun);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="live-evidence">
+      <div className="evidence-heading">
+        <div>
+          <span className="eyebrow">Live evidence monitor</span>
+          <h2>
+            <Radar size={20} />
+            Public proof probes
+          </h2>
+        </div>
+        <button className="icon-button" onClick={monitorEvidence} disabled={loading} title="公開環境の証拠をライブ検証">
+          <Activity size={17} />
+          {loading ? "Probing" : "Monitor evidence"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Live evidence request failed: {error}</p>}
+
+      {evidence ? (
+        <div className="evidence-body">
+          <div className="evidence-summary">
+            <div>
+              <span className={cx("risk-chip", evidence.readiness === "live-ready" ? "low" : evidence.readiness === "watch" ? "medium" : "high")}>
+                {evidence.readiness}
+              </span>
+              <h3>{evidence.summary}</h3>
+              <p>{evidence.hardTruth}</p>
+              <small>{new Date(evidence.generatedAt).toLocaleString()}</small>
+            </div>
+            <div className="evidence-score">
+              <strong>{evidence.evidenceScore}</strong>
+              <span>live proof</span>
+            </div>
+          </div>
+
+          <div className="evidence-probes">
+            {evidence.probes.map((probe) => (
+              <article key={probe.id} className={probe.status}>
+                <div>
+                  <strong>{probe.label}</strong>
+                  <span>{probe.status}</span>
+                </div>
+                <p>{probe.evidence}</p>
+                <small>{probe.latencyMs ? `${probe.latencyMs}ms` : "live"} / score {probe.score}</small>
+                <a href={probe.url} target="_blank" rel="noreferrer">
+                  Evidence <ExternalLink size={13} />
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <div className="evidence-grid">
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Next actions
+              </h3>
+              <div className="evidence-actions">
+                {evidence.nextActions.length > 0 ? (
+                  evidence.nextActions.map((action) => (
+                    <article key={action.id} className={action.priority}>
+                      <div>
+                        <strong>{action.label}</strong>
+                        <span>{action.priority}</span>
+                      </div>
+                      <p>{action.action}</p>
+                      <small>{action.proof}</small>
+                    </article>
+                  ))
+                ) : (
+                  <article className="clear">
+                    <strong>All public probes passed</strong>
+                    <p>審査員に見せる公開証拠はライブで確認済みです。</p>
+                  </article>
+                )}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                Runbook
+              </h3>
+              <pre>{evidence.runbook.join("\n")}</pre>
+            </section>
+            <section>
+              <h3>
+                <ShieldCheck size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(evidence.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="evidence-empty">
+          <Radar size={28} />
+          <strong>Monitor evidenceで、Cloud Run、Agent Card、A2A、Squad Optimizer、CIを公開環境からライブ検証します。</strong>
+          <p>「提出URLが動く」という主張を、審査員の前で再実行できる証拠に変えます。</p>
         </div>
       )}
     </section>
@@ -3860,6 +3999,7 @@ export default function App() {
 
       <JudgeTourPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SquadOptimizerPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <LiveEvidencePanel recommendation={recommendation} projectBrief={projectBrief} />
       <UserPilotPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeBriefPanel recommendation={recommendation} projectBrief={projectBrief} />
       <AutonomyLedgerPanel recommendation={recommendation} projectBrief={projectBrief} />
