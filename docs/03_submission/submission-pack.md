@@ -53,7 +53,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - External Evidence Verifierで、公開GitHub、Cloud Run、ProtoPedia作品URL、動画URLが審査員から開けるかを検証する
 - Release Drift Guardで、公開Cloud Runが最新Agent Card、Acceptance Matrix、A2A artifactを返しているかを検査する
 - Deploy Recoveryで、release drift、gcloud認証、Cloud Build、公開再検証を復旧コマンドに変換する
-- Judge Demo Receiptで、審査導線、競合反論、編成判断、公開証拠、外部提出URL状態をsha256 digest付き検収票にする
+- Judge Demo Receiptで、審査導線、競合反論、編成判断、公開証拠、外部提出URL状態をReceipt Integrity Lockとsha256 digest付き検収票にする
 - Judge Acceptance Matrixで、必須技術、審査5項目、競合/SWOT、公開証拠、提出物をaccepted/watch/blockedの受入表にする
 - Autonomy Ledgerで、市場探索、判断、契約、A2A委任、検証、運用、提出を検収可能なAI自律性台帳として見せる
 - Agent Task Boardで、`task.delegate` を目的、検収条件、proof URL付きのA2A `message/send` payloadとして見せる

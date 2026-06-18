@@ -3570,6 +3570,50 @@ function DemoReceiptPanel({
             ))}
           </div>
 
+          <div className="receipt-integrity-lock">
+            <div className="integrity-summary">
+              <div>
+                <span
+                  className={cx(
+                    "risk-chip",
+                    receipt.integrityLock.readiness === "integrity-sealed"
+                      ? "low"
+                      : receipt.integrityLock.readiness === "integrity-external-watch"
+                        ? "medium"
+                        : "high"
+                  )}
+                >
+                  {receipt.integrityLock.readiness}
+                </span>
+                <h3>Receipt Integrity Lock</h3>
+                <p>{receipt.integrityLock.judgeLine}</p>
+                <small>
+                  sealed {receipt.integrityLock.sealedCount} / watch {receipt.integrityLock.watchCount} / missing {receipt.integrityLock.missingCount} /
+                  digest {receipt.integrityLock.digestPreview}
+                </small>
+              </div>
+              <div className="integrity-score">
+                <strong>{receipt.integrityLock.integrityScore}</strong>
+                <span>integrity score</span>
+              </div>
+            </div>
+            <div className="integrity-checks">
+              {receipt.integrityLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.proof}</p>
+                  <small>{check.digestField}</small>
+                  <a href={check.url} target="_blank" rel="noreferrer">
+                    Replay <ExternalLink size={13} />
+                  </a>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="receipt-grid">
             <section>
               <h3>

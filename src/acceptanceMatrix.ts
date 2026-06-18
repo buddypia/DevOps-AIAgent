@@ -380,7 +380,7 @@ export function buildJudgeAcceptanceMatrix(input: {
       status: input.demoReceipt.verdict === "sealed" ? "accepted" : input.demoReceipt.verdict === "needs-external-submit" ? "watch" : "blocked",
       score: input.demoReceipt.receiptScore,
       requirement: "審査動画の主張、反論、編成判断、公開証拠、外部URLをreceiptで封印すること",
-      evidence: `${input.demoReceipt.verdict}; digest ${input.demoReceipt.digest.digest}.`,
+      evidence: `${input.demoReceipt.verdict}; ${input.demoReceipt.integrityLock.readiness}; digest ${input.demoReceipt.digest.digest}.`,
       proofUrl: absoluteUrl(base, "/api/demo-receipt"),
       nextAction: input.demoReceipt.actions[0]?.action ?? "Judge Demo Receiptのdigestを提出メモへ控える"
     })

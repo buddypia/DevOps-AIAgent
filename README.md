@@ -37,7 +37,7 @@
 - External Evidence Verifier: 最終提出の4 URLを許可ドメインだけでプローブし、外部提出ギャップを再実行可能な証拠にする
 - Release Drift Guard: GitHub/CIが緑でも公開Cloud Runが古いrevisionなら、Agent Card、Acceptance Matrix、A2A artifactの差分で検知する
 - Deploy Recovery: release drift、gcloud認証、Cloud Build、公開再検証を復旧コマンドと審査説明へ変換する
-- Judge Demo Receipt: 審査導線、競合反論、編成判断、公開証拠、外部提出URL状態をsha256 digest付きの検収票にする
+- Judge Demo Receipt: 審査導線、競合反論、編成判断、公開証拠、外部提出URL状態をReceipt Integrity Lockとsha256 digest付きの検収票にする
 - Judge Acceptance Matrix: 必須技術、審査5項目、競合/SWOT、公開証拠、提出物、ProtoPedia complianceをaccepted/watch/blockedの受入表にする
 - Autonomy Ledger: 市場探索、判断、契約、A2A委任、検証、運用、提出を検収可能なAI自律性台帳に変換
 - Agent Task Board: `task.delegate` を、委任先AI、目的、検収条件、proof URL、A2A payloadへ具体化する
@@ -232,11 +232,11 @@
 
 ## Judge Demo Receipt
 
-`Judge Demo Receipt` は、審査動画で実行した主張を1枚の検収票に固定します。Judge Tour、Moat Stress Test、Squad Optimizer、Live Evidence Monitor、Submission Launch Gateをstamp化し、ProtoPedia作品URLと動画URLが未入力ならwatchとして残します。最後にsha256 digestを控えることで、動画後の質疑でも「何を見せ、何が未完了か」を同じ証拠で再確認できます。
+`Judge Demo Receipt` は、審査動画で実行した主張を1枚の検収票に固定します。Judge Tour、Moat Stress Test、Squad Optimizer、Live Evidence Monitor、Submission Launch Gateをstamp化し、ProtoPedia作品URLと動画URLが未入力ならwatchとして残します。Receipt Integrity Lockでdigest coverage、stamp coverage、公開証拠route、A2A Agent Card、競合反論、外部URL watchの正直さを検査し、動画後の質疑でも「何を見せ、何が未完了か」を同じ証拠で再確認できます。
 
 - API: `POST /api/demo-receipt`
 - App UI: `Seal receipt`
-- Output: receipt score、stamps、recording order、next actions、sha256 digest、A2A `demo.receipt` payload
+- Output: receipt score、stamps、Receipt Integrity Lock、recording order、next actions、sha256 digest、A2A `demo.receipt` payload
 
 ## Judge Acceptance Matrix
 

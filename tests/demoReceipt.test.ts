@@ -30,9 +30,25 @@ describe("judge demo receipt", () => {
     expect(receipt.stamps.find((stamp) => stamp.id === "external-submit")?.status).toBe("watch");
     expect(receipt.actions.map((action) => action.id)).toContain("external-submit");
     expect(receipt.digest.digest).toMatch(/^[a-f0-9]{64}$/);
+    expect(receipt.digest.payload.integrityCheckIds).toEqual([
+      "digest-replay",
+      "stamp-coverage",
+      "runtime-proof-linked",
+      "a2a-surface-linked",
+      "competitive-proof-linked",
+      "external-gap-honesty"
+    ]);
+    expect(receipt.integrityLock.readiness).toBe("integrity-external-watch");
+    expect(receipt.integrityLock.integrityScore).toBeGreaterThanOrEqual(95);
+    expect(receipt.integrityLock.watchCount).toBe(1);
+    expect(receipt.integrityLock.missingCount).toBe(0);
+    expect(receipt.integrityLock.checks.find((check) => check.id === "external-gap-honesty")?.status).toBe("watch");
     expect(receipt.a2aPayload).toMatchObject({
       skill: "demo.receipt",
-      verdict: "needs-external-submit"
+      verdict: "needs-external-submit",
+      integrityLock: {
+        readiness: "integrity-external-watch"
+      }
     });
   });
 
@@ -48,5 +64,8 @@ describe("judge demo receipt", () => {
     expect(receipt.stamps.find((stamp) => stamp.id === "external-submit")?.status).toBe("sealed");
     expect(receipt.actions.every((action) => action.priority === "next")).toBe(true);
     expect(receipt.digest.payload.externalUrls.protopediaUrl).toBe("https://protopedia.net/prototype/999999");
+    expect(receipt.integrityLock.readiness).toBe("integrity-sealed");
+    expect(receipt.integrityLock.integrityScore).toBe(100);
+    expect(receipt.integrityLock.checks.every((check) => check.status === "sealed")).toBe(true);
   });
 });

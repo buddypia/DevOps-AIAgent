@@ -7,6 +7,7 @@ import type { Recommendation } from "./types.js";
 
 export type DemoReceiptVerdict = "sealed" | "needs-proof" | "needs-external-submit";
 export type DemoReceiptStampStatus = "sealed" | "watch" | "missing";
+export type DemoReceiptIntegrityReadiness = "integrity-sealed" | "integrity-external-watch" | "needs-integrity-fix";
 
 export type DemoReceiptStamp = {
   id: string;
@@ -30,6 +31,7 @@ export type DemoReceiptDigestPayload = {
   receiptScore: number;
   verdict: DemoReceiptVerdict;
   stampStatuses: Array<{ id: string; status: DemoReceiptStampStatus; score: number }>;
+  integrityCheckIds: string[];
   externalUrls: {
     protopediaUrl: string;
     videoUrl: string;
@@ -43,6 +45,29 @@ export type DemoReceiptDigest = {
   verification: string;
 };
 
+export type DemoReceiptIntegrityCheck = {
+  id: string;
+  label: string;
+  status: DemoReceiptStampStatus;
+  score: number;
+  proof: string;
+  digestField: string;
+  url: string;
+};
+
+export type DemoReceiptIntegrityLock = {
+  id: string;
+  integrityScore: number;
+  readiness: DemoReceiptIntegrityReadiness;
+  sealedCount: number;
+  watchCount: number;
+  missingCount: number;
+  digestPreview: string;
+  judgeLine: string;
+  replayCommand: string;
+  checks: DemoReceiptIntegrityCheck[];
+};
+
 export type JudgeDemoReceipt = {
   id: string;
   generatedAt: string;
@@ -54,8 +79,19 @@ export type JudgeDemoReceipt = {
   recordingOrder: string[];
   actions: DemoReceiptAction[];
   digest: DemoReceiptDigest;
+  integrityLock: DemoReceiptIntegrityLock;
   a2aPayload: Record<string, unknown>;
 };
+
+const REQUIRED_STAMP_IDS = ["judge-route", "competitive-moat", "squad-choice", "runtime-proof", "a2a-surface", "external-submit"] as const;
+const INTEGRITY_CHECK_IDS = [
+  "digest-replay",
+  "stamp-coverage",
+  "runtime-proof-linked",
+  "a2a-surface-linked",
+  "competitive-proof-linked",
+  "external-gap-honesty"
+] as const;
 
 function clamp(value: number, min = 0, max = 100) {
   return Math.max(min, Math.min(max, value));
@@ -110,6 +146,13 @@ function stamp(input: Omit<DemoReceiptStamp, "score"> & { score?: number }): Dem
   };
 }
 
+function integrityCheck(input: Omit<DemoReceiptIntegrityCheck, "score"> & { score?: number }): DemoReceiptIntegrityCheck {
+  return {
+    ...input,
+    score: Math.round(clamp(input.score ?? statusScore(input.status)))
+  };
+}
+
 function verdictFrom(stamps: DemoReceiptStamp[], score: number): DemoReceiptVerdict {
   if (stamps.some((item) => item.id === "external-submit" && item.status !== "sealed")) return "needs-external-submit";
   if (stamps.some((item) => item.status === "missing") || score < 82) return "needs-proof";
@@ -128,6 +171,125 @@ function actionsFrom(stamps: DemoReceiptStamp[]): DemoReceiptAction[] {
           : `${stampItem.label} を再実行し、score ${stampItem.score} のwatch状態をsealedへ上げる`,
       proof: stampItem.proof
     }));
+}
+
+function buildIntegrityLock(input: {
+  baseUrl: string;
+  projectBrief: string;
+  selectedAgentIds: string[];
+  stamps: DemoReceiptStamp[];
+  verdict: DemoReceiptVerdict;
+  receiptDigest: DemoReceiptDigest;
+}): DemoReceiptIntegrityLock {
+  const stampById = new Map(input.stamps.map((item) => [item.id, item]));
+  const stampStatusesMatchDigest =
+    input.receiptDigest.payload.stampStatuses.length === input.stamps.length &&
+    input.receiptDigest.payload.stampStatuses.every((item) => {
+      const source = stampById.get(item.id);
+      return source?.status === item.status && source.score === item.score;
+    });
+  const hasRequiredStamps = REQUIRED_STAMP_IDS.every((id) => stampById.has(id)) && input.stamps.length === REQUIRED_STAMP_IDS.length;
+  const runtimeProof = stampById.get("runtime-proof");
+  const a2aSurface = stampById.get("a2a-surface");
+  const competitiveMoat = stampById.get("competitive-moat");
+  const externalSubmit = stampById.get("external-submit");
+  const replayBody = JSON.stringify({
+    projectBrief: input.projectBrief,
+    selectedAgentIds: input.selectedAgentIds,
+    protopediaUrl: input.receiptDigest.payload.externalUrls.protopediaUrl,
+    videoUrl: input.receiptDigest.payload.externalUrls.videoUrl
+  });
+  const checks = [
+    integrityCheck({
+      id: "digest-replay",
+      label: "Digest replay",
+      status:
+        /^[a-f0-9]{64}$/.test(input.receiptDigest.digest) &&
+        input.receiptDigest.payload.integrityCheckIds.join(",") === INTEGRITY_CHECK_IDS.join(",") &&
+        stampStatusesMatchDigest
+          ? "sealed"
+          : "missing",
+      proof: `Digest covers ${input.receiptDigest.payload.stampStatuses.length} stamp statuses and ${input.receiptDigest.payload.integrityCheckIds.length} integrity checks.`,
+      digestField: "digest.payload.stampStatuses + digest.payload.integrityCheckIds",
+      url: absoluteUrl(input.baseUrl, "/api/demo-receipt")
+    }),
+    integrityCheck({
+      id: "stamp-coverage",
+      label: "Stamp coverage",
+      status: hasRequiredStamps ? "sealed" : "missing",
+      proof: hasRequiredStamps
+        ? "Required judge route, moat, squad, runtime, A2A, and external submission stamps are present."
+        : "A required receipt stamp is missing from the digest payload.",
+      digestField: "digest.payload.stampStatuses[].id",
+      url: absoluteUrl(input.baseUrl, "/api/demo-receipt")
+    }),
+    integrityCheck({
+      id: "runtime-proof-linked",
+      label: "Runtime proof linked",
+      status: runtimeProof?.status === "sealed" && runtimeProof.url.endsWith("/api/live-evidence") ? "sealed" : "missing",
+      proof: runtimeProof ? `${runtimeProof.status}; ${runtimeProof.proof}` : "Runtime proof stamp missing.",
+      digestField: "digest.payload.stampStatuses[runtime-proof]",
+      url: runtimeProof?.url ?? absoluteUrl(input.baseUrl, "/api/live-evidence")
+    }),
+    integrityCheck({
+      id: "a2a-surface-linked",
+      label: "A2A surface linked",
+      status: a2aSurface?.status === "sealed" && a2aSurface.url.endsWith("/.well-known/agent-card.json") ? "sealed" : "missing",
+      proof: a2aSurface ? `${a2aSurface.status}; ${a2aSurface.proof}` : "A2A surface stamp missing.",
+      digestField: "digest.payload.stampStatuses[a2a-surface]",
+      url: a2aSurface?.url ?? absoluteUrl(input.baseUrl, "/.well-known/agent-card.json")
+    }),
+    integrityCheck({
+      id: "competitive-proof-linked",
+      label: "Competitive proof linked",
+      status: competitiveMoat && competitiveMoat.status !== "missing" && competitiveMoat.url.endsWith("/api/moat-stress") ? competitiveMoat.status : "missing",
+      proof: competitiveMoat ? `${competitiveMoat.status}; ${competitiveMoat.proof}` : "Competitive moat stamp missing.",
+      digestField: "digest.payload.stampStatuses[competitive-moat]",
+      url: competitiveMoat?.url ?? absoluteUrl(input.baseUrl, "/api/moat-stress")
+    }),
+    integrityCheck({
+      id: "external-gap-honesty",
+      label: "External gap honesty",
+      status:
+        externalSubmit?.status === "sealed"
+          ? "sealed"
+          : externalSubmit?.status === "watch" && input.verdict === "needs-external-submit"
+            ? "watch"
+            : "missing",
+      proof:
+        externalSubmit?.status === "sealed"
+          ? "External ProtoPedia and video URLs are included in the digest payload."
+          : externalSubmit?.status === "watch" && input.verdict === "needs-external-submit"
+            ? "External URLs remain visible as watch, so the receipt does not overclaim submit-ready."
+            : "External URL state is missing or inconsistent with the receipt verdict.",
+      digestField: "digest.payload.externalUrls + verdict",
+      url: externalSubmit?.url ?? absoluteUrl(input.baseUrl, "/api/submission-launch")
+    })
+  ];
+  const integrityScore = Math.round(clamp(average(checks.map((item) => item.score))));
+  const sealedCount = checks.filter((item) => item.status === "sealed").length;
+  const watchCount = checks.filter((item) => item.status === "watch").length;
+  const missingCount = checks.filter((item) => item.status === "missing").length;
+  const readiness =
+    missingCount > 0 ? "needs-integrity-fix" : input.verdict === "needs-external-submit" || watchCount > 0 ? "integrity-external-watch" : "integrity-sealed";
+
+  return {
+    id: `receipt-integrity-${integrityScore}-${readiness}`,
+    integrityScore,
+    readiness,
+    sealedCount,
+    watchCount,
+    missingCount,
+    digestPreview: input.receiptDigest.digest.slice(0, 16),
+    judgeLine:
+      readiness === "integrity-sealed"
+        ? "Receipt digest, proof routes, A2A surface, competitive rebuttal, and external submission URLs replay cleanly."
+        : readiness === "integrity-external-watch"
+          ? "Code-side demo proof replays cleanly; the only honest watch is the external submission URL gap."
+          : "Receipt integrity has a broken proof route or digest coverage gap; fix this before recording.",
+    replayCommand: `curl -s -X POST ${absoluteUrl(input.baseUrl, "/api/demo-receipt")} -H 'Content-Type: application/json' --data '${replayBody}' | jq '.integrityLock'`,
+    checks
+  };
 }
 
 export function buildJudgeDemoReceipt(input: {
@@ -207,6 +369,7 @@ export function buildJudgeDemoReceipt(input: {
     receiptScore,
     verdict,
     stampStatuses: stamps.map((item) => ({ id: item.id, status: item.status, score: item.score })),
+    integrityCheckIds: [...INTEGRITY_CHECK_IDS],
     externalUrls: {
       protopediaUrl,
       videoUrl
@@ -218,6 +381,14 @@ export function buildJudgeDemoReceipt(input: {
     payload,
     verification: "Recompute sha256 over the stable JSON of digest.payload and compare it with digest.digest."
   };
+  const integrityLock = buildIntegrityLock({
+    baseUrl: base,
+    projectBrief: input.recommendation.profile.brief,
+    selectedAgentIds,
+    stamps,
+    verdict,
+    receiptDigest
+  });
 
   return {
     id: receiptId,
@@ -243,12 +414,18 @@ export function buildJudgeDemoReceipt(input: {
     ],
     actions,
     digest: receiptDigest,
+    integrityLock,
     a2aPayload: {
       method: "message/send",
       skill: "demo.receipt",
       receiptScore,
       verdict,
       digest: receiptDigest.digest,
+      integrityLock: {
+        readiness: integrityLock.readiness,
+        integrityScore: integrityLock.integrityScore,
+        checks: integrityLock.checks.map((item) => ({ id: item.id, status: item.status, score: item.score, url: item.url }))
+      },
       stamps: stamps.map((item) => ({ id: item.id, status: item.status, score: item.score, url: item.url })),
       nextActions: actions.map((action) => ({ id: action.id, priority: action.priority, action: action.action })),
       endpoints: {

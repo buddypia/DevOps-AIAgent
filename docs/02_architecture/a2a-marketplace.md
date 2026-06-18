@@ -244,9 +244,10 @@
 
 - `POST /api/demo-receipt`: Judge Tour、Moat Stress Test、Squad Optimizer、Live Evidence Monitor、Submission Launch Gateを審査デモreceiptへ束ねる
 - Stamps: 審査導線、競合反論、編成判断、公開証拠、A2A surface、外部提出URLをsealed/watch/missingで固定する
-- Digest: stamp statuses、選択agent、外部URL、verdictからsha256 digestを作り、録画後の照合に使う
+- Digest: stamp statuses、選択agent、外部URL、verdict、integrity check idsからsha256 digestを作り、録画後の照合に使う
+- Receipt Integrity Lock: digest replay、stamp coverage、runtime proof、A2A surface、competitive proof、external gap honestyをsealed/watch/missingで検査する
 - External truth: ProtoPedia作品URLと動画URLは未入力ならwatchとして残し、提出完了扱いにしない
-- A2A payload: `demo.receipt` skillとしてreceipt score、verdict、digest、next actions、endpointを返す
+- A2A payload: `demo.receipt` skillとしてreceipt score、verdict、integrity lock、digest、next actions、endpointを返す
 
 ## Acceptance Matrix Surface
 
