@@ -44,6 +44,7 @@ import type { ImpactCase } from "./impact";
 import type { JudgeBrief } from "./judgeBrief";
 import type { JudgeCommandCenter } from "./judgeCommandCenter";
 import type { JudgeDrill } from "./judgeDrill";
+import type { JudgeRehearsalRoom } from "./judgeRehearsal";
 import type { JudgeTour } from "./judgeTour";
 import type { LiveEvidenceRun } from "./liveEvidence";
 import { CAPABILITY_LABELS, DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "./market";
@@ -463,6 +464,174 @@ function DemoConciergePanel({
           <Radar size={28} />
           <strong>Build conciergeで、審査員・買い手・提出者の最初の1クリック、話す台詞、証拠URLを固定します。</strong>
           <p>機能一覧を見せる前に、誰が来ても迷わない入口を作ります。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function JudgeRehearsalPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [rehearsal, setRehearsal] = useState<JudgeRehearsalRoom | null>(null);
+  const [protopediaUrl, setProtopediaUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildRehearsal() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/judge-rehearsal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+          protopediaUrl,
+          videoUrl
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setRehearsal((await response.json()) as JudgeRehearsalRoom);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="judge-rehearsal">
+      <div className="rehearsal-heading">
+        <div>
+          <span className="eyebrow">Judge rehearsal</span>
+          <h2>
+            <Play size={20} />
+            90-second run room
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildRehearsal} disabled={loading} title="90秒の審査員向けリハーサルを生成">
+          <Trophy size={17} />
+          {loading ? "Rehearsing" : "Build rehearsal"}
+        </button>
+      </div>
+
+      <div className="rehearsal-inputs">
+        <label>
+          <span>ProtoPedia work URL</span>
+          <input value={protopediaUrl} onChange={(event) => setProtopediaUrl(event.target.value)} placeholder="https://protopedia.net/prototype/..." />
+        </label>
+        <label>
+          <span>Video URL</span>
+          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://drive.google.com/..." />
+        </label>
+      </div>
+
+      {error && <p className="error-text">Judge rehearsal request failed: {error}</p>}
+
+      {rehearsal ? (
+        <div className="rehearsal-body">
+          <div className="rehearsal-summary">
+            <div>
+              <span className={cx("risk-chip", rehearsal.readiness === "rehearsal-ready" ? "low" : rehearsal.readiness === "external-gap-rehearsal" ? "medium" : "high")}>
+                {rehearsal.readiness}
+              </span>
+              <h3>{rehearsal.headline}</h3>
+              <p>{rehearsal.hardTruth}</p>
+              <strong>Next run: {rehearsal.nextRun}</strong>
+            </div>
+            <div className="rehearsal-score">
+              <strong>{rehearsal.rehearsalScore}</strong>
+              <span>rehearsal score</span>
+            </div>
+          </div>
+
+          <div className="rehearsal-segments">
+            {rehearsal.segments.map((segment) => (
+              <article key={segment.id} className={segment.status}>
+                <div>
+                  <strong>{segment.timeRange}</strong>
+                  <span>{segment.status}</span>
+                </div>
+                <h3>{segment.screen}</h3>
+                <b>{segment.open}</b>
+                <p>{segment.say}</p>
+                <small>{segment.successSignal}</small>
+                <a href={segment.proofUrl} target="_blank" rel="noreferrer">
+                  Proof <ExternalLink size={13} />
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <div className="rehearsal-grid">
+            <section>
+              <h3>
+                <Crosshair size={15} />
+                Question deck
+              </h3>
+              {rehearsal.questionDeck.map((question) => (
+                <article key={question.id} className={question.status}>
+                  <strong>{question.question}</strong>
+                  <p>{question.answer}</p>
+                  <a href={question.proofUrl} target="_blank" rel="noreferrer">
+                    Open proof <ExternalLink size={13} />
+                  </a>
+                </article>
+              ))}
+            </section>
+            <section>
+              <h3>
+                <Gauge size={15} />
+                Scorecard
+              </h3>
+              {rehearsal.scorecard.map((criterion) => (
+                <article key={criterion.id} className={criterion.status}>
+                  <div>
+                    <strong>{criterion.label}</strong>
+                    <span>
+                      {criterion.currentScore}/{criterion.targetScore}
+                    </span>
+                  </div>
+                  <p>{criterion.rehearse}</p>
+                </article>
+              ))}
+            </section>
+            <section>
+              <h3>
+                <Film size={15} />
+                Capture checklist
+              </h3>
+              {rehearsal.captureChecklist.map((item) => (
+                <article key={item.id} className={item.status}>
+                  <div>
+                    <strong>{item.timeRange}</strong>
+                    <span>{item.screen}</span>
+                  </div>
+                  <p>{item.narration}</p>
+                </article>
+              ))}
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(rehearsal.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="rehearsal-empty">
+          <Play size={28} />
+          <strong>Build rehearsalで、最初の90秒に開く画面、話す台詞、想定質問、録画チェックを1つにまとめます。</strong>
+          <p>審査員に機能一覧を浴びせず、価値、差別化、実用性、提出状態の順に見せます。</p>
         </div>
       )}
     </section>
@@ -6055,6 +6224,7 @@ export default function App() {
 
       <JudgeCommandCenterPanel recommendation={recommendation} projectBrief={projectBrief} />
       <DemoConciergePanel recommendation={recommendation} projectBrief={projectBrief} />
+      <JudgeRehearsalPanel recommendation={recommendation} projectBrief={projectBrief} />
       <PrizeStrategyPanel recommendation={recommendation} projectBrief={projectBrief} />
       <WinGapRadarPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeTourPanel recommendation={recommendation} projectBrief={projectBrief} />

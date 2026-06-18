@@ -143,6 +143,14 @@
 - Friction cuts: 機能過多、実用性説明、競合差別化の迷いを、どの証拠順で減らすかを返す
 - A2A payload: `demo.concierge` skillとしてconcierge score、readiness、single next click、persona lanes、success criteriaを返す
 
+## Judge Rehearsal Surface
+
+- `POST /api/judge-rehearsal`: Judge Command、Demo Concierge、Judge Tour、Prize Strategy、Submission Closeoutを90秒の実演リハーサルへ束ねる
+- Segments: 0-90秒で開く画面、押すボタン、話す台詞、成功signal、proof URLをready/watch/blockedで返す
+- Question deck: 審査員の想定質問、短い回答、開く証拠URLを固定し、質疑で迷う時間を減らす
+- Capture checklist: 動画録画のchapterとcloseout receipt確認を同じレスポンスに含める
+- A2A payload: `judge.rehearsal` skillとしてrehearsal score、readiness、next run、endpoint群を返す
+
 ## Prize Strategy Surface
 
 - `POST /api/prize-strategy`: 審査5項目のtarget score、現在スコア、足りない証拠、最終ピッチ順を優勝作戦へ束ねる
@@ -299,6 +307,7 @@
 - `POST /api/mvp-audit`: MVPハードゲート、審査lane、提出blockerを評価する
 - `POST /api/judge-command-center`: 初回審査用の証拠ボタン、90秒timeline、残ブロッカーを評価する
 - `POST /api/demo-concierge`: persona別のfirst click、台詞、証拠URL、成功条件を返す
+- `POST /api/judge-rehearsal`: 90秒segments、想定質問、scorecard、録画チェックを返す
 - `POST /api/prize-strategy`: 審査5項目の優勝作戦、proof moves、final pitch orderを返す
 - `POST /api/pitch`: 30秒動画のshot list、voiceover、lower thirds、recording checklist、提出残リスクを返す
 - `POST /api/judge-drill`: 審査5項目と主要競合への厳しめ質問、回答、60秒回答パス、証拠リンク、デモ画面を返す
@@ -377,6 +386,7 @@
 - MVP audit: `/api/mvp-audit`
 - Judge brief: `/api/judge-brief`
 - Judge command center: `/api/judge-command-center`
+- Judge rehearsal: `/api/judge-rehearsal`
 - Judge tour: `/api/judge-tour`
 - User pilot: `/api/user-pilot`
 - Squad optimizer: `/api/squad-optimizer`
