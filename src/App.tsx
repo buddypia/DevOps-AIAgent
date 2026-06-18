@@ -48,6 +48,7 @@ import type { PitchRun } from "./pitch";
 import type { JudgeProof } from "./proof";
 import type { ProtoPediaPublisher } from "./publisher";
 import type { SecurityReview } from "./security";
+import type { OptimizedSquadCandidate, SquadOptimizerRun } from "./squadOptimizer";
 import type { SubmissionDossier } from "./dossier";
 import type { SubmissionLaunchGate } from "./submissionLaunch";
 import { buildWinningStrategy } from "./strategy";
@@ -832,6 +833,235 @@ function UserPilotPanel({
           <Crosshair size={28} />
           <strong>Run user pilotで、開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証します。</strong>
           <p>ユーザビリティの弱点を、対象ユーザー別のクリック順、摩擦、成功条件、次アクションに変換します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function OptimizerCandidateCard({
+  title,
+  candidate
+}: {
+  title: string;
+  candidate: OptimizedSquadCandidate;
+}) {
+  return (
+    <article className="optimizer-candidate">
+      <div className="optimizer-candidate-top">
+        <span>{title}</span>
+        <strong>{candidate.totalScore}</strong>
+      </div>
+      <h3>{candidate.agents.map((agent) => agent.name).join(" / ")}</h3>
+      <div className="optimizer-candidate-meta">
+        <span>
+          <Coins size={14} />
+          {candidate.totalPrice}
+        </span>
+        <span>
+          <Gauge size={14} />
+          Judge {candidate.judgeScore}
+        </span>
+        <span>
+          <BadgeCheck size={14} />
+          Coverage {candidate.coverageScore}
+        </span>
+      </div>
+      <div className="optimizer-coverage">
+        {candidate.coverage.map((gate) => (
+          <span key={gate.id} className={gate.met ? "met" : "missing"}>
+            {gate.label}
+          </span>
+        ))}
+      </div>
+      <p>{candidate.weakestCriterion.label}: {candidate.weakestCriterion.nextAction}</p>
+    </article>
+  );
+}
+
+function SquadOptimizerPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [optimizer, setOptimizer] = useState<SquadOptimizerRun | null>(null);
+  const [budget, setBudget] = useState(140);
+  const [maxSquadSize, setMaxSquadSize] = useState(4);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function optimizeSquad() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/squad-optimizer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+          budget,
+          maxSquadSize
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setOptimizer((await response.json()) as SquadOptimizerRun);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="squad-optimizer">
+      <div className="optimizer-heading">
+        <div>
+          <span className="eyebrow">Squad optimizer</span>
+          <h2>
+            <ShoppingCart size={20} />
+            Budget-aware winning squad
+          </h2>
+        </div>
+        <button className="icon-button" onClick={optimizeSquad} disabled={loading} title="予算内の最適編成を探索">
+          <Workflow size={17} />
+          {loading ? "Optimizing" : "Optimize squad"}
+        </button>
+      </div>
+
+      <div className="optimizer-inputs">
+        <label>
+          <span>Budget</span>
+          <input
+            type="number"
+            min={60}
+            max={300}
+            value={budget}
+            onChange={(event) => setBudget(Number(event.target.value))}
+          />
+        </label>
+        <label>
+          <span>Max squad size</span>
+          <input
+            type="number"
+            min={1}
+            max={6}
+            value={maxSquadSize}
+            onChange={(event) => setMaxSquadSize(Number(event.target.value))}
+          />
+        </label>
+      </div>
+
+      {error && <p className="error-text">Squad optimizer request failed: {error}</p>}
+
+      {optimizer ? (
+        <div className="optimizer-body">
+          <div className="optimizer-summary">
+            <div>
+              <span className={cx("risk-chip", optimizer.readiness === "optimized" ? "low" : optimizer.readiness === "needs-more-budget" ? "medium" : "high")}>
+                {optimizer.readiness}
+              </span>
+              <h3>{optimizer.headline}</h3>
+              <p>{optimizer.hardTruth}</p>
+              <strong>{optimizer.recommended.totalPrice} used / {optimizer.recommended.remainingBudget} remaining / rank {optimizer.recommended.rank}</strong>
+            </div>
+            <div className="optimizer-score">
+              <strong>{optimizer.optimizerScore}</strong>
+              <span>optimizer score</span>
+            </div>
+          </div>
+
+          <div className="optimizer-candidates">
+            <OptimizerCandidateCard title="Current" candidate={optimizer.current} />
+            <OptimizerCandidateCard title="Recommended" candidate={optimizer.recommended} />
+            {optimizer.stretch && <OptimizerCandidateCard title={`Stretch +${optimizer.budgetGap}`} candidate={optimizer.stretch} />}
+          </div>
+
+          <div className="optimizer-deltas">
+            <article>
+              <span>Total</span>
+              <strong>{optimizer.delta.totalScore >= 0 ? `+${optimizer.delta.totalScore}` : optimizer.delta.totalScore}</strong>
+            </article>
+            <article>
+              <span>Judge</span>
+              <strong>{optimizer.delta.judgeScore >= 0 ? `+${optimizer.delta.judgeScore}` : optimizer.delta.judgeScore}</strong>
+            </article>
+            <article>
+              <span>Coverage</span>
+              <strong>{optimizer.delta.coverageScore >= 0 ? `+${optimizer.delta.coverageScore}` : optimizer.delta.coverageScore}</strong>
+            </article>
+            <article>
+              <span>Usability</span>
+              <strong>{optimizer.delta.usability >= 0 ? `+${optimizer.delta.usability}` : optimizer.delta.usability}</strong>
+            </article>
+            <article>
+              <span>Budget used</span>
+              <strong>{optimizer.delta.budgetUsed >= 0 ? `+${optimizer.delta.budgetUsed}` : optimizer.delta.budgetUsed}</strong>
+            </article>
+          </div>
+
+          <div className="optimizer-grid">
+            <section>
+              <h3>
+                <Workflow size={15} />
+                Swap plan
+              </h3>
+              <div className="optimizer-steps">
+                {optimizer.swapPlan.map((step) => (
+                  <article key={step.id} className={step.action}>
+                    <div>
+                      <strong>{step.label}</strong>
+                      <span>{step.action}</span>
+                    </div>
+                    <p>{step.reason}</p>
+                    <small>{step.scoreImpact}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Trophy size={15} />
+                Alternatives
+              </h3>
+              <div className="optimizer-alternatives">
+                {optimizer.alternatives.map((candidate) => (
+                  <article key={candidate.id}>
+                    <div>
+                      <strong>{candidate.agents.map((agent) => agent.name).join(" / ")}</strong>
+                      <span>{candidate.totalScore}</span>
+                    </div>
+                    <p>{candidate.totalPrice} budget / coverage {candidate.coverageScore} / judge {candidate.judgeScore}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(optimizer.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+
+          <div className="optimizer-rules">
+            {optimizer.decisionRules.map((rule) => (
+              <article key={rule.id}>
+                <span>{rule.weight}%</span>
+                <strong>{rule.label}</strong>
+                <p>{rule.evidence}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="optimizer-empty">
+          <ShoppingCart size={28} />
+          <strong>Optimize squadで、予算内の最適編成、交換計画、追加予算ギャップを生成します。</strong>
+          <p>単体の次候補ではなく、審査5項目と必須技術を同時に満たす組み合わせを探索します。</p>
         </div>
       )}
     </section>
@@ -3629,6 +3859,7 @@ export default function App() {
       </section>
 
       <JudgeTourPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <SquadOptimizerPanel recommendation={recommendation} projectBrief={projectBrief} />
       <UserPilotPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeBriefPanel recommendation={recommendation} projectBrief={projectBrief} />
       <AutonomyLedgerPanel recommendation={recommendation} projectBrief={projectBrief} />

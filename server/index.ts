@@ -24,6 +24,7 @@ import { buildPitchRun } from "../src/pitch.js";
 import { buildJudgeProof } from "../src/proof.js";
 import { buildProtoPediaPublisher } from "../src/publisher.js";
 import { buildSecurityReview } from "../src/security.js";
+import { buildSquadOptimizer } from "../src/squadOptimizer.js";
 import { buildSubmissionLaunchGate } from "../src/submissionLaunch.js";
 import { SUBMISSION_PROOF } from "../src/submission.js";
 import type { CiProof } from "../src/proof.js";
@@ -59,6 +60,10 @@ const OpsDrillSchema = RecommendSchema.extend({
 const LaunchSchema = RecommendSchema.extend({
   protopediaUrl: z.string().optional(),
   videoUrl: z.string().optional()
+});
+const SquadOptimizerSchema = RecommendSchema.extend({
+  budget: z.number().int().positive().max(300).default(140),
+  maxSquadSize: z.number().int().min(1).max(6).default(4)
 });
 
 function publicBaseUrl(req: express.Request) {
@@ -149,6 +154,12 @@ function agentCard(baseUrl: string) {
         name: "Run target-user first-run pilot",
         description: "開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証する。",
         tags: ["usability", "pilot", "persona", "first-run", "judge-score"]
+      },
+      {
+        id: "squad.optimize",
+        name: "Optimize the winning squad under budget",
+        description: "予算内のエージェント編成を総当たりし、審査スコア、必須技術カバレッジ、交換計画、追加予算ギャップを返す。",
+        tags: ["squad", "optimizer", "budget", "judge-score", "marketplace"]
       },
       {
         id: "autonomy.ledger",
@@ -1295,6 +1306,23 @@ app.post("/api/user-pilot", async (req, res) => {
   );
 });
 
+app.post("/api/squad-optimizer", (req, res) => {
+  const parsed = SquadOptimizerSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  res.json(
+    buildSquadOptimizer({
+      projectBrief: parsed.data.projectBrief,
+      selectedAgentIds: parsed.data.selectedAgentIds,
+      budget: parsed.data.budget,
+      maxSquadSize: parsed.data.maxSquadSize
+    })
+  );
+});
+
 app.post("/api/autonomy-ledger", async (req, res) => {
   const parsed = RecommendSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -1851,6 +1879,12 @@ app.post("/a2a", (req, res) => {
     securityReview,
     squadContract
   });
+  const squadOptimizer = buildSquadOptimizer({
+    projectBrief: String(text),
+    selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+    budget: 140,
+    maxSquadSize: 4
+  });
   const judgeTour = buildJudgeTour({
     baseUrl: publicBaseUrl(req),
     recommendation,
@@ -2030,6 +2064,31 @@ app.post("/a2a", (req, res) => {
                     button: click.button
                   }))
                 },
+                squadOptimizer: {
+                  id: squadOptimizer.id,
+                  optimizerScore: squadOptimizer.optimizerScore,
+                  readiness: squadOptimizer.readiness,
+                  budget: squadOptimizer.budget,
+                  recommended: {
+                    agentIds: squadOptimizer.recommended.agentIds,
+                    totalPrice: squadOptimizer.recommended.totalPrice,
+                    totalScore: squadOptimizer.recommended.totalScore,
+                    coverageScore: squadOptimizer.recommended.coverageScore
+                  },
+                  stretch: squadOptimizer.stretch
+                    ? {
+                        agentIds: squadOptimizer.stretch.agentIds,
+                        budgetGap: squadOptimizer.budgetGap,
+                        totalScore: squadOptimizer.stretch.totalScore,
+                        coverageScore: squadOptimizer.stretch.coverageScore
+                      }
+                    : null,
+                  swapPlan: squadOptimizer.swapPlan.map((step) => ({
+                    action: step.action,
+                    label: step.label,
+                    scoreImpact: step.scoreImpact
+                  }))
+                },
                 judgeTour: {
                   id: judgeTour.id,
                   tourScore: judgeTour.tourScore,
@@ -2168,6 +2227,7 @@ app.post("/a2a", (req, res) => {
                 securityReviewEndpoint: `${publicBaseUrl(req)}/api/security-review`,
                 impactCaseEndpoint: `${publicBaseUrl(req)}/api/impact-case`,
                 userPilotEndpoint: `${publicBaseUrl(req)}/api/user-pilot`,
+                squadOptimizerEndpoint: `${publicBaseUrl(req)}/api/squad-optimizer`,
                 judgeTourEndpoint: `${publicBaseUrl(req)}/api/judge-tour`,
                 winRunEndpoint: `${publicBaseUrl(req)}/api/win-run`,
                 demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,

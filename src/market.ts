@@ -88,7 +88,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
       { name: "a2a-directory", tools: ["discover", "negotiate", "delegate"], maturity: 96 },
       { name: "mcp-ledger", tools: ["score_skill", "record_handoff"], maturity: 91 }
     ],
-    a2aSkillIds: ["market.discover", "agent.hire", "task.delegate"],
+    a2aSkillIds: ["market.discover", "agent.hire", "task.delegate", "squad.optimize"],
     synergyTags: ["a2a", "marketplace", "mcp", "governance"]
   },
   {
