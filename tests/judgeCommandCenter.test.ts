@@ -206,9 +206,11 @@ function fixture(options: { staleRelease?: boolean } = {}) {
         currentBaseUrl: "http://127.0.0.1:8080",
         targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
         expectedSkillIds: ["task.delegate",
+  "external.evidence",
   "evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"],
         observedSkillIds: ["evidence.monitor"],
         requiredSkillIds: ["task.delegate",
+  "external.evidence",
   "evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"],
         probes: [
           passedProbe("target-health"),

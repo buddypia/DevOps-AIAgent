@@ -6,6 +6,7 @@ const expectedSkillIds = [
   "market.discover",
   "agent.hire",
   "task.delegate",
+  "external.evidence",
   "evidence.monitor",
   "demo.receipt",
   "acceptance.matrix",
@@ -41,8 +42,10 @@ describe("release drift guard", () => {
       targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
       expectedSkillIds,
       observedSkillIds: ["market.discover", "agent.hire", "task.delegate",
+  "external.evidence",
   "evidence.monitor", "win.autopilot"],
       requiredSkillIds: ["task.delegate",
+  "external.evidence",
   "evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"],
       generatedAt: "2026-06-18T00:00:00.000Z",
       probes: [
@@ -89,6 +92,7 @@ describe("release drift guard", () => {
       expectedSkillIds,
       observedSkillIds: expectedSkillIds,
       requiredSkillIds: ["task.delegate",
+  "external.evidence",
   "evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"],
       probes: [
         passedProbe("target-health"),

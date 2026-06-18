@@ -17,6 +17,7 @@ import { buildJudgeDemoReceipt } from "../src/demoReceipt.js";
 import { buildDemoConcierge } from "../src/demoConcierge.js";
 import { buildDemoRunway } from "../src/demoRunway.js";
 import { buildSubmissionDossier } from "../src/dossier.js";
+import { buildExternalEvidenceRun, type ExternalEvidenceProbe } from "../src/externalEvidence.js";
 import { buildFinalistSimulation } from "../src/finalist.js";
 import { buildImpactCase } from "../src/impact.js";
 import { buildJudgeBrief } from "../src/judgeBrief.js";
@@ -324,6 +325,12 @@ function agentCard(baseUrl: string) {
         name: "Validate final submission launch gate",
         description: "ProtoPedia作品URLと動画URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する。",
         tags: ["submission", "launch-gate", "protopedia", "video", "mvp"]
+      },
+      {
+        id: "external.evidence",
+        name: "Verify external submission evidence",
+        description: "公開GitHub、Cloud Run、ProtoPedia作品URL、動画URLが審査員から開けるかをライブ検証する。",
+        tags: ["submission", "external-proof", "protopedia", "video", "live-proof"]
       },
       {
         id: "submission.closeout",
@@ -678,6 +685,151 @@ async function liveJsonProbe(input: {
       required: input.required
     };
   }
+}
+
+function parsedHttpsUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+function externalUrlAllowed(id: ExternalEvidenceProbe["id"], value: string) {
+  const parsed = parsedHttpsUrl(value);
+  if (!parsed) return false;
+  const host = parsed.hostname.replace(/^www\./, "");
+  if (id === "github-url") return host === "github.com";
+  if (id === "deployed-url") return host.endsWith(".run.app");
+  if (id === "protopedia-url") return host === "protopedia.net" || host.endsWith(".protopedia.net");
+  return host === "youtube.com" || host === "youtu.be" || host === "vimeo.com" || host === "drive.google.com";
+}
+
+async function externalUrlProbe(input: {
+  id: ExternalEvidenceProbe["id"];
+  label: string;
+  url: string;
+  fetchUrl?: string;
+  required: boolean;
+  missingEvidence: string;
+  invalidEvidence: string;
+}) {
+  const url = input.url.trim();
+  if (!url) {
+    return {
+      id: input.id,
+      label: input.label,
+      status: "missing" as const,
+      score: 30,
+      url: "",
+      evidence: input.missingEvidence,
+      required: input.required
+    };
+  }
+  if (!externalUrlAllowed(input.id, url)) {
+    return {
+      id: input.id,
+      label: input.label,
+      status: "missing" as const,
+      score: 20,
+      url,
+      evidence: input.invalidEvidence,
+      required: input.required
+    };
+  }
+
+  const startedAt = Date.now();
+  try {
+    const response = await fetch(input.fetchUrl ?? url, {
+      method: "GET",
+      headers: {
+        Accept: "text/html,application/json;q=0.9,*/*;q=0.8",
+        "User-Agent": "a2a-agent-marketplace"
+      },
+      redirect: "follow",
+      signal: AbortSignal.timeout(4500)
+    });
+    await response.body?.cancel().catch(() => undefined);
+    const latencyMs = Date.now() - startedAt;
+    if (!response.ok) {
+      return {
+        id: input.id,
+        label: input.label,
+        status: "missing" as const,
+        score: 30,
+        url,
+        evidence: `HTTP ${response.status} from public fetch.`,
+        latencyMs,
+        required: input.required
+      };
+    }
+    const driveWatch = input.id === "video-url" && parsedHttpsUrl(url)?.hostname.replace(/^www\./, "") === "drive.google.com";
+    return {
+      id: input.id,
+      label: input.label,
+      status: driveWatch ? ("watch" as const) : ("passed" as const),
+      score: driveWatch ? 72 : 100,
+      url,
+      evidence: driveWatch
+        ? `Google Drive returned HTTP ${response.status}; confirm sharing is Anyone with the link before final submit.`
+        : `Public fetch returned HTTP ${response.status}.`,
+      latencyMs,
+      required: input.required
+    };
+  } catch (error) {
+    return {
+      id: input.id,
+      label: input.label,
+      status: "missing" as const,
+      score: 30,
+      url,
+      evidence: error instanceof Error ? error.message : "external URL probe failed",
+      latencyMs: Date.now() - startedAt,
+      required: input.required
+    };
+  }
+}
+
+function staticExternalEvidenceProbes(): ExternalEvidenceProbe[] {
+  return [
+    {
+      id: "github-url",
+      label: "Public GitHub repository",
+      status: "passed",
+      score: 100,
+      url: SUBMISSION_PROOF.publicGitHubUrl,
+      evidence: "Public GitHub URL is configured for final submission.",
+      required: true
+    },
+    {
+      id: "deployed-url",
+      label: "Deployed Cloud Run URL",
+      status: "passed",
+      score: 100,
+      url: SUBMISSION_PROOF.deployedUrl,
+      evidence: "Cloud Run URL is configured and separately covered by health/release drift probes.",
+      required: true
+    },
+    {
+      id: "protopedia-url",
+      label: "ProtoPedia work URL",
+      status: "missing",
+      score: 30,
+      url: "",
+      evidence: "ProtoPedia work URL is not present in this A2A request.",
+      required: true
+    },
+    {
+      id: "video-url",
+      label: "Demo video URL",
+      status: "missing",
+      score: 30,
+      url: "",
+      evidence: "Demo video URL is not present in this A2A request.",
+      required: true
+    }
+  ];
 }
 
 app.disable("x-powered-by");
@@ -1683,6 +1835,7 @@ app.post("/api/live-evidence", async (req, res) => {
         const hasWinGapRadar = skills.some((skill) => skill.id === "win.gap.radar");
         const hasSubmissionCloseout = skills.some((skill) => skill.id === "submission.closeout");
         const hasSubmissionRunway = skills.some((skill) => skill.id === "submission.runway");
+        const hasExternalEvidence = skills.some((skill) => skill.id === "external.evidence");
         const hasDeployRecovery = skills.some((skill) => skill.id === "deploy.recover");
         return hasTaskDelegate &&
           hasEvidence &&
@@ -1701,17 +1854,18 @@ app.post("/api/live-evidence", async (req, res) => {
           hasWinGapRadar &&
           hasSubmissionCloseout &&
           hasSubmissionRunway &&
+          hasExternalEvidence &&
           hasDeployRecovery &&
-          skills.length >= 43
+          skills.length >= 44
           ? {
               status: "passed",
               score: 100,
-              evidence: `Agent Card exposes ${skills.length} skills including task.delegate, winner.packet, submission.runway, judge.rehearsal, submission.closeout, win.gap.radar, demo.concierge, prize.strategy, competitive.battlecard, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
+              evidence: `Agent Card exposes ${skills.length} skills including task.delegate, external.evidence, winner.packet, submission.runway, judge.rehearsal, submission.closeout, win.gap.radar, demo.concierge, prize.strategy, competitive.battlecard, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
             }
           : {
               status: "watch",
               score: 72,
-              evidence: `Agent Card exposes ${skills.length} skills; expected task delegate, winner packet, submission runway, judge rehearsal, submission closeout, win gap radar, demo concierge, prize strategy, battlecard, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
+              evidence: `Agent Card exposes ${skills.length} skills; expected task delegate, external evidence, winner packet, submission runway, judge rehearsal, submission closeout, win gap radar, demo concierge, prize strategy, battlecard, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
             };
       }
     }),
@@ -1761,6 +1915,7 @@ app.post("/api/live-evidence", async (req, res) => {
           data?.acceptanceMatrixEndpoint &&
           data?.releaseDriftEndpoint &&
           data?.taskBoardEndpoint &&
+          data?.externalEvidenceEndpoint &&
           data?.pilotEconomicsEndpoint &&
           data?.demoConciergeEndpoint &&
           data?.judgeCommandEndpoint &&
@@ -1775,9 +1930,9 @@ app.post("/api/live-evidence", async (req, res) => {
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
+                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but task board/winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but external evidence/task board/winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -1800,6 +1955,57 @@ app.post("/api/live-evidence", async (req, res) => {
   );
 });
 
+app.post("/api/external-evidence", async (req, res) => {
+  const parsed = LaunchSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const [githubProbe, deployedProbe, protopediaProbe, videoProbe] = await Promise.all([
+    externalUrlProbe({
+      id: "github-url",
+      label: "Public GitHub repository",
+      url: SUBMISSION_PROOF.publicGitHubUrl,
+      required: true,
+      missingEvidence: "Public GitHub URL is not configured.",
+      invalidEvidence: "Public GitHub URL must be an https://github.com URL."
+    }),
+    externalUrlProbe({
+      id: "deployed-url",
+      label: "Deployed Cloud Run URL",
+      url: SUBMISSION_PROOF.deployedUrl,
+      fetchUrl: `${SUBMISSION_PROOF.deployedUrl.replace(/\/$/, "")}/api/healthz`,
+      required: true,
+      missingEvidence: "Cloud Run deployed URL is not configured.",
+      invalidEvidence: "Cloud Run deployed URL must be an https://*.run.app URL."
+    }),
+    externalUrlProbe({
+      id: "protopedia-url",
+      label: "ProtoPedia work URL",
+      url: parsed.data.protopediaUrl ?? "",
+      required: true,
+      missingEvidence: "ProtoPedia work URL is still missing.",
+      invalidEvidence: "ProtoPedia work URL must be an https://protopedia.net URL."
+    }),
+    externalUrlProbe({
+      id: "video-url",
+      label: "Demo video URL",
+      url: parsed.data.videoUrl ?? "",
+      required: true,
+      missingEvidence: "Demo video URL is still missing.",
+      invalidEvidence: "Video URL must be YouTube, Vimeo, or Google Drive over https."
+    })
+  ]);
+
+  res.json(
+    buildExternalEvidenceRun({
+      baseUrl: publicBaseUrl(req),
+      probes: [githubProbe, deployedProbe, protopediaProbe, videoProbe]
+    })
+  );
+});
+
 async function buildReleaseDriftForTarget(input: {
   currentBaseUrl: string;
   targetBaseUrl: string;
@@ -1813,6 +2019,7 @@ async function buildReleaseDriftForTarget(input: {
   const expectedSkillIds = agentCard(currentBaseUrl).skills.map((skill) => skill.id);
   const requiredSkillIds = [
     "task.delegate",
+    "external.evidence",
     "evidence.monitor",
     "demo.receipt",
     "acceptance.matrix",
@@ -1911,6 +2118,7 @@ async function buildReleaseDriftForTarget(input: {
         const data = (payload as { result?: { artifacts?: Array<{ parts?: Array<{ data?: Record<string, unknown> }> }> } }).result?.artifacts?.[0]?.parts?.[0]?.data;
         return data?.releaseDriftEndpoint &&
           data?.taskBoardEndpoint &&
+          data?.externalEvidenceEndpoint &&
           data?.acceptanceMatrixEndpoint &&
           data?.demoReceiptEndpoint &&
           data?.pilotEconomicsEndpoint &&
@@ -1927,9 +2135,9 @@ async function buildReleaseDriftForTarget(input: {
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, and deployRecoveryEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but task board/winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but external evidence/task board/winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -4416,6 +4624,10 @@ app.post("/a2a", async (req, res) => {
     opsDrill,
     squadContract
   });
+  const externalEvidence = buildExternalEvidenceRun({
+    baseUrl: publicBaseUrl(req),
+    probes: staticExternalEvidenceProbes()
+  });
   const submissionLaunch = buildSubmissionLaunchGate({
     mvpAudit,
     dossier,
@@ -4819,6 +5031,17 @@ app.post("/a2a", async (req, res) => {
                   })),
                   receipt: taskBoard.receipt.digest
                 },
+                externalEvidence: {
+                  id: externalEvidence.id,
+                  evidenceScore: externalEvidence.evidenceScore,
+                  readiness: externalEvidence.readiness,
+                  finalUrlsReady: externalEvidence.a2aPayload.finalUrlsReady,
+                  probes: externalEvidence.probes.map((probe) => ({
+                    id: probe.id,
+                    status: probe.status,
+                    url: probe.url || null
+                  }))
+                },
                 submissionLaunch: {
                   id: submissionLaunch.id,
                   launchScore: submissionLaunch.launchScore,
@@ -5155,6 +5378,7 @@ app.post("/a2a", async (req, res) => {
                 judgeBriefEndpoint: `${publicBaseUrl(req)}/api/judge-brief`,
                 autonomyLedgerEndpoint: `${publicBaseUrl(req)}/api/autonomy-ledger`,
                 taskBoardEndpoint: `${publicBaseUrl(req)}/api/task-board`,
+                externalEvidenceEndpoint: `${publicBaseUrl(req)}/api/external-evidence`,
                 submissionLaunchEndpoint: `${publicBaseUrl(req)}/api/submission-launch`,
                 submissionCloseoutEndpoint: `${publicBaseUrl(req)}/api/submission-closeout`,
                 securityReviewEndpoint: `${publicBaseUrl(req)}/api/security-review`,

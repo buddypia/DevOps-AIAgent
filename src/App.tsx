@@ -40,6 +40,7 @@ import type { DeployRecoveryPlan } from "./deployRecovery";
 import type { JudgeDemoReceipt } from "./demoReceipt";
 import type { DemoConcierge } from "./demoConcierge";
 import type { DemoRunway } from "./demoRunway";
+import type { ExternalEvidenceRun } from "./externalEvidence";
 import type { FinalistSimulation } from "./finalist";
 import type { ImpactCase } from "./impact";
 import type { JudgeBrief } from "./judgeBrief";
@@ -965,6 +966,161 @@ function SubmissionRunwayPanel({
           <Rocket size={28} />
           <strong>Build runwayで、7/10 23:59 JSTから逆算した提出作業、証拠URL、検収条件を1つにまとめます。</strong>
           <p>Winner Packetの勝ち証拠を、動画、ProtoPedia、構成図、最終提出フォームへ落とし込みます。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ExternalEvidencePanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [evidence, setEvidence] = useState<ExternalEvidenceRun | null>(null);
+  const [protopediaUrl, setProtopediaUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function verifyExternalEvidence() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/external-evidence", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+          protopediaUrl,
+          videoUrl
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setEvidence((await response.json()) as ExternalEvidenceRun);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="live-evidence external-evidence">
+      <div className="evidence-heading">
+        <div>
+          <span className="eyebrow">External submission evidence</span>
+          <h2>
+            <ExternalLink size={20} />
+            Final URL verifier
+          </h2>
+        </div>
+        <button className="icon-button" onClick={verifyExternalEvidence} disabled={loading} title="最終提出URLの公開到達性を検証">
+          <Activity size={17} />
+          {loading ? "Verifying" : "Verify external evidence"}
+        </button>
+      </div>
+
+      <div className="runway-inputs">
+        <label>
+          <span>ProtoPedia work URL</span>
+          <input value={protopediaUrl} onChange={(event) => setProtopediaUrl(event.target.value)} placeholder="https://protopedia.net/prototype/..." />
+        </label>
+        <label>
+          <span>Video URL</span>
+          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://drive.google.com/..." />
+        </label>
+      </div>
+
+      {error && <p className="error-text">External evidence request failed: {error}</p>}
+
+      {evidence ? (
+        <div className="evidence-body">
+          <div className="evidence-summary">
+            <div>
+              <span className={cx("risk-chip", evidence.readiness === "external-ready" ? "low" : evidence.readiness === "needs-external-urls" ? "medium" : "high")}>
+                {evidence.readiness}
+              </span>
+              <h3>{evidence.summary}</h3>
+              <p>{evidence.hardTruth}</p>
+              <small>{new Date(evidence.generatedAt).toLocaleString()}</small>
+            </div>
+            <div className="evidence-score">
+              <strong>{evidence.evidenceScore}</strong>
+              <span>external proof</span>
+            </div>
+          </div>
+
+          <div className="evidence-probes">
+            {evidence.probes.map((probe) => (
+              <article key={probe.id} className={probe.status}>
+                <div>
+                  <strong>{probe.label}</strong>
+                  <span>{probe.status}</span>
+                </div>
+                <p>{probe.evidence}</p>
+                <small>{probe.latencyMs ? `${probe.latencyMs}ms` : "not probed"} / score {probe.score}</small>
+                {probe.url ? (
+                  <a href={probe.url} target="_blank" rel="noreferrer">
+                    Evidence <ExternalLink size={13} />
+                  </a>
+                ) : (
+                  <small>URL pending</small>
+                )}
+              </article>
+            ))}
+          </div>
+
+          <div className="evidence-grid">
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Next actions
+              </h3>
+              <div className="evidence-actions">
+                {evidence.nextActions.length > 0 ? (
+                  evidence.nextActions.map((action) => (
+                    <article key={action.id} className={action.priority}>
+                      <div>
+                        <strong>{action.label}</strong>
+                        <span>{action.priority}</span>
+                      </div>
+                      <p>{action.action}</p>
+                      <small>{action.proof}</small>
+                    </article>
+                  ))
+                ) : (
+                  <article className="clear">
+                    <strong>All final URLs are externally reachable</strong>
+                    <p>公開GitHub、Cloud Run、ProtoPedia、動画URLを提出フォームへ貼れる状態です。</p>
+                  </article>
+                )}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                Runbook
+              </h3>
+              <pre>{evidence.runbook.join("\n")}</pre>
+            </section>
+            <section>
+              <h3>
+                <ShieldCheck size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(evidence.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="evidence-empty">
+          <ExternalLink size={28} />
+          <strong>Verify external evidenceで、公開GitHub、Cloud Run、ProtoPedia作品URL、動画URLをライブ検証します。</strong>
+          <p>提出直前に「審査員が開けるURLか」を再実行できる証拠として残します。</p>
         </div>
       )}
     </section>
@@ -6701,6 +6857,7 @@ export default function App() {
       <JudgeRehearsalPanel recommendation={recommendation} projectBrief={projectBrief} />
       <WinnerPacketPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SubmissionRunwayPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <ExternalEvidencePanel recommendation={recommendation} projectBrief={projectBrief} />
       <PrizeStrategyPanel recommendation={recommendation} projectBrief={projectBrief} />
       <WinGapRadarPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeTourPanel recommendation={recommendation} projectBrief={projectBrief} />

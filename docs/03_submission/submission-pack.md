@@ -49,6 +49,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - User Pilot Labで、開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証する
 - Squad Optimizerで、予算内のAI編成を総当たりし、現行維持、交換、追加予算ギャップを判断する
 - Live Evidence Monitorで、Cloud Run、Agent Card、A2A、Squad Optimizer、GitHub Actions CIを公開環境からライブ検証する
+- External Evidence Verifierで、公開GitHub、Cloud Run、ProtoPedia作品URL、動画URLが審査員から開けるかを検証する
 - Release Drift Guardで、公開Cloud Runが最新Agent Card、Acceptance Matrix、A2A artifactを返しているかを検査する
 - Deploy Recoveryで、release drift、gcloud認証、Cloud Build、公開再検証を復旧コマンドに変換する
 - Judge Demo Receiptで、審査導線、競合反論、編成判断、公開証拠、外部提出URL状態をsha256 digest付き検収票にする
@@ -181,6 +182,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/squad-optimizer \
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/live-evidence \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"budget":140,"maxSquadSize":4}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/external-evidence \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"protopediaUrl":"https://protopedia.net/prototype/999999","videoUrl":"https://youtu.be/demo1234567"}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/release-drift \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"targetUrl":"https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app"}'
@@ -275,4 +279,5 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - Winner Proof Packet API: `POST /api/winner-packet`
 - Final Submission Runway API: `POST /api/submission-runway`
 - Agent Task Board API: `POST /api/task-board`
+- External Evidence API: `POST /api/external-evidence`
 - Required tag: `findy_hackathon`

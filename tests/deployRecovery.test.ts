@@ -5,6 +5,7 @@ import { SUBMISSION_PROOF } from "../src/submission";
 
 const expectedSkillIds = [
   "task.delegate",
+  "external.evidence",
   "evidence.monitor",
   "demo.receipt",
   "acceptance.matrix",
@@ -40,6 +41,7 @@ describe("deploy recovery plan", () => {
       targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
       expectedSkillIds,
       observedSkillIds: ["task.delegate",
+  "external.evidence",
   "evidence.monitor", "win.autopilot"],
       requiredSkillIds: expectedSkillIds,
       generatedAt: "2026-06-18T00:00:00.000Z",

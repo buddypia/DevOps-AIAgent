@@ -3723,6 +3723,10 @@ h1 {
   background: #c8d1d8;
 }
 
+.external-evidence .evidence-probes {
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+}
+
 .evidence-probes article {
   display: grid;
   align-content: start;

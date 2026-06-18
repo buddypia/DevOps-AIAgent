@@ -213,6 +213,13 @@
 - Runbook: 審査員が同じ確認を再実行できるcurlを返す
 - A2A payload: `evidence.monitor` skillとしてlive proof score、probe statuses、next actionsを返す
 
+## External Evidence Surface
+
+- `POST /api/external-evidence`: 公開GitHub、Cloud Run、ProtoPedia作品URL、動画URLが審査員から開けるかをライブプローブする
+- Safe URL policy: 任意URLを無制限にfetchせず、GitHub、Cloud Run、ProtoPedia、YouTube/Vimeo/Google Driveだけを許可する
+- Runbook: 提出直前に同じ4 URLを再検証できるcurlを返す
+- A2A payload: `external.evidence` skillとしてexternal proof score、finalUrlsReady、probe statuses、next actionsを返す
+
 ## Release Drift Surface
 
 - `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Acceptance Matrix、A2A artifactを返しているかを検査する
@@ -340,6 +347,7 @@
 - `POST /api/user-pilot`: 実利用者3ペルソナの初回導線、摩擦、次クリックを返す
 - `POST /api/squad-optimizer`: 予算内の最適編成、追加予算ギャップ、交換計画を返す
 - `POST /api/live-evidence`: 公開URL、Agent Card、A2A、Optimizer、CIをライブ検証する
+- `POST /api/external-evidence`: 公開GitHub、Cloud Run、ProtoPedia、動画URLの外部到達性を検証する
 - `POST /api/release-drift`: 提出用Cloud Run URLが最新revisionかを検査する
 - `POST /api/deploy-recovery`: release driftとgcloud認証失敗をCloud Run復旧計画へ変換する
 - `POST /api/demo-receipt`: 審査デモのstamp、外部URL状態、sha256 digestを検収票として返す
@@ -380,6 +388,7 @@
 - User pilot proof: `user.pilot` skillとして、開発リード、Platform/SRE、提出者のfirst-run usabilityをA2A payloadにも含める
 - Squad optimizer proof: `squad.optimize` skillとして、予算制約下の自律編成判断、coverage gap、funding stepをA2A payloadにも含める
 - Live evidence proof: `evidence.monitor` skillとして、公開Cloud Run/A2A/CIの再実行可能なライブ証拠をA2A payloadにも含める
+- External evidence proof: `external.evidence` skillとして、公開GitHub、Cloud Run、ProtoPedia、動画URLの到達性と残アクションをA2A payloadにも含める
 - Release drift proof: `release.drift` skillとして、公開Cloud Runが最新Agent Card/Acceptance Matrix/A2A artifactを返すかをA2A payloadにも含める
 - Deploy recovery proof: `deploy.recover` skillとして、gcloud認証、Cloud Build、公開再検証の復旧計画をA2A payloadにも含める
 - Demo receipt proof: `demo.receipt` skillとして、審査導線、競合反論、編成判断、公開証拠、外部提出URL状態、sha256 digestをA2A payloadにも含める
@@ -414,6 +423,7 @@
 - User pilot: `/api/user-pilot`
 - Squad optimizer: `/api/squad-optimizer`
 - Live evidence: `/api/live-evidence`
+- External evidence: `/api/external-evidence`
 - Release drift: `/api/release-drift`
 - Deploy recovery: `/api/deploy-recovery`
 - Demo receipt: `/api/demo-receipt`
