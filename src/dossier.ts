@@ -10,6 +10,8 @@ import type { WinningAutopilotRun } from "./autopilot.js";
 import { buildArchitecturePack, type ArchitecturePack } from "./architecturePack.js";
 import type { WinningStrategy } from "./strategy.js";
 import type { Recommendation } from "./types.js";
+import type { ImpactCase } from "./impact.js";
+import type { PilotEconomics, PilotEconomicsStatus } from "./pilotEconomics.js";
 
 export type DossierReadiness = "ready-to-submit" | "needs-external-urls";
 
@@ -66,11 +68,22 @@ export type DossierCompetitiveReceipt = {
   acceptance: string;
 };
 
+export type DossierBuyerValueReceipt = {
+  id: string;
+  label: string;
+  status: PublisherStatus;
+  claim: string;
+  metric: string;
+  proof: string;
+  protopediaLine: string;
+};
+
 export type DossierHandoffPacket = {
   submitFields: DossierHandoffField[];
   protopediaFields: DossierHandoffField[];
   videoChapters: DossierVideoChapter[];
   competitiveReceipts: DossierCompetitiveReceipt[];
+  buyerValueReceipts: DossierBuyerValueReceipt[];
   architecturePack: ArchitecturePack;
   proofLinks: DossierLink[];
   missingOnly: Array<{ id: string; label: string; target: string; action: string }>;
@@ -126,6 +139,14 @@ function statusFromBattlecard(status: BattlecardStatus): PublisherStatus {
   return status === "lead" ? "ready" : "watch";
 }
 
+function statusFromEconomics(status: PilotEconomicsStatus): PublisherStatus {
+  return status === "clear" ? "ready" : "watch";
+}
+
+function yen(value: number) {
+  return `${value.toLocaleString("ja-JP")}円`;
+}
+
 export function buildSubmissionDossier(input: {
   recommendation: Recommendation;
   strategy: WinningStrategy;
@@ -137,8 +158,10 @@ export function buildSubmissionDossier(input: {
   autopilot: WinningAutopilotRun;
   proof: JudgeProof;
   battlecard?: CompetitiveBattlecard;
+  impactCase?: ImpactCase;
+  pilotEconomics?: PilotEconomics;
 }): SubmissionDossier {
-  const { recommendation, strategy, mission, pitch, finalist, publisher, demoRunway, autopilot, proof, battlecard } = input;
+  const { recommendation, strategy, mission, pitch, finalist, publisher, demoRunway, autopilot, proof, battlecard, impactCase, pilotEconomics } = input;
   const selectedAgents = recommendation.selected.map((agent) => agent.name).join(" / ") || "A2A Market Broker";
   const pasteField = (id: string) => publisher.pasteFields.find((field) => field.id === id);
   const externalGapIds = new Set([...publisher.missingExternal.map((item) => item.id), ...autopilot.blockers.map((item) => item.id)]);
@@ -154,13 +177,56 @@ export function buildSubmissionDossier(input: {
       protopediaLine: receipt.protopediaLine,
       acceptance: receipt.acceptance
     })) ?? [];
+  const savedHours =
+    pilotEconomics?.unitEconomics.savedHoursPerCycle ??
+    impactCase?.metrics.filter((metric) => metric.unit === "hours").reduce((sum, metric) => sum + Math.max(0, metric.delta), 0);
+  const buyerValueReceipts: DossierBuyerValueReceipt[] =
+    impactCase && pilotEconomics
+      ? [
+          {
+            id: "practical-impact",
+            label: "対象ユーザー別KPI",
+            status: impactCase.posture === "pilot-ready" ? "ready" : "watch",
+            claim: impactCase.hardTruth,
+            metric: `${impactCase.impactScore} impact / ${impactCase.personas.length} personas`,
+            proof: impactCase.personas.map((persona) => `${persona.persona}: ${persona.kpi}`).join(" / "),
+            protopediaLine: `開発リード、Platform/SRE、提出者の3 personaに対し、${impactCase.metrics
+              .slice(0, 3)
+              .map((metric) => `${metric.label}${metric.delta}${metric.unit}`)
+              .join("、")}を体験価値として提示します。`
+          },
+          {
+            id: "pilot-economics",
+            label: "導入実験の回収性",
+            status: pilotEconomics.posture === "investment-ready" ? "ready" : "watch",
+            claim: pilotEconomics.hardTruth,
+            metric: `${pilotEconomics.unitEconomics.paybackDays}d payback / ${yen(pilotEconomics.unitEconomics.monthlyValueYen)} monthly value`,
+            proof: `pilot ${yen(pilotEconomics.unitEconomics.pilotCostYen)} / saved ${savedHours ?? 0}h per cycle`,
+            protopediaLine: `初期pilot ${yen(pilotEconomics.unitEconomics.pilotCostYen)}に対し、月次価値${yen(
+              pilotEconomics.unitEconomics.monthlyValueYen
+            )}、回収${pilotEconomics.unitEconomics.paybackDays}日として小さく導入判断できます。`
+          },
+          ...pilotEconomics.buyerObjections.slice(0, 2).map((objection) => ({
+            id: `buyer-${objection.id}`,
+            label: "買い手反論",
+            status: statusFromEconomics(objection.status),
+            claim: objection.objection,
+            metric: objection.status,
+            proof: objection.evidence,
+            protopediaLine: `${objection.objection} には「${objection.answer}」と回答し、${objection.evidence}を証拠として開きます。`
+          }))
+        ]
+      : [];
   const opening = `Win Autopilotの判定は${autopilot.winScore}点/${autopilot.readiness}。${selectedAgents} が、競合/SWOT、A2A委任、Cloud Run運用、提出証拠、30秒デモ導線を一括で束ねます。`;
   const judgeEvidence = [
     `Judge Proof overall ${proof.overallScore}、CI ${proof.ci.conclusion}`,
     `Finalist ${finalist.finalistScore} (${finalist.finalistBand}) / ${finalist.judgeConsensus}`,
     `Demo Runway ${demoRunway.totalSeconds}秒/${demoRunway.steps.length} steps`,
     `競合 ${strategy.competitors.length}件、SWOT、moat ${strategy.moatScore}`,
-    ...(battlecard ? [`Competitive Battlecard ${battlecard.battleScore} (${battlecard.readiness}) / 反論レシート${competitiveReceipts.length}件`] : [])
+    ...(battlecard ? [`Competitive Battlecard ${battlecard.battleScore} (${battlecard.readiness}) / 反論レシート${competitiveReceipts.length}件`] : []),
+    ...(impactCase && pilotEconomics
+      ? [`Impact ${impactCase.impactScore} (${impactCase.posture}) / Pilot economics ${pilotEconomics.economicsScore} (${pilotEconomics.posture})`]
+      : [])
   ];
   const competitiveCopy = competitiveReceipts
     .map((receipt) =>
@@ -169,6 +235,16 @@ export function buildSubmissionDossier(input: {
         `  - 提出文: ${receipt.protopediaLine}`,
         `  - 証拠: ${receipt.proofRoute}`,
         `  - 検収: ${receipt.acceptance}`
+      ].join("\n")
+    )
+    .join("\n");
+  const buyerValueCopy = buyerValueReceipts
+    .map((receipt) =>
+      [
+        `- ${receipt.label}: ${receipt.claim}`,
+        `  - 指標: ${receipt.metric}`,
+        `  - 証拠: ${receipt.proof}`,
+        `  - 提出文: ${receipt.protopediaLine}`
       ].join("\n")
     )
     .join("\n");
@@ -182,6 +258,9 @@ export function buildSubmissionDossier(input: {
     block("demo-flow", "デモの見どころ", "ProtoPedia demo description", demoRunway.recordingCues.map((cue) => `- ${cue}`).join("\n")),
     ...(competitiveReceipts.length > 0
       ? [block("competitive-objections", "競合反論レシート", "ProtoPedia story / judge Q&A", competitiveCopy)]
+      : []),
+    ...(buyerValueReceipts.length > 0
+      ? [block("buyer-value-proof", "実用性・買い手価値", "ProtoPedia practicality / business value", buyerValueCopy)]
       : []),
     block("judge-proof", "審査向け証拠", "ProtoPedia notes", [opening, markdownList(judgeEvidence)].join("\n")),
     block("tags", "タグ", "ProtoPedia tags", pasteField("tags")?.value ?? mission.submissionPack.tags.join(", "))
@@ -223,6 +302,9 @@ export function buildSubmissionDossier(input: {
     ...competitiveReceipts
       .slice(0, 2)
       .map((receipt) => `16-21s: Competitive Battlecardで${receipt.competitor}への反論、SWOT、証拠routeを同時に見せる`),
+    ...buyerValueReceipts
+      .slice(0, 2)
+      .map((receipt) => `21-25s: Pilot Economics/Impact Caseで${receipt.label}を見せる (${receipt.metric})`),
     ...demoRunway.recordingCues
   ];
   const submitFields: DossierHandoffField[] = [
@@ -304,6 +386,7 @@ export function buildSubmissionDossier(input: {
     protopediaFields,
     videoChapters,
     competitiveReceipts,
+    buyerValueReceipts,
     architecturePack,
     proofLinks: links,
     missingOnly
@@ -340,6 +423,9 @@ export function buildSubmissionDossier(input: {
     "",
     ...(competitiveReceipts.length > 0
       ? [markdownSection("競合反論レシート", competitiveCopy), ""]
+      : []),
+    ...(buyerValueReceipts.length > 0
+      ? [markdownSection("実用性・買い手価値レシート", buyerValueCopy), ""]
       : []),
     markdownSection("30秒動画録画順", markdownList(recordingPlan)),
     "",
@@ -409,6 +495,12 @@ export function buildSubmissionDossier(input: {
           competitor: item.competitor,
           status: item.status,
           proofRoute: item.proofRoute
+        })),
+        buyerValueReceipts: buyerValueReceipts.map((item) => ({
+          id: item.id,
+          status: item.status,
+          metric: item.metric,
+          proof: item.proof
         })),
         architecturePack: {
           score: architecturePack.architectureScore,

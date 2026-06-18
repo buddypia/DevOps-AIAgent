@@ -69,7 +69,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Submission Publisherで、ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
 - Demo Runwayで、Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線に束ねる
 - Win Autopilotで、競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を一括判定し、win scoreと残アクションを返す
-- Submission Dossierで、ProtoPedia本文、動画録画順、提出リンク、最終チェック、Markdownを1つに束ねる
+- Submission Dossierで、ProtoPedia本文、競合反論レシート、実用性・買い手価値レシート、動画録画順、提出リンク、最終チェック、Markdownを1つに束ねる
 - Submission Closeoutで、ProtoPedia貼付、構成図、30秒動画、外部URL、最終提出フォームを順番付きの作業台にする
 - Architecture Packで、システム構成図、Mermaid、Cloud Run/Gemini/A2A/CIの対応表、ProtoPedia貼り付け手順を提出証拠にする
 - Gemini 3.5 Flashで勝ち筋、残リスク、30秒ピッチを生成する
@@ -133,7 +133,7 @@ React UI
 | 24-25s | Judge Demo Receiptでstamp、外部URLwatch、sha256 digestを控える |
 | 25-26s | Judge Acceptance Matrixで必須技術、審査5項目、公開証拠、提出物のaccepted/watchを見せる |
 | 26-27s | Security Sentinel Review、Impact Case、Pilot Economics、Submission Launch Gate、Judge Proofで安全境界、実用性KPI、payback、外部URL、Gemini/Cloud Run/A2A/CI/DevOpsの証拠束を見せる |
-| 27-28s | Submission DossierでProtoPedia本文、提出リンク、録画順、最終チェックを見せる |
+| 27-28s | Submission DossierでProtoPedia本文、競合反論、買い手価値、提出リンク、録画順、最終チェックを見せる |
 | 28-29s | Marketplace、Winning Strategy、Mission、Opsで必要能力、SWOT、A2A委任、運用判断を見せる |
 | 29-30s | Cloud Run URL、GitHub Actions、Agent Card、構成図で締める |
 

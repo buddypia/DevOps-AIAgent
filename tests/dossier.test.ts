@@ -6,6 +6,7 @@ import { buildSquadContract } from "../src/contracts";
 import { buildDemoRunway } from "../src/demoRunway";
 import { buildSubmissionDossier } from "../src/dossier";
 import { buildFinalistSimulation } from "../src/finalist";
+import { buildImpactCase } from "../src/impact";
 import { buildJudgeDrill } from "../src/judgeDrill";
 import { DEFAULT_PROJECT_BRIEF } from "../src/market";
 import { buildMarketIntelReport } from "../src/marketIntel";
@@ -13,11 +14,14 @@ import { buildMissionRun } from "../src/mission";
 import { buildMoatStressTest } from "../src/moatStress";
 import { buildOpsDrill } from "../src/ops";
 import { buildPitchRun } from "../src/pitch";
+import { buildPilotEconomics } from "../src/pilotEconomics";
 import { buildJudgeProof } from "../src/proof";
 import type { CiProof } from "../src/proof";
 import { buildProtoPediaPublisher } from "../src/publisher";
+import { buildSecurityReview } from "../src/security";
 import { SUBMISSION_PROOF } from "../src/submission";
 import { buildWinningStrategy } from "../src/strategy";
+import { buildUserPilotLab } from "../src/userPilot";
 
 describe("submission dossier", () => {
   test("packages copy blocks, proof links, and recording steps for final external submission", () => {
@@ -54,6 +58,32 @@ describe("submission dossier", () => {
       gemini: localGeminiRecommendation(recommendation, "test"),
       ci
     });
+    const securityReview = buildSecurityReview({
+      baseUrl,
+      recommendation,
+      strategy,
+      allowlist: { exactIpCount: 126, localDevelopmentCidrCount: 2, rakutenMobileCidrCount: 65 },
+      ci,
+      geminiSecretConfigured: true
+    });
+    const impactCase = buildImpactCase({ recommendation, strategy, opsDrill, securityReview });
+    const userPilot = buildUserPilotLab({
+      recommendation,
+      strategy,
+      impactCase,
+      opsDrill,
+      securityReview,
+      squadContract
+    });
+    const pilotEconomics = buildPilotEconomics({
+      recommendation,
+      strategy,
+      impactCase,
+      userPilot,
+      squadContract,
+      opsDrill,
+      securityReview
+    });
     const autopilot = buildWinningAutopilot({
       baseUrl,
       recommendation,
@@ -77,13 +107,27 @@ describe("submission dossier", () => {
       demoRunway,
       autopilot,
       proof,
-      battlecard
+      battlecard,
+      impactCase,
+      pilotEconomics
     });
 
     expect(dossier.dossierScore).toBeGreaterThanOrEqual(84);
     expect(dossier.readiness).toBe("needs-external-urls");
     expect(dossier.copyBlocks.map((block) => block.id)).toEqual(
-      expect.arrayContaining(["title", "one-liner", "problem", "users", "features", "technology", "demo-flow", "competitive-objections", "judge-proof", "tags"])
+      expect.arrayContaining([
+        "title",
+        "one-liner",
+        "problem",
+        "users",
+        "features",
+        "technology",
+        "demo-flow",
+        "competitive-objections",
+        "buyer-value-proof",
+        "judge-proof",
+        "tags"
+      ])
     );
     expect(dossier.links.map((link) => link.id)).toEqual(expect.arrayContaining(["github", "cloud-run", "ci", "architecture", "protopedia", "video"]));
     expect(dossier.links.filter((link) => link.status === "watch").map((link) => link.id)).toEqual(expect.arrayContaining(["protopedia", "video"]));
@@ -102,6 +146,14 @@ describe("submission dossier", () => {
       status: expect.stringMatching(/ready|watch/),
       protopediaLine: expect.stringContaining("本作")
     });
+    expect(dossier.handoffPacket.buyerValueReceipts.map((receipt) => receipt.id)).toEqual(
+      expect.arrayContaining(["practical-impact", "pilot-economics", "buyer-existing-tools", "buyer-roi-assumption"])
+    );
+    expect(dossier.handoffPacket.buyerValueReceipts.find((receipt) => receipt.id === "pilot-economics")).toMatchObject({
+      status: "ready",
+      metric: expect.stringContaining("payback"),
+      protopediaLine: expect.stringContaining("回収")
+    });
     expect(dossier.handoffPacket.architecturePack).toMatchObject({
       readiness: "needs-external-urls",
       diagramUrl: `${baseUrl}/assets/a2a-marketplace-architecture.svg`
@@ -113,6 +165,8 @@ describe("submission dossier", () => {
     expect(dossier.markdown).toContain("30秒動画録画順");
     expect(dossier.markdown).toContain("競合反論レシート");
     expect(dossier.markdown).toContain("Google ADK");
+    expect(dossier.markdown).toContain("実用性・買い手価値レシート");
+    expect(dossier.markdown).toContain("回収");
     expect(dossier.markdown).toContain("提出フォームパケット");
     expect(dossier.markdown).toContain("動画チャプター");
     expect(dossier.markdown).toContain("システム構成図パケット");
@@ -125,6 +179,7 @@ describe("submission dossier", () => {
         submitFields: expect.arrayContaining([expect.objectContaining({ id: "github-url", status: "ready" })]),
         videoChapters: expect.arrayContaining([expect.objectContaining({ id: "proof-first" })]),
         competitiveReceipts: expect.arrayContaining([expect.objectContaining({ id: "google-adk" })]),
+        buyerValueReceipts: expect.arrayContaining([expect.objectContaining({ id: "pilot-economics" })]),
         architecturePack: {
           readiness: "needs-external-urls",
           diagramUrl: `${baseUrl}/assets/a2a-marketplace-architecture.svg`

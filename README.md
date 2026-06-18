@@ -54,7 +54,7 @@
 - Publisher: ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
 - Demo Runway: Judge Proof、Finalist、Publisher、Marketplace、Strategy、Competitive Battlecard、Mission、Opsを30秒の審査員導線に束ね、競合反論リールを録画キューへ落とす
 - Win Autopilot: 競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を一括で走らせ、勝てる状態と残アクションを返す
-- Submission Dossier: ProtoPedia本文、競合反論レシート、動画録画順、提出リンク、最終チェック、Markdownを1つに束ねる
+- Submission Dossier: ProtoPedia本文、競合反論レシート、実用性・買い手価値レシート、動画録画順、提出リンク、最終チェック、Markdownを1つに束ねる
 - Visual asset: `image_gen` で生成した `public/assets/agent-marketplace-hero.png`
 
 ## Winning Strategy Layer
@@ -386,11 +386,11 @@
 
 ## Submission Dossier
 
-`Submission Dossier` は外部提出直前の作業束です。Submission Publisher、Win Autopilot、Demo Runway、Competitive Battlecard、Judge Proofをまとめ、ProtoPediaに貼る本文、競合反論レシート、提出リンク、30秒録画順、構成図パケット、最終チェック、Markdownドシエを返します。
+`Submission Dossier` は外部提出直前の作業束です。Submission Publisher、Win Autopilot、Demo Runway、Competitive Battlecard、Impact Case、Pilot Economics、Judge Proofをまとめ、ProtoPediaに貼る本文、競合反論レシート、実用性・買い手価値レシート、提出リンク、30秒録画順、構成図パケット、最終チェック、Markdownドシエを返します。
 
 - API: `POST /api/dossier`
 - App UI: `Run submission dossier`
-- Output: dossier score、copy blocks、submission links、recording plan、competitive receipts、handoff packet、architecture pack、final checks、Markdown、A2A `submission.dossier` payload
+- Output: dossier score、copy blocks、submission links、recording plan、competitive receipts、buyer value receipts、handoff packet、architecture pack、final checks、Markdown、A2A `submission.dossier` payload
 
 ## Architecture Pack
 

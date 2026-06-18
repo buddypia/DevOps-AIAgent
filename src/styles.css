@@ -8405,7 +8405,8 @@ h1 {
   line-height: 1.42;
 }
 
-.dossier-competitive {
+.dossier-competitive,
+.dossier-buyer-value {
   display: grid;
   gap: 10px;
   padding: 14px;
@@ -8413,6 +8414,7 @@ h1 {
 }
 
 .dossier-competitive h3,
+.dossier-buyer-value h3,
 .demo-competitive h3 {
   display: flex;
   align-items: center;
@@ -8423,6 +8425,7 @@ h1 {
 }
 
 .dossier-competitive > div,
+.dossier-buyer-value > div,
 .demo-competitive > div {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -8430,6 +8433,7 @@ h1 {
 }
 
 .dossier-competitive article,
+.dossier-buyer-value article,
 .demo-competitive article {
   display: grid;
   gap: 7px;
@@ -8441,6 +8445,11 @@ h1 {
   background: #f7f8f2;
 }
 
+.dossier-buyer-value article {
+  border-left-color: var(--blue);
+  background: #f6f9ff;
+}
+
 .demo-competitive article {
   border-color: #c8d3e2;
   border-left-color: var(--blue);
@@ -8448,12 +8457,14 @@ h1 {
 }
 
 .dossier-competitive article.watch,
+.dossier-buyer-value article.watch,
 .demo-competitive article.watch {
   border-left-color: var(--amber);
   background: #fff8e6;
 }
 
 .dossier-competitive article > div,
+.dossier-buyer-value article > div,
 .demo-competitive article > div {
   display: flex;
   align-items: start;
@@ -8465,6 +8476,10 @@ h1 {
 .dossier-competitive p,
 .dossier-competitive small,
 .dossier-competitive b,
+.dossier-buyer-value strong,
+.dossier-buyer-value p,
+.dossier-buyer-value small,
+.dossier-buyer-value b,
 .demo-competitive strong,
 .demo-competitive p,
 .demo-competitive small,
@@ -8473,6 +8488,7 @@ h1 {
 }
 
 .dossier-competitive span,
+.dossier-buyer-value span,
 .demo-competitive span {
   color: var(--teal);
   font-size: 0.72rem;
@@ -8480,11 +8496,16 @@ h1 {
   text-transform: uppercase;
 }
 
+.dossier-buyer-value span {
+  color: var(--blue);
+}
+
 .demo-competitive span {
   color: var(--blue);
 }
 
 .dossier-competitive article.watch span,
+.dossier-buyer-value article.watch span,
 .demo-competitive article.watch span {
   color: #8a5b17;
 }
@@ -8492,6 +8513,9 @@ h1 {
 .dossier-competitive p,
 .dossier-competitive small,
 .dossier-competitive b,
+.dossier-buyer-value p,
+.dossier-buyer-value small,
+.dossier-buyer-value b,
 .demo-competitive p,
 .demo-competitive small,
 .demo-competitive b {
@@ -8500,6 +8524,7 @@ h1 {
 }
 
 .demo-competitive b,
+.dossier-buyer-value b,
 .dossier-competitive b {
   font-size: 0.76rem;
 }
@@ -11322,6 +11347,7 @@ pre {
   }
 
   .dossier-competitive > div,
+  .dossier-buyer-value > div,
   .demo-competitive > div {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
   }
@@ -11539,6 +11565,7 @@ pre {
   }
 
   .dossier-competitive > div,
+  .dossier-buyer-value > div,
   .demo-competitive > div {
     grid-template-columns: 1fr;
   }

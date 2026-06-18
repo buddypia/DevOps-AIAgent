@@ -1326,6 +1326,32 @@ app.post("/api/dossier", async (req, res) => {
     gemini,
     ci
   });
+  const securityReview = buildSecurityReview({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    allowlist: ipAllowlistSummary,
+    ci,
+    geminiSecretConfigured: geminiSecretConfigured()
+  });
+  const impactCase = buildImpactCase({ recommendation, strategy, opsDrill, securityReview });
+  const userPilot = buildUserPilotLab({
+    recommendation,
+    strategy,
+    impactCase,
+    opsDrill,
+    securityReview,
+    squadContract
+  });
+  const pilotEconomics = buildPilotEconomics({
+    recommendation,
+    strategy,
+    impactCase,
+    userPilot,
+    squadContract,
+    opsDrill,
+    securityReview
+  });
   const autopilot = buildWinningAutopilot({
     baseUrl: publicBaseUrl(req),
     recommendation,
@@ -1351,7 +1377,9 @@ app.post("/api/dossier", async (req, res) => {
       demoRunway,
       autopilot,
       proof,
-      battlecard: competitiveBattlecard
+      battlecard: competitiveBattlecard,
+      impactCase,
+      pilotEconomics
     })
   );
 });

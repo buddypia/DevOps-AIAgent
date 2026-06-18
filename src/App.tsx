@@ -5451,6 +5451,28 @@ function SubmissionDossierPanel({
             </div>
           )}
 
+          {dossier.handoffPacket.buyerValueReceipts.length > 0 && (
+            <div className="dossier-buyer-value">
+              <h3>
+                <Coins size={15} />
+                Buyer value receipts
+              </h3>
+              <div>
+                {dossier.handoffPacket.buyerValueReceipts.map((receipt) => (
+                  <article key={receipt.id} className={receipt.status}>
+                    <div>
+                      <strong>{receipt.label}</strong>
+                      <span>{receipt.status}</span>
+                    </div>
+                    <p>{receipt.claim}</p>
+                    <small>{receipt.metric}</small>
+                    <b>{receipt.proof}</b>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="dossier-copy">
             {dossier.copyBlocks.map((block) => (
               <article key={block.id} className={block.status}>
@@ -5530,7 +5552,7 @@ function SubmissionDossierPanel({
       ) : (
         <div className="dossier-empty">
           <FileText size={28} />
-          <strong>Run submission dossierで、ProtoPedia本文、動画録画順、提出リンク、最終チェックを1つに束ねます。</strong>
+          <strong>Run submission dossierで、ProtoPedia本文、競合反論、買い手価値、動画録画順、提出リンク、最終チェックを1つに束ねます。</strong>
           <p>外部提出URLが未発行でも、貼る本文と録る順番を固定できます。</p>
         </div>
       )}
