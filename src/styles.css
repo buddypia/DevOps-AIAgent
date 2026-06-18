@@ -3314,6 +3314,300 @@ h1 {
   text-align: center;
 }
 
+.demo-receipt {
+  margin-top: 14px;
+  border: 1px solid #1f3434;
+  border-radius: 8px;
+  background: #f7fbf8;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.receipt-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px;
+  border-bottom: 1px solid #c8dad4;
+  color: #f7fbf8;
+  background:
+    linear-gradient(90deg, #1f3434, #0f766e);
+}
+
+.receipt-heading .eyebrow {
+  color: #f2b84b;
+}
+
+.receipt-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 1.28rem;
+}
+
+.receipt-inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 12px;
+  padding: 14px;
+  border-bottom: 1px solid #c8dad4;
+  background: #eef7f2;
+}
+
+.receipt-inputs label {
+  display: grid;
+  gap: 6px;
+  color: #33524e;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.receipt-inputs input {
+  min-width: 0;
+  min-height: 40px;
+  border: 1px solid #b7cec7;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--ink);
+  background: #fffdf9;
+  outline: none;
+}
+
+.receipt-inputs input:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+}
+
+.receipt-body {
+  display: grid;
+  gap: 1px;
+  background: #c8dad4;
+}
+
+.receipt-summary {
+  display: grid;
+  grid-template-columns: minmax(380px, 1fr) minmax(210px, 0.25fr);
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  background: #f7fbf8;
+}
+
+.receipt-summary h3 {
+  margin-top: 10px;
+  font-size: 1.42rem;
+  line-height: 1.22;
+}
+
+.receipt-summary p,
+.receipt-summary small,
+.receipt-empty p {
+  display: block;
+  margin-top: 8px;
+  color: #344341;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.receipt-score {
+  min-height: 136px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  border-radius: 8px;
+  color: #f7fbf8;
+  background: #1f3434;
+}
+
+.receipt-score strong {
+  font-size: 3.8rem;
+  line-height: 0.96;
+}
+
+.receipt-score span {
+  color: rgba(247, 251, 248, 0.76);
+  font-size: 0.76rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.receipt-stamps {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(190px, 1fr));
+  gap: 1px;
+  background: #c8dad4;
+}
+
+.receipt-stamps article {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 13px;
+  border-top: 5px solid var(--teal);
+  background: #f7fbf8;
+}
+
+.receipt-stamps article.watch {
+  border-top-color: var(--amber);
+  background: #fff8e6;
+}
+
+.receipt-stamps article.missing {
+  border-top-color: var(--rose);
+  background: #fff1f2;
+}
+
+.receipt-stamps article > div,
+.receipt-actions article > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.receipt-stamps span,
+.receipt-actions span,
+.receipt-digest span {
+  color: var(--teal);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.receipt-stamps b {
+  color: #1f3434;
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.receipt-stamps p,
+.receipt-actions p,
+.receipt-actions small,
+.receipt-digest p {
+  color: #344341;
+  line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+
+.receipt-stamps strong,
+.receipt-actions strong {
+  overflow-wrap: anywhere;
+}
+
+.receipt-stamps a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  color: var(--teal);
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.receipt-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.82fr) minmax(360px, 0.9fr) minmax(400px, 1.1fr);
+  gap: 1px;
+  background: #c8dad4;
+}
+
+.receipt-grid > section {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+  background: #f7fbf8;
+}
+
+.receipt-grid h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.receipt-order {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+  color: #344341;
+  line-height: 1.5;
+}
+
+.receipt-actions {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.receipt-actions article {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid #c8dad4;
+  border-left: 4px solid var(--amber);
+  border-radius: 8px;
+  background: #fff8e6;
+}
+
+.receipt-actions article.now {
+  border-left-color: var(--rose);
+  background: #fff1f2;
+}
+
+.receipt-actions article.clear {
+  border-left-color: var(--green);
+  background: #f2f8ec;
+}
+
+.receipt-digest {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #b7cec7;
+  border-radius: 8px;
+  background: #fffdf9;
+}
+
+.receipt-digest strong {
+  color: #1f3434;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.receipt-grid pre {
+  max-width: 100%;
+  max-height: 300px;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.receipt-empty {
+  min-height: 190px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 22px;
+  text-align: center;
+}
+
 .market-intel {
   margin-top: 14px;
   border: 1px solid #26383b;
@@ -6960,6 +7254,14 @@ pre {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
   }
 
+  .receipt-stamps {
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+  }
+
+  .receipt-grid {
+    grid-template-columns: repeat(2, minmax(320px, 1fr));
+  }
+
   .evidence-grid {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
   }
@@ -7094,6 +7396,10 @@ pre {
     .moat-summary,
     .moat-scenarios,
     .moat-grid,
+    .receipt-inputs,
+    .receipt-summary,
+    .receipt-stamps,
+    .receipt-grid,
     .evidence-summary,
     .evidence-probes,
     .evidence-grid,
@@ -7197,6 +7503,7 @@ pre {
   .pilot-heading,
   .optimizer-heading,
   .moat-heading,
+  .receipt-heading,
   .evidence-heading,
   .brief-heading,
   .ledger-heading,
@@ -7223,6 +7530,7 @@ pre {
   .pilot-heading,
   .optimizer-heading,
   .moat-heading,
+  .receipt-heading,
   .evidence-heading,
   .brief-heading,
   .ledger-heading,

@@ -28,12 +28,13 @@
 20. `src/userPilot.ts` が開発リード、Platform/SRE、提出者の初回利用導線、摩擦、次クリックを検証する
 21. `src/squadOptimizer.ts` が予算内のAI編成を総当たりし、必須技術カバレッジ、交換計画、追加予算ギャップを返す
 22. `src/liveEvidence.ts` が公開Cloud Run、Agent Card、A2A、Squad Optimizer、CIのライブ証拠をスコア化する
-23. `src/autonomyLedger.ts` が市場探索、判断、契約、A2A委任、検証、運用、提出をAI自律性台帳にする
-24. `src/security.ts` がSecret Manager、IP allowlist、入力制限、A2A信頼境界、CIを審査用セキュリティ証拠にする
-25. `src/impact.ts` が対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性証拠にする
-26. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
-27. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-28. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+23. `src/demoReceipt.ts` が審査導線、競合反論、編成判断、公開証拠、外部提出URLをsha256 digest付き検収票にする
+24. `src/autonomyLedger.ts` が市場探索、判断、契約、A2A委任、検証、運用、提出をAI自律性台帳にする
+25. `src/security.ts` がSecret Manager、IP allowlist、入力制限、A2A信頼境界、CIを審査用セキュリティ証拠にする
+26. `src/impact.ts` が対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性証拠にする
+27. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
+28. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+29. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -65,6 +66,7 @@
   - `user.pilot`
   - `squad.optimize`
   - `evidence.monitor`
+  - `demo.receipt`
 
 ## Strategy Surface
 
@@ -137,6 +139,14 @@
 - Runbook: 審査員が同じ確認を再実行できるcurlを返す
 - A2A payload: `evidence.monitor` skillとしてlive proof score、probe statuses、next actionsを返す
 
+## Demo Receipt Surface
+
+- `POST /api/demo-receipt`: Judge Tour、Moat Stress Test、Squad Optimizer、Live Evidence Monitor、Submission Launch Gateを審査デモreceiptへ束ねる
+- Stamps: 審査導線、競合反論、編成判断、公開証拠、A2A surface、外部提出URLをsealed/watch/missingで固定する
+- Digest: stamp statuses、選択agent、外部URL、verdictからsha256 digestを作り、録画後の照合に使う
+- External truth: ProtoPedia作品URLと動画URLは未入力ならwatchとして残し、提出完了扱いにしない
+- A2A payload: `demo.receipt` skillとしてreceipt score、verdict、digest、next actions、endpointを返す
+
 ## Autonomy Ledger Surface
 
 - `POST /api/autonomy-ledger`: AIエージェント中心性を、sense、decide、contract、delegate、verify、operate、submitの7段階台帳で返す
@@ -202,6 +212,7 @@
 - `POST /api/user-pilot`: 実利用者3ペルソナの初回導線、摩擦、次クリックを返す
 - `POST /api/squad-optimizer`: 予算内の最適編成、追加予算ギャップ、交換計画を返す
 - `POST /api/live-evidence`: 公開URL、Agent Card、A2A、Optimizer、CIをライブ検証する
+- `POST /api/demo-receipt`: 審査デモのstamp、外部URL状態、sha256 digestを検収票として返す
 - Release gate: Cloud Run SREが公開継続かrollbackかを判断する
 - Rebuy loop: A2A Market BrokerがObservability Oracle / Test Forge / Security Sentinelの買い足しを推薦する
 - Runbook: healthz、ops drill、Cloud Run describe、Cloud Logging、traffic updateコマンドを提示する
@@ -230,6 +241,7 @@
 - User pilot proof: `user.pilot` skillとして、開発リード、Platform/SRE、提出者のfirst-run usabilityをA2A payloadにも含める
 - Squad optimizer proof: `squad.optimize` skillとして、予算制約下の自律編成判断、coverage gap、funding stepをA2A payloadにも含める
 - Live evidence proof: `evidence.monitor` skillとして、公開Cloud Run/A2A/CIの再実行可能なライブ証拠をA2A payloadにも含める
+- Demo receipt proof: `demo.receipt` skillとして、審査導線、競合反論、編成判断、公開証拠、外部提出URL状態、sha256 digestをA2A payloadにも含める
 - Moat stress proof: `moat.stress` skillとして、競合別の想定反論、反証、見せる証拠、録画順をA2A payloadにも含める
 
 ## Submission Surface
@@ -251,6 +263,7 @@
 - User pilot: `/api/user-pilot`
 - Squad optimizer: `/api/squad-optimizer`
 - Live evidence: `/api/live-evidence`
+- Demo receipt: `/api/demo-receipt`
 - Autonomy ledger: `/api/autonomy-ledger`
 - Submission launch: `/api/submission-launch`
 - Security review: `/api/security-review`
@@ -270,8 +283,8 @@
 
 ## Judging Angle
 
-- AIエージェントが価値の中心: 市場探索、購入判断、競合反論の証拠選択、予算内の編成最適化、A2A委任、ライブ証拠監視、自律ミッション、運用ドリル、Gemini分析が体験の中心
+- AIエージェントが価値の中心: 市場探索、購入判断、競合反論の証拠選択、予算内の編成最適化、A2A委任、ライブ証拠監視、審査デモreceipt、自律ミッション、運用ドリル、Gemini分析が体験の中心
 - 課題アプローチ: AIを作るだけでなく、必要なAI能力を発見・調達・運用する問題を扱う
 - ユーザビリティ: 数値・価格・改善量・競合/SWOTに加え、Judge Tour、Squad Optimizer、User Pilot Labで審査員と実利用者の最初の導線まで意思決定できる
 - 実用性: 開発現場のエージェント選定、DevOps改善、公開後の異常検知とrollback判断に加え、Impact CaseとJudge Tourで時間短縮、提出信頼度、ユーザー別KPI、審査説明順を説明可能
-- 実装力: React、Gemini API、A2A Agent Card、Cloud Run、戦略API、ミッションAPI、ライブ証拠プローブ、フォールバック、テストを含む
+- 実装力: React、Gemini API、A2A Agent Card、Cloud Run、戦略API、ミッションAPI、ライブ証拠プローブ、sha256 receipt、フォールバック、テストを含む

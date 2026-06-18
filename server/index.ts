@@ -9,6 +9,7 @@ import { buildWinningAutopilot } from "../src/autopilot.js";
 import { buildAutonomyLedger } from "../src/autonomyLedger.js";
 import { ciStatusFromBadge } from "../src/ciProof.js";
 import { buildSquadContract } from "../src/contracts.js";
+import { buildJudgeDemoReceipt } from "../src/demoReceipt.js";
 import { buildDemoRunway } from "../src/demoRunway.js";
 import { buildSubmissionDossier } from "../src/dossier.js";
 import { buildFinalistSimulation } from "../src/finalist.js";
@@ -185,6 +186,12 @@ function agentCard(baseUrl: string) {
         name: "Monitor live public proof",
         description: "Cloud Run health、Agent Card、A2A、Squad Optimizer、GitHub Actions CIを公開環境でプローブし、ライブ証拠スコアを返す。",
         tags: ["live-proof", "cloud-run", "a2a", "ci", "submission"]
+      },
+      {
+        id: "demo.receipt",
+        name: "Seal the judge demo receipt",
+        description: "審査導線、競合反論、編成判断、公開証拠、外部提出URLを1枚のsha256 receiptとして封印する。",
+        tags: ["demo", "receipt", "submission", "judge-proof", "sha256"]
       },
       {
         id: "autonomy.ledger",
@@ -1501,9 +1508,10 @@ app.post("/api/live-evidence", async (req, res) => {
         const hasEvidence = skills.some((skill) => skill.id === "evidence.monitor");
         const hasOptimizer = skills.some((skill) => skill.id === "squad.optimize");
         const hasMoat = skills.some((skill) => skill.id === "moat.stress");
-        return hasEvidence && hasOptimizer && hasMoat && skills.length >= 29
-          ? { status: "passed", score: 100, evidence: `Agent Card exposes ${skills.length} skills including moat.stress, evidence.monitor, and squad.optimize.` }
-          : { status: "watch", score: 72, evidence: `Agent Card exposes ${skills.length} skills; expected moat, live evidence, and optimizer skills.` };
+        const hasReceipt = skills.some((skill) => skill.id === "demo.receipt");
+        return hasEvidence && hasOptimizer && hasMoat && hasReceipt && skills.length >= 30
+          ? { status: "passed", score: 100, evidence: `Agent Card exposes ${skills.length} skills including demo.receipt, moat.stress, evidence.monitor, and squad.optimize.` }
+          : { status: "watch", score: 72, evidence: `Agent Card exposes ${skills.length} skills; expected receipt, moat, live evidence, and optimizer skills.` };
       }
     }),
     liveJsonProbe({
@@ -1544,9 +1552,9 @@ app.post("/api/live-evidence", async (req, res) => {
       },
       evaluate: (payload) => {
         const data = (payload as { result?: { artifacts?: Array<{ parts?: Array<{ data?: Record<string, unknown> }> }> } }).result?.artifacts?.[0]?.parts?.[0]?.data;
-        return data?.squadOptimizerEndpoint && data?.liveEvidenceEndpoint && data?.moatStressEndpoint
-          ? { status: "passed", score: 100, evidence: "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, and moatStressEndpoint." }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but moat/live evidence endpoints were not visible." };
+        return data?.squadOptimizerEndpoint && data?.liveEvidenceEndpoint && data?.moatStressEndpoint && data?.demoReceiptEndpoint
+          ? { status: "passed", score: 100, evidence: "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, and demoReceiptEndpoint." }
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -1565,6 +1573,46 @@ app.post("/api/live-evidence", async (req, res) => {
     buildLiveEvidenceRun({
       baseUrl,
       probes: [healthProbe, cardProbe, optimizerProbe, a2aProbe, ciProbe]
+    })
+  );
+});
+
+app.post("/api/demo-receipt", (req, res) => {
+  const parsed = LaunchSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const marketIntel = buildMarketIntelReport({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy
+  });
+  const moatStress = buildMoatStressTest({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    marketIntel
+  });
+  const squadOptimizer = buildSquadOptimizer({
+    projectBrief: parsed.data.projectBrief,
+    selectedAgentIds: parsed.data.selectedAgentIds,
+    budget: 140,
+    maxSquadSize: 4
+  });
+
+  res.json(
+    buildJudgeDemoReceipt({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy,
+      moatStress,
+      squadOptimizer,
+      protopediaUrl: parsed.data.protopediaUrl,
+      videoUrl: parsed.data.videoUrl
     })
   );
 });
@@ -2476,6 +2524,7 @@ app.post("/a2a", (req, res) => {
                 userPilotEndpoint: `${publicBaseUrl(req)}/api/user-pilot`,
                 squadOptimizerEndpoint: `${publicBaseUrl(req)}/api/squad-optimizer`,
                 liveEvidenceEndpoint: `${publicBaseUrl(req)}/api/live-evidence`,
+                demoReceiptEndpoint: `${publicBaseUrl(req)}/api/demo-receipt`,
                 judgeTourEndpoint: `${publicBaseUrl(req)}/api/judge-tour`,
                 winRunEndpoint: `${publicBaseUrl(req)}/api/win-run`,
                 demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,

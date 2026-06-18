@@ -33,6 +33,7 @@ import { recommendSquad } from "./agentEngine";
 import type { AutonomyLedger } from "./autonomyLedger";
 import type { WinningAutopilotRun } from "./autopilot";
 import type { SquadContract } from "./contracts";
+import type { JudgeDemoReceipt } from "./demoReceipt";
 import type { DemoRunway } from "./demoRunway";
 import type { FinalistSimulation } from "./finalist";
 import type { ImpactCase } from "./impact";
@@ -1344,6 +1345,170 @@ function MoatStressPanel({
           <Crosshair size={28} />
           <strong>Stress-test moatで、ADK/LangGraph/CrewAI/Dify/AgentOpsからの反論に証拠付きで答えます。</strong>
           <p>競合を否定せず、どの証拠をどの順番で見せるかまで審査導線に変換します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function DemoReceiptPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [receipt, setReceipt] = useState<JudgeDemoReceipt | null>(null);
+  const [protopediaUrl, setProtopediaUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function sealReceipt() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/demo-receipt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+          protopediaUrl,
+          videoUrl
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setReceipt((await response.json()) as JudgeDemoReceipt);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="demo-receipt">
+      <div className="receipt-heading">
+        <div>
+          <span className="eyebrow">Judge demo receipt</span>
+          <h2>
+            <BadgeCheck size={20} />
+            Seal the demo
+          </h2>
+        </div>
+        <button className="icon-button" onClick={sealReceipt} disabled={loading} title="審査デモreceiptを発行">
+          <ClipboardCheck size={17} />
+          {loading ? "Sealing" : "Seal receipt"}
+        </button>
+      </div>
+
+      <div className="receipt-inputs">
+        <label>
+          <span>ProtoPedia URL</span>
+          <input value={protopediaUrl} onChange={(event) => setProtopediaUrl(event.target.value)} placeholder="https://protopedia.net/prototype/..." />
+        </label>
+        <label>
+          <span>Video URL</span>
+          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/..." />
+        </label>
+      </div>
+
+      {error && <p className="error-text">Demo receipt request failed: {error}</p>}
+
+      {receipt ? (
+        <div className="receipt-body">
+          <div className="receipt-summary">
+            <div>
+              <span className={cx("risk-chip", receipt.verdict === "sealed" ? "low" : receipt.verdict === "needs-external-submit" ? "medium" : "high")}>
+                {receipt.verdict}
+              </span>
+              <h3>{receipt.headline}</h3>
+              <p>{receipt.hardTruth}</p>
+              <small>{new Date(receipt.generatedAt).toLocaleString()}</small>
+            </div>
+            <div className="receipt-score">
+              <strong>{receipt.receiptScore}</strong>
+              <span>receipt score</span>
+            </div>
+          </div>
+
+          <div className="receipt-stamps">
+            {receipt.stamps.map((stamp) => (
+              <article key={stamp.id} className={stamp.status}>
+                <div>
+                  <strong>{stamp.label}</strong>
+                  <span>{stamp.status}</span>
+                </div>
+                <b>{stamp.score}</b>
+                <p>{stamp.proof}</p>
+                <a href={stamp.url} target="_blank" rel="noreferrer">
+                  Evidence <ExternalLink size={13} />
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <div className="receipt-grid">
+            <section>
+              <h3>
+                <Film size={15} />
+                Recording order
+              </h3>
+              <ol className="receipt-order">
+                {receipt.recordingOrder.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+            </section>
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Next actions
+              </h3>
+              <div className="receipt-actions">
+                {receipt.actions.length > 0 ? (
+                  receipt.actions.map((action) => (
+                    <article key={action.id} className={action.priority}>
+                      <div>
+                        <strong>{action.priority}</strong>
+                        <span>{action.id}</span>
+                      </div>
+                      <p>{action.action}</p>
+                      <small>{action.proof}</small>
+                    </article>
+                  ))
+                ) : (
+                  <article className="clear">
+                    <strong>Receipt sealed</strong>
+                    <p>提出動画の検収票としてdigestを控えられます。</p>
+                  </article>
+                )}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <ShieldCheck size={15} />
+                Digest
+              </h3>
+              <div className="receipt-digest">
+                <span>{receipt.digest.algorithm}</span>
+                <strong>{receipt.digest.digest}</strong>
+                <p>{receipt.digest.verification}</p>
+              </div>
+              <h3>
+                <Terminal size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(receipt.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="receipt-empty">
+          <BadgeCheck size={28} />
+          <strong>Seal receiptで、審査導線、競合反論、編成判断、公開証拠、外部URL状態をsha256 digest付きで固定します。</strong>
+          <p>動画URLとProtoPedia URLが未入力ならwatchとして残し、提出完了扱いにしません。</p>
         </div>
       )}
     </section>
@@ -4144,6 +4309,7 @@ export default function App() {
       <SquadOptimizerPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MoatStressPanel recommendation={recommendation} projectBrief={projectBrief} />
       <LiveEvidencePanel recommendation={recommendation} projectBrief={projectBrief} />
+      <DemoReceiptPanel recommendation={recommendation} projectBrief={projectBrief} />
       <UserPilotPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeBriefPanel recommendation={recommendation} projectBrief={projectBrief} />
       <AutonomyLedgerPanel recommendation={recommendation} projectBrief={projectBrief} />
