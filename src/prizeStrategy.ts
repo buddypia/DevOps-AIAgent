@@ -3,6 +3,7 @@ import type { WinningAutopilotRun } from "./autopilot.js";
 import type { CompetitiveBattlecard } from "./competitiveBattlecard.js";
 import type { DemoConcierge } from "./demoConcierge.js";
 import type { JudgeCommandCenter } from "./judgeCommandCenter.js";
+import { observabilityProofScore, type ObservabilityOracle } from "./observabilityOracle.js";
 import type { PilotEconomics } from "./pilotEconomics.js";
 import type { ReleaseDriftGuard } from "./releaseDrift.js";
 import type { JudgeCriterion, WinningStrategy } from "./strategy.js";
@@ -158,9 +159,11 @@ function proofMoves(input: {
   battlecard: CompetitiveBattlecard;
   demoConcierge?: DemoConcierge;
   pilotEconomics: PilotEconomics;
+  observabilityOracle?: ObservabilityOracle;
   releaseDrift?: ReleaseDriftGuard;
 }): PrizeProofMove[] {
-  const { baseUrl, acceptance, command, battlecard, demoConcierge, pilotEconomics, releaseDrift } = input;
+  const { baseUrl, acceptance, command, battlecard, demoConcierge, pilotEconomics, observabilityOracle, releaseDrift } = input;
+  const oracleScore = observabilityOracle ? observabilityProofScore(observabilityOracle) : undefined;
   return [
     ...(demoConcierge
       ? [
@@ -206,6 +209,18 @@ function proofMoves(input: {
       proof: releaseDrift ? `${releaseDrift.observedSkillCount}/${releaseDrift.expectedSkillCount} skills / ${releaseDrift.verdict}` : "Release Drift Guard not checked",
       score: releaseDrift?.driftScore ?? 82
     },
+    ...(observabilityOracle && oracleScore !== undefined
+      ? [
+          {
+            id: "operations-value",
+            label: "Operational value proof",
+            screen: "Observability Oracle",
+            endpoint: absoluteUrl(baseUrl, "/api/observability-oracle"),
+            proof: `${oracleScore} operational buyer proof / ${observabilityOracle.readiness}`,
+            score: oracleScore
+          }
+        ]
+      : []),
     {
       id: "buyer-value",
       label: "Buyer value proof",
@@ -290,10 +305,12 @@ export function buildPrizeStrategyBoard(input: {
   battlecard: CompetitiveBattlecard;
   demoConcierge?: DemoConcierge;
   pilotEconomics: PilotEconomics;
+  observabilityOracle?: ObservabilityOracle;
   releaseDrift?: ReleaseDriftGuard;
 }): PrizeStrategyBoard {
-  const { baseUrl, strategy, acceptance, autopilot, command, battlecard, demoConcierge, pilotEconomics, releaseDrift } = input;
+  const { baseUrl, strategy, acceptance, autopilot, command, battlecard, demoConcierge, pilotEconomics, observabilityOracle, releaseDrift } = input;
   const normalizedBase = baseUrl.replace(/\/$/, "");
+  const oracleScore = observabilityOracle ? observabilityProofScore(observabilityOracle) : undefined;
   const criteria = [
     criterionItem({
       id: "agent-centrality",
@@ -349,12 +366,22 @@ export function buildPrizeStrategyBoard(input: {
         row(acceptance, "practical-impact")?.score ?? 0,
         row(acceptance, "pilot-economics")?.score ?? 0,
         pilotEconomics.economicsScore,
+        oracleScore ?? pilotEconomics.economicsScore,
         demoConcierge?.conciergeScore ?? pilotEconomics.economicsScore
       ],
-      decisiveProof: "Demo Concierge、Impact Case、Pilot Economicsが対象ユーザー、時間短縮、回収日数、買い手反論を示す。",
+      decisiveProof:
+        oracleScore === undefined
+          ? "Demo Concierge、Impact Case、Pilot Economicsが対象ユーザー、時間短縮、回収日数、買い手反論を示す。"
+          : "Demo Concierge、Impact Case、Pilot Economics、Observability Oracleが対象ユーザー、時間短縮、回収日数、公開運用SLOを示す。",
       missingProof: "面白いが現場価値が薄い、という評価になるリスク。",
-      demoMove: "Demo Conciergeのbuyer laneからPilot Economicsのpayback daysとbuyer objectionsを見せる。",
-      nextAction: "ProtoPedia本文にDemo Conciergeのbuyer lane、回収日数、対象ユーザー別KPIを入れる。"
+      demoMove:
+        oracleScore === undefined
+          ? "Demo Conciergeのbuyer laneからPilot Economicsのpayback daysとbuyer objectionsを見せる。"
+          : "Demo Conciergeのbuyer laneからObservability Oracleのbuyer SLOとPilot Economicsのpayback daysを見せる。",
+      nextAction:
+        oracleScore === undefined
+          ? "ProtoPedia本文にDemo Conciergeのbuyer lane、回収日数、対象ユーザー別KPIを入れる。"
+          : "ProtoPedia本文にObservability Oracleのbuyer SLO、回収日数、対象ユーザー別KPIを入れる。"
     }),
     criterionItem({
       id: "implementation",
@@ -364,23 +391,36 @@ export function buildPrizeStrategyBoard(input: {
         row(acceptance, "implementation-quality")?.score ?? 0,
         row(acceptance, "live-public-proof")?.score ?? 0,
         row(acceptance, "release-drift")?.score ?? releaseDrift?.driftScore ?? 88,
-        row(acceptance, "security-boundary")?.score ?? 0
+        row(acceptance, "security-boundary")?.score ?? 0,
+        observabilityOracle?.oracleScore ?? row(acceptance, "live-public-proof")?.score ?? 0
       ],
-      decisiveProof: "Cloud Run、GitHub Actions、Release Drift、Security Reviewで公開運用まで検証できる。",
+      decisiveProof:
+        oracleScore === undefined
+          ? "Cloud Run、GitHub Actions、Release Drift、Security Reviewで公開運用まで検証できる。"
+          : "Cloud Run、GitHub Actions、Release Drift、Security Review、Observability Oracleで公開運用と継続判断まで検証できる。",
       missingProof: "ローカルでは動くが提出URLが古い、またはCI証拠が弱いリスク。",
-      demoMove: "Release Drift Guardでrelease-currentを見せ、CIリンクを開く。",
-      nextAction: "提出直前にRelease Drift GuardとGitHub Actions latest main runを再実行する。"
+      demoMove: oracleScore === undefined ? "Release Drift Guardでrelease-currentを見せ、CIリンクを開く。" : "Release Drift Guardでrelease-currentを見せ、Observability Oracleで継続/復旧判断を開く。",
+      nextAction: "提出直前にRelease Drift Guard、Observability Oracle、GitHub Actions latest main runを再実行する。"
     })
   ];
 
   const prizeScore = Math.round(
     clamp(
       average(criteria.map((item) => item.currentScore)) * 0.74 +
-        average([acceptance.acceptanceScore, command.commandScore, autopilot.winScore, battlecard.battleScore, pilotEconomics.economicsScore, releaseDrift?.driftScore ?? 88]) * 0.26
+        average([
+          acceptance.acceptanceScore,
+          command.commandScore,
+          autopilot.winScore,
+          battlecard.battleScore,
+          pilotEconomics.economicsScore,
+          oracleScore ?? pilotEconomics.economicsScore,
+          releaseDrift?.driftScore ?? 88
+        ]) *
+          0.26
     )
   );
   const readiness = readinessFrom({ prizeScore, criteria, acceptance, command, autopilot, releaseDrift });
-  const moves = proofMoves({ baseUrl, acceptance, command, battlecard, demoConcierge, pilotEconomics, releaseDrift });
+  const moves = proofMoves({ baseUrl, acceptance, command, battlecard, demoConcierge, pilotEconomics, observabilityOracle, releaseDrift });
   const riskItems = risks({ acceptance, command, battlecard, criteria, releaseDrift });
   const weakest = [...criteria].sort((left, right) => left.currentScore - right.currentScore)[0];
 
@@ -425,9 +465,9 @@ export function buildPrizeStrategyBoard(input: {
       {
         id: "buyer-value",
         timeRange: "90-125s",
-        screen: "Pilot Economics",
-        say: pilotEconomics.verdict,
-        proofMoveId: "buyer-value"
+        screen: observabilityOracle ? "Observability Oracle + Pilot Economics" : "Pilot Economics",
+        say: observabilityOracle ? `${observabilityOracle.hardTruth} ${pilotEconomics.verdict}` : pilotEconomics.verdict,
+        proofMoveId: observabilityOracle ? "operations-value" : "buyer-value"
       },
       {
         id: "close",
@@ -462,6 +502,13 @@ export function buildPrizeStrategyBoard(input: {
             singleNextClick: demoConcierge.singleNextClick
           }
         : null,
+      observabilityOracle: observabilityOracle
+        ? {
+            score: oracleScore,
+            readiness: observabilityOracle.readiness,
+            receipts: observabilityOracle.receipts.map((receipt) => ({ id: receipt.id, status: receipt.status }))
+          }
+        : null,
       risks: riskItems.map((item) => ({ id: item.id, priority: item.priority, owner: item.owner })),
       endpoints: {
         app: normalizedBase,
@@ -471,6 +518,7 @@ export function buildPrizeStrategyBoard(input: {
         competitiveBattlecard: absoluteUrl(normalizedBase, "/api/competitive-battlecard"),
         acceptanceMatrix: absoluteUrl(normalizedBase, "/api/acceptance-matrix"),
         releaseDrift: absoluteUrl(normalizedBase, "/api/release-drift"),
+        observabilityOracle: absoluteUrl(normalizedBase, "/api/observability-oracle"),
         pilotEconomics: absoluteUrl(normalizedBase, "/api/pilot-economics")
       }
     }

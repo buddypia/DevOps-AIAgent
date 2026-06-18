@@ -15,10 +15,12 @@ import { buildJudgeCommandCenter } from "../src/judgeCommandCenter";
 import { buildJudgeDrill } from "../src/judgeDrill";
 import { buildJudgeTour } from "../src/judgeTour";
 import { DEFAULT_PROJECT_BRIEF } from "../src/market";
+import { buildLiveEvidenceRun } from "../src/liveEvidence";
 import { buildMarketIntelReport } from "../src/marketIntel";
 import { buildMissionRun } from "../src/mission";
 import { buildMoatStressTest } from "../src/moatStress";
 import { buildMvpAudit } from "../src/mvpAudit";
+import { buildObservabilityOracle } from "../src/observabilityOracle";
 import { buildOpsDrill } from "../src/ops";
 import { buildPilotEconomics } from "../src/pilotEconomics";
 import { buildPitchRun } from "../src/pitch";
@@ -82,6 +84,18 @@ const passedProbe = (id: string): ReleaseDriftProbe => ({
   evidence: `${id} passed`,
   required: true
 });
+
+function passedLiveProbe(id: string, baseUrl: string) {
+  return {
+    id,
+    label: id,
+    status: "passed" as const,
+    score: 100,
+    url: `${baseUrl}/${id}`,
+    evidence: `${id} passed`,
+    required: true
+  };
+}
 
 function fixture() {
   const baseUrl = SUBMISSION_PROOF.deployedUrl;
@@ -192,6 +206,23 @@ function fixture() {
     opsDrill,
     securityReview
   });
+  const observabilityOracle = buildObservabilityOracle({
+    baseUrl,
+    recommendation,
+    strategy,
+    liveEvidence: buildLiveEvidenceRun({
+      baseUrl,
+      generatedAt: "2026-06-18T00:00:00.000Z",
+      probes: [
+        passedLiveProbe("health", baseUrl),
+        passedLiveProbe("agent-card", baseUrl),
+        passedLiveProbe("a2a", baseUrl),
+        passedLiveProbe("ci", baseUrl)
+      ]
+    }),
+    opsDrill,
+    pilotEconomics
+  });
   const submissionLaunch = buildSubmissionLaunchGate({
     mvpAudit,
     dossier,
@@ -250,6 +281,7 @@ function fixture() {
     userPilot,
     impactCase,
     pilotEconomics,
+    observabilityOracle,
     securityReview,
     demoReceipt,
     releaseDrift
@@ -281,6 +313,7 @@ function fixture() {
     battlecard,
     demoConcierge,
     pilotEconomics,
+    observabilityOracle,
     releaseDrift
   });
 
@@ -294,6 +327,7 @@ function fixture() {
     finalist,
     acceptance,
     prizeStrategy,
+    observabilityOracle,
     submissionLaunch
   });
 }
@@ -314,6 +348,11 @@ describe("win gap radar", () => {
       "submission-closeout"
     ]);
     expect(radar.lanes.find((lane) => lane.id === "approach-moat")?.competitorPressure).toContain("代替");
+    expect(radar.lanes.find((lane) => lane.id === "practical-value")).toMatchObject({
+      proofUrl: `${SUBMISSION_PROOF.deployedUrl}/api/observability-oracle`,
+      demoCue: "Demo Concierge buyer lane -> Observability Oracle -> Pilot Economics",
+      mvpEvidence: expect.stringContaining("payback")
+    });
     expect(radar.lanes.find((lane) => lane.id === "submission-closeout")).toMatchObject({
       status: "close-now",
       priority: "now"
@@ -332,8 +371,10 @@ describe("win gap radar", () => {
       endpoints: {
         winGapRadar: `${SUBMISSION_PROOF.deployedUrl}/api/win-gap-radar`,
         competitiveBattlecard: `${SUBMISSION_PROOF.deployedUrl}/api/competitive-battlecard`,
+        observabilityOracle: `${SUBMISSION_PROOF.deployedUrl}/api/observability-oracle`,
         submissionLaunch: `${SUBMISSION_PROOF.deployedUrl}/api/submission-launch`
       }
     });
+    expect(radar.proofScript).toContain("Observability Oracleでbuyer SLO、公開運用判断、次のAI買い足しループを見せる。");
   });
 });

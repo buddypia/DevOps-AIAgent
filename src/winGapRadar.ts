@@ -4,6 +4,7 @@ import type { FinalistGap, FinalistPanel, FinalistSimulation } from "./finalist.
 import type { MarketIntelReport } from "./marketIntel.js";
 import type { MoatStressScenario, MoatStressTest } from "./moatStress.js";
 import type { MvpAuditGate, MvpAuditReport } from "./mvpAudit.js";
+import { observabilityProofScore, type ObservabilityOracle } from "./observabilityOracle.js";
 import type { PrizeCriterion, PrizeStrategyBoard } from "./prizeStrategy.js";
 import type { SubmissionLaunchGate } from "./submissionLaunch.js";
 import type { SwotItem, SwotQuadrant, WinningStrategy } from "./strategy.js";
@@ -196,6 +197,7 @@ export function buildWinGapRadar(input: {
   finalist: FinalistSimulation;
   acceptance: JudgeAcceptanceMatrix;
   prizeStrategy: PrizeStrategyBoard;
+  observabilityOracle?: ObservabilityOracle;
   submissionLaunch: SubmissionLaunchGate;
 }): WinGapRadar {
   const base = input.baseUrl.replace(/\/$/, "");
@@ -205,6 +207,8 @@ export function buildWinGapRadar(input: {
   const submissionRow = acceptanceRow(input.acceptance, "submission-assets");
   const receiptRow = acceptanceRow(input.acceptance, "demo-receipt");
   const releaseRow = acceptanceRow(input.acceptance, "release-drift");
+  const oracleScore = input.observabilityOracle ? observabilityProofScore(input.observabilityOracle) : undefined;
+  const buyerSlo = input.observabilityOracle?.receipts.find((receipt) => receipt.id === "buyer-slo");
 
   const lanes = [
     lane({
@@ -271,16 +275,23 @@ export function buildWinGapRadar(input: {
         acceptanceRow(input.acceptance, "practical-impact")?.score ?? 0,
         acceptanceRow(input.acceptance, "pilot-economics")?.score ?? 0,
         finalistPanel(input.finalist, "practicality")?.score ?? 0,
-        prizeCriterion(input.prizeStrategy, "practicality")?.currentScore ?? 0
+        prizeCriterion(input.prizeStrategy, "practicality")?.currentScore ?? 0,
+        oracleScore ?? acceptanceRow(input.acceptance, "pilot-economics")?.score ?? 0
       ],
       competitorPressure: "AgentOpsやLangSmithに比べて、運用後の実利が弱いと実用性で落ちる。",
       swotSignal: swotSignal(input.strategy, "opportunities"),
-      mvpEvidence: acceptanceRow(input.acceptance, "pilot-economics")?.evidence ?? "Pilot Economics evidence missing.",
-      judgeImpact: "審査基準4。対象ユーザー、削減時間、payback、買い手反論を同じ画面で示す。",
-      featureHypothesis: "buyer laneを前に出し、導入費用と回収日数を審査員の実用性質問へ直結させる。",
-      nextAction: prizeCriterion(input.prizeStrategy, "practicality")?.nextAction ?? "Pilot EconomicsをProtoPedia本文に入れる。",
-      proofUrl: absoluteUrl(base, "/api/pilot-economics"),
-      demoCue: "Demo Concierge buyer lane -> Pilot Economics -> Impact Case"
+      mvpEvidence:
+        input.observabilityOracle && buyerSlo
+          ? `${input.observabilityOracle.readiness}; ${buyerSlo.metric}; ${input.observabilityOracle.hardTruth}`
+          : acceptanceRow(input.acceptance, "pilot-economics")?.evidence ?? "Pilot Economics evidence missing.",
+      judgeImpact: "審査基準4。対象ユーザー、削減時間、payback、買い手反論、公開運用SLOを同じ画面で示す。",
+      featureHypothesis: "buyer laneを前に出し、運用観測を導入費用、回収日数、次のAI買い足し判断へ直結させる。",
+      nextAction:
+        input.observabilityOracle && buyerSlo
+          ? `${buyerSlo.metric}をProtoPedia本文、動画、Judge Closeへ固定する。`
+          : prizeCriterion(input.prizeStrategy, "practicality")?.nextAction ?? "Pilot EconomicsをProtoPedia本文に入れる。",
+      proofUrl: absoluteUrl(base, input.observabilityOracle ? "/api/observability-oracle" : "/api/pilot-economics"),
+      demoCue: input.observabilityOracle ? "Demo Concierge buyer lane -> Observability Oracle -> Pilot Economics" : "Demo Concierge buyer lane -> Pilot Economics -> Impact Case"
     }),
     lane({
       id: "implementation-proof",
@@ -354,10 +365,14 @@ export function buildWinGapRadar(input: {
       label: "Buyer Proof Forward",
       priority: (acceptanceRow(input.acceptance, "pilot-economics")?.status ?? "watch") === "accepted" ? "later" : "next",
       status: featureBetStatus((acceptanceRow(input.acceptance, "pilot-economics")?.status ?? "watch") === "accepted" ? "later" : "next", false),
-      why: "実用性は“便利そう”では足りず、導入費用と回収日数を先に見せる必要がある。",
-      build: "買い手導線をDemo Conciergeの上位に置き、Pilot EconomicsとImpact Caseを1クリックで開く。",
-      acceptance: "Pilot Economicsがinvestment-readyで、buyer objectionsが全てaccepted/watch以下になる。",
-      proofUrl: absoluteUrl(base, "/api/pilot-economics")
+      why: "実用性は“便利そう”では足りず、導入費用、回収日数、公開運用SLOを先に見せる必要がある。",
+      build: input.observabilityOracle
+        ? "買い手導線をDemo Conciergeの上位に置き、Observability Oracle、Pilot Economics、Impact Caseを1クリックで開く。"
+        : "買い手導線をDemo Conciergeの上位に置き、Pilot EconomicsとImpact Caseを1クリックで開く。",
+      acceptance: input.observabilityOracle
+        ? "Observability Oracleがoperator-readyで、buyer SLOとPilot Economicsがinvestment-readyになる。"
+        : "Pilot Economicsがinvestment-readyで、buyer objectionsが全てaccepted/watch以下になる。",
+      proofUrl: absoluteUrl(base, input.observabilityOracle ? "/api/observability-oracle" : "/api/pilot-economics")
     }
   ];
 
@@ -425,6 +440,7 @@ export function buildWinGapRadar(input: {
       "Demo Conciergeで最初のクリックを固定する。",
       "Competitive Battlecardで最弱競合への短い回答、source、SWOTを見せる。",
       "Win Gap Radarで、MVP不足をfeature betsとcut listへ変換したことを見せる。",
+      ...(input.observabilityOracle ? ["Observability Oracleでbuyer SLO、公開運用判断、次のAI買い足しループを見せる。"] : []),
       "Acceptance MatrixとRelease Driftで公開Cloud Runの検収を通す。",
       "Submission Launch Gateで外部URLの状態を正直に示す。"
     ],
@@ -460,6 +476,7 @@ export function buildWinGapRadar(input: {
         competitiveBattlecard: absoluteUrl(base, "/api/competitive-battlecard"),
         acceptanceMatrix: absoluteUrl(base, "/api/acceptance-matrix"),
         prizeStrategy: absoluteUrl(base, "/api/prize-strategy"),
+        observabilityOracle: absoluteUrl(base, "/api/observability-oracle"),
         submissionLaunch: absoluteUrl(base, "/api/submission-launch")
       }
     }

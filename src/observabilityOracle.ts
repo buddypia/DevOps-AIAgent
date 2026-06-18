@@ -78,6 +78,29 @@ function statusFromScore(score: number): ObservabilityOracleStatus {
   return "blocked";
 }
 
+function receiptScore(status: ObservabilityOracleStatus) {
+  if (status === "clear") return 100;
+  if (status === "watch") return 82;
+  return 30;
+}
+
+export function observabilityProofScore(oracle: ObservabilityOracle) {
+  const publicProof = oracle.receipts.find((receipt) => receipt.id === "public-proof");
+  const buyerSlo = oracle.receipts.find((receipt) => receipt.id === "buyer-slo");
+  const receiptAverage = average(oracle.receipts.map((receipt) => receiptScore(receipt.status)));
+
+  return Math.round(
+    clamp(
+      average([
+        oracle.oracleScore,
+        receiptAverage,
+        publicProof ? receiptScore(publicProof.status) : 0,
+        buyerSlo ? receiptScore(buyerSlo.status) : 0
+      ])
+    )
+  );
+}
+
 function readinessFrom(input: { score: number; liveEvidence: LiveEvidenceRun; opsDrill: OpsDrill }): ObservabilityOracleReadiness {
   if (input.opsDrill.rollbackRecommended || input.liveEvidence.readiness === "blocked") return "rollback-required";
   if (input.score >= 88 && input.liveEvidence.readiness === "live-ready" && input.opsDrill.severity !== "degraded" && input.opsDrill.severity !== "critical") {

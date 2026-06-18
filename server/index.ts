@@ -35,7 +35,7 @@ import { buildObservabilityOracle } from "../src/observabilityOracle.js";
 import { buildOpsDrill } from "../src/ops.js";
 import { buildPilotEconomics } from "../src/pilotEconomics.js";
 import { buildPitchRun } from "../src/pitch.js";
-import { buildJudgeProof } from "../src/proof.js";
+import { buildJudgeProof, type CiProof, type JudgeProof } from "../src/proof.js";
 import { buildPrizeStrategyBoard } from "../src/prizeStrategy.js";
 import { buildProtoPediaPublisher } from "../src/publisher.js";
 import { buildReleaseDriftGuard, type ReleaseDriftProbe } from "../src/releaseDrift.js";
@@ -46,7 +46,6 @@ import { buildSubmissionLaunchGate } from "../src/submissionLaunch.js";
 import { buildFinalSubmissionRunway } from "../src/submissionRunway.js";
 import { SUBMISSION_PROOF } from "../src/submission.js";
 import { buildAgentTaskBoard } from "../src/taskBoard.js";
-import type { CiProof } from "../src/proof.js";
 import { buildWinningStrategy } from "../src/strategy.js";
 import type { GeminiRecommendation } from "../src/types.js";
 import { buildUserPilotLab } from "../src/userPilot.js";
@@ -1864,6 +1863,61 @@ app.post("/api/squad-optimizer", (req, res) => {
   );
 });
 
+function liveStatusFromScore(score: number): LiveEvidenceStatus {
+  if (score >= 90) return "passed";
+  if (score >= 65) return "watch";
+  return "missing";
+}
+
+function buildProofBackedLiveEvidence(input: { baseUrl: string; proof: JudgeProof; ci: CiProof }) {
+  const baseUrl = input.baseUrl.replace(/\/$/, "");
+  const cloudRunStatus = liveStatusFromScore(input.proof.scores.cloudRun);
+  const a2aStatus = liveStatusFromScore(input.proof.scores.a2a);
+  const ciStatus = input.ci.status === "passed" ? "passed" : input.ci.status;
+
+  return buildLiveEvidenceRun({
+    baseUrl,
+    probes: [
+      {
+        id: "proof-cloud-run",
+        label: "Cloud Run proof score",
+        status: cloudRunStatus,
+        score: input.proof.scores.cloudRun,
+        url: `${baseUrl}/api/healthz`,
+        evidence: `Judge Proof Cloud Run score ${input.proof.scores.cloudRun}; /api/live-evidence performs live public probes.`,
+        required: true
+      },
+      {
+        id: "proof-agent-card",
+        label: "A2A proof score",
+        status: a2aStatus,
+        score: input.proof.scores.a2a,
+        url: `${baseUrl}/.well-known/agent-card.json`,
+        evidence: `Judge Proof A2A score ${input.proof.scores.a2a}; Agent Card and /a2a expose the current skill surface.`,
+        required: true
+      },
+      {
+        id: "observability-oracle",
+        label: "Observability Oracle endpoint",
+        status: "passed",
+        score: 100,
+        url: `${baseUrl}/api/observability-oracle`,
+        evidence: "Observability Oracle endpoint is part of the current public proof surface.",
+        required: true
+      },
+      {
+        id: "ci-main",
+        label: "GitHub Actions CI",
+        status: ciStatus,
+        score: input.ci.status === "passed" ? 100 : evidenceScore(ciStatus),
+        url: input.ci.url,
+        evidence: input.ci.evidence,
+        required: true
+      }
+    ]
+  });
+}
+
 async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<typeof LiveEvidenceSchema>) {
   const baseUrl = publicBaseUrl(req);
   const selectedAgentIds = input.selectedAgentIds;
@@ -2499,6 +2553,14 @@ app.post("/api/acceptance-matrix", async (req, res) => {
     opsDrill,
     securityReview
   });
+  const observabilityOracle = buildObservabilityOracle({
+    baseUrl,
+    recommendation,
+    strategy,
+    liveEvidence: buildProofBackedLiveEvidence({ baseUrl, proof, ci }),
+    opsDrill,
+    pilotEconomics
+  });
   const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
   const squadOptimizer = buildSquadOptimizer({
     projectBrief: parsed.data.projectBrief,
@@ -2536,6 +2598,7 @@ app.post("/api/acceptance-matrix", async (req, res) => {
       userPilot,
       impactCase,
       pilotEconomics,
+      observabilityOracle,
       securityReview,
       demoReceipt,
       releaseDrift,
@@ -2658,6 +2721,14 @@ app.post("/api/judge-command-center", async (req, res) => {
     opsDrill,
     securityReview
   });
+  const observabilityOracle = buildObservabilityOracle({
+    baseUrl,
+    recommendation,
+    strategy,
+    liveEvidence: buildProofBackedLiveEvidence({ baseUrl, proof, ci }),
+    opsDrill,
+    pilotEconomics
+  });
   const submissionLaunch = buildSubmissionLaunchGate({
     protopediaUrl: parsed.data.protopediaUrl,
     videoUrl: parsed.data.videoUrl,
@@ -2717,6 +2788,7 @@ app.post("/api/judge-command-center", async (req, res) => {
     userPilot,
     impactCase,
     pilotEconomics,
+    observabilityOracle,
     securityReview,
     demoReceipt,
     releaseDrift
@@ -2849,6 +2921,14 @@ app.post("/api/demo-concierge", async (req, res) => {
     opsDrill,
     securityReview
   });
+  const observabilityOracle = buildObservabilityOracle({
+    baseUrl,
+    recommendation,
+    strategy,
+    liveEvidence: buildProofBackedLiveEvidence({ baseUrl, proof, ci }),
+    opsDrill,
+    pilotEconomics
+  });
   const submissionLaunch = buildSubmissionLaunchGate({
     protopediaUrl: parsed.data.protopediaUrl,
     videoUrl: parsed.data.videoUrl,
@@ -2908,6 +2988,7 @@ app.post("/api/demo-concierge", async (req, res) => {
     userPilot,
     impactCase,
     pilotEconomics,
+    observabilityOracle,
     securityReview,
     demoReceipt,
     releaseDrift
@@ -3049,6 +3130,14 @@ app.post("/api/prize-strategy", async (req, res) => {
     opsDrill,
     securityReview
   });
+  const observabilityOracle = buildObservabilityOracle({
+    baseUrl,
+    recommendation,
+    strategy,
+    liveEvidence: buildProofBackedLiveEvidence({ baseUrl, proof, ci }),
+    opsDrill,
+    pilotEconomics
+  });
   const submissionLaunch = buildSubmissionLaunchGate({
     protopediaUrl: parsed.data.protopediaUrl,
     videoUrl: parsed.data.videoUrl,
@@ -3108,6 +3197,7 @@ app.post("/api/prize-strategy", async (req, res) => {
     userPilot,
     impactCase,
     pilotEconomics,
+    observabilityOracle,
     securityReview,
     demoReceipt,
     releaseDrift
@@ -3141,6 +3231,7 @@ app.post("/api/prize-strategy", async (req, res) => {
       battlecard: competitiveBattlecard,
       demoConcierge,
       pilotEconomics,
+      observabilityOracle,
       releaseDrift
     })
   );
@@ -3260,6 +3351,14 @@ app.post("/api/win-gap-radar", async (req, res) => {
     opsDrill,
     securityReview
   });
+  const observabilityOracle = buildObservabilityOracle({
+    baseUrl,
+    recommendation,
+    strategy,
+    liveEvidence: buildProofBackedLiveEvidence({ baseUrl, proof, ci }),
+    opsDrill,
+    pilotEconomics
+  });
   const submissionLaunch = buildSubmissionLaunchGate({
     protopediaUrl: parsed.data.protopediaUrl,
     videoUrl: parsed.data.videoUrl,
@@ -3319,6 +3418,7 @@ app.post("/api/win-gap-radar", async (req, res) => {
     userPilot,
     impactCase,
     pilotEconomics,
+    observabilityOracle,
     securityReview,
     demoReceipt,
     releaseDrift
@@ -3350,6 +3450,7 @@ app.post("/api/win-gap-radar", async (req, res) => {
     battlecard: competitiveBattlecard,
     demoConcierge,
     pilotEconomics,
+    observabilityOracle,
     releaseDrift
   });
 
@@ -3364,6 +3465,7 @@ app.post("/api/win-gap-radar", async (req, res) => {
       finalist,
       acceptance,
       prizeStrategy,
+      observabilityOracle,
       submissionLaunch
     })
   );
@@ -3818,6 +3920,14 @@ app.post("/api/judge-rehearsal", async (req, res) => {
     opsDrill,
     securityReview
   });
+  const observabilityOracle = buildObservabilityOracle({
+    baseUrl,
+    recommendation,
+    strategy,
+    liveEvidence: buildProofBackedLiveEvidence({ baseUrl, proof, ci }),
+    opsDrill,
+    pilotEconomics
+  });
   const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
   const competitiveBattlecard = buildCompetitiveBattlecard({ baseUrl, strategy, marketIntel, moatStress });
   const squadOptimizer = buildSquadOptimizer({
@@ -4023,6 +4133,14 @@ app.post("/api/winner-packet", async (req, res) => {
     opsDrill,
     securityReview
   });
+  const observabilityOracle = buildObservabilityOracle({
+    baseUrl,
+    recommendation,
+    strategy,
+    liveEvidence: buildProofBackedLiveEvidence({ baseUrl, proof, ci }),
+    opsDrill,
+    pilotEconomics
+  });
   const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
   const competitiveBattlecard = buildCompetitiveBattlecard({ baseUrl, strategy, marketIntel, moatStress });
   const squadOptimizer = buildSquadOptimizer({
@@ -4079,6 +4197,7 @@ app.post("/api/winner-packet", async (req, res) => {
     userPilot,
     impactCase,
     pilotEconomics,
+    observabilityOracle,
     securityReview,
     demoReceipt,
     releaseDrift
@@ -4110,6 +4229,7 @@ app.post("/api/winner-packet", async (req, res) => {
     battlecard: competitiveBattlecard,
     demoConcierge,
     pilotEconomics,
+    observabilityOracle,
     releaseDrift
   });
   const judgeRehearsal = buildJudgeRehearsalRoom({
@@ -4249,6 +4369,14 @@ app.post("/api/submission-runway", async (req, res) => {
     opsDrill,
     securityReview
   });
+  const observabilityOracle = buildObservabilityOracle({
+    baseUrl,
+    recommendation,
+    strategy,
+    liveEvidence: buildProofBackedLiveEvidence({ baseUrl, proof, ci }),
+    opsDrill,
+    pilotEconomics
+  });
   const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
   const competitiveBattlecard = buildCompetitiveBattlecard({ baseUrl, strategy, marketIntel, moatStress });
   const squadOptimizer = buildSquadOptimizer({
@@ -4305,6 +4433,7 @@ app.post("/api/submission-runway", async (req, res) => {
     userPilot,
     impactCase,
     pilotEconomics,
+    observabilityOracle,
     securityReview,
     demoReceipt,
     releaseDrift
@@ -4336,6 +4465,7 @@ app.post("/api/submission-runway", async (req, res) => {
     battlecard: competitiveBattlecard,
     demoConcierge,
     pilotEconomics,
+    observabilityOracle,
     releaseDrift
   });
   const judgeRehearsal = buildJudgeRehearsalRoom({
@@ -4914,6 +5044,7 @@ app.post("/a2a", async (req, res) => {
     userPilot,
     impactCase,
     pilotEconomics,
+    observabilityOracle,
     securityReview,
     demoReceipt,
     releaseDrift
@@ -4945,6 +5076,7 @@ app.post("/a2a", async (req, res) => {
     battlecard: competitiveBattlecard,
     demoConcierge,
     pilotEconomics,
+    observabilityOracle,
     releaseDrift
   });
   const judgeRehearsal = buildJudgeRehearsalRoom({
@@ -4981,6 +5113,7 @@ app.post("/a2a", async (req, res) => {
     finalist,
     acceptance,
     prizeStrategy,
+    observabilityOracle,
     submissionLaunch
   });
   const architecturePack = buildArchitecturePack({

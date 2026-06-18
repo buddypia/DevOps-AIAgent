@@ -15,10 +15,12 @@ import { buildJudgeCommandCenter } from "../src/judgeCommandCenter";
 import { buildJudgeDrill } from "../src/judgeDrill";
 import { buildJudgeTour } from "../src/judgeTour";
 import { DEFAULT_PROJECT_BRIEF } from "../src/market";
+import { buildLiveEvidenceRun } from "../src/liveEvidence";
 import { buildMarketIntelReport } from "../src/marketIntel";
 import { buildMissionRun } from "../src/mission";
 import { buildMoatStressTest } from "../src/moatStress";
 import { buildMvpAudit } from "../src/mvpAudit";
+import { buildObservabilityOracle } from "../src/observabilityOracle";
 import { buildOpsDrill } from "../src/ops";
 import { buildPilotEconomics } from "../src/pilotEconomics";
 import { buildPitchRun } from "../src/pitch";
@@ -81,6 +83,18 @@ const passedProbe = (id: string): ReleaseDriftProbe => ({
   evidence: `${id} passed`,
   required: true
 });
+
+function passedLiveProbe(id: string, baseUrl: string) {
+  return {
+    id,
+    label: id,
+    status: "passed" as const,
+    score: 100,
+    url: `${baseUrl}/${id}`,
+    evidence: `${id} passed`,
+    required: true
+  };
+}
 
 function fixture() {
   const baseUrl = SUBMISSION_PROOF.deployedUrl;
@@ -191,6 +205,23 @@ function fixture() {
     opsDrill,
     securityReview
   });
+  const observabilityOracle = buildObservabilityOracle({
+    baseUrl,
+    recommendation,
+    strategy,
+    liveEvidence: buildLiveEvidenceRun({
+      baseUrl,
+      generatedAt: "2026-06-18T00:00:00.000Z",
+      probes: [
+        passedLiveProbe("health", baseUrl),
+        passedLiveProbe("agent-card", baseUrl),
+        passedLiveProbe("a2a", baseUrl),
+        passedLiveProbe("ci", baseUrl)
+      ]
+    }),
+    opsDrill,
+    pilotEconomics
+  });
   const submissionLaunch = buildSubmissionLaunchGate({
     mvpAudit,
     dossier,
@@ -249,6 +280,7 @@ function fixture() {
     userPilot,
     impactCase,
     pilotEconomics,
+    observabilityOracle,
     securityReview,
     demoReceipt,
     releaseDrift
@@ -281,6 +313,7 @@ function fixture() {
     battlecard,
     demoConcierge,
     pilotEconomics,
+    observabilityOracle,
     releaseDrift
   });
 }
@@ -300,9 +333,18 @@ describe("prize strategy board", () => {
     ]);
     expect(board.criteria.every((criterion) => criterion.targetScore === 92)).toBe(true);
     expect(board.criteria.find((criterion) => criterion.id === "usability")?.status).toBe("finalist-track");
-    expect(board.proofMoves.map((move) => move.id)).toEqual(["concierge", "command", "battlecard", "truth-table", "public-release", "buyer-value"]);
+    expect(board.proofMoves.map((move) => move.id)).toEqual(["concierge", "command", "battlecard", "truth-table", "public-release", "operations-value", "buyer-value"]);
+    expect(board.proofMoves.find((move) => move.id === "operations-value")).toMatchObject({
+      screen: "Observability Oracle",
+      endpoint: `${SUBMISSION_PROOF.deployedUrl}/api/observability-oracle`,
+      proof: expect.stringContaining("operational buyer proof")
+    });
     expect(board.pitchOrder[0]).toMatchObject({ screen: "Demo Concierge", proofMoveId: "concierge" });
     expect(board.criteria.find((criterion) => criterion.id === "usability")?.decisiveProof).toContain("Demo Concierge");
+    expect(board.pitchOrder.find((step) => step.id === "buyer-value")).toMatchObject({
+      screen: "Observability Oracle + Pilot Economics",
+      proofMoveId: "operations-value"
+    });
     expect(board.pitchOrder).toHaveLength(5);
     expect(board.risks.map((risk) => risk.id)).toEqual(expect.arrayContaining(["submission-assets", "demo-receipt"]));
     expect(board.a2aPayload).toMatchObject({
@@ -311,10 +353,15 @@ describe("prize strategy board", () => {
       demoConcierge: {
         readiness: expect.any(String)
       },
+      observabilityOracle: {
+        readiness: expect.any(String),
+        score: expect.any(Number)
+      },
       endpoints: {
         demoConcierge: `${SUBMISSION_PROOF.deployedUrl}/api/demo-concierge`,
         prizeStrategy: `${SUBMISSION_PROOF.deployedUrl}/api/prize-strategy`,
-        competitiveBattlecard: `${SUBMISSION_PROOF.deployedUrl}/api/competitive-battlecard`
+        competitiveBattlecard: `${SUBMISSION_PROOF.deployedUrl}/api/competitive-battlecard`,
+        observabilityOracle: `${SUBMISSION_PROOF.deployedUrl}/api/observability-oracle`
       }
     });
   });

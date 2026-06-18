@@ -33,7 +33,7 @@
 - User Pilot Lab: 開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証し、摩擦と次クリックを出す
 - Squad Optimizer: 予算内のAI編成を総当たりし、審査スコア、必須技術カバレッジ、交換計画、追加予算ギャップを返す
 - Live Evidence Monitor: Cloud Run、Agent Card、A2A、Squad Optimizer、GitHub Actions CIを公開環境からライブ検証する
-- Observability Oracle: Live Evidence、Ops Drill、Pilot Economicsを束ね、運用観測を継続/復旧判断、買い手価値、次のAI雇用へ変換する
+- Observability Oracle: Live Evidence、Ops Drill、Pilot Economicsを束ね、運用観測を継続/復旧判断、買い手価値、次のAI雇用へ変換し、Acceptance Matrix / Prize Strategy / Win Gap Radarの実用性証拠に接続する
 - External Evidence Verifier: 最終提出の4 URLを許可ドメインだけでプローブし、外部提出ギャップを再実行可能な証拠にする
 - Release Drift Guard: GitHub/CIが緑でも公開Cloud Runが古いrevisionなら、Agent Card、Acceptance Matrix、A2A artifactの差分で検知する
 - Deploy Recovery: release drift、gcloud認証、Cloud Build、公開再検証を復旧コマンドと審査説明へ変換する
@@ -160,7 +160,7 @@
 
 ## Prize Strategy Board
 
-`Prize Strategy Board` は、MVPが足りるかではなく、ハッカソン優勝に必要な採点作戦を固定するパネルです。審査5項目ごとにtarget score、現在スコア、足りない証拠、demo move、次アクションを返し、Demo Concierge、Judge Command Center、Competitive Battlecard、Acceptance Matrix、Release Drift Guard、Pilot Economicsを最終ピッチ順へ束ねます。
+`Prize Strategy Board` は、MVPが足りるかではなく、ハッカソン優勝に必要な採点作戦を固定するパネルです。審査5項目ごとにtarget score、現在スコア、足りない証拠、demo move、次アクションを返し、Demo Concierge、Judge Command Center、Competitive Battlecard、Acceptance Matrix、Release Drift Guard、Observability Oracle、Pilot Economicsを最終ピッチ順へ束ねます。
 
 - API: `POST /api/prize-strategy`
 - App UI: `Build prize strategy`
@@ -200,7 +200,7 @@
 
 ## Observability Oracle
 
-`Observability Oracle` は、Live Evidence、Cloud Run Ops Drill、Pilot Economicsをつなぎます。公開証拠を見たAIが、継続公開か復旧か、運用リスクをどう買い手価値へ変換するか、次に雇うAI能力は何かを判断し、審査向けreceiptとA2A `observability.oracle` payloadを返します。
+`Observability Oracle` は、Live Evidence、Cloud Run Ops Drill、Pilot Economicsをつなぎます。公開証拠を見たAIが、継続公開か復旧か、運用リスクをどう買い手価値へ変換するか、次に雇うAI能力は何かを判断し、審査向けreceiptとA2A `observability.oracle` payloadを返します。Acceptance MatrixのPractical value、Prize StrategyのOperational value proof、Win Gap Radarのpractical laneにも同じbuyer SLOを流し込みます。
 
 - API: `POST /api/observability-oracle`
 - App UI: `Run oracle`
@@ -240,7 +240,7 @@
 
 ## Judge Acceptance Matrix
 
-`Judge Acceptance Matrix` は、MVP判定を最後に曖昧にしないための受入表です。Cloud Run/Gemini/A2Aの必須技術、審査5項目、競合/SWOTとMoat反論、Live Evidence、Release Drift、Security/Impact/User Pilot/Pilot Economics、ProtoPedia compliance、Judge Demo Receiptを最大14行のaccepted/watch/blockedに束ねます。ProtoPedia作品URL、YouTube/Vimeo動画URL、構成図、ストーリー、タグがLaunch Gateで揃わない場合、または公開Cloud Runが古いrevisionなら、本体の実装だけを合格扱いにしません。
+`Judge Acceptance Matrix` は、MVP判定を最後に曖昧にしないための受入表です。Cloud Run/Gemini/A2Aの必須技術、審査5項目、競合/SWOTとMoat反論、Live Evidence、Release Drift、Security/Impact/User Pilot/Pilot Economics/Observability Oracle、ProtoPedia compliance、Judge Demo Receiptを最大14行のaccepted/watch/blockedに束ねます。ProtoPedia作品URL、YouTube/Vimeo動画URL、構成図、ストーリー、タグがLaunch Gateで揃わない場合、または公開Cloud Runが古いrevisionなら、本体の実装だけを合格扱いにしません。
 
 - API: `POST /api/acceptance-matrix`
 - App UI: `Build acceptance matrix`

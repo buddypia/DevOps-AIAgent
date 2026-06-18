@@ -10,10 +10,12 @@ import { buildFinalistSimulation } from "../src/finalist";
 import { buildImpactCase } from "../src/impact";
 import { buildJudgeDrill } from "../src/judgeDrill";
 import { DEFAULT_PROJECT_BRIEF } from "../src/market";
+import { buildLiveEvidenceRun } from "../src/liveEvidence";
 import { buildMarketIntelReport } from "../src/marketIntel";
 import { buildMissionRun } from "../src/mission";
 import { buildMoatStressTest } from "../src/moatStress";
 import { buildMvpAudit } from "../src/mvpAudit";
+import { buildObservabilityOracle } from "../src/observabilityOracle";
 import { buildOpsDrill } from "../src/ops";
 import { buildPilotEconomics } from "../src/pilotEconomics";
 import { buildPitchRun } from "../src/pitch";
@@ -54,6 +56,18 @@ const passedDriftProbe = (id: string): ReleaseDriftProbe => ({
   evidence: `${id} passed`,
   required: true
 });
+
+function passedLiveProbe(id: string, baseUrl: string) {
+  return {
+    id,
+    label: id,
+    status: "passed" as const,
+    score: 100,
+    url: `${baseUrl}/${id}`,
+    evidence: `${id} passed`,
+    required: true
+  };
+}
 
 function fixture() {
   const baseUrl = SUBMISSION_PROOF.deployedUrl;
@@ -154,6 +168,23 @@ function fixture() {
     opsDrill,
     securityReview
   });
+  const observabilityOracle = buildObservabilityOracle({
+    baseUrl,
+    recommendation,
+    strategy,
+    liveEvidence: buildLiveEvidenceRun({
+      baseUrl,
+      generatedAt: "2026-06-18T00:00:00.000Z",
+      probes: [
+        passedLiveProbe("health", baseUrl),
+        passedLiveProbe("agent-card", baseUrl),
+        passedLiveProbe("a2a", baseUrl),
+        passedLiveProbe("ci", baseUrl)
+      ]
+    }),
+    opsDrill,
+    pilotEconomics
+  });
   const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
   const squadOptimizer = buildSquadOptimizer({
     projectBrief: DEFAULT_PROJECT_BRIEF,
@@ -179,6 +210,7 @@ function fixture() {
     userPilot,
     impactCase,
     pilotEconomics,
+    observabilityOracle,
     securityReview,
     demoReceipt,
     submissionLaunch,
@@ -223,7 +255,16 @@ describe("judge acceptance matrix", () => {
     expect(matrix.rows.find((row) => row.id === "submission-assets")?.evidence).toContain("ProtoPedia compliance 8/9");
     expect(matrix.rows.find((row) => row.id === "demo-receipt")?.status).toBe("watch");
     expect(matrix.rows.find((row) => row.id === "usability-first-run")?.status).toBe("accepted");
+    expect(matrix.rows.find((row) => row.id === "practical-impact")).toMatchObject({
+      status: "accepted",
+      proofUrl: `${SUBMISSION_PROOF.deployedUrl}/api/observability-oracle`,
+      evidence: expect.stringContaining("Observability Oracle")
+    });
     expect(matrix.rows.find((row) => row.id === "pilot-economics")?.status).toBe("accepted");
+    expect(matrix.decisiveProof.find((proof) => proof.id === "observability")).toMatchObject({
+      value: expect.any(String),
+      proof: expect.stringContaining("operational buyer proof")
+    });
     expect(matrix.nextActions.map((action) => action.id)).toEqual(expect.arrayContaining(["submission-assets", "demo-receipt"]));
     expect(matrix.nextActions.map((action) => action.id)).not.toContain("usability-first-run");
     expect(matrix.digest.digest).toMatch(/^[a-f0-9]{64}$/);
@@ -236,9 +277,16 @@ describe("judge acceptance matrix", () => {
         complianceReady: 8,
         complianceTotal: 9
       },
+      observabilityOracle: {
+        score: expect.any(Number),
+        buyerSlo: {
+          metric: expect.stringContaining("payback")
+        }
+      },
       endpoints: {
         acceptanceMatrix: `${SUBMISSION_PROOF.deployedUrl}/api/acceptance-matrix`,
-        pilotEconomics: `${SUBMISSION_PROOF.deployedUrl}/api/pilot-economics`
+        pilotEconomics: `${SUBMISSION_PROOF.deployedUrl}/api/pilot-economics`,
+        observabilityOracle: `${SUBMISSION_PROOF.deployedUrl}/api/observability-oracle`
       }
     });
   });

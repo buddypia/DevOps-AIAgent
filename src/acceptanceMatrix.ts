@@ -4,6 +4,7 @@ import type { JudgeDemoReceipt } from "./demoReceipt.js";
 import type { ImpactCase } from "./impact.js";
 import type { MarketIntelReport } from "./marketIntel.js";
 import type { MvpAuditGate, MvpAuditReport } from "./mvpAudit.js";
+import { observabilityProofScore, type ObservabilityOracle } from "./observabilityOracle.js";
 import type { PilotEconomics } from "./pilotEconomics.js";
 import type { JudgeProof } from "./proof.js";
 import type { ReleaseDriftGuard } from "./releaseDrift.js";
@@ -157,6 +158,7 @@ export function buildJudgeAcceptanceMatrix(input: {
   userPilot: UserPilotLab;
   impactCase: ImpactCase;
   pilotEconomics: PilotEconomics;
+  observabilityOracle?: ObservabilityOracle;
   securityReview: SecurityReview;
   demoReceipt: JudgeDemoReceipt;
   releaseDrift?: ReleaseDriftGuard;
@@ -176,6 +178,20 @@ export function buildJudgeAcceptanceMatrix(input: {
   const moatLane = laneById(input.autopilot, "moat-stress");
 
   const submissionGates = [githubGate, deployedGate, protopediaGate, videoGate].filter((gate): gate is MvpAuditGate => Boolean(gate));
+  const oracleScore = input.observabilityOracle ? observabilityProofScore(input.observabilityOracle) : undefined;
+  const buyerSlo = input.observabilityOracle?.receipts.find((receipt) => receipt.id === "buyer-slo");
+  const practicalImpactScore =
+    oracleScore === undefined ? input.impactCase.impactScore : average([input.impactCase.impactScore, oracleScore, input.pilotEconomics.economicsScore]);
+  const practicalImpactEvidence =
+    oracleScore === undefined
+      ? input.impactCase.hardTruth
+      : `${input.impactCase.hardTruth} Observability Oracle ${input.observabilityOracle?.readiness}; ${buyerSlo?.metric ?? `${oracleScore} operational proof`}.`;
+  const practicalImpactNextAction =
+    oracleScore === undefined
+      ? input.impactCase.nextImpactHire
+        ? `${input.impactCase.nextImpactHire.name}を追加して実用性を補強する`
+        : "Impact CaseをProtoPedia本文へ転記する"
+      : `${buyerSlo?.metric ?? "Observability Oracleのbuyer SLO"}をProtoPedia本文と30秒動画へ入れる`;
   const submissionStatus = submissionGates.some((gate) => gate.status === "fail")
     ? "blocked"
     : submissionGates.some((gate) => gate.status === "watch")
@@ -273,12 +289,12 @@ export function buildJudgeAcceptanceMatrix(input: {
       id: "practical-impact",
       label: "Practical value",
       area: "judge",
-      status: input.impactCase.posture === "pilot-ready" ? "accepted" : input.impactCase.posture === "needs-pilot-proof" ? "watch" : "blocked",
-      score: input.impactCase.impactScore,
+      status: oracleScore === undefined ? (input.impactCase.posture === "pilot-ready" ? "accepted" : input.impactCase.posture === "needs-pilot-proof" ? "watch" : "blocked") : statusFromScore(practicalImpactScore),
+      score: practicalImpactScore,
       requirement: "実用性・体験価値: 現場価値、KPI、導入後の効果が説明できること",
-      evidence: input.impactCase.hardTruth,
-      proofUrl: absoluteUrl(base, "/api/impact-case"),
-      nextAction: input.impactCase.nextImpactHire ? `${input.impactCase.nextImpactHire.name}を追加して実用性を補強する` : "Impact CaseをProtoPedia本文へ転記する"
+      evidence: practicalImpactEvidence,
+      proofUrl: oracleScore === undefined ? absoluteUrl(base, "/api/impact-case") : absoluteUrl(base, "/api/observability-oracle"),
+      nextAction: practicalImpactNextAction
     }),
     row({
       id: "pilot-economics",
@@ -380,6 +396,8 @@ export function buildJudgeAcceptanceMatrix(input: {
     proofDigest: input.proof.receipt.digest,
     demoReceiptDigest: input.demoReceipt.digest.digest,
     pilotEconomicsPosture: input.pilotEconomics.posture,
+    observabilityOracleReadiness: input.observabilityOracle?.readiness ?? "not-checked",
+    observabilityOracleScore: oracleScore ?? 0,
     submissionLaunchReadiness: input.submissionLaunch?.readiness ?? "not-checked",
     protopediaCompliance: input.submissionLaunch ? `${complianceReadyCount}/${complianceTotal}` : "not-checked",
     releaseDriftVerdict: input.releaseDrift?.verdict ?? "not-checked"
@@ -406,6 +424,16 @@ export function buildJudgeAcceptanceMatrix(input: {
       { id: "win", label: "Win readiness", value: input.autopilot.readiness, proof: `${input.autopilot.lanes.length} lanes / ${input.autopilot.winScore}` },
       { id: "brief", label: "Judge brief", value: input.marketIntel.status, proof: `${input.marketIntel.sources.length} sources` },
       { id: "economics", label: "Pilot economics", value: input.pilotEconomics.posture, proof: `${input.pilotEconomics.unitEconomics.paybackDays}d payback` },
+      ...(input.observabilityOracle
+        ? [
+            {
+              id: "observability",
+              label: "Observability Oracle",
+              value: input.observabilityOracle.readiness,
+              proof: `${oracleScore} operational buyer proof`
+            }
+          ]
+        : []),
       ...(input.submissionLaunch
         ? [
             {
@@ -425,7 +453,7 @@ export function buildJudgeAcceptanceMatrix(input: {
       algorithm: "sha256",
       digest: acceptanceDigest,
       verification:
-        "Recompute sha256 over acceptanceScore, verdict, row statuses, Judge Proof digest, Demo Receipt digest, Pilot Economics posture, Submission Launch readiness, ProtoPedia compliance, and Release Drift verdict."
+        "Recompute sha256 over acceptanceScore, verdict, row statuses, Judge Proof digest, Demo Receipt digest, Pilot Economics posture, Observability Oracle readiness/score, Submission Launch readiness, ProtoPedia compliance, and Release Drift verdict."
     },
     a2aPayload: {
       method: "message/send",
@@ -435,6 +463,13 @@ export function buildJudgeAcceptanceMatrix(input: {
       digest: acceptanceDigest,
       rows: rows.map((item) => ({ id: item.id, area: item.area, status: item.status, score: item.score })),
       nextActions: nextActions.map((item) => ({ id: item.id, priority: item.priority, action: item.action })),
+      observabilityOracle: input.observabilityOracle
+        ? {
+            readiness: input.observabilityOracle.readiness,
+            score: oracleScore,
+            buyerSlo: buyerSlo ? { status: buyerSlo.status, metric: buyerSlo.metric } : null
+          }
+        : null,
       submissionLaunch: input.submissionLaunch
         ? {
             readiness: input.submissionLaunch.readiness,
@@ -449,6 +484,7 @@ export function buildJudgeAcceptanceMatrix(input: {
         mvpAudit: absoluteUrl(base, "/api/mvp-audit"),
         winRun: absoluteUrl(base, "/api/win-run"),
         pilotEconomics: absoluteUrl(base, "/api/pilot-economics"),
+        observabilityOracle: absoluteUrl(base, "/api/observability-oracle"),
         releaseDrift: absoluteUrl(base, "/api/release-drift"),
         demoReceipt: absoluteUrl(base, "/api/demo-receipt")
       }

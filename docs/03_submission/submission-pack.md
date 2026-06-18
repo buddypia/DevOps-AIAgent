@@ -49,7 +49,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - User Pilot Labで、開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証する
 - Squad Optimizerで、予算内のAI編成を総当たりし、現行維持、交換、追加予算ギャップを判断する
 - Live Evidence Monitorで、Cloud Run、Agent Card、A2A、Squad Optimizer、GitHub Actions CIを公開環境からライブ検証する
-- Observability Oracleで、Live Evidence、Ops Drill、Pilot Economicsをつなぎ、運用観測を継続/復旧判断、買い手価値、次のAI雇用へ変換する
+- Observability Oracleで、Live Evidence、Ops Drill、Pilot Economicsをつなぎ、運用観測を継続/復旧判断、買い手価値、次のAI雇用へ変換し、Acceptance Matrix / Prize Strategy / Win Gap Radarの実用性証拠に接続する
 - External Evidence Verifierで、公開GitHub、Cloud Run、ProtoPedia作品URL、動画URLが審査員から開けるかを検証する
 - Release Drift Guardで、公開Cloud Runが最新Agent Card、Acceptance Matrix、A2A artifactを返しているかを検査する
 - Deploy Recoveryで、release drift、gcloud認証、Cloud Build、公開再検証を復旧コマンドに変換する
