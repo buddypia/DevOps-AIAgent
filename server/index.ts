@@ -60,7 +60,7 @@ import { buildReleaseDriftGuard, type ReleaseDriftProbe } from "../src/releaseDr
 import { buildSecurityReview } from "../src/security.js";
 import { buildSquadOptimizer } from "../src/squadOptimizer.js";
 import { buildSubmissionCloseoutWorkbench } from "../src/submissionCloseout.js";
-import { buildSubmissionLaunchGate } from "../src/submissionLaunch.js";
+import { buildSubmissionLaunchGate, renderSubmissionLaunchHtml } from "../src/submissionLaunch.js";
 import { buildFinalSubmissionRunway } from "../src/submissionRunway.js";
 import { SUBMISSION_PROOF } from "../src/submission.js";
 import { buildAgentTaskBoard } from "../src/taskBoard.js";
@@ -234,8 +234,8 @@ function agentCard(baseUrl: string) {
       {
         id: FIRST_CLICK_SKILL_ID,
         name: "Route the judge first click",
-        description: "トップ画面直下から10本のGET証拠ページへ迷わず到達できる初回審査導線を固定する。",
-        tags: ["first-click", FIRST_CLICK_ROUTE_LOCK_TAG, "get-proof", "judge-snapshot", "winner-packet", "objection-arena", "mvp-readiness", "architecture-pack"]
+        description: "トップ画面直下から11本のGET証拠ページへ迷わず到達できる初回審査導線を固定する。",
+        tags: ["first-click", FIRST_CLICK_ROUTE_LOCK_TAG, "get-proof", "judge-snapshot", "winner-packet", "objection-arena", "mvp-readiness", "architecture-pack", "submission-launch"]
       },
       {
         id: FIRST_CLICK_SMOKE_SKILL_ID,
@@ -414,8 +414,8 @@ function agentCard(baseUrl: string) {
       {
         id: "submission.launch",
         name: "Validate final submission launch gate",
-        description: "ProtoPedia作品URLと動画URLを受け取り、提出3点、タグ、本文、CI、証拠receipt、Final Submit Lockを最終判定する。",
-        tags: ["submission", "launch-gate", "final-submit-lock", "protopedia", "video", "mvp"]
+        description: "ProtoPedia作品URLと動画URLを受け取り、提出3点、タグ、本文、CI、証拠receipt、Final Submit LockをGET/JSONで最終判定する。",
+        tags: ["submission", "launch-gate", "final-submit-lock", "submit-form-lock", "protopedia", "video", "mvp", "get-proof"]
       },
       {
         id: "external.evidence",
@@ -2712,6 +2712,8 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
           data?.winnerPacketPageEndpoint &&
           data?.submissionRunwayEndpoint &&
           data?.submissionAssetsPageEndpoint &&
+          data?.submissionLaunchEndpoint &&
+          data?.submissionLaunchPageEndpoint &&
           data?.recordingScriptPageEndpoint &&
           data?.recordingScriptJsonEndpoint &&
           data?.prizeStrategyEndpoint &&
@@ -2723,9 +2725,9 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
+                "A2A artifact exposes autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, submissionLaunchEndpoint, submissionLaunchPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but autonomy snapshot/observability oracle/external evidence/task board/winner packet/submission runway/submission assets/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but autonomy snapshot/observability oracle/external evidence/task board/winner packet/submission runway/submission assets/submission launch/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -2887,6 +2889,7 @@ async function buildReleaseDriftForTarget(input: {
     "mvp.snapshot:tag:get-proof",
     "autonomy.snapshot:tag:get-proof",
     "recording.script:tag:get-proof",
+    "submission.launch:tag:get-proof",
     "submission.package:tag:get-proof",
     "pilot.value.snapshot:tag:get-proof"
   ];
@@ -2907,6 +2910,7 @@ async function buildReleaseDriftForTarget(input: {
     "judge.rehearsal",
     "winner.packet",
     "judge.objection-arena",
+    "submission.launch",
     "submission.runway",
     "submission.assets",
     "recording.script",
@@ -2932,6 +2936,7 @@ async function buildReleaseDriftForTarget(input: {
     autonomySnapshotProbe,
     recordingScriptProbe,
     architecturePackProbe,
+    submissionLaunchProbe,
     pilotValueProbe,
     objectionArenaProbe,
     firstClickSmokeProbe,
@@ -2975,6 +2980,7 @@ async function buildReleaseDriftForTarget(input: {
         const mvpSnapshot = skills.find((skill) => skill.id === "mvp.snapshot");
         const autonomySnapshot = skills.find((skill) => skill.id === "autonomy.snapshot");
         const recordingScript = skills.find((skill) => skill.id === "recording.script");
+        const submissionLaunch = skills.find((skill) => skill.id === "submission.launch");
         const submissionPackage = skills.find((skill) => skill.id === "submission.package");
         const pilotValueSnapshot = skills.find((skill) => skill.id === "pilot.value.snapshot");
         observedAgentCardSignals = [
@@ -2993,6 +2999,7 @@ async function buildReleaseDriftForTarget(input: {
           ...(mvpSnapshot?.tags?.includes("get-proof") ? ["mvp.snapshot:tag:get-proof"] : []),
           ...(autonomySnapshot?.tags?.includes("get-proof") ? ["autonomy.snapshot:tag:get-proof"] : []),
           ...(recordingScript?.tags?.includes("get-proof") ? ["recording.script:tag:get-proof"] : []),
+          ...(submissionLaunch?.tags?.includes("get-proof") ? ["submission.launch:tag:get-proof"] : []),
           ...(submissionPackage?.tags?.includes("get-proof") ? ["submission.package:tag:get-proof"] : []),
           ...(pilotValueSnapshot?.tags?.includes("get-proof") ? ["pilot.value.snapshot:tag:get-proof"] : [])
         ];
@@ -3092,6 +3099,20 @@ async function buildReleaseDriftForTarget(input: {
       }
     }),
     liveJsonProbe({
+      id: "submission-launch-endpoint",
+      label: "Target Submission Launch endpoint",
+      url: `${targetBaseUrl}/api/submission-launch`,
+      required: true,
+      timeoutMs: 20000,
+      init: targetProbeHeaders ? { headers: targetProbeHeaders } : undefined,
+      evaluate: (payload) => {
+        const body = payload as { readiness?: string; launchScore?: number; finalSubmitLock?: { readiness?: string }; a2aPayload?: { skill?: string } };
+        return body.a2aPayload?.skill === "submission.launch" && typeof body.readiness === "string" && body.finalSubmitLock?.readiness
+          ? { status: "passed", score: 100, evidence: `Submission Launch returned ${body.readiness}; final submit ${body.finalSubmitLock.readiness}; score ${body.launchScore ?? "unknown"}.` }
+          : { status: "missing", score: 24, evidence: "Submission Launch endpoint did not return the current submission.launch JSON payload." };
+      }
+    }),
+    liveJsonProbe({
       id: "pilot-value-endpoint",
       label: "Target Pilot Value endpoint",
       url: `${targetBaseUrl}/api/pilot-value`,
@@ -3166,6 +3187,8 @@ async function buildReleaseDriftForTarget(input: {
           data?.winnerPacketPageEndpoint &&
           data?.submissionRunwayEndpoint &&
           data?.submissionAssetsPageEndpoint &&
+          data?.submissionLaunchEndpoint &&
+          data?.submissionLaunchPageEndpoint &&
           data?.architecturePackEndpoint &&
           data?.architecturePackPageEndpoint &&
           data?.recordingScriptPageEndpoint &&
@@ -3192,9 +3215,9 @@ async function buildReleaseDriftForTarget(input: {
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, objectionArenaEndpoint, objectionArenaPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, architecturePackEndpoint, architecturePackPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, firstClickProof, firstClickSmokeEndpoint, firstClickSmokePageEndpoint, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, objectionArenaEndpoint, objectionArenaPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, submissionLaunchEndpoint, submissionLaunchPageEndpoint, architecturePackEndpoint, architecturePackPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, firstClickProof, firstClickSmokeEndpoint, firstClickSmokePageEndpoint, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but autonomy snapshot/observability oracle/external evidence/task board/winner packet/objection arena/submission runway/submission assets/architecture pack/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/first-click proof/first-click smoke/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but autonomy snapshot/observability oracle/external evidence/task board/winner packet/objection arena/submission runway/submission assets/submission launch/architecture pack/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/first-click proof/first-click smoke/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -3226,6 +3249,7 @@ async function buildReleaseDriftForTarget(input: {
       autonomySnapshotProbe,
       recordingScriptProbe,
       architecturePackProbe,
+      submissionLaunchProbe,
       pilotValueProbe,
       objectionArenaProbe,
       firstClickSmokeProbe,
@@ -4429,14 +4453,22 @@ app.post("/api/autonomy-ledger", async (req, res) => {
   );
 });
 
-app.post("/api/submission-launch", async (req, res) => {
-  const parsed = LaunchSchema.safeParse(req.body);
+function submissionLaunchQueryInput(req: express.Request) {
+  const candidate = {
+    projectBrief: DEFAULT_PROJECT_BRIEF,
+    selectedAgentIds: ["market-broker", "gemini-strategist", "cloud-run-sre"],
+    ...(typeof req.query.protopediaUrl === "string" ? { protopediaUrl: req.query.protopediaUrl } : {}),
+    ...(typeof req.query.videoUrl === "string" ? { videoUrl: req.query.videoUrl } : {})
+  };
+  const parsed = LaunchSchema.safeParse(candidate);
   if (!parsed.success) {
-    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
-    return;
+    return { error: { error: "invalid_request", issues: parsed.error.issues } };
   }
+  return { input: parsed.data };
+}
 
-  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+async function buildSubmissionLaunchForRequest(req: express.Request, input: z.infer<typeof LaunchSchema>) {
+  const recommendation = recommendSquad(input.projectBrief, input.selectedAgentIds);
   const strategy = buildWinningStrategy(recommendation);
   const marketIntel = buildMarketIntelReport({
     baseUrl: publicBaseUrl(req),
@@ -4470,7 +4502,7 @@ app.post("/api/submission-launch", async (req, res) => {
     pitch,
     judgeDrill,
     squadContract,
-    submissionUrls: submissionUrlEvidence(parsed.data)
+    submissionUrls: submissionUrlEvidence(input)
   });
   const publisher = buildProtoPediaPublisher({
     baseUrl: publicBaseUrl(req),
@@ -4492,7 +4524,7 @@ app.post("/api/submission-launch", async (req, res) => {
     publisher
   });
   const [geminiResult, ciResult] = await Promise.allSettled([
-    runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
+    runGeminiWithRetry(input.projectBrief, input.selectedAgentIds),
     fetchCiProof()
   ]);
   const gemini =
@@ -4549,16 +4581,42 @@ app.post("/api/submission-launch", async (req, res) => {
     marketIntel
   });
 
-  res.json(
-    buildSubmissionLaunchGate({
-      protopediaUrl: parsed.data.protopediaUrl,
-      videoUrl: parsed.data.videoUrl,
-      mvpAudit,
-      dossier,
-      proof,
-      publisher
-    })
-  );
+  return buildSubmissionLaunchGate({
+    protopediaUrl: input.protopediaUrl,
+    videoUrl: input.videoUrl,
+    mvpAudit,
+    dossier,
+    proof,
+    publisher
+  });
+}
+
+app.get("/api/submission-launch", async (req, res) => {
+  const result = submissionLaunchQueryInput(req);
+  if ("error" in result) {
+    res.status(400).json(result.error);
+    return;
+  }
+  res.json(await buildSubmissionLaunchForRequest(req, result.input));
+});
+
+app.get("/submission-launch", async (req, res) => {
+  const result = submissionLaunchQueryInput(req);
+  if ("error" in result) {
+    res.status(400).json(result.error);
+    return;
+  }
+  res.type("html").send(renderSubmissionLaunchHtml(await buildSubmissionLaunchForRequest(req, result.input)));
+});
+
+app.post("/api/submission-launch", async (req, res) => {
+  const parsed = LaunchSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  res.json(await buildSubmissionLaunchForRequest(req, parsed.data));
 });
 
 app.post("/api/submission-closeout", async (req, res) => {
@@ -6935,6 +6993,7 @@ app.post("/a2a", async (req, res) => {
                 taskBoardEndpoint: `${publicBaseUrl(req)}/api/task-board`,
                 externalEvidenceEndpoint: `${publicBaseUrl(req)}/api/external-evidence`,
                 submissionLaunchEndpoint: `${publicBaseUrl(req)}/api/submission-launch`,
+                submissionLaunchPageEndpoint: `${publicBaseUrl(req)}/submission-launch`,
                 submissionCloseoutEndpoint: `${publicBaseUrl(req)}/api/submission-closeout`,
                 securityReviewEndpoint: `${publicBaseUrl(req)}/api/security-review`,
                 impactCaseEndpoint: `${publicBaseUrl(req)}/api/impact-case`,

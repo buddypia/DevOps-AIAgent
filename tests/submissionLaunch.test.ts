@@ -16,7 +16,7 @@ import { buildJudgeProof } from "../src/proof";
 import type { CiProof } from "../src/proof";
 import { buildProtoPediaPublisher } from "../src/publisher";
 import { HACKATHON_SUBMISSION_DEADLINE, SUBMISSION_PROOF } from "../src/submission";
-import { buildSubmissionLaunchGate } from "../src/submissionLaunch";
+import { buildSubmissionLaunchGate, renderSubmissionLaunchHtml } from "../src/submissionLaunch";
 import { buildWinningStrategy } from "../src/strategy";
 
 function fixture() {
@@ -192,5 +192,21 @@ describe("submission launch gate", () => {
     expect(launch.finalSubmitLock.readiness).toBe("needs-form-fix");
     expect(launch.finalSubmitLock.checks.find((item) => item.id === "video-url")?.target).toBe("ProtoPedia media field");
     expect(launch.hardTruth).toContain("YouTube/Vimeo");
+  });
+
+  test("renders a direct-open final submit lock page without leaking raw HTML", () => {
+    const launch = buildSubmissionLaunchGate({
+      ...fixture(),
+      protopediaUrl: "https://example.com/<script>alert(1)</script>",
+      videoUrl: "https://youtu.be/demo1234567"
+    });
+
+    const html = renderSubmissionLaunchHtml(launch);
+
+    expect(html).toContain("Submission Launch Gate");
+    expect(html).toContain("Final Submit Lock");
+    expect(html).toContain("Findy Final Submission Form Checks");
+    expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
+    expect(html).not.toContain("<script>alert(1)</script>");
   });
 });

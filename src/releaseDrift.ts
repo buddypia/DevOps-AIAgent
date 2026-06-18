@@ -77,6 +77,7 @@ function actionFromProbe(probe: ReleaseDriftProbe): ReleaseDriftAction {
     probe.id === "autonomy-snapshot-endpoint" ||
     probe.id === "recording-script-endpoint" ||
     probe.id === "architecture-pack-endpoint" ||
+    probe.id === "submission-launch-endpoint" ||
     probe.id === "pilot-value-endpoint" ||
     probe.id === "objection-arena-endpoint" ||
     probe.id === "first-click-smoke-endpoint" ||
@@ -158,12 +159,13 @@ export function buildReleaseDriftGuard(input: {
       "gcloud auth login",
       "gcloud builds submit --config cloudbuild.yaml --substitutions _REGION=asia-northeast1,_SERVICE=a2a-agent-marketplace,_REPOSITORY=cloud-run-source-deploy,_GEMINI_SECRET=gemini-api-key-a2a-marketplace",
       `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills | length'`,
-      `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="judge.objection-arena" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="judge.first-click" or .id=="mvp.snapshot" or .id=="autonomy.snapshot" or .id=="recording.script" or .id=="submission.package" or .id=="pilot.value.snapshot") | {id, tags}'`,
+      `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="judge.objection-arena" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="judge.first-click" or .id=="mvp.snapshot" or .id=="autonomy.snapshot" or .id=="recording.script" or .id=="submission.launch" or .id=="submission.package" or .id=="pilot.value.snapshot") | {id, tags}'`,
       `curl -s ${targetBaseUrl}/ | rg 'Judge first click|Start with proof, not feature hunting'`,
       `curl -s ${targetBaseUrl}/api/mvp-readiness | jq '{readiness, mvp: .summary.mvpScore, acceptance: .summary.acceptanceScore, release: .summary.releaseVerdict}'`,
       `curl -s ${targetBaseUrl}/api/autonomy-snapshot | jq '{readiness, ledger: .summary.ledgerScore, task: .summary.taskScore, chain: .summary.verifiedChainCount}'`,
       `curl -s ${targetBaseUrl}/api/recording-script | jq '{readiness, chapters: .summary.chapterCount, videoLock: .summary.videoLockReadiness}'`,
       `curl -s ${targetBaseUrl}/api/architecture-pack | jq '{readiness, architectureScore, nodes: (.nodes | length), requirements: (.requirements | length)}'`,
+      `curl -s ${targetBaseUrl}/api/submission-launch | jq '{readiness, launchScore, finalSubmitLock: .finalSubmitLock.readiness}'`,
       `curl -s ${targetBaseUrl}/api/pilot-value | jq '{readiness, payback: .summary.paybackDays, firstValue: .summary.timeToValueSeconds}'`,
       `curl -s ${targetBaseUrl}/api/objection-arena | jq '{readiness, arenaScore, answered: .lock.answeredCount, blocked: .lock.blockedCount}'`,
       `curl -s ${targetBaseUrl}/api/first-click-smoke | jq '{readiness, smokeScore, passedCount, missingCount}'`,
@@ -193,6 +195,7 @@ export function buildReleaseDriftGuard(input: {
         targetAutonomySnapshot: `${targetBaseUrl}/api/autonomy-snapshot`,
         targetRecordingScript: `${targetBaseUrl}/api/recording-script`,
         targetArchitecturePack: `${targetBaseUrl}/api/architecture-pack`,
+        targetSubmissionLaunch: `${targetBaseUrl}/api/submission-launch`,
         targetPilotValue: `${targetBaseUrl}/api/pilot-value`,
         targetObjectionArena: `${targetBaseUrl}/api/objection-arena`,
         targetFirstClickSmoke: `${targetBaseUrl}/api/first-click-smoke`

@@ -116,6 +116,14 @@ export const FIRST_CLICK_PROOF_LINKS: FirstClickProofLink[] = [
     tone: "watch"
   },
   {
+    id: "submission-launch",
+    label: "Submission Launch",
+    href: "/submission-launch",
+    signal: "submit-form-lock",
+    judgeValue: "Findy最終提出フォームへ貼る3URL、動画、タグ、完成ステータス、締切をFinal Submit Lockで確認する。",
+    tone: "watch"
+  },
+  {
     id: "submission-assets",
     label: "Submission Assets",
     href: "/submission-assets",
@@ -129,7 +137,7 @@ export const FIRST_CLICK_SCORECARDS: FirstClickScorecard[] = [
   {
     id: "no-post-first",
     label: "No POST required",
-    value: "10 GET links",
+    value: "11 GET links",
     proof: "初回審査はcurlやJSONを知らなくても主要証拠に到達できる。"
   },
   {

@@ -559,3 +559,159 @@ export function buildSubmissionLaunchGate(input: {
     }
   };
 }
+
+function escapeHtml(value: unknown) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function tone(status: string) {
+  if (["submit-ready", "findy-form-sealed", "ready"].includes(status)) return "good";
+  if (["invalid-urls", "needs-form-fix", "invalid"].includes(status)) return "bad";
+  return "watch";
+}
+
+export function renderSubmissionLaunchHtml(gate: SubmissionLaunchGate) {
+  const metrics = [
+    { label: "Launch Readiness", value: gate.readiness, status: gate.readiness },
+    { label: "Launch Score", value: gate.launchScore, status: gate.readiness },
+    { label: "Final Submit Lock", value: gate.finalSubmitLock.readiness, status: gate.finalSubmitLock.readiness },
+    { label: "Deadline", value: gate.finalSubmitLock.deadline, status: "ready" }
+  ]
+    .map(
+      (metric) => `
+        <article class="metric ${tone(String(metric.status))}">
+          <span>${escapeHtml(metric.label)}</span>
+          <strong>${escapeHtml(metric.value)}</strong>
+        </article>`
+    )
+    .join("");
+
+  const urlStatuses = gate.urlStatuses
+    .map(
+      (item) => `
+        <article class="card ${tone(item.status)}">
+          <div><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.status)}</span></div>
+          <p>${escapeHtml(item.proof)}</p>
+          <dl>
+            <dt>URL</dt><dd>${item.url ? `<a href="${escapeHtml(item.url)}">${escapeHtml(item.url)}</a>` : "missing"}</dd>
+            <dt>Action</dt><dd>${escapeHtml(item.action)}</dd>
+          </dl>
+        </article>`
+    )
+    .join("");
+
+  const finalChecks = gate.finalSubmitLock.checks
+    .map(
+      (check) => `
+        <article class="card ${tone(check.status)}">
+          <div><strong>${escapeHtml(check.label)}</strong><span>${escapeHtml(check.status)}</span></div>
+          <p>${escapeHtml(check.acceptance)}</p>
+          <dl>
+            <dt>Target</dt><dd>${escapeHtml(check.target)}</dd>
+            <dt>Value</dt><dd>${escapeHtml(check.value || "missing")}</dd>
+            <dt>Proof</dt><dd>${escapeHtml(check.proof)}</dd>
+          </dl>
+        </article>`
+    )
+    .join("");
+
+  const compliance = gate.protopediaCompliance
+    .map(
+      (item) => `
+        <li class="${tone(item.status)}">
+          <strong>${escapeHtml(item.label)}</strong>
+          <span>${escapeHtml(item.status)} / ${escapeHtml(item.source)}</span>
+          <p>${escapeHtml(item.proof)}</p>
+        </li>`
+    )
+    .join("");
+
+  const pasteOrder = gate.finalSubmitLock.pasteOrder.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+  const copyActions = gate.copyActions
+    .map(
+      (item) => `
+        <tr>
+          <td>${escapeHtml(item.label)}</td>
+          <td>${escapeHtml(item.target)}</td>
+          <td>${escapeHtml(item.status)}</td>
+          <td>${escapeHtml(item.value || "missing")}</td>
+        </tr>`
+    )
+    .join("");
+
+  return `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Submission Launch Gate</title>
+    <style>
+      :root { color-scheme: light; --ink: #17201d; --muted: #5f6965; --line: #dce5df; --paper: #fbfcfa; --panel: #fff; --green: #13715d; --mint: #e6f4ed; --amber: #8a620d; --amber-bg: #fff4d4; --coral: #b24735; --coral-bg: #fff0ec; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; }
+      a { color: inherit; }
+      header, main, footer { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
+      header { padding: 40px 0 20px; }
+      .eyebrow { color: var(--green); font-size: .78rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0; }
+      h1 { margin: 8px 0 10px; font-size: clamp(2rem, 5vw, 4.2rem); line-height: 1; letter-spacing: 0; max-width: 980px; }
+      h2 { margin: 30px 0 10px; font-size: 1.2rem; }
+      p { color: var(--muted); }
+      .metrics, .grid { display: grid; gap: 12px; }
+      .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 22px; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metric, .card, .panel, .compliance li { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 16px; box-shadow: 0 10px 24px rgba(23, 32, 29, .06); }
+      .metric span, .card span { color: var(--muted); font-size: .74rem; font-weight: 900; text-transform: uppercase; }
+      .metric strong { display: block; margin-top: 6px; font-size: 1.45rem; overflow-wrap: anywhere; }
+      .card div { display: flex; gap: 12px; justify-content: space-between; align-items: start; }
+      .card strong, .card p, .card dd, .panel, td { overflow-wrap: anywhere; }
+      dl { display: grid; grid-template-columns: 92px 1fr; gap: 6px 12px; color: var(--muted); }
+      dt { font-weight: 900; color: var(--ink); }
+      ol, ul { margin: 8px 0 0; padding-left: 20px; }
+      .compliance { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 0; list-style: none; }
+      .compliance li span { display: block; color: var(--muted); font-size: .8rem; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { text-align: left; border-bottom: 1px solid var(--line); padding: 10px 8px; vertical-align: top; }
+      th { font-size: .78rem; text-transform: uppercase; color: var(--muted); }
+      .good { border-color: #a9d8c2; background: var(--mint); }
+      .watch { border-color: #ead39a; background: var(--amber-bg); }
+      .bad { border-color: #efb7aa; background: var(--coral-bg); }
+      footer { padding: 20px 0 40px; color: var(--muted); }
+      @media (max-width: 860px) { .metrics, .grid, .compliance { grid-template-columns: 1fr; } .card div, dl { display: block; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="eyebrow">Submission Launch Gate</div>
+      <h1>${escapeHtml(gate.verdict)}</h1>
+      <p>${escapeHtml(gate.hardTruth)}</p>
+      <section class="metrics">${metrics}</section>
+    </header>
+    <main>
+      <section class="panel ${tone(gate.finalSubmitLock.readiness)}">
+        <h2>Final Submit Lock</h2>
+        <p>${escapeHtml(gate.finalSubmitLock.operatorLine)}</p>
+        <ol>${pasteOrder}</ol>
+      </section>
+      <h2>External URLs</h2>
+      <section class="grid">${urlStatuses}</section>
+      <h2>Findy Final Submission Form Checks</h2>
+      <section class="grid">${finalChecks}</section>
+      <h2>ProtoPedia Compliance</h2>
+      <ul class="compliance">${compliance}</ul>
+      <h2>Copy Actions</h2>
+      <section class="panel">
+        <table>
+          <thead><tr><th>Label</th><th>Target</th><th>Status</th><th>Value</th></tr></thead>
+          <tbody>${copyActions}</tbody>
+        </table>
+      </section>
+    </main>
+    <footer>Open this page before ProtoPedia publication and before the Findy final submission form. It only says submit-ready when all external evidence is valid.</footer>
+  </body>
+</html>`;
+}
