@@ -431,10 +431,11 @@
 ## Submission Surface
 
 - `GET /api/submission-kit`: 提出タイトル、タグ、ストーリー、動画ストーリーボード、構成図URL、提出チェックリストを返す
+- `GET /submission-assets`: ProtoPedia提出に必要な動画台本、構成図、ストーリー、タグ、提出URLを審査員・チームが直接読めるHTMLページに束ねる
 - `public/assets/a2a-marketplace-architecture.svg`: ProtoPediaに貼れるシステム構成図
 - `POST /api/architecture-pack`: 構成図を提出証拠、Mermaid、必須技術対応表として再生成する
 - `docs/03_submission/submission-pack.md`: ProtoPediaストーリー欄に転記するMarkdown下書き
-- UI: Mission Control実行後に Architecture Diagram / 30s Storyboard / Required Assets を表示し、Submission DossierでArchitecture packを提出直前に確認する
+- UI: Mission Control実行後に Assets Page / Architecture Diagram / 30s Storyboard / Required Assets を表示し、Submission DossierでArchitecture packを提出直前に確認する
 
 ## GCP Surface
 

@@ -7919,7 +7919,13 @@ function MissionControl({
               <pre>{visibleMission.verificationCommands.join("\n")}</pre>
             </section>
             <section className="submission-pack">
-              <h3>Submission Pack</h3>
+              <div className="submission-kit-heading">
+                <h3>Submission Pack</h3>
+                <a href="/submission-assets" target="_blank" rel="noreferrer" className="icon-link">
+                  <ExternalLink size={14} />
+                  Assets Page
+                </a>
+              </div>
               <strong>{visibleMission.submissionPack.protopediaTitle}</strong>
               <p>{visibleMission.submissionPack.demoScript}</p>
               <div className="mission-tags">

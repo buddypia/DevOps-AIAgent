@@ -17,6 +17,7 @@ const expectedSkillIds = [
   "judge.rehearsal",
   "winner.packet",
   "submission.runway",
+  "submission.assets",
   "prize.strategy",
   "win.gap.radar",
   "submission.closeout",

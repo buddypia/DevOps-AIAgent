@@ -18,6 +18,7 @@ const expectedSkillIds = [
   "judge.rehearsal",
   "winner.packet",
   "submission.runway",
+  "submission.assets",
   "prize.strategy",
   "win.gap.radar",
   "submission.closeout",
@@ -57,7 +58,7 @@ describe("release drift guard", () => {
   "evidence.monitor", "win.autopilot"],
       requiredSkillIds: ["task.delegate",
   "external.evidence",
-  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "judge.snapshot"],
+  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "submission.assets", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "judge.snapshot"],
       generatedAt: "2026-06-18T00:00:00.000Z",
       probes: [
         passedProbe("target-health"),
@@ -85,7 +86,7 @@ describe("release drift guard", () => {
 
     expect(guard.verdict).toBe("deploy-drift");
     expect(guard.missingSkills).toEqual(
-      expect.arrayContaining(["demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "judge.snapshot"])
+      expect.arrayContaining(["demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "submission.assets", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "judge.snapshot"])
     );
     expect(guard.missingAgentCardSignals).toEqual([]);
     expect(guard.nextActions.map((action) => action.id)).toEqual(expect.arrayContaining(["agent-card-skill-surface", "acceptance-endpoint"]));
@@ -105,7 +106,7 @@ describe("release drift guard", () => {
       observedSkillIds: expectedSkillIds,
       requiredSkillIds: ["task.delegate",
   "external.evidence",
-  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "judge.snapshot"],
+  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "submission.assets", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "judge.snapshot"],
       requiredAgentCardSignals,
       observedAgentCardSignals: requiredAgentCardSignals,
       probes: [
@@ -131,7 +132,7 @@ describe("release drift guard", () => {
       observedSkillIds: expectedSkillIds,
       requiredSkillIds: ["task.delegate",
   "external.evidence",
-  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "judge.snapshot"],
+  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "submission.assets", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "judge.snapshot"],
       requiredAgentCardSignals,
       observedAgentCardSignals: [
         "judge.rehearsal:tag:recording-lock",

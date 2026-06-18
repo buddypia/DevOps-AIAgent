@@ -17,6 +17,7 @@ import { buildJudgeDemoReceipt } from "../src/demoReceipt.js";
 import { buildDemoConcierge } from "../src/demoConcierge.js";
 import { buildDemoRunway } from "../src/demoRunway.js";
 import { buildSubmissionDossier } from "../src/dossier.js";
+import { buildSubmissionAssetsPage, renderSubmissionAssetsHtml } from "../src/submissionAssets.js";
 import { buildExternalEvidenceRun, type ExternalEvidenceProbe } from "../src/externalEvidence.js";
 import { buildFinalistSimulation } from "../src/finalist.js";
 import { buildImpactCase } from "../src/impact.js";
@@ -317,6 +318,12 @@ function agentCard(baseUrl: string) {
         name: "Package ProtoPedia submission assets",
         description: "動画ストーリーボード、システム構成図、ストーリー、必須タグ、提出チェックリストを返す。",
         tags: ["protopedia", "video", "architecture", "findy_hackathon"]
+      },
+      {
+        id: "submission.assets",
+        name: "Open human-readable submission assets",
+        description: "ProtoPedia提出に必要な動画台本、構成図、ストーリー、タグ、提出URLをGETで読めるページに束ねる。",
+        tags: ["protopedia", "submission-assets", "video", "architecture", "findy_hackathon"]
       },
       {
         id: "submission.publish",
@@ -1091,6 +1098,18 @@ app.get("/api/submission-kit", (_req, res) => {
     videoUrl: mission.submissionPack.videoUrl,
     requirements: mission.submissionPack.requirements
   });
+});
+
+app.get("/submission-assets", (req, res) => {
+  const selectedAgentIds = ["market-broker", "gemini-strategist", "cloud-run-sre"];
+  const recommendation = recommendSquad(DEFAULT_PROJECT_BRIEF, selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy);
+  const page = buildSubmissionAssetsPage({
+    baseUrl: publicBaseUrl(req),
+    mission
+  });
+  res.type("html").send(renderSubmissionAssetsHtml(page));
 });
 
 app.post("/api/architecture-pack", (req, res) => {
@@ -2065,6 +2084,7 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
         const hasWinGapRadar = skills.some((skill) => skill.id === "win.gap.radar");
         const hasSubmissionCloseout = skills.some((skill) => skill.id === "submission.closeout");
         const hasSubmissionRunway = skills.some((skill) => skill.id === "submission.runway");
+        const hasSubmissionAssets = skills.some((skill) => skill.id === "submission.assets");
         const hasExternalEvidence = skills.some((skill) => skill.id === "external.evidence");
         const hasDeployRecovery = skills.some((skill) => skill.id === "deploy.recover");
         const hasObservabilityOracle = skills.some((skill) => skill.id === "observability.oracle");
@@ -2086,19 +2106,20 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
           hasWinGapRadar &&
           hasSubmissionCloseout &&
           hasSubmissionRunway &&
+          hasSubmissionAssets &&
           hasExternalEvidence &&
           hasDeployRecovery &&
           hasObservabilityOracle &&
-          skills.length >= 46
+          skills.length >= 47
           ? {
               status: "passed",
               score: 100,
-              evidence: `Agent Card exposes ${skills.length} skills including observability.oracle, task.delegate, external.evidence, winner.packet, submission.runway, judge.rehearsal, submission.closeout, win.gap.radar, demo.concierge, prize.strategy, competitive.battlecard, judge.snapshot, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
+              evidence: `Agent Card exposes ${skills.length} skills including observability.oracle, task.delegate, external.evidence, winner.packet, submission.runway, submission.assets, judge.rehearsal, submission.closeout, win.gap.radar, demo.concierge, prize.strategy, competitive.battlecard, judge.snapshot, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
             }
           : {
               status: "watch",
               score: 72,
-              evidence: `Agent Card exposes ${skills.length} skills; expected observability oracle, task delegate, external evidence, winner packet, submission runway, judge rehearsal, submission closeout, win gap radar, demo concierge, prize strategy, battlecard, judge snapshot, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
+              evidence: `Agent Card exposes ${skills.length} skills; expected observability oracle, task delegate, external evidence, winner packet, submission runway, submission assets, judge rehearsal, submission closeout, win gap radar, demo concierge, prize strategy, battlecard, judge snapshot, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
             };
       }
     }),
@@ -2157,6 +2178,7 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
           data?.judgeRehearsalEndpoint &&
           data?.winnerPacketEndpoint &&
           data?.submissionRunwayEndpoint &&
+          data?.submissionAssetsPageEndpoint &&
           data?.prizeStrategyEndpoint &&
           data?.winGapRadarEndpoint &&
           data?.submissionCloseoutEndpoint &&
@@ -2166,7 +2188,7 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes observabilityOracleEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
+                "A2A artifact exposes observabilityOracleEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
             }
           : { status: "watch", score: 72, evidence: "A2A artifact returned, but observability oracle/external evidence/task board/winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
@@ -2336,6 +2358,7 @@ async function buildReleaseDriftForTarget(input: {
     "judge.rehearsal",
     "winner.packet",
     "submission.runway",
+    "submission.assets",
     "prize.strategy",
     "win.gap.radar",
     "submission.closeout",
@@ -2452,6 +2475,7 @@ async function buildReleaseDriftForTarget(input: {
           data?.judgeRehearsalEndpoint &&
           data?.winnerPacketEndpoint &&
           data?.submissionRunwayEndpoint &&
+          data?.submissionAssetsPageEndpoint &&
           data?.prizeStrategyEndpoint &&
           data?.winGapRadarEndpoint &&
           data?.submissionCloseoutEndpoint &&
@@ -2463,7 +2487,7 @@ async function buildReleaseDriftForTarget(input: {
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
             }
           : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but observability oracle/external evidence/task board/winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
@@ -5982,6 +6006,7 @@ app.post("/a2a", async (req, res) => {
                 judgeRehearsalEndpoint: `${publicBaseUrl(req)}/api/judge-rehearsal`,
                 winnerPacketEndpoint: `${publicBaseUrl(req)}/api/winner-packet`,
                 submissionRunwayEndpoint: `${publicBaseUrl(req)}/api/submission-runway`,
+                submissionAssetsPageEndpoint: `${publicBaseUrl(req)}/submission-assets`,
                 winGapRadarEndpoint: `${publicBaseUrl(req)}/api/win-gap-radar`,
                 mvpAuditEndpoint: `${publicBaseUrl(req)}/api/mvp-audit`,
                 judgeBriefEndpoint: `${publicBaseUrl(req)}/api/judge-brief`,
