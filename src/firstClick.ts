@@ -16,6 +16,32 @@ export type FirstClickScorecard = {
   proof: string;
 };
 
+export type FirstClickProofRoute = FirstClickProofLink & {
+  url: string;
+};
+
+export type FirstClickRouteLock = {
+  id: string;
+  noPostRequired: boolean;
+  proofPathCount: number;
+  firstProofPath: string;
+  requiredAgentCardSignal: string;
+};
+
+export type FirstClickProof = {
+  skill: typeof FIRST_CLICK_SKILL_ID;
+  id: string;
+  headline: string;
+  directOpen: boolean;
+  proofLinks: FirstClickProofRoute[];
+  scorecards: FirstClickScorecard[];
+  routeLock: FirstClickRouteLock;
+};
+
+export const FIRST_CLICK_SKILL_ID = "judge.first-click";
+export const FIRST_CLICK_ROUTE_LOCK_TAG = "first-click-route-lock";
+export const FIRST_CLICK_REQUIRED_SIGNAL = `${FIRST_CLICK_SKILL_ID}:tag:${FIRST_CLICK_ROUTE_LOCK_TAG}`;
+
 export const FIRST_CLICK_PROOF_LINKS: FirstClickProofLink[] = [
   {
     id: "judge-snapshot",
@@ -103,3 +129,30 @@ export const FIRST_CLICK_SCORECARDS: FirstClickScorecard[] = [
     proof: "公開Cloud Runが古い場合はready扱いにせず、Release Driftで止める。"
   }
 ];
+
+function absoluteUrl(baseUrl: string, path: string) {
+  return `${baseUrl.replace(/\/$/, "")}${path}`;
+}
+
+export function buildFirstClickProof(baseUrl: string): FirstClickProof {
+  const proofLinks = FIRST_CLICK_PROOF_LINKS.map((link) => ({
+    ...link,
+    url: absoluteUrl(baseUrl, link.href)
+  }));
+
+  return {
+    skill: FIRST_CLICK_SKILL_ID,
+    id: `judge-first-click-${proofLinks.length}-get-proof-links`,
+    headline: "Start with proof, not feature hunting",
+    directOpen: true,
+    proofLinks,
+    scorecards: FIRST_CLICK_SCORECARDS,
+    routeLock: {
+      id: "judge-first-click-route-lock",
+      noPostRequired: true,
+      proofPathCount: proofLinks.length,
+      firstProofPath: FIRST_CLICK_PROOF_LINKS[0]?.href ?? "/judge-snapshot",
+      requiredAgentCardSignal: FIRST_CLICK_REQUIRED_SIGNAL
+    }
+  };
+}

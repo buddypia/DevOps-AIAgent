@@ -30,6 +30,7 @@ const expectedSkillIds = [
   "competitive.battlecard",
   "competitive.snapshot",
   "judge.snapshot",
+  "judge.first-click",
   "win.autopilot"
 ];
 
@@ -42,6 +43,7 @@ const requiredAgentCardSignals = [
   "competitive.battlecard:tag:criteria-duel",
   "competitive.snapshot:tag:get-proof",
   "judge.snapshot:tag:get-proof",
+  "judge.first-click:tag:first-click-route-lock",
   "mvp.snapshot:tag:get-proof",
   "autonomy.snapshot:tag:get-proof",
   "recording.script:tag:get-proof",
@@ -69,7 +71,7 @@ describe("release drift guard", () => {
   "evidence.monitor", "win.autopilot"],
       requiredSkillIds: ["task.delegate",
   "external.evidence",
-  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "mvp.snapshot", "autonomy.snapshot", "pilot.economics", "pilot.value.snapshot", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "submission.assets", "recording.script", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "competitive.snapshot", "judge.snapshot"],
+  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "mvp.snapshot", "autonomy.snapshot", "pilot.economics", "pilot.value.snapshot", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "submission.assets", "recording.script", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "competitive.snapshot", "judge.snapshot", "judge.first-click"],
       generatedAt: "2026-06-18T00:00:00.000Z",
       probes: [
         passedProbe("target-health"),
@@ -97,7 +99,7 @@ describe("release drift guard", () => {
 
     expect(guard.verdict).toBe("deploy-drift");
     expect(guard.missingSkills).toEqual(
-      expect.arrayContaining(["demo.receipt", "acceptance.matrix", "release.drift", "mvp.snapshot", "autonomy.snapshot", "pilot.economics", "pilot.value.snapshot", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "submission.assets", "recording.script", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "competitive.snapshot", "judge.snapshot"])
+      expect.arrayContaining(["demo.receipt", "acceptance.matrix", "release.drift", "mvp.snapshot", "autonomy.snapshot", "pilot.economics", "pilot.value.snapshot", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "submission.assets", "recording.script", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "competitive.snapshot", "judge.snapshot", "judge.first-click"])
     );
     expect(guard.missingAgentCardSignals).toEqual([]);
     expect(guard.nextActions.map((action) => action.id)).toEqual(expect.arrayContaining(["agent-card-skill-surface", "acceptance-endpoint"]));
@@ -117,7 +119,7 @@ describe("release drift guard", () => {
       observedSkillIds: expectedSkillIds,
       requiredSkillIds: ["task.delegate",
   "external.evidence",
-  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "mvp.snapshot", "autonomy.snapshot", "pilot.economics", "pilot.value.snapshot", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "submission.assets", "recording.script", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "competitive.snapshot", "judge.snapshot"],
+  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "mvp.snapshot", "autonomy.snapshot", "pilot.economics", "pilot.value.snapshot", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "submission.assets", "recording.script", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "competitive.snapshot", "judge.snapshot", "judge.first-click"],
       requiredAgentCardSignals,
       observedAgentCardSignals: requiredAgentCardSignals,
       probes: [
@@ -143,7 +145,7 @@ describe("release drift guard", () => {
       observedSkillIds: expectedSkillIds,
       requiredSkillIds: ["task.delegate",
   "external.evidence",
-  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "mvp.snapshot", "autonomy.snapshot", "pilot.economics", "pilot.value.snapshot", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "submission.assets", "recording.script", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "competitive.snapshot", "judge.snapshot"],
+  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "mvp.snapshot", "autonomy.snapshot", "pilot.economics", "pilot.value.snapshot", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "submission.assets", "recording.script", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "competitive.snapshot", "judge.snapshot", "judge.first-click"],
       requiredAgentCardSignals,
       observedAgentCardSignals: [
         "judge.rehearsal:tag:recording-lock",
@@ -158,7 +160,7 @@ describe("release drift guard", () => {
           ...passedProbe("agent-card-skill-surface"),
           status: "watch",
           score: 58,
-          evidence: "Target Agent Card exposes all skill ids but is missing autonomy.snapshot:tag:get-proof, competitive.battlecard:tag:criteria-duel, competitive.snapshot:tag:get-proof, judge.snapshot:tag:get-proof, mvp.snapshot:tag:get-proof, recording.script:tag:get-proof, and pilot.value.snapshot:tag:get-proof."
+          evidence: "Target Agent Card exposes all skill ids but is missing autonomy.snapshot:tag:get-proof, competitive.battlecard:tag:criteria-duel, competitive.snapshot:tag:get-proof, judge.first-click:tag:first-click-route-lock, judge.snapshot:tag:get-proof, mvp.snapshot:tag:get-proof, recording.script:tag:get-proof, and pilot.value.snapshot:tag:get-proof."
         },
         passedProbe("acceptance-endpoint"),
         passedProbe("a2a-artifact"),
@@ -172,13 +174,14 @@ describe("release drift guard", () => {
       "autonomy.snapshot:tag:get-proof",
       "competitive.battlecard:tag:criteria-duel",
       "competitive.snapshot:tag:get-proof",
+      "judge.first-click:tag:first-click-route-lock",
       "judge.snapshot:tag:get-proof",
       "mvp.snapshot:tag:get-proof",
       "pilot.value.snapshot:tag:get-proof",
       "recording.script:tag:get-proof",
       "winner.packet:tag:get-proof"
     ]);
-    expect(guard.summary).toContain("0 required skills and 8 required Agent Card signals");
+    expect(guard.summary).toContain("0 required skills and 9 required Agent Card signals");
     expect(guard.runbook.join("\n")).toContain('or .id=="autonomy.snapshot" or .id=="recording.script"');
     expect(guard.runbook.join("\n")).toContain("/api/mvp-readiness");
     expect(guard.runbook.join("\n")).toContain("/api/autonomy-snapshot");
@@ -191,6 +194,7 @@ describe("release drift guard", () => {
         "autonomy.snapshot:tag:get-proof",
         "competitive.battlecard:tag:criteria-duel",
         "competitive.snapshot:tag:get-proof",
+        "judge.first-click:tag:first-click-route-lock",
         "judge.snapshot:tag:get-proof",
         "mvp.snapshot:tag:get-proof",
         "pilot.value.snapshot:tag:get-proof",

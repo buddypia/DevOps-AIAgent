@@ -22,6 +22,7 @@ import { buildSubmissionDossier } from "../src/dossier.js";
 import { buildSubmissionAssetsPage, renderSubmissionAssetsHtml } from "../src/submissionAssets.js";
 import { buildExternalEvidenceRun, type ExternalEvidenceProbe } from "../src/externalEvidence.js";
 import { buildFinalistSimulation } from "../src/finalist.js";
+import { buildFirstClickProof, FIRST_CLICK_REQUIRED_SIGNAL, FIRST_CLICK_ROUTE_LOCK_TAG, FIRST_CLICK_SKILL_ID } from "../src/firstClick.js";
 import { buildImpactCase } from "../src/impact.js";
 import { buildJudgeBrief } from "../src/judgeBrief.js";
 import { buildJudgeCommandCenter } from "../src/judgeCommandCenter.js";
@@ -216,6 +217,12 @@ function agentCard(baseUrl: string) {
         name: "Open the public judge proof snapshot",
         description: "POST専用の深い証拠群を、審査員がGETで直接開ける初回証拠スナップショットへ束ねる。",
         tags: ["judge-snapshot", "get-proof", "first-click", "submission", "proof"]
+      },
+      {
+        id: FIRST_CLICK_SKILL_ID,
+        name: "Route the judge first click",
+        description: "トップ画面直下から8本のGET証拠ページへ迷わず到達できる初回審査導線を固定する。",
+        tags: ["first-click", FIRST_CLICK_ROUTE_LOCK_TAG, "get-proof", "judge-snapshot", "winner-packet", "mvp-readiness"]
       },
       {
         id: "mvp.audit",
@@ -2774,6 +2781,7 @@ async function buildReleaseDriftForTarget(input: {
     "competitive.battlecard:tag:criteria-duel",
     "competitive.snapshot:tag:get-proof",
     "judge.snapshot:tag:get-proof",
+    FIRST_CLICK_REQUIRED_SIGNAL,
     "mvp.snapshot:tag:get-proof",
     "autonomy.snapshot:tag:get-proof",
     "recording.script:tag:get-proof",
@@ -2805,6 +2813,7 @@ async function buildReleaseDriftForTarget(input: {
     "competitive.battlecard",
     "competitive.snapshot",
     "judge.snapshot",
+    FIRST_CLICK_SKILL_ID,
     "win.autopilot"
   ];
   let observedSkillIds: string[] = [];
@@ -2842,6 +2851,7 @@ async function buildReleaseDriftForTarget(input: {
         const competitiveBattlecard = skills.find((skill) => skill.id === "competitive.battlecard");
         const competitiveSnapshot = skills.find((skill) => skill.id === "competitive.snapshot");
         const judgeSnapshot = skills.find((skill) => skill.id === "judge.snapshot");
+        const firstClick = skills.find((skill) => skill.id === FIRST_CLICK_SKILL_ID);
         const mvpSnapshot = skills.find((skill) => skill.id === "mvp.snapshot");
         const autonomySnapshot = skills.find((skill) => skill.id === "autonomy.snapshot");
         const recordingScript = skills.find((skill) => skill.id === "recording.script");
@@ -2855,6 +2865,7 @@ async function buildReleaseDriftForTarget(input: {
           ...(competitiveBattlecard?.tags?.includes("criteria-duel") ? ["competitive.battlecard:tag:criteria-duel"] : []),
           ...(competitiveSnapshot?.tags?.includes("get-proof") ? ["competitive.snapshot:tag:get-proof"] : []),
           ...(judgeSnapshot?.tags?.includes("get-proof") ? ["judge.snapshot:tag:get-proof"] : []),
+          ...(firstClick?.tags?.includes(FIRST_CLICK_ROUTE_LOCK_TAG) ? [FIRST_CLICK_REQUIRED_SIGNAL] : []),
           ...(mvpSnapshot?.tags?.includes("get-proof") ? ["mvp.snapshot:tag:get-proof"] : []),
           ...(autonomySnapshot?.tags?.includes("get-proof") ? ["autonomy.snapshot:tag:get-proof"] : []),
           ...(recordingScript?.tags?.includes("get-proof") ? ["recording.script:tag:get-proof"] : []),
@@ -2995,6 +3006,7 @@ async function buildReleaseDriftForTarget(input: {
           data?.competitiveSwotSnapshotEndpoint &&
           data?.judgeSnapshotEndpoint &&
           data?.judgeSnapshotPageEndpoint &&
+          data?.firstClickProof &&
           data?.mvpReadinessSnapshotEndpoint &&
           data?.autonomySnapshotEndpoint &&
           data?.autonomySnapshotJsonEndpoint &&
@@ -3003,9 +3015,9 @@ async function buildReleaseDriftForTarget(input: {
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, firstClickProof, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but autonomy snapshot/observability oracle/external evidence/task board/winner packet/submission runway/submission assets/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but autonomy snapshot/observability oracle/external evidence/task board/winner packet/submission runway/submission assets/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/first-click proof/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -6607,6 +6619,7 @@ app.post("/a2a", async (req, res) => {
                 competitiveSwotSnapshotEndpoint: `${publicBaseUrl(req)}/competitive-swot`,
                 judgeSnapshotEndpoint: `${publicBaseUrl(req)}/api/judge-snapshot`,
                 judgeSnapshotPageEndpoint: `${publicBaseUrl(req)}/judge-snapshot`,
+                firstClickProof: buildFirstClickProof(publicBaseUrl(req)),
                 mvpReadinessSnapshotEndpoint: `${publicBaseUrl(req)}/mvp-readiness`,
                 mvpReadinessSnapshotJsonEndpoint: `${publicBaseUrl(req)}/api/mvp-readiness`,
                 autonomySnapshotEndpoint: `${publicBaseUrl(req)}/autonomy-snapshot`,

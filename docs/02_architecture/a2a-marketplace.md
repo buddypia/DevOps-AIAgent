@@ -128,7 +128,7 @@
 
 - `GET /judge-snapshot`: Judge Proof、Competitive Battlecard、Criteria Duel、Competitive SWOT、Autonomy Snapshot、MVP Readiness、Pilot Value、Recording Script、Submission Assets、Agent Card、CI、深掘り用POST curlを、審査員が直接読める初回HTML証拠ページへ束ねる
 - `GET /api/judge-snapshot`: 同じ証拠をA2A/自動検証用のJSONとして返す
-- Judge First-Click Strip: Cloud Runトップ画面直下で `/judge-snapshot`、`/winner-packet`、`/competitive-swot`、`/mvp-readiness`、`/autonomy-snapshot`、`/pilot-value`、`/recording-script`、`/submission-assets` をPOSTなしの証拠入口として固定する
+- Judge First-Click Strip: Cloud Runトップ画面直下で `/judge-snapshot`、`/winner-packet`、`/competitive-swot`、`/mvp-readiness`、`/autonomy-snapshot`、`/pilot-value`、`/recording-script`、`/submission-assets` をPOSTなしの証拠入口として固定し、Agent Cardの `judge.first-click` / `first-click-route-lock` とA2A artifactの `firstClickProof` で自動検収する
 - Direct-open proof: ProtoPediaや提出本文に貼ったリンクが、POST method errorや生JSONではなくreadiness、proof score、競合/SWOT証拠、運用証拠を返す
 - Live drift option: `/api/judge-snapshot?live=1` の時だけRelease Drift Guardを実行し、通常HTMLは初回表示の安定性を優先する
 - A2A payload: `judge.snapshot` skillとしてdirectOpen、readiness、proof score、Criteria Duel score、GET証拠endpoint群、POST深掘りendpoint群を返す

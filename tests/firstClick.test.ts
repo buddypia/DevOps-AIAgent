@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { FIRST_CLICK_PROOF_LINKS, FIRST_CLICK_SCORECARDS } from "../src/firstClick";
+import { buildFirstClickProof, FIRST_CLICK_PROOF_LINKS, FIRST_CLICK_REQUIRED_SIGNAL, FIRST_CLICK_SCORECARDS, FIRST_CLICK_SKILL_ID } from "../src/firstClick";
 
 describe("judge first-click proof strip", () => {
   test("keeps the first judge path on direct-open GET proof pages", () => {
@@ -26,5 +26,30 @@ describe("judge first-click proof strip", () => {
     expect(FIRST_CLICK_SCORECARDS.map((card) => card.id)).toEqual(["no-post-first", "criteria-covered", "drift-honesty"]);
     expect(FIRST_CLICK_SCORECARDS.find((card) => card.id === "criteria-covered")?.value).toBe("5/5 covered");
     expect(FIRST_CLICK_SCORECARDS.find((card) => card.id === "drift-honesty")?.proof).toContain("Release Drift");
+  });
+
+  test("exposes an A2A-verifiable first-click route lock", () => {
+    const proof = buildFirstClickProof("https://a2a-agent-marketplace.example.com/");
+
+    expect(proof).toMatchObject({
+      skill: FIRST_CLICK_SKILL_ID,
+      directOpen: true,
+      routeLock: {
+        noPostRequired: true,
+        proofPathCount: 8,
+        firstProofPath: "/judge-snapshot",
+        requiredAgentCardSignal: FIRST_CLICK_REQUIRED_SIGNAL
+      }
+    });
+    expect(proof.proofLinks.map((link) => link.url)).toEqual([
+      "https://a2a-agent-marketplace.example.com/judge-snapshot",
+      "https://a2a-agent-marketplace.example.com/winner-packet",
+      "https://a2a-agent-marketplace.example.com/competitive-swot",
+      "https://a2a-agent-marketplace.example.com/mvp-readiness",
+      "https://a2a-agent-marketplace.example.com/autonomy-snapshot",
+      "https://a2a-agent-marketplace.example.com/pilot-value",
+      "https://a2a-agent-marketplace.example.com/recording-script",
+      "https://a2a-agent-marketplace.example.com/submission-assets"
+    ]);
   });
 });

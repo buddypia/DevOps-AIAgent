@@ -22,7 +22,7 @@
 - Win Gap Radar: 競合/SWOT、MVP監査、最終候補判定、Prize Strategyを横断し、優勝に必要なMVP gapをfeature bets、Feature Freeze Lock、cut listへ変換する
 - MVP Audit: 必須技術、審査5項目、DevOps証拠、提出3点をハードゲートで判定し、外部未発行URLをwatchとして残す
 - Judge Brief: 競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページに圧縮
-- Judge First-Click Strip: Cloud Runのトップ画面直下からJudge Snapshot、Winner Packet、Competitive SWOT、MVP Readiness、Autonomy、Pilot Value、Recording、Submission AssetsへPOSTなしで移動できる入口を固定
+- Judge First-Click Strip: Cloud Runのトップ画面直下からJudge Snapshot、Winner Packet、Competitive SWOT、MVP Readiness、Autonomy、Pilot Value、Recording、Submission AssetsへPOSTなしで移動できる入口を固定し、Agent Card/A2A/Release Driftでも `judge.first-click` として検収する
 - Judge Command Center: Judge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
 - Demo Concierge: 審査員、買い手、提出者ごとの最初の1クリック、台詞、証拠URL、成功条件を固定し、Judge Route LockとFirst-Run Focus Lockで0-90秒の一本道に圧縮する
 - Judge Rehearsal Room: 90秒の開く画面、話す台詞、想定質問、録画チェックを1つのrun roomに束ねる
@@ -267,7 +267,7 @@
 
 ## Release Drift Guard
 
-`Release Drift Guard` は、提出用Cloud Run URLが最新mainの機能を本当に返しているかを検査します。公開healthが通っていても、Agent Cardのskill数、`judge.command`、`deploy.recover`、`acceptance.matrix`、`mvp.snapshot`、`autonomy.snapshot`、`recording.script`、`pilot.value.snapshot`、`demo.receipt`、`release.drift`、`pilot.economics`、`judge.rehearsal` の `recording-lock` tag、`win.gap.radar` の `feature-freeze-lock` tag、`winner.packet` の `winner-release-lock` / `get-proof` tag、`finalist.simulate` の `release-drift` tag、`competitive.battlecard` の `criteria-duel` tag、`competitive.snapshot` / `judge.snapshot` / `mvp.snapshot` / `autonomy.snapshot` / `recording.script` / `pilot.value.snapshot` の `get-proof` tag、A2A artifact、Acceptance Matrix endpoint、MVP Readiness endpoint、Autonomy Snapshot endpoint、Recording Script endpoint、Pilot Value endpointが古ければ `deploy-drift` として止めます。
+`Release Drift Guard` は、提出用Cloud Run URLが最新mainの機能を本当に返しているかを検査します。公開healthが通っていても、Agent Cardのskill数、`judge.command`、`deploy.recover`、`acceptance.matrix`、`mvp.snapshot`、`autonomy.snapshot`、`recording.script`、`pilot.value.snapshot`、`demo.receipt`、`release.drift`、`pilot.economics`、`judge.rehearsal` の `recording-lock` tag、`win.gap.radar` の `feature-freeze-lock` tag、`winner.packet` の `winner-release-lock` / `get-proof` tag、`judge.first-click` の `first-click-route-lock` tag、`finalist.simulate` の `release-drift` tag、`competitive.battlecard` の `criteria-duel` tag、`competitive.snapshot` / `judge.snapshot` / `mvp.snapshot` / `autonomy.snapshot` / `recording.script` / `pilot.value.snapshot` の `get-proof` tag、A2A artifact、Acceptance Matrix endpoint、MVP Readiness endpoint、Autonomy Snapshot endpoint、Recording Script endpoint、Pilot Value endpointが古ければ `deploy-drift` として止めます。
 
 - API: `POST /api/release-drift`
 - App UI: `Check release drift`
