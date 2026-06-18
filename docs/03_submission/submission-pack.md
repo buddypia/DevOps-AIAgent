@@ -52,7 +52,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Observability Oracleで、Live Evidence、Ops Drill、Pilot Economicsをつなぎ、運用観測を継続/復旧判断、買い手価値、次のAI雇用へ変換し、Acceptance Matrix / Prize Strategy / Win Gap Radarの実用性証拠に接続する
 - External Evidence Verifierで、公開GitHub、Cloud Run、ProtoPedia作品URL、動画URLが審査員から開けるかを検証する
 - Release Drift Guardで、公開Cloud Runが最新Agent Card、Acceptance Matrix、A2A artifactを返しているかを検査する
-- Deploy Recoveryで、release drift、gcloud認証、Cloud Build、公開再検証を復旧コマンドに変換する
+- Deploy Recoveryで、release drift、gcloud認証、Cloud Build、required Agent Card signal tags、公開再検証を復旧コマンドに変換する
 - Judge Demo Receiptで、審査導線、競合反論、編成判断、公開証拠、外部提出URL状態をReceipt Integrity Lockとsha256 digest付き検収票にする
 - Judge Acceptance Matrixで、必須技術、審査5項目、競合/SWOT、公開証拠、提出物をaccepted/watch/blockedの受入表にする
 - Autonomy Ledgerで、市場探索、判断、契約、A2A委任、検証、運用、提出を検収可能なAI自律性台帳として見せる

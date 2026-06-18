@@ -278,14 +278,14 @@ function agentCard(baseUrl: string) {
       {
         id: "release.drift",
         name: "Detect Cloud Run release drift",
-        description: "公開Cloud Runが最新Agent Card、Acceptance Matrix、A2A artifactを出しているかを検知し、古いrevisionを提出前に止める。",
-        tags: ["cloud-run", "release", "drift", "ci", "deployment"]
+        description: "公開Cloud Runが最新Agent Card、必須skill tag、Acceptance Matrix、A2A artifactを出しているかを検知し、古いrevisionを提出前に止める。",
+        tags: ["cloud-run", "release", "drift", "agent-card-signals", "ci", "deployment"]
       },
       {
         id: "deploy.recover",
         name: "Recover stale Cloud Run deployment",
-        description: "release drift、gcloud認証、Cloud Build、公開再検証を復旧計画へ変換する。",
-        tags: ["cloud-run", "cloud-build", "recovery", "deployment", "runbook"]
+        description: "release drift、gcloud認証、Cloud Build、必須Agent Card signal、公開再検証を復旧計画へ変換する。",
+        tags: ["cloud-run", "cloud-build", "recovery", "agent-card-signals", "deployment", "runbook"]
       },
       {
         id: "demo.receipt",
@@ -2235,7 +2235,7 @@ async function buildReleaseDriftForTarget(input: {
   const targetBaseUrl = input.targetBaseUrl.replace(/\/$/, "");
   const targetProbeHeaders = input.forwardedHeaders && currentBaseUrl === targetBaseUrl ? input.forwardedHeaders : undefined;
   const expectedSkillIds = agentCard(currentBaseUrl).skills.map((skill) => skill.id);
-  const requiredAgentCardSignals = ["judge.rehearsal:tag:recording-lock"];
+  const requiredAgentCardSignals = ["judge.rehearsal:tag:recording-lock", "win.gap.radar:tag:feature-freeze-lock"];
   const requiredSkillIds = [
     "task.delegate",
     "external.evidence",
@@ -2286,7 +2286,11 @@ async function buildReleaseDriftForTarget(input: {
           : [];
         observedSkillIds = skills.map((skill) => skill.id).filter((id): id is string => Boolean(id));
         const judgeRehearsal = skills.find((skill) => skill.id === "judge.rehearsal");
-        observedAgentCardSignals = judgeRehearsal?.tags?.includes("recording-lock") ? ["judge.rehearsal:tag:recording-lock"] : [];
+        const winGapRadar = skills.find((skill) => skill.id === "win.gap.radar");
+        observedAgentCardSignals = [
+          ...(judgeRehearsal?.tags?.includes("recording-lock") ? ["judge.rehearsal:tag:recording-lock"] : []),
+          ...(winGapRadar?.tags?.includes("feature-freeze-lock") ? ["win.gap.radar:tag:feature-freeze-lock"] : [])
+        ];
         const missing = requiredSkillIds.filter((skill) => !observedSkillIds.includes(skill));
         const missingSignals = requiredAgentCardSignals.filter((signal) => !observedAgentCardSignals.includes(signal));
         const hasExpectedCount = observedSkillIds.length >= expectedSkillIds.length;

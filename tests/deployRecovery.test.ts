@@ -115,4 +115,53 @@ describe("deploy recovery plan", () => {
     expect(plan.checks.find((check) => check.id === "skill-surface")?.status).toBe("ready");
     expect(plan.blockers).toHaveLength(0);
   });
+
+  test("surfaces missing Agent Card signals as deploy blockers", () => {
+    const releaseDrift = buildReleaseDriftGuard({
+      currentBaseUrl: "http://localhost:8080",
+      targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
+      expectedSkillIds,
+      observedSkillIds: expectedSkillIds,
+      requiredSkillIds: expectedSkillIds,
+      requiredAgentCardSignals: ["judge.rehearsal:tag:recording-lock", "win.gap.radar:tag:feature-freeze-lock"],
+      observedAgentCardSignals: ["judge.rehearsal:tag:recording-lock"],
+      generatedAt: "2026-06-18T00:00:00.000Z",
+      probes: [
+        passedProbe("target-health"),
+        {
+          ...passedProbe("agent-card-skill-surface"),
+          status: "watch",
+          score: 58,
+          evidence: "Agent Card exposes all skills but misses win.gap.radar:tag:feature-freeze-lock."
+        },
+        passedProbe("acceptance-endpoint"),
+        passedProbe("a2a-artifact"),
+        passedProbe("ci-main")
+      ]
+    });
+
+    const plan = buildDeployRecoveryPlan({
+      baseUrl: "http://localhost:8080",
+      releaseDrift
+    });
+
+    expect(plan.readiness).toBe("redeploy-required");
+    expect(plan.checks.find((check) => check.id === "agent-card-signals")).toMatchObject({
+      status: "blocked",
+      evidence: expect.stringContaining("win.gap.radar:tag:feature-freeze-lock")
+    });
+    expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")).toMatchObject({
+      blocking: true,
+      copyGroup: "verify"
+    });
+    expect(plan.steps.find((step) => step.id === "skill-surface")?.status).toBe("blocked");
+    expect(plan.blockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["agent-card-signals", "agent-card-skill-surface"]));
+    expect(plan.judgeScript.join("\n")).toContain("win.gap.radar:tag:feature-freeze-lock");
+    expect(plan.a2aPayload).toMatchObject({
+      skill: "deploy.recover",
+      releaseDrift: {
+        missingAgentCardSignals: ["win.gap.radar:tag:feature-freeze-lock"]
+      }
+    });
+  });
 });

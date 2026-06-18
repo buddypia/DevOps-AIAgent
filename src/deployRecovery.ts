@@ -139,6 +139,12 @@ export function buildDeployRecoveryPlan(input: {
       evidence: `${input.releaseDrift.observedSkillCount}/${input.releaseDrift.expectedSkillCount} skills; missing ${input.releaseDrift.missingSkills.join(", ") || "none"}.`
     },
     {
+      id: "agent-card-signals",
+      label: "Agent Card required signals",
+      status: input.releaseDrift.missingAgentCardSignals.length === 0 ? "ready" : "blocked",
+      evidence: `missing ${input.releaseDrift.missingAgentCardSignals.join(", ") || "none"}.`
+    },
+    {
       id: "cloud-build-auth",
       label: "Cloud Build auth",
       status: authBlocked ? "blocked" : "watch",
@@ -193,6 +199,14 @@ export function buildDeployRecoveryPlan(input: {
       blocking: false
     },
     {
+      id: "verify-agent-card-signals",
+      label: "Verify Agent Card signals",
+      command: `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar") | {id, tags}'`,
+      why: "Recording LockとFeature Freeze Lockが公開Agent Cardに載ったことを確認します。",
+      copyGroup: "verify",
+      blocking: input.releaseDrift.missingAgentCardSignals.length > 0
+    },
+    {
       id: "verify-recovery-endpoint",
       label: "Verify recovery endpoint",
       command: `curl -s -X POST ${targetBaseUrl}/api/deploy-recovery -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}' | jq '{readiness, recoveryScore}'`,
@@ -231,9 +245,9 @@ export function buildDeployRecoveryPlan(input: {
       id: "skill-surface",
       window: "8-9m",
       owner: "A2A Market Broker",
-      action: "Agent Card skill countとdeploy.recover skillを確認する",
+      action: "Agent Card skill count、deploy.recover skill、required signal tagsを確認する",
       verify: `${targetBaseUrl}/.well-known/agent-card.json`,
-      status: input.releaseDrift.missingSkills.length === 0 ? "ready" : "blocked"
+      status: input.releaseDrift.missingSkills.length === 0 && input.releaseDrift.missingAgentCardSignals.length === 0 ? "ready" : "blocked"
     },
     {
       id: "acceptance",
@@ -257,6 +271,17 @@ export function buildDeployRecoveryPlan(input: {
           }
         ]
       : []),
+    ...(input.releaseDrift.missingAgentCardSignals.length > 0
+      ? [
+          {
+            id: "agent-card-signals",
+            priority: "now" as const,
+            owner: "Cloud Run SRE",
+            action: "最新mainをCloud Runへ反映し、Agent Cardのrequired signal tagsを再検証する",
+            proof: `missing ${input.releaseDrift.missingAgentCardSignals.join(", ")}`
+          }
+        ]
+      : []),
     ...input.releaseDrift.nextActions.map(blockerFromDrift)
   ];
 
@@ -264,6 +289,7 @@ export function buildDeployRecoveryPlan(input: {
     `Deploy recovery: ${headline}`,
     `Primary action: ${primaryAction}`,
     `Release drift: ${input.releaseDrift.observedSkillCount}/${input.releaseDrift.expectedSkillCount} skills, ${input.releaseDrift.verdict}.`,
+    `Agent Card signals: missing ${input.releaseDrift.missingAgentCardSignals.join(", ") || "none"}.`,
     `Auth: ${authBlocked ? "manual gcloud auth login required" : "no auth failure provided"}.`,
     `After deploy: verify Agent Card count, /api/deploy-recovery, and A2A deployRecoveryEndpoint.`
   ];
@@ -290,7 +316,8 @@ export function buildDeployRecoveryPlan(input: {
         verdict: input.releaseDrift.verdict,
         expectedSkillCount: input.releaseDrift.expectedSkillCount,
         observedSkillCount: input.releaseDrift.observedSkillCount,
-        missingSkills: input.releaseDrift.missingSkills
+        missingSkills: input.releaseDrift.missingSkills,
+        missingAgentCardSignals: input.releaseDrift.missingAgentCardSignals
       },
       commands: commands.map((command) => ({ id: command.id, copyGroup: command.copyGroup, blocking: command.blocking })),
       blockers: blockers.map((blocker) => ({ id: blocker.id, priority: blocker.priority, action: blocker.action })),

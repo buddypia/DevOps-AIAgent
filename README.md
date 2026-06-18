@@ -216,7 +216,7 @@
 
 ## Release Drift Guard
 
-`Release Drift Guard` は、提出用Cloud Run URLが最新mainの機能を本当に返しているかを検査します。公開healthが通っていても、Agent Cardのskill数、`judge.command`、`deploy.recover`、`acceptance.matrix`、`demo.receipt`、`release.drift`、`pilot.economics`、`judge.rehearsal` の `recording-lock` tag、A2A artifact、Acceptance Matrix endpointが古ければ `deploy-drift` として止めます。
+`Release Drift Guard` は、提出用Cloud Run URLが最新mainの機能を本当に返しているかを検査します。公開healthが通っていても、Agent Cardのskill数、`judge.command`、`deploy.recover`、`acceptance.matrix`、`demo.receipt`、`release.drift`、`pilot.economics`、`judge.rehearsal` の `recording-lock` tag、`win.gap.radar` の `feature-freeze-lock` tag、A2A artifact、Acceptance Matrix endpointが古ければ `deploy-drift` として止めます。
 
 - API: `POST /api/release-drift`
 - App UI: `Check release drift`
@@ -224,11 +224,11 @@
 
 ## Deploy Recovery
 
-`Deploy Recovery` は、Release Drift Guardの結果を運用復旧へ変換します。公開Cloud Runが古い時、または `gcloud builds submit` が `Reauthentication failed` で止まった時に、認証更新、Cloud Build再実行、Agent Card skill count、`/api/deploy-recovery`、A2A `deployRecoveryEndpoint` の再検証コマンドをまとめます。
+`Deploy Recovery` は、Release Drift Guardの結果を運用復旧へ変換します。公開Cloud Runが古い時、または `gcloud builds submit` が `Reauthentication failed` で止まった時に、認証更新、Cloud Build再実行、Agent Card skill count、必須Agent Card signal tags、`/api/deploy-recovery`、A2A `deployRecoveryEndpoint` の再検証コマンドをまとめます。
 
 - API: `POST /api/deploy-recovery`
 - App UI: `Plan deploy recovery`
-- Output: recovery score、readiness、checks、commands、recovery steps、blockers、A2A `deploy.recover` payload
+- Output: recovery score、readiness、checks、commands、required signal verification、recovery steps、blockers、A2A `deploy.recover` payload
 
 ## Judge Demo Receipt
 

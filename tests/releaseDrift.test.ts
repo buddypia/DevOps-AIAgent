@@ -96,8 +96,8 @@ describe("release drift guard", () => {
       requiredSkillIds: ["task.delegate",
   "external.evidence",
   "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"],
-      requiredAgentCardSignals: ["judge.rehearsal:tag:recording-lock"],
-      observedAgentCardSignals: ["judge.rehearsal:tag:recording-lock"],
+      requiredAgentCardSignals: ["judge.rehearsal:tag:recording-lock", "win.gap.radar:tag:feature-freeze-lock"],
+      observedAgentCardSignals: ["judge.rehearsal:tag:recording-lock", "win.gap.radar:tag:feature-freeze-lock"],
       probes: [
         passedProbe("target-health"),
         passedProbe("agent-card-skill-surface"),
@@ -113,7 +113,7 @@ describe("release drift guard", () => {
     expect(guard.nextActions).toHaveLength(0);
   });
 
-  test("flags deploy drift when judge rehearsal lacks the recording lock tag", () => {
+  test("flags deploy drift when required Agent Card signal tags are missing", () => {
     const guard = buildReleaseDriftGuard({
       currentBaseUrl: "http://127.0.0.1:8090",
       targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
@@ -122,8 +122,8 @@ describe("release drift guard", () => {
       requiredSkillIds: ["task.delegate",
   "external.evidence",
   "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"],
-      requiredAgentCardSignals: ["judge.rehearsal:tag:recording-lock"],
-      observedAgentCardSignals: [],
+      requiredAgentCardSignals: ["judge.rehearsal:tag:recording-lock", "win.gap.radar:tag:feature-freeze-lock"],
+      observedAgentCardSignals: ["judge.rehearsal:tag:recording-lock"],
       generatedAt: "2026-06-18T00:00:00.000Z",
       probes: [
         passedProbe("target-health"),
@@ -131,7 +131,7 @@ describe("release drift guard", () => {
           ...passedProbe("agent-card-skill-surface"),
           status: "watch",
           score: 58,
-          evidence: "Target Agent Card exposes all skill ids but is missing judge.rehearsal:tag:recording-lock."
+          evidence: "Target Agent Card exposes all skill ids but is missing win.gap.radar:tag:feature-freeze-lock."
         },
         passedProbe("acceptance-endpoint"),
         passedProbe("a2a-artifact"),
@@ -141,13 +141,13 @@ describe("release drift guard", () => {
 
     expect(guard.verdict).toBe("deploy-drift");
     expect(guard.missingSkills).toEqual([]);
-    expect(guard.missingAgentCardSignals).toEqual(["judge.rehearsal:tag:recording-lock"]);
+    expect(guard.missingAgentCardSignals).toEqual(["win.gap.radar:tag:feature-freeze-lock"]);
     expect(guard.summary).toContain("0 required skills and 1 required Agent Card signals");
-    expect(guard.runbook.join("\n")).toContain('select(.id=="judge.rehearsal")');
+    expect(guard.runbook.join("\n")).toContain('select(.id=="judge.rehearsal" or .id=="win.gap.radar")');
     expect(guard.a2aPayload).toMatchObject({
       skill: "release.drift",
       verdict: "deploy-drift",
-      missingAgentCardSignals: ["judge.rehearsal:tag:recording-lock"]
+      missingAgentCardSignals: ["win.gap.radar:tag:feature-freeze-lock"]
     });
   });
 });
