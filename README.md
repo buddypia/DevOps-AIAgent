@@ -91,7 +91,7 @@
 
 - API: `POST /api/competitive-battlecard`
 - App UI: `Build battlecard`
-- Output: battle score、readiness、competitor cards、top risks、SWOT receipts、judge script、A2A `competitive.battlecard` payload
+- Output: battle score、readiness、competitor cards、top risks、SWOT receipts、objection receipts、judge script、A2A `competitive.battlecard` payload
 
 ## Win Gap Radar
 

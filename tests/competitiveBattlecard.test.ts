@@ -38,10 +38,26 @@ describe("competitive battlecard", () => {
       expect.arrayContaining(["strengths", "weaknesses", "opportunities", "threats"])
     );
     expect(battlecard.topRisks.length).toBeGreaterThan(0);
+    expect(battlecard.objectionReceipts).toHaveLength(battlecard.cards.length);
+    expect(battlecard.objectionReceipts[0]).toMatchObject({
+      proofRoute: expect.any(String),
+      acceptance: expect.stringContaining("公式ソース"),
+      protopediaLine: expect.stringContaining("本作")
+    });
+    expect(battlecard.objectionReceipts.find((receipt) => receipt.id === "a2a-marketplace")).toMatchObject({
+      swotSignal: expect.objectContaining({ quadrant: "threats" }),
+      mvpUpgrade: expect.stringContaining("SWOT")
+    });
     expect(battlecard.judgeScript.join("\n")).toContain("Live Evidence");
     expect(battlecard.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "competitive.battlecard",
+      objectionReceipts: expect.arrayContaining([
+        expect.objectContaining({
+          id: "a2a-marketplace",
+          swot: "threats"
+        })
+      ]),
       endpoints: {
         competitiveBattlecard: `${baseUrl}/api/competitive-battlecard`,
         moatStress: `${baseUrl}/api/moat-stress`

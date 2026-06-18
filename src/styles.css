@@ -6484,6 +6484,10 @@ h1 {
 .battle-risks small,
 .battle-risks b,
 .battle-receipts p,
+.battle-objections p,
+.battle-objections small,
+.battle-objections b,
+.battle-objections em,
 .battle-script,
 .battle-empty p {
   color: #3e4651;
@@ -6546,7 +6550,7 @@ h1 {
 
 .battle-grid {
   display: grid;
-  grid-template-columns: minmax(340px, 0.88fr) minmax(360px, 1fr) minmax(380px, 1fr);
+  grid-template-columns: repeat(4, minmax(280px, 1fr));
   gap: 1px;
   background: #d1d6cf;
 }
@@ -6570,14 +6574,16 @@ h1 {
 }
 
 .battle-risks,
-.battle-receipts {
+.battle-receipts,
+.battle-objections {
   display: grid;
   gap: 8px;
   min-width: 0;
 }
 
 .battle-risks article,
-.battle-receipts article {
+.battle-receipts article,
+.battle-objections article {
   display: grid;
   gap: 7px;
   min-width: 0;
@@ -6590,19 +6596,41 @@ h1 {
 
 .battle-risks article.medium,
 .battle-receipts article.warning,
-.battle-receipts article.opening {
+.battle-receipts article.opening,
+.battle-objections article.parity {
   border-left-color: var(--amber);
   background: #fff9e9;
 }
 
 .battle-risks article.high,
-.battle-receipts article.risk {
+.battle-receipts article.risk,
+.battle-objections article.risk {
   border-left-color: var(--rose);
   background: #fff1f3;
 }
 
-.battle-risks b {
+.battle-objections article > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.battle-objections span {
+  color: #355c7d;
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.battle-risks b,
+.battle-objections b,
+.battle-objections em {
   font-style: normal;
+}
+
+.battle-objections b {
+  color: #1b3f55;
 }
 
 .battle-script {

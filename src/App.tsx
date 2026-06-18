@@ -3144,6 +3144,28 @@ function CompetitiveBattlecardPanel({
             </section>
             <section>
               <h3>
+                <ClipboardCheck size={15} />
+                Objection receipts
+              </h3>
+              <div className="battle-objections">
+                {battlecard.objectionReceipts.slice(0, 4).map((receipt) => (
+                  <article key={receipt.id} className={receipt.status}>
+                    <div>
+                      <strong>{receipt.competitor}</strong>
+                      <span>{receipt.status}</span>
+                    </div>
+                    <p>{receipt.objection}</p>
+                    <small>
+                      {receipt.swotSignal.quadrant}: {receipt.swotSignal.title}
+                    </small>
+                    <b>{receipt.mvpUpgrade}</b>
+                    <em>{receipt.protopediaLine}</em>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
                 <Film size={15} />
                 Judge script
               </h3>

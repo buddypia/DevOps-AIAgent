@@ -36,6 +36,19 @@ export type CompetitiveBattlecardRisk = {
   proof: string;
 };
 
+export type CompetitiveObjectionReceipt = {
+  id: string;
+  competitor: string;
+  status: BattlecardStatus;
+  objection: string;
+  swotSignal: BattlecardSwotLink;
+  proofRoute: string;
+  mvpUpgrade: string;
+  recordingCue: string;
+  protopediaLine: string;
+  acceptance: string;
+};
+
 export type CompetitiveBattlecard = {
   id: string;
   battleScore: number;
@@ -46,6 +59,7 @@ export type CompetitiveBattlecard = {
   cards: CompetitiveBattlecardCard[];
   topRisks: CompetitiveBattlecardRisk[];
   swotReceipts: Array<BattlecardSwotLink & { detail: string }>;
+  objectionReceipts: CompetitiveObjectionReceipt[];
   judgeScript: string[];
   a2aPayload: Record<string, unknown>;
 };
@@ -166,6 +180,31 @@ function buildSwotReceipts(strategy: WinningStrategy) {
   );
 }
 
+function buildObjectionReceipts(cards: CompetitiveBattlecardCard[]): CompetitiveObjectionReceipt[] {
+  return [...cards]
+    .sort((left, right) => left.score - right.score)
+    .map((card) => {
+      const swotSignal = card.swotLinks.find((link) => link.quadrant === "threats") ?? card.swotLinks[0];
+      const priorityVerb = card.status === "risk" ? "先頭で補強する" : card.status === "parity" ? "録画で証拠を開く" : "提出本文に固定する";
+      return {
+        id: card.id,
+        competitor: card.competitor,
+        status: card.status,
+        objection: card.judgeQuestion,
+        swotSignal: swotSignal ?? {
+          quadrant: "threats",
+          title: "競合差分の証拠不足",
+          signal: "warning"
+        },
+        proofRoute: card.proofRoute,
+        mvpUpgrade: `${card.competitor}への反論を${priorityVerb}: source ${card.sourceUrls.length}件、SWOT、proof routeを同じカードで開く。`,
+        recordingCue: card.recordingCue,
+        protopediaLine: `${card.competitor}は${card.whereTheyWin}に強い。本作は${card.whereWeWin}`,
+        acceptance: "審査質問に15秒で回答し、公式ソース、SWOTシグナル、公開証拠routeを同時に提示できる。"
+      };
+    });
+}
+
 export function buildCompetitiveBattlecard(input: {
   baseUrl: string;
   strategy: WinningStrategy;
@@ -186,6 +225,7 @@ export function buildCompetitiveBattlecard(input: {
   const readiness = readinessFor(battleScore, input.moatStress.scenarios);
   const topRisks = buildTopRisks(cards, input.moatStress);
   const swotReceipts = buildSwotReceipts(input.strategy);
+  const objectionReceipts = buildObjectionReceipts(cards);
 
   return {
     id: `competitive-battlecard-${battleScore}-${readiness}`,
@@ -203,6 +243,7 @@ export function buildCompetitiveBattlecard(input: {
     cards,
     topRisks,
     swotReceipts,
+    objectionReceipts,
     judgeScript: [
       "まず競合の強みを認める: 作る基盤、workflow、observabilityは既存ツールが強い。",
       "次にずらす: このプロダクトはAI能力を選び、雇い、A2A委任し、DevOps証拠で検収する市場体験です。",
@@ -226,6 +267,13 @@ export function buildCompetitiveBattlecard(input: {
         id: risk.id,
         severity: risk.severity,
         proof: risk.proof
+      })),
+      objectionReceipts: objectionReceipts.map((receipt) => ({
+        id: receipt.id,
+        status: receipt.status,
+        swot: receipt.swotSignal.quadrant,
+        proofRoute: receipt.proofRoute,
+        acceptance: receipt.acceptance
       })),
       endpoints: {
         app: normalizedBase,
