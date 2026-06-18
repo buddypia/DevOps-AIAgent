@@ -23,6 +23,7 @@ import { buildProtoPediaPublisher } from "../src/publisher";
 import { buildReleaseDriftGuard, type ReleaseDriftProbe } from "../src/releaseDrift";
 import { buildSecurityReview } from "../src/security";
 import { SUBMISSION_PROOF } from "../src/submission";
+import { buildSubmissionLaunchGate } from "../src/submissionLaunch";
 import { buildSquadOptimizer } from "../src/squadOptimizer";
 import { buildWinningStrategy } from "../src/strategy";
 import { buildUserPilotLab } from "../src/userPilot";
@@ -126,6 +127,7 @@ function fixture() {
     proof,
     marketIntel
   });
+  const submissionLaunch = buildSubmissionLaunchGate({ mvpAudit, dossier, proof, publisher });
   const securityReview = buildSecurityReview({
     baseUrl,
     recommendation,
@@ -178,7 +180,10 @@ function fixture() {
     impactCase,
     pilotEconomics,
     securityReview,
-    demoReceipt
+    demoReceipt,
+    submissionLaunch,
+    dossier,
+    publisher
   };
 }
 
@@ -215,6 +220,7 @@ describe("judge acceptance matrix", () => {
     expect(matrix.rows.find((row) => row.id === "competitive-swot")?.evidence).toContain("競合");
     expect(matrix.rows.find((row) => row.id === "competitive-swot")?.evidence).toContain("SWOT");
     expect(matrix.rows.find((row) => row.id === "submission-assets")?.status).toBe("watch");
+    expect(matrix.rows.find((row) => row.id === "submission-assets")?.evidence).toContain("ProtoPedia compliance 8/9");
     expect(matrix.rows.find((row) => row.id === "demo-receipt")?.status).toBe("watch");
     expect(matrix.rows.find((row) => row.id === "usability-first-run")?.status).toBe("accepted");
     expect(matrix.rows.find((row) => row.id === "pilot-economics")?.status).toBe("accepted");
@@ -225,9 +231,48 @@ describe("judge acceptance matrix", () => {
       method: "message/send",
       skill: "acceptance.matrix",
       verdict: "accepted-with-external-gaps",
+      submissionLaunch: {
+        readiness: "needs-external-urls",
+        complianceReady: 8,
+        complianceTotal: 9
+      },
       endpoints: {
         acceptanceMatrix: `${SUBMISSION_PROOF.deployedUrl}/api/acceptance-matrix`,
         pilotEconomics: `${SUBMISSION_PROOF.deployedUrl}/api/pilot-economics`
+      }
+    });
+  });
+
+  test("accepts submission assets when the shared launch gate is submit-ready", () => {
+    const data = fixture();
+    const submissionLaunch = buildSubmissionLaunchGate({
+      mvpAudit: data.mvpAudit,
+      dossier: data.dossier,
+      proof: data.proof,
+      publisher: data.publisher,
+      protopediaUrl: "https://protopedia.net/prototype/999999",
+      videoUrl: "https://youtu.be/demo1234567"
+    });
+    const matrix = buildJudgeAcceptanceMatrix({
+      ...data,
+      submissionLaunch,
+      generatedAt: "2026-06-18T00:00:00.000Z"
+    });
+
+    expect(matrix.rows.find((row) => row.id === "submission-assets")).toMatchObject({
+      status: "accepted",
+      evidence: expect.stringContaining("ProtoPedia compliance 9/9")
+    });
+    expect(matrix.nextActions.map((action) => action.id)).not.toContain("submission-assets");
+    expect(matrix.decisiveProof.find((proof) => proof.id === "protopedia")).toMatchObject({
+      value: "9/9",
+      proof: "submit-ready"
+    });
+    expect(matrix.a2aPayload).toMatchObject({
+      submissionLaunch: {
+        readiness: "submit-ready",
+        complianceReady: 9,
+        complianceTotal: 9
       }
     });
   });

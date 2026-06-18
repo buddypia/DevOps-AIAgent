@@ -3513,6 +3513,8 @@ function AcceptanceMatrixPanel({
   projectBrief: string;
 }) {
   const [matrix, setMatrix] = useState<JudgeAcceptanceMatrix | null>(null);
+  const [protopediaUrl, setProtopediaUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -3525,7 +3527,9 @@ function AcceptanceMatrixPanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           projectBrief,
-          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+          protopediaUrl,
+          videoUrl
         })
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -3551,6 +3555,17 @@ function AcceptanceMatrixPanel({
           <ClipboardCheck size={17} />
           {loading ? "Checking" : "Build acceptance matrix"}
         </button>
+      </div>
+
+      <div className="acceptance-inputs">
+        <label>
+          <span>ProtoPedia work URL</span>
+          <input value={protopediaUrl} onChange={(event) => setProtopediaUrl(event.target.value)} placeholder="https://protopedia.net/prototype/..." />
+        </label>
+        <label>
+          <span>Video URL</span>
+          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://vimeo.com/..." />
+        </label>
       </div>
 
       {error && <p className="error-text">Acceptance matrix request failed: {error}</p>}

@@ -8,6 +8,7 @@ import type { PilotEconomics } from "./pilotEconomics.js";
 import type { JudgeProof } from "./proof.js";
 import type { ReleaseDriftGuard } from "./releaseDrift.js";
 import type { SecurityReview } from "./security.js";
+import type { SubmissionLaunchGate } from "./submissionLaunch.js";
 import type { WinningStrategy } from "./strategy.js";
 import type { UserPilotLab } from "./userPilot.js";
 
@@ -128,6 +129,18 @@ function actionFromRow(rowItem: AcceptanceRow): AcceptanceAction {
   };
 }
 
+function statusFromLaunch(readiness: SubmissionLaunchGate["readiness"]): AcceptanceStatus {
+  if (readiness === "submit-ready") return "accepted";
+  if (readiness === "needs-external-urls") return "watch";
+  return "blocked";
+}
+
+function launchItemScore(status: "ready" | "missing" | "invalid") {
+  if (status === "ready") return 100;
+  if (status === "missing") return 58;
+  return 20;
+}
+
 function verdictFrom(rows: AcceptanceRow[]): AcceptanceVerdict {
   if (rows.some((item) => item.status === "blocked")) return "not-accepted";
   if (rows.every((item) => item.status === "accepted")) return "ready-to-submit";
@@ -147,6 +160,7 @@ export function buildJudgeAcceptanceMatrix(input: {
   securityReview: SecurityReview;
   demoReceipt: JudgeDemoReceipt;
   releaseDrift?: ReleaseDriftGuard;
+  submissionLaunch?: SubmissionLaunchGate;
   generatedAt?: string;
 }): JudgeAcceptanceMatrix {
   const base = input.baseUrl.replace(/\/$/, "");
@@ -167,6 +181,24 @@ export function buildJudgeAcceptanceMatrix(input: {
     : submissionGates.some((gate) => gate.status === "watch")
       ? "watch"
       : "accepted";
+  const launchCompliance = input.submissionLaunch?.protopediaCompliance;
+  const complianceReadyCount = launchCompliance?.filter((item) => item.status === "ready").length ?? 0;
+  const complianceTotal = launchCompliance?.length ?? 0;
+  const launchSubmissionStatus = input.submissionLaunch ? statusFromLaunch(input.submissionLaunch.readiness) : submissionStatus;
+  const launchSubmissionScore = input.submissionLaunch
+    ? average([
+        input.submissionLaunch.launchScore,
+        ...input.submissionLaunch.urlStatuses.map((item) => launchItemScore(item.status)),
+        ...input.submissionLaunch.protopediaCompliance.map((item) => launchItemScore(item.status))
+      ])
+    : average(submissionGates.map((gate) => gate.score));
+  const launchSubmissionEvidence = input.submissionLaunch
+    ? [
+        `Launch Gate ${input.submissionLaunch.readiness}`,
+        `ProtoPedia compliance ${complianceReadyCount}/${complianceTotal}`,
+        input.submissionLaunch.urlStatuses.map((item) => `${item.label}:${item.status}`).join(" / ")
+      ].join("; ")
+    : submissionGates.map((gate) => `${gate.label}:${gate.status}`).join(" / ");
 
   const rows: AcceptanceRow[] = [
     row({
@@ -318,12 +350,12 @@ export function buildJudgeAcceptanceMatrix(input: {
       id: "submission-assets",
       label: "Submission assets",
       area: "submission",
-      status: submissionStatus,
-      score: average(submissionGates.map((gate) => gate.score)),
-      requirement: "公開GitHub URL、デプロイ済みURL、ProtoPedia作品URL、動画URL、findy_hackathonタグ",
-      evidence: submissionGates.map((gate) => `${gate.label}:${gate.status}`).join(" / "),
+      status: launchSubmissionStatus,
+      score: launchSubmissionScore,
+      requirement: "公開GitHub URL、デプロイ済みURL、ProtoPedia作品URL、YouTube/Vimeo動画URL、findy_hackathonタグ、構成図、ストーリー",
+      evidence: launchSubmissionEvidence,
       proofUrl: absoluteUrl(base, "/api/submission-launch"),
-      nextAction: "ProtoPedia作品URLと動画URLを発行し、Submission Launch Gateをsubmit-readyにする"
+      nextAction: "ProtoPedia作品URLとYouTube/Vimeo動画URLを発行し、Submission Launch Gateをsubmit-readyにする"
     }),
     row({
       id: "demo-receipt",
@@ -348,6 +380,8 @@ export function buildJudgeAcceptanceMatrix(input: {
     proofDigest: input.proof.receipt.digest,
     demoReceiptDigest: input.demoReceipt.digest.digest,
     pilotEconomicsPosture: input.pilotEconomics.posture,
+    submissionLaunchReadiness: input.submissionLaunch?.readiness ?? "not-checked",
+    protopediaCompliance: input.submissionLaunch ? `${complianceReadyCount}/${complianceTotal}` : "not-checked",
     releaseDriftVerdict: input.releaseDrift?.verdict ?? "not-checked"
   };
   const acceptanceDigest = digest(payload);
@@ -372,6 +406,16 @@ export function buildJudgeAcceptanceMatrix(input: {
       { id: "win", label: "Win readiness", value: input.autopilot.readiness, proof: `${input.autopilot.lanes.length} lanes / ${input.autopilot.winScore}` },
       { id: "brief", label: "Judge brief", value: input.marketIntel.status, proof: `${input.marketIntel.sources.length} sources` },
       { id: "economics", label: "Pilot economics", value: input.pilotEconomics.posture, proof: `${input.pilotEconomics.unitEconomics.paybackDays}d payback` },
+      ...(input.submissionLaunch
+        ? [
+            {
+              id: "protopedia",
+              label: "ProtoPedia compliance",
+              value: `${complianceReadyCount}/${complianceTotal}`,
+              proof: input.submissionLaunch.readiness
+            }
+          ]
+        : []),
       ...(input.releaseDrift
         ? [{ id: "release", label: "Release drift", value: input.releaseDrift.verdict, proof: `${input.releaseDrift.observedSkillCount}/${input.releaseDrift.expectedSkillCount} skills` }]
         : []),
@@ -381,7 +425,7 @@ export function buildJudgeAcceptanceMatrix(input: {
       algorithm: "sha256",
       digest: acceptanceDigest,
       verification:
-        "Recompute sha256 over acceptanceScore, verdict, row statuses, Judge Proof digest, Demo Receipt digest, Pilot Economics posture, and Release Drift verdict."
+        "Recompute sha256 over acceptanceScore, verdict, row statuses, Judge Proof digest, Demo Receipt digest, Pilot Economics posture, Submission Launch readiness, ProtoPedia compliance, and Release Drift verdict."
     },
     a2aPayload: {
       method: "message/send",
@@ -391,6 +435,14 @@ export function buildJudgeAcceptanceMatrix(input: {
       digest: acceptanceDigest,
       rows: rows.map((item) => ({ id: item.id, area: item.area, status: item.status, score: item.score })),
       nextActions: nextActions.map((item) => ({ id: item.id, priority: item.priority, action: item.action })),
+      submissionLaunch: input.submissionLaunch
+        ? {
+            readiness: input.submissionLaunch.readiness,
+            complianceReady: complianceReadyCount,
+            complianceTotal,
+            urls: input.submissionLaunch.urlStatuses.map((item) => ({ id: item.id, status: item.status }))
+          }
+        : null,
       endpoints: {
         app: base,
         acceptanceMatrix: absoluteUrl(base, "/api/acceptance-matrix"),

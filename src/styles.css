@@ -4250,6 +4250,43 @@ h1 {
   font-size: 1.28rem;
 }
 
+.acceptance-inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(320px, 1fr));
+  gap: 1px;
+  background: #cbd8d0;
+}
+
+.acceptance-inputs label {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  background: #f7fbf8;
+}
+
+.acceptance-inputs span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.acceptance-inputs input {
+  min-height: 42px;
+  width: 100%;
+  border: 1px solid #b7c8be;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: #fbfffc;
+  font: inherit;
+}
+
+.acceptance-inputs input:focus {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
 .acceptance-body {
   display: grid;
   gap: 1px;
@@ -11285,6 +11322,7 @@ pre {
     .evidence-summary,
     .evidence-probes,
     .evidence-grid,
+    .acceptance-inputs,
     .acceptance-summary,
     .acceptance-proof,
     .acceptance-rows,

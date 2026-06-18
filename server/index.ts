@@ -94,7 +94,9 @@ const DeployRecoverySchema = ReleaseDriftSchema.extend({
 });
 const AcceptanceMatrixSchema = RecommendSchema.extend({
   targetUrl: z.string().url().optional(),
-  skipReleaseDrift: z.boolean().optional()
+  skipReleaseDrift: z.boolean().optional(),
+  protopediaUrl: z.string().optional(),
+  videoUrl: z.string().optional()
 });
 const CommandCenterSchema = AcceptanceMatrixSchema.extend({
   protopediaUrl: z.string().optional(),
@@ -2332,6 +2334,14 @@ app.post("/api/acceptance-matrix", async (req, res) => {
     proof,
     marketIntel
   });
+  const submissionLaunch = buildSubmissionLaunchGate({
+    protopediaUrl: parsed.data.protopediaUrl,
+    videoUrl: parsed.data.videoUrl,
+    mvpAudit,
+    dossier,
+    proof,
+    publisher
+  });
   const securityReview = buildSecurityReview({
     baseUrl,
     recommendation,
@@ -2370,7 +2380,9 @@ app.post("/api/acceptance-matrix", async (req, res) => {
     recommendation,
     strategy,
     moatStress,
-    squadOptimizer
+    squadOptimizer,
+    protopediaUrl: parsed.data.protopediaUrl,
+    videoUrl: parsed.data.videoUrl
   });
   const releaseDrift = parsed.data.skipReleaseDrift
     ? undefined
@@ -2395,7 +2407,8 @@ app.post("/api/acceptance-matrix", async (req, res) => {
       pilotEconomics,
       securityReview,
       demoReceipt,
-      releaseDrift
+      releaseDrift,
+      submissionLaunch
     })
   );
 });

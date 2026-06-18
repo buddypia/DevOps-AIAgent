@@ -37,7 +37,7 @@
 - Release Drift Guard: GitHub/CIが緑でも公開Cloud Runが古いrevisionなら、Agent Card、Acceptance Matrix、A2A artifactの差分で検知する
 - Deploy Recovery: release drift、gcloud認証、Cloud Build、公開再検証を復旧コマンドと審査説明へ変換する
 - Judge Demo Receipt: 審査導線、競合反論、編成判断、公開証拠、外部提出URL状態をsha256 digest付きの検収票にする
-- Judge Acceptance Matrix: 必須技術、審査5項目、競合/SWOT、公開証拠、提出物をaccepted/watch/blockedの受入表にする
+- Judge Acceptance Matrix: 必須技術、審査5項目、競合/SWOT、公開証拠、提出物、ProtoPedia complianceをaccepted/watch/blockedの受入表にする
 - Autonomy Ledger: 市場探索、判断、契約、A2A委任、検証、運用、提出を検収可能なAI自律性台帳に変換
 - Agent Task Board: `task.delegate` を、委任先AI、目的、検収条件、proof URL、A2A payloadへ具体化する
 - Security Sentinel Review: Secret Manager、IP allowlist、Zod入力制限、A2A信頼境界、CIを安全性証拠に変換
@@ -231,11 +231,11 @@
 
 ## Judge Acceptance Matrix
 
-`Judge Acceptance Matrix` は、MVP判定を最後に曖昧にしないための受入表です。Cloud Run/Gemini/A2Aの必須技術、審査5項目、競合/SWOTとMoat反論、Live Evidence、Release Drift、Security/Impact/User Pilot/Pilot Economics、ProtoPedia/動画URL、Judge Demo Receiptを最大14行のaccepted/watch/blockedに束ねます。外部提出URLが未発行、または公開Cloud Runが古いrevisionなら、本体の実装だけを合格扱いにしません。
+`Judge Acceptance Matrix` は、MVP判定を最後に曖昧にしないための受入表です。Cloud Run/Gemini/A2Aの必須技術、審査5項目、競合/SWOTとMoat反論、Live Evidence、Release Drift、Security/Impact/User Pilot/Pilot Economics、ProtoPedia compliance、Judge Demo Receiptを最大14行のaccepted/watch/blockedに束ねます。ProtoPedia作品URL、YouTube/Vimeo動画URL、構成図、ストーリー、タグがLaunch Gateで揃わない場合、または公開Cloud Runが古いrevisionなら、本体の実装だけを合格扱いにしません。
 
 - API: `POST /api/acceptance-matrix`
 - App UI: `Build acceptance matrix`
-- Output: acceptance score、verdict、release drift row、acceptance rows、next actions、sha256 digest、A2A `acceptance.matrix` payload
+- Output: acceptance score、verdict、release drift row、ProtoPedia compliance、acceptance rows、next actions、sha256 digest、A2A `acceptance.matrix` payload
 
 ## Autonomy Ledger
 
