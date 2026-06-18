@@ -410,8 +410,8 @@ function agentCard(baseUrl: string) {
       {
         id: "finalist.simulate",
         name: "Simulate finalist judging panel",
-        description: "審査員5役の模擬判定で、最終候補スコア、Finalist Internal Lock、外部URL status、次の一手を返す。",
-        tags: ["finalist", "judge-panel", "mvp", "scorecard", "submission", "internal-lock", "submission-url"]
+        description: "審査員5役の模擬判定で、最終候補スコア、Release Drift、Finalist Internal Lock、外部URL status、次の一手を返す。",
+        tags: ["finalist", "judge-panel", "mvp", "scorecard", "release-drift", "submission", "internal-lock", "submission-url"]
       },
       {
         id: "judge.proof",
@@ -4722,37 +4722,47 @@ app.post("/api/judge-drill", (req, res) => {
   );
 });
 
-app.post("/api/finalist", (req, res) => {
-  const parsed = LaunchSchema.safeParse(req.body);
+app.post("/api/finalist", async (req, res) => {
+  const parsed = AcceptanceMatrixSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
     return;
   }
 
+  const baseUrl = publicBaseUrl(req);
   const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
   const strategy = buildWinningStrategy(recommendation);
   const mission = buildMissionRun(recommendation, strategy, "審査員5役で最終候補に残せるかを模擬判定し、落選理由と次の一手を出す。");
   const opsDrill = buildOpsDrill(recommendation, strategy);
   const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
   const pitch = buildPitchRun({
-    baseUrl: publicBaseUrl(req),
+    baseUrl,
     recommendation,
     strategy,
     mission,
     opsDrill
   });
   const judgeDrill = buildJudgeDrill({
-    baseUrl: publicBaseUrl(req),
+    baseUrl,
     recommendation,
     strategy,
     mission,
     opsDrill,
     pitch
   });
+  const releaseDrift = parsed.data.skipReleaseDrift
+    ? undefined
+    : await buildReleaseDriftForTarget({
+        currentBaseUrl: baseUrl,
+        targetBaseUrl: parsed.data.targetUrl || SUBMISSION_PROOF.deployedUrl,
+        projectBrief: parsed.data.projectBrief,
+        selectedAgentIds: parsed.data.selectedAgentIds,
+        forwardedHeaders: selfProbeHeaders(req)
+      });
 
   res.json(
     buildFinalistSimulation({
-      baseUrl: publicBaseUrl(req),
+      baseUrl,
       recommendation,
       strategy,
       mission,
@@ -4760,7 +4770,8 @@ app.post("/api/finalist", (req, res) => {
       pitch,
       judgeDrill,
       squadContract,
-      submissionUrls: submissionUrlEvidence(parsed.data)
+      submissionUrls: submissionUrlEvidence(parsed.data),
+      releaseDrift
     })
   );
 });

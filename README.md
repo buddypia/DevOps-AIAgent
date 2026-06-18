@@ -379,12 +379,12 @@
 
 ## Finalist Simulator
 
-`Finalist Simulator` は、提出直前に「最終候補へ残れるか」を審査員5役で模擬判定するパネルです。競合/SWOT、Mission、Ops、Contract、Pitch、Judge Drillの証跡を束ね、点数だけでなく落選理由と次の一手を返します。Finalist Internal Lockは、5パネル、競合/SWOT、A2A必然性、30秒導線、Ops/CIを内部証拠として検収し、ProtoPedia作品URLや動画URLのような外部提出作業は、合格扱いにせず残ギャップとして明示します。実URLを入力した場合は、ProtoPedia `https://protopedia.net/...` とYouTube/Vimeo動画URLを検証し、妥当なら `finalist-ready` へ昇格、不正URLなら blocker として提出不能に落とします。
+`Finalist Simulator` は、提出直前に「最終候補へ残れるか」を審査員5役で模擬判定するパネルです。競合/SWOT、Mission、Ops、Contract、Pitch、Judge Drill、Release Driftの証跡を束ね、点数だけでなく落選理由と次の一手を返します。Finalist Internal Lockは、5パネル、競合/SWOT、A2A必然性、30秒導線、Ops/CI、公開Cloud Run revisionを内部証拠として検収し、ProtoPedia作品URLや動画URLのような外部提出作業は、合格扱いにせず残ギャップとして明示します。実URLを入力した場合は、ProtoPedia `https://protopedia.net/...` とYouTube/Vimeo動画URLを検証し、妥当なら `finalist-ready` へ昇格、不正URLなら blocker として提出不能に落とします。
 
 - API: `POST /api/finalist`
-- Input: `projectBrief`、`selectedAgentIds`、任意の `protopediaUrl` / `videoUrl`
+- Input: `projectBrief`、`selectedAgentIds`、任意の `protopediaUrl` / `videoUrl` / `targetUrl` / `skipReleaseDrift`
 - App UI: `Simulate finalist`
-- Output: finalist score、5 judge panels、Finalist Internal Lock、URL status、remaining gaps、top concern、winning move、A2A payload
+- Output: finalist score、5 judge panels、Release Drift status、Finalist Internal Lock、URL status、remaining gaps、top concern、winning move、A2A payload
 
 ## Submission Publisher
 

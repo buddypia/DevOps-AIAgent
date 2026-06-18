@@ -66,7 +66,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Judge Proofで、Gemini Proof Lock、Usability Proof Lock、Cloud Run、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1クリックの証拠束にし、sha256 receiptで照合できるようにする
 - Pitch Directorで、30秒動画の録画順、読み上げ台詞、字幕、証拠リンク、提出残リスクを生成する
 - Judge Drillで、審査5項目と主要競合への厳しい質問、回答、60秒回答パス、証拠リンク、デモで開く画面を生成する
-- Finalist Simulatorで、審査員5役の最終候補判定、落選理由、残ギャップ、次の一手を生成する
+- Finalist Simulatorで、審査員5役の最終候補判定、Release Drift、落選理由、残ギャップ、次の一手を生成し、公開Cloud Run revisionが古い状態を内部MVP合格として隠さない
 - Submission Publisherで、ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにし、ProtoPedia Quality Lockで審査5項目、競合/SWOT、必須技術、公開証拠を検収し、Publication Policy Lockで作品性、宣伝化リスク、Markdown安全性を検収する
 - Demo Runwayで、Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線に束ねる
 - Win Autopilotで、競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を一括判定し、win scoreと残アクションを返す

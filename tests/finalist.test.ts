@@ -7,12 +7,50 @@ import { DEFAULT_PROJECT_BRIEF } from "../src/market";
 import { buildMissionRun } from "../src/mission";
 import { buildOpsDrill } from "../src/ops";
 import { buildPitchRun } from "../src/pitch";
+import { buildReleaseDriftGuard, type ReleaseDriftProbe } from "../src/releaseDrift";
 import { buildWinningStrategy } from "../src/strategy";
 
 describe("finalist simulator", () => {
   const baseUrl = "https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app";
 
-  function buildSimulation(input: { protopediaUrl?: string; videoUrl?: string } = {}) {
+  function passedProbe(id: string): ReleaseDriftProbe {
+    return {
+      id,
+      label: id,
+      status: "passed",
+      score: 100,
+      url: `${baseUrl}/${id}`,
+      evidence: `${id} passed.`,
+      required: true
+    };
+  }
+
+  function buildDriftWithMissingSignal() {
+    return buildReleaseDriftGuard({
+      currentBaseUrl: "http://localhost:8080",
+      targetBaseUrl: baseUrl,
+      expectedSkillIds: ["judge.rehearsal", "win.gap.radar", "finalist.simulate"],
+      observedSkillIds: ["judge.rehearsal", "win.gap.radar", "finalist.simulate"],
+      requiredSkillIds: ["judge.rehearsal", "win.gap.radar", "finalist.simulate"],
+      requiredAgentCardSignals: ["judge.rehearsal:tag:recording-lock", "win.gap.radar:tag:feature-freeze-lock"],
+      observedAgentCardSignals: ["judge.rehearsal:tag:recording-lock"],
+      generatedAt: "2026-06-18T00:00:00.000Z",
+      probes: [
+        passedProbe("target-health"),
+        {
+          ...passedProbe("agent-card-skill-surface"),
+          status: "watch",
+          score: 58,
+          evidence: "Target Agent Card misses win.gap.radar:tag:feature-freeze-lock."
+        },
+        passedProbe("acceptance-endpoint"),
+        passedProbe("a2a-artifact"),
+        passedProbe("ci-main")
+      ]
+    });
+  }
+
+  function buildSimulation(input: { protopediaUrl?: string; videoUrl?: string; releaseDrift?: ReturnType<typeof buildReleaseDriftGuard> } = {}) {
     const recommendation = recommendSquad(DEFAULT_PROJECT_BRIEF, ["market-broker", "gemini-strategist", "cloud-run-sre"], 140);
     const strategy = buildWinningStrategy(recommendation);
     const mission = buildMissionRun(recommendation, strategy);
@@ -29,7 +67,8 @@ describe("finalist simulator", () => {
       pitch,
       judgeDrill,
       squadContract,
-      submissionUrls: input
+      submissionUrls: input,
+      releaseDrift: input.releaseDrift
     });
     return simulation;
   }
@@ -116,6 +155,36 @@ describe("finalist simulator", () => {
     expect(simulation.internalLock).toMatchObject({
       readiness: "needs-finalist-proof",
       checks: expect.arrayContaining([expect.objectContaining({ id: "external-submit-truth", status: "blocked" })])
+    });
+  });
+
+  test("keeps a stale public Cloud Run revision visible in the finalist lock", () => {
+    const simulation = buildSimulation({ releaseDrift: buildDriftWithMissingSignal() });
+
+    expect(simulation.gaps).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "public-release-drift",
+          severity: "watch",
+          owner: "Cloud Run SRE"
+        })
+      ])
+    );
+    expect(simulation.internalLock).toMatchObject({
+      readiness: "needs-finalist-proof",
+      checks: expect.arrayContaining([
+        expect.objectContaining({
+          id: "public-release-truth",
+          status: "watch",
+          proof: expect.stringContaining("missing Agent Card signals")
+        })
+      ])
+    });
+    expect(simulation.a2aPayload).toMatchObject({
+      releaseDrift: {
+        verdict: "deploy-drift",
+        missingAgentCardSignals: ["win.gap.radar:tag:feature-freeze-lock"]
+      }
     });
   });
 });

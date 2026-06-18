@@ -3,6 +3,7 @@ import type { JudgeDrill, JudgeObjection } from "./judgeDrill.js";
 import type { MissionRun } from "./mission.js";
 import type { OpsDrill } from "./ops.js";
 import type { PitchChecklistItem, PitchRun } from "./pitch.js";
+import type { ReleaseDriftGuard } from "./releaseDrift.js";
 import {
   SUBMISSION_PROOF,
   hasSubmissionUrl,
@@ -266,6 +267,7 @@ function buildInternalLock(input: {
   panels: FinalistPanel[];
   gaps: FinalistGap[];
   ciReady: number;
+  releaseDrift?: ReleaseDriftGuard;
 }): FinalistInternalLock {
   const base = input.baseUrl.replace(/\/$/, "");
   const holdCount = input.panels.filter((panel) => panel.verdict === "hold").length;
@@ -327,6 +329,26 @@ function buildInternalLock(input: {
       evidenceUrl: absoluteUrl(base, "/api/submission-closeout")
     })
   ];
+  if (input.releaseDrift) {
+    checks.push(
+      internalLockCheck({
+        id: "public-release-truth",
+        label: "Public Cloud Run revision is current",
+        status:
+          input.releaseDrift.verdict === "release-current"
+            ? "sealed"
+            : input.releaseDrift.verdict === "deploy-drift"
+              ? "watch"
+              : "blocked",
+        score: input.releaseDrift.verdict === "release-current" ? 100 : input.releaseDrift.verdict === "deploy-drift" ? 72 : 20,
+        proof:
+          input.releaseDrift.verdict === "release-current"
+            ? `${input.releaseDrift.driftScore} drift score; public release is current.`
+            : `${input.releaseDrift.verdict}: ${input.releaseDrift.missingSkills.length} missing skills / ${input.releaseDrift.missingAgentCardSignals.length} missing Agent Card signals.`,
+        evidenceUrl: absoluteUrl(base, "/api/release-drift")
+      })
+    );
+  }
   const nonExternalChecks = checks.filter((check) => check.id !== "external-submit-truth");
   const sealedCount = checks.filter((check) => check.status === "sealed").length;
   const watchCount = checks.filter((check) => check.status === "watch").length;
@@ -369,8 +391,9 @@ export function buildFinalistSimulation(input: {
   judgeDrill: JudgeDrill;
   squadContract: SquadContract;
   submissionUrls?: SubmissionUrlEvidence;
+  releaseDrift?: ReleaseDriftGuard;
 }): FinalistSimulation {
-  const { baseUrl, recommendation, strategy, mission, opsDrill, pitch, judgeDrill, squadContract, submissionUrls } = input;
+  const { baseUrl, recommendation, strategy, mission, opsDrill, pitch, judgeDrill, squadContract, submissionUrls, releaseDrift } = input;
   const appUrl = mission.submissionPack.deployedUrl || baseUrl;
   const proofUrl = absoluteUrl(baseUrl, "/api/proof");
   const finalistUrl = absoluteUrl(baseUrl, "/api/finalist");
@@ -381,7 +404,25 @@ export function buildFinalistSimulation(input: {
   const contractUrl = absoluteUrl(baseUrl, "/api/contracts");
   const ciReady = hasSubmissionUrl(SUBMISSION_PROOF.ciWorkflowUrl) ? 100 : 45;
   const submissionState = buildSubmissionState(submissionUrls);
-  const externalGaps = uniqueGaps([...submissionGaps(strategy, submissionState), ...checklistGaps(pitch.recordingChecklist, submissionState)]);
+  const releaseGap =
+    releaseDrift && releaseDrift.verdict !== "release-current"
+      ? ({
+          id: "public-release-drift",
+          label: "Public Cloud Run release drift",
+          severity: releaseDrift.verdict === "release-blocked" ? "blocker" : "watch",
+          owner: "Cloud Run SRE",
+          action:
+            releaseDrift.verdict === "release-blocked"
+              ? "公開Cloud RunまたはCIを復旧し、Release Drift Guardを再実行する"
+              : "最新mainをCloud Runへ再デプロイし、Agent Card / A2A / Acceptance Matrixを再検証する",
+          proof: releaseDrift.summary
+        } satisfies FinalistGap)
+      : null;
+  const externalGaps = uniqueGaps([
+    ...submissionGaps(strategy, submissionState),
+    ...checklistGaps(pitch.recordingChecklist, submissionState),
+    ...(releaseGap ? [releaseGap] : [])
+  ]);
   const externalPenalty = externalGaps.filter((gap) => gap.severity === "external").length * 2 + externalGaps.filter((gap) => gap.severity === "blocker").length * 18;
   const selectedAgentNames = recommendation.selected.map((agent) => agent.name).join(" / ") || "A2A Market Broker";
 
@@ -465,7 +506,8 @@ export function buildFinalistSimulation(input: {
     squadContract,
     panels,
     gaps: externalGaps,
-    ciReady
+    ciReady,
+    releaseDrift
   });
   const finalistScore = Math.round(clamp(average([rawScore, internalLock.internalScore]) - externalPenalty));
   const weakestPanel = [...panels].sort((left, right) => left.score - right.score)[0];
@@ -544,6 +586,14 @@ export function buildFinalistSimulation(input: {
           evidenceUrl: check.evidenceUrl
         }))
       },
+      releaseDrift: releaseDrift
+        ? {
+            verdict: releaseDrift.verdict,
+            driftScore: releaseDrift.driftScore,
+            missingSkills: releaseDrift.missingSkills,
+            missingAgentCardSignals: releaseDrift.missingAgentCardSignals
+          }
+        : null,
       appUrl
     }
   };
