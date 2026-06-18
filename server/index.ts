@@ -1123,13 +1123,28 @@ app.post("/api/competitive-battlecard", async (req, res) => {
   );
 });
 
-function buildCompetitiveSnapshotForRequest(req: express.Request) {
+function competitiveSnapshotQueryInput(req: express.Request) {
+  return {
+    liveSourceProof: req.query.live === "1" || req.query.live === "true"
+  };
+}
+
+async function buildCompetitiveSnapshotForRequest(req: express.Request, input: { liveSourceProof?: boolean } = {}) {
   const baseUrl = publicBaseUrl(req);
   const selectedAgentIds = ["market-broker", "gemini-strategist", "cloud-run-sre"];
   const projectBrief = DEFAULT_PROJECT_BRIEF;
   const recommendation = recommendSquad(projectBrief, selectedAgentIds);
   const strategy = buildWinningStrategy(recommendation);
-  const marketIntel = buildMarketIntelReport({ baseUrl, recommendation, strategy });
+  const marketIntelBase = buildMarketIntelReport({ baseUrl, recommendation, strategy });
+  const marketIntel = input.liveSourceProof
+    ? attachSourceProofLock(
+        marketIntelBase,
+        await probeMarketIntelSources({
+          sourceLedger: marketIntelBase.sourceLedger,
+          timeoutMs: 6000
+        })
+      )
+    : marketIntelBase;
   const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
   const battlecard = buildCompetitiveBattlecard({ baseUrl, strategy, marketIntel, moatStress });
 
@@ -1143,12 +1158,12 @@ function buildCompetitiveSnapshotForRequest(req: express.Request) {
   });
 }
 
-app.get("/api/competitive-swot", (req, res) => {
-  res.json(buildCompetitiveSnapshotForRequest(req));
+app.get("/api/competitive-swot", async (req, res) => {
+  res.json(await buildCompetitiveSnapshotForRequest(req, competitiveSnapshotQueryInput(req)));
 });
 
-app.get("/competitive-swot", (req, res) => {
-  res.type("html").send(renderCompetitiveSnapshotHtml(buildCompetitiveSnapshotForRequest(req)));
+app.get("/competitive-swot", async (req, res) => {
+  res.type("html").send(renderCompetitiveSnapshotHtml(await buildCompetitiveSnapshotForRequest(req, competitiveSnapshotQueryInput(req))));
 });
 
 async function buildJudgeSnapshotForRequest(req: express.Request) {

@@ -1,5 +1,5 @@
 import type { CompetitiveBattlecard, CompetitiveBattlecardCard } from "./competitiveBattlecard.js";
-import type { MarketIntelReport, MarketSourceLedgerItem } from "./marketIntel.js";
+import type { MarketIntelReport, MarketSourceLedgerItem, MarketSourceProofLock } from "./marketIntel.js";
 import type { SwotItem, SwotQuadrant, WinningStrategy } from "./strategy.js";
 
 export type CompetitiveSnapshotReadiness = "competitive-swot-ready" | "competitive-swot-watch" | "competitive-swot-exposed";
@@ -35,6 +35,13 @@ export type CompetitiveSnapshot = {
     swotReceiptCount: number;
     swotQuadrantCount: number;
     sourceLockReadiness: string;
+    sourceProofScore: number;
+    sourceLiveProbeCount: number;
+    sourcePassedCount: number;
+    sourceWatchCount: number;
+    sourceFailedCount: number;
+    sourceUncheckedCount: number;
+    sourceCompetitorCoveragePercent: number;
   };
   links: CompetitiveSnapshotLink[];
   swotMatrix: Array<{
@@ -60,6 +67,7 @@ export type CompetitiveSnapshot = {
   winLossLock: CompetitiveBattlecard["winLossLock"];
   proofLock: CompetitiveBattlecard["proofLock"];
   objectionReplay: CompetitiveBattlecard["objectionReplay"];
+  sourceProofLock: MarketSourceProofLock;
   sourceLedger: MarketSourceLedgerItem[];
   postApis: CompetitiveSnapshotPostApi[];
   judgeScript: string[];
@@ -192,7 +200,14 @@ export function buildCompetitiveSnapshot(input: {
       sourceUrlCount,
       swotReceiptCount: input.battlecard.swotReceipts.length,
       swotQuadrantCount,
-      sourceLockReadiness: input.marketIntel.sourceProofLock.readiness
+      sourceLockReadiness: input.marketIntel.sourceProofLock.readiness,
+      sourceProofScore: input.marketIntel.sourceProofLock.score,
+      sourceLiveProbeCount: input.marketIntel.sourceProofLock.liveProbeCount,
+      sourcePassedCount: input.marketIntel.sourceProofLock.passedCount,
+      sourceWatchCount: input.marketIntel.sourceProofLock.watchCount,
+      sourceFailedCount: input.marketIntel.sourceProofLock.failedCount,
+      sourceUncheckedCount: input.marketIntel.sourceProofLock.uncheckedCount,
+      sourceCompetitorCoveragePercent: input.marketIntel.sourceProofLock.competitorCoveragePercent
     },
     links: [
       {
@@ -251,6 +266,7 @@ export function buildCompetitiveSnapshot(input: {
     winLossLock: input.battlecard.winLossLock,
     proofLock: input.battlecard.proofLock,
     objectionReplay: input.battlecard.objectionReplay,
+    sourceProofLock: input.marketIntel.sourceProofLock,
     sourceLedger: input.marketIntel.sourceLedger,
     postApis,
     judgeScript: [
@@ -272,6 +288,17 @@ export function buildCompetitiveSnapshot(input: {
       swotQuadrantCount,
       winLossReadiness: input.battlecard.winLossLock.readiness,
       sourceLockReadiness: input.marketIntel.sourceProofLock.readiness,
+      sourceProofLock: {
+        score: input.marketIntel.sourceProofLock.score,
+        readiness: input.marketIntel.sourceProofLock.readiness,
+        checkedAt: input.marketIntel.sourceProofLock.checkedAt,
+        passedCount: input.marketIntel.sourceProofLock.passedCount,
+        watchCount: input.marketIntel.sourceProofLock.watchCount,
+        failedCount: input.marketIntel.sourceProofLock.failedCount,
+        uncheckedCount: input.marketIntel.sourceProofLock.uncheckedCount,
+        liveProbeCount: input.marketIntel.sourceProofLock.liveProbeCount,
+        competitorCoveragePercent: input.marketIntel.sourceProofLock.competitorCoveragePercent
+      },
       endpoints: {
         competitiveSwotSnapshot: competitiveSnapshotUrl,
         competitiveSwotJson: competitiveSnapshotJsonUrl,
@@ -286,8 +313,8 @@ export function buildCompetitiveSnapshot(input: {
 }
 
 function statusTone(status: string) {
-  if (["competitive-swot-ready", "lead", "win", "sealed", "proof-locked", "duel-locked", "replay-ready", "win-loss-locked"].includes(status)) return "good";
-  if (["competitive-swot-exposed", "risk", "exposed", "missing", "needs-counterproof", "needs-duel-proof", "loss-risk", "needs-positioning"].includes(status)) return "bad";
+  if (["competitive-swot-ready", "lead", "win", "sealed", "proof-locked", "duel-locked", "replay-ready", "win-loss-locked", "source-lock-live", "passed"].includes(status)) return "good";
+  if (["competitive-swot-exposed", "risk", "exposed", "missing", "needs-counterproof", "needs-duel-proof", "loss-risk", "needs-positioning", "source-lock-blocked", "failed"].includes(status)) return "bad";
   return "watch";
 }
 
@@ -374,6 +401,19 @@ export function renderCompetitiveSnapshotHtml(snapshot: CompetitiveSnapshot) {
         </article>`
     )
     .join("");
+  const sourceProbeRows = snapshot.sourceProofLock.probes
+    .map(
+      (probe) => `
+        <article class="source-probe ${statusTone(probe.status)}">
+          <div><strong>${escapeHtml(probe.label)}</strong><span>${escapeHtml(probe.status)}</span></div>
+          <a href="${escapeHtml(probe.url)}">${escapeHtml(probe.url)}</a>
+          <p>${escapeHtml(probe.evidence)}</p>
+          <small>${escapeHtml(probe.competitorIds.join(" / ") || "context")} · ${escapeHtml(probe.statusCode ?? "no-status")} · ${escapeHtml(probe.latencyMs ? `${probe.latencyMs}ms` : "no-latency")}</small>
+        </article>`
+    )
+    .join("");
+  const sourceRunbook = snapshot.sourceProofLock.runbook.map((line) => `<li><code>${escapeHtml(line)}</code></li>`).join("");
+  const sourceActions = snapshot.sourceProofLock.nextActions.map((line) => `<li>${escapeHtml(line)}</li>`).join("");
   const sourceRows = snapshot.sourceLedger
     .map(
       (source) => `
@@ -431,7 +471,7 @@ export function renderCompetitiveSnapshotHtml(snapshot: CompetitiveSnapshot) {
       .eyebrow { color: var(--green); font-size: 0.78rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0; }
       h1 { margin: 8px 0 10px; font-size: clamp(2rem, 5vw, 4.6rem); line-height: 1; letter-spacing: 0; max-width: 920px; }
       header p { color: var(--muted); max-width: 820px; }
-      .metric-grid, .links-grid, .swot-grid, .competitor-grid, .proof-grid, .source-grid {
+      .metric-grid, .links-grid, .swot-grid, .competitor-grid, .proof-grid, .source-grid, .source-lock-grid, .source-probe-grid, .source-lock-runbook {
         display: grid;
         gap: 12px;
       }
@@ -484,6 +524,25 @@ export function renderCompetitiveSnapshotHtml(snapshot: CompetitiveSnapshot) {
       td span, td small { display: block; color: var(--muted); font-size: 0.76rem; margin-top: 3px; }
       .proof-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .proof-check { padding: 12px; }
+      .source-lock-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); margin: 12px 0; }
+      .source-lock-grid article, .source-probe {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        background: #fff;
+        min-width: 0;
+      }
+      .source-lock-grid span, .source-probe span { color: var(--muted); font-size: 0.72rem; font-weight: 900; text-transform: uppercase; }
+      .source-lock-grid strong { display: block; margin-top: 4px; font-size: 1.3rem; overflow-wrap: anywhere; }
+      .source-probe-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .source-probe div { display: flex; justify-content: space-between; gap: 10px; align-items: start; }
+      .source-probe a, .source-probe p, .source-probe small { display: block; overflow-wrap: anywhere; }
+      .source-probe small { color: var(--muted); }
+      .source-probe.good { background: var(--mint); border-color: #b9dfd1; }
+      .source-probe.watch { background: var(--amber-bg); border-color: #ecd58c; }
+      .source-probe.bad { background: #ffe4de; border-color: #efb2a6; }
+      .source-lock-runbook { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 12px; }
+      .source-lock-runbook div { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fff; min-width: 0; }
       .source-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .api-row { padding: 12px; margin: 10px 0; }
       .api-row small { color: var(--muted); text-align: right; overflow-wrap: anywhere; }
@@ -493,7 +552,7 @@ export function renderCompetitiveSnapshotHtml(snapshot: CompetitiveSnapshot) {
       footer { color: var(--muted); font-size: 0.84rem; padding: 10px 0 36px; }
       @media (max-width: 860px) {
         header { padding-top: 28px; }
-        .metric-grid, .links-grid, .swot-grid, .competitor-grid, .proof-grid, .source-grid { grid-template-columns: 1fr; }
+        .metric-grid, .links-grid, .swot-grid, .competitor-grid, .proof-grid, .source-grid, .source-lock-grid, .source-probe-grid, .source-lock-runbook { grid-template-columns: 1fr; }
         table, thead, tbody, tr, th, td { display: block; }
         thead { display: none; }
         tr { border-top: 1px solid var(--line); padding: 8px 0; }
@@ -511,7 +570,7 @@ export function renderCompetitiveSnapshotHtml(snapshot: CompetitiveSnapshot) {
         <div class="metric good"><span>Battle</span><strong>${escapeHtml(snapshot.summary.battleScore)}</strong></div>
         <div class="metric good"><span>Criteria Duel</span><strong>${escapeHtml(snapshot.summary.criteriaDuelScore)}</strong></div>
         <div class="metric ${statusTone(snapshot.winLossLock.readiness)}"><span>Win/Loss</span><strong>${escapeHtml(snapshot.summary.winLossScore)}</strong></div>
-        <div class="metric watch"><span>Source Lock</span><strong>${escapeHtml(snapshot.summary.sourceLockReadiness)}</strong></div>
+        <div class="metric ${statusTone(snapshot.summary.sourceLockReadiness)}"><span>Source Lock</span><strong>${escapeHtml(snapshot.summary.sourceLockReadiness)}</strong></div>
         <div class="metric good"><span>SWOT</span><strong>${escapeHtml(snapshot.summary.swotQuadrantCount)}/4</strong></div>
       </div>
     </header>
@@ -552,6 +611,23 @@ export function renderCompetitiveSnapshotHtml(snapshot: CompetitiveSnapshot) {
         <h2>Competitive Proof Lock</h2>
         <p>${escapeHtml(snapshot.proofLock.judgeLine)}</p>
         <div class="proof-grid">${proofChecks}</div>
+      </section>
+      <section class="section">
+        <h2>Source Freshness Lock</h2>
+        <p>${escapeHtml(snapshot.sourceProofLock.headline)} ${escapeHtml(snapshot.sourceProofLock.hardTruth)}</p>
+        <div class="source-lock-grid">
+          <article><span>Score</span><strong>${escapeHtml(snapshot.sourceProofLock.score)}</strong></article>
+          <article><span>Live Probes</span><strong>${escapeHtml(snapshot.sourceProofLock.liveProbeCount)} / ${escapeHtml(snapshot.sourceProofLock.probes.length)}</strong></article>
+          <article><span>Passed</span><strong>${escapeHtml(snapshot.sourceProofLock.passedCount)}</strong></article>
+          <article><span>Watch</span><strong>${escapeHtml(snapshot.sourceProofLock.watchCount)}</strong></article>
+          <article><span>Failed</span><strong>${escapeHtml(snapshot.sourceProofLock.failedCount)}</strong></article>
+          <article><span>Coverage</span><strong>${escapeHtml(snapshot.sourceProofLock.competitorCoveragePercent)}%</strong></article>
+        </div>
+        <div class="source-probe-grid">${sourceProbeRows}</div>
+        <div class="source-lock-runbook">
+          <div><strong>Runbook</strong><ol>${sourceRunbook}</ol></div>
+          <div><strong>Next Actions</strong><ol>${sourceActions}</ol></div>
+        </div>
       </section>
       <section class="section">
         <h2>Source Ledger</h2>

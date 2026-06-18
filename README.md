@@ -102,12 +102,13 @@
 
 ## Competitive SWOT Snapshot
 
-`Competitive SWOT Snapshot` は、競合分析とSWOTをPOST APIの奥に隠さず、審査員が直接読めるGETページにします。6競合、SWOT 4象限、公式ソース、Criteria Duel、Win/Loss Lock、Competitive Proof Lock、Source Ledger、深掘りcurlを1ページに束ね、提出本文やJudge Snapshotから「競合分析を実施済み」と確認できます。
+`Competitive SWOT Snapshot` は、競合分析とSWOTをPOST APIの奥に隠さず、審査員が直接読めるGETページにします。6競合、SWOT 4象限、公式ソース、Criteria Duel、Win/Loss Lock、Competitive Proof Lock、Source Freshness Lock、Source Ledger、深掘りcurlを1ページに束ね、提出本文やJudge Snapshotから「競合分析を実施済み」と確認できます。通常GETでは宣言済みソースを軽く表示し、`?live=1` では公式ソースURLをその場でプローブしてpassed/watch/failed、競合カバレッジ、次アクションまで表示します。
 
 - Page: `GET /competitive-swot`
 - API: `GET /api/competitive-swot`
+- Live source check: `GET /competitive-swot?live=1` / `GET /api/competitive-swot?live=1`
 - App UI: `SWOT Page`
-- Output: competitor summary、SWOT matrix、Criteria Duel、Win/Loss Lock、Proof Lock、Source Ledger、judge script、A2A `competitive.snapshot` payload
+- Output: competitor summary、SWOT matrix、Criteria Duel、Win/Loss Lock、Proof Lock、Source Freshness Lock、Source Ledger、judge script、A2A `competitive.snapshot` payload
 
 ## Public Judge Snapshot
 

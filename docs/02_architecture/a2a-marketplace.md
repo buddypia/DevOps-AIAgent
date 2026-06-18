@@ -126,6 +126,7 @@
 - Competitive Proof Lock: 競合カバレッジ、公式ソース、SWOT mapping、反論receipt、Objection Replay、live source lockをsealed/watch/missingで検収する
 - Judge script: 質疑で話す順番を「相手の強みを認める → 調達体験へずらす → 証拠を開く」に固定する
 - A2A payload: `competitive.battlecard` skillとしてbattle score、readiness、card verdicts、top risks、Win/Loss Lock、proof lockを返す
+- Competitive SWOT Snapshot: `GET /competitive-swot` / `GET /api/competitive-swot` でSource Freshness Lockを含む競合/SWOT証拠を直接表示し、`?live=1` の時だけ公式ソースURLをライブプローブする
 
 ## Public Judge Snapshot Surface
 
@@ -486,7 +487,7 @@
 - Task board proof: `task.delegate` skillとして、agent work orders、execution order、verification queue、receipt digestをA2A payloadにも含める
 - Moat stress proof: `moat.stress` skillとして、競合別の想定反論、反証、見せる証拠、録画順をA2A payloadにも含める
 - Competitive battlecard proof: `competitive.battlecard` skillとして、競合別の短い回答、公式ソース、SWOT receipts、Criteria Duel、Win/Loss Lock、Objection Replay、top risksをA2A payloadにも含める
-- Competitive SWOT snapshot proof: `competitive.snapshot` skillとして、6競合、SWOT 4象限、公式ソース、Criteria Duel、Win/Loss Lock、Proof LockをGETで開ける審査用HTMLにも含める
+- Competitive SWOT snapshot proof: `competitive.snapshot` skillとして、6競合、SWOT 4象限、公式ソース、Criteria Duel、Win/Loss Lock、Proof Lock、Source Freshness LockをGETで開ける審査用HTMLにも含め、`?live=1` で公式ソース到達性を再検証する
 - MVP readiness snapshot proof: `mvp.snapshot` skillとして、MVP Audit、Acceptance Matrix、Release Drift、Deploy Recovery、外部提出gapをGETで開ける提出可否HTMLにも含める
 - Recording script proof: `recording.script` skillとして、30秒動画の台本、字幕、証拠URL、Video Proof LockをGETで開ける録画用HTMLにも含める
 
