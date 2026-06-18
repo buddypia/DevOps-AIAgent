@@ -7,6 +7,7 @@ import type { UserPilotLab } from "./userPilot.js";
 
 export type DemoConciergeReadiness = "guided" | "external-watch" | "needs-focus";
 export type DemoConciergeStatus = "ready" | "watch" | "blocked";
+export type DemoRouteLockReadiness = "locked" | "locked-external-watch" | "needs-route-fix";
 
 export type DemoConciergeStep = {
   id: string;
@@ -29,6 +30,27 @@ export type DemoConciergeLane = {
   steps: DemoConciergeStep[];
 };
 
+export type DemoRouteLockStep = {
+  id: string;
+  timeRange: string;
+  screen: string;
+  click: string;
+  proofUrl: string;
+  judgeSignal: string;
+  status: DemoConciergeStatus;
+};
+
+export type DemoRouteLock = {
+  id: string;
+  lockScore: number;
+  readiness: DemoRouteLockReadiness;
+  routeStepScore: number;
+  proofLinkScore: number;
+  oneBreathScript: string;
+  lockedSteps: DemoRouteLockStep[];
+  bypassedDistractions: Array<{ id: string; cut: string; reason: string }>;
+};
+
 export type DemoConcierge = {
   id: string;
   conciergeScore: number;
@@ -36,6 +58,7 @@ export type DemoConcierge = {
   headline: string;
   hardTruth: string;
   singleNextClick: string;
+  routeLock: DemoRouteLock;
   lanes: DemoConciergeLane[];
   successCriteria: Array<{ id: string; label: string; status: DemoConciergeStatus; proof: string }>;
   frictionCuts: Array<{ id: string; before: string; after: string; proof: string }>;
@@ -62,6 +85,12 @@ function statusFromScore(score: number): DemoConciergeStatus {
   return "blocked";
 }
 
+function scoreFromStatus(status: DemoConciergeStatus) {
+  if (status === "ready") return 100;
+  if (status === "watch") return 88;
+  return 0;
+}
+
 function criterionScore(strategy: WinningStrategy, id: string) {
   return strategy.judgeCriteria.find((criterion) => criterion.id === id)?.score ?? strategy.judgeScore;
 }
@@ -77,6 +106,16 @@ function readinessFrom(input: {
   }
   if (input.acceptance.verdict === "accepted-with-external-gaps" || input.score < 92) return "external-watch";
   return "guided";
+}
+
+function routeLockReadiness(input: { score: number; blockedCount: number; externalWatchCount: number }): DemoRouteLockReadiness {
+  if (input.blockedCount > 0) return "needs-route-fix";
+  if (input.externalWatchCount > 0 || input.score < 92) return "locked-external-watch";
+  return "locked";
+}
+
+function shortText(value: string, max = 180) {
+  return value.length <= max ? value : `${value.slice(0, max - 1)}...`;
 }
 
 export function buildDemoConcierge(input: {
@@ -251,6 +290,62 @@ export function buildDemoConcierge(input: {
     }
   ];
 
+  const buyerLane = lanes.find((lane) => lane.id === "buyer");
+  const routeLockSteps: DemoRouteLockStep[] = [
+    ...(lanes.find((lane) => lane.id === "judge")?.steps.slice(0, 2) ?? []),
+    ...(lanes.find((lane) => lane.id === "submitter")?.steps.slice(0, 1) ?? []),
+    ...(lanes.find((lane) => lane.id === "buyer")?.steps.slice(0, 1) ?? []),
+    ...(lanes.find((lane) => lane.id === "submitter")?.steps.slice(1, 2) ?? [])
+  ].map((step) => ({
+    id: step.id,
+    timeRange: step.timeRange,
+    screen: step.screen,
+    click: step.click,
+    proofUrl: step.endpoint,
+    judgeSignal: step.successSignal,
+    status: step.status
+  }));
+  const routeStepScore = Math.round(average(routeLockSteps.map((step) => scoreFromStatus(step.status))));
+  const proofLinkScore = Math.round(
+    (routeLockSteps.filter((step) => step.proofUrl.startsWith("http://") || step.proofUrl.startsWith("https://")).length / Math.max(1, routeLockSteps.length)) * 100
+  );
+  const routeLockScore = Math.round(
+    clamp(
+      average([routeStepScore, proofLinkScore, command.commandScore, userPilot.pilotScore, acceptance.acceptanceScore, pilotEconomics.economicsScore]) +
+        (lanes.length >= 3 ? 2 : 0)
+    )
+  );
+  const routeLock: DemoRouteLock = {
+    id: `demo-route-lock-${routeLockScore}`,
+    lockScore: routeLockScore,
+    readiness: routeLockReadiness({
+      score: routeLockScore,
+      blockedCount: routeLockSteps.filter((step) => step.status === "blocked").length,
+      externalWatchCount
+    }),
+    routeStepScore,
+    proofLinkScore,
+    oneBreathScript: shortText(`${command.openingMove} ${buyerLane?.valueMoment ?? pilotEconomics.verdict}`),
+    lockedSteps: routeLockSteps,
+    bypassedDistractions: [
+      {
+        id: "feature-tour",
+        cut: "機能一覧を順番に説明しない",
+        reason: "Judge Command Center、Acceptance Matrix、Battlecard、buyer proofだけを90秒に固定する。"
+      },
+      {
+        id: "free-navigation",
+        cut: "審査員に自由探索させない",
+        reason: "各stepがproof URL、成功シグナル、話す台詞を持つため、迷いを発生させない。"
+      },
+      {
+        id: "external-gap-hiding",
+        cut: "ProtoPedia/動画URL不足を隠さない",
+        reason: "外部URLはwatchとして見せ、コード側MVPと提出作業を分離する。"
+      }
+    ]
+  };
+
   const singleNextClick =
     readiness === "needs-focus"
       ? successCriteria.find((item) => item.status === "blocked")?.label ?? "Fix blocked concierge criterion"
@@ -271,6 +366,7 @@ export function buildDemoConcierge(input: {
     hardTruth:
       "機能を増やすほど、審査員には迷いが増えます。勝つには、誰が来ても最初の1クリック、言う台詞、見る証拠URLを固定する必要があります。",
     singleNextClick,
+    routeLock,
     lanes,
     successCriteria,
     frictionCuts,
@@ -280,6 +376,13 @@ export function buildDemoConcierge(input: {
       conciergeScore,
       readiness,
       singleNextClick,
+      routeLock: {
+        lockScore: routeLock.lockScore,
+        readiness: routeLock.readiness,
+        routeStepScore: routeLock.routeStepScore,
+        proofLinkScore: routeLock.proofLinkScore,
+        lockedSteps: routeLock.lockedSteps.map((step) => ({ id: step.id, status: step.status, proofUrl: step.proofUrl }))
+      },
       lanes: lanes.map((lane) => ({
         id: lane.id,
         persona: lane.persona,

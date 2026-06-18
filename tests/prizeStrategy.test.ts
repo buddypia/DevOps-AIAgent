@@ -333,14 +333,30 @@ describe("prize strategy board", () => {
     ]);
     expect(board.criteria.every((criterion) => criterion.targetScore === 92)).toBe(true);
     expect(board.criteria.find((criterion) => criterion.id === "usability")?.status).toBe("finalist-track");
-    expect(board.proofMoves.map((move) => move.id)).toEqual(["concierge", "command", "battlecard", "truth-table", "public-release", "operations-value", "buyer-value"]);
+    expect(board.proofMoves.map((move) => move.id)).toEqual([
+      "concierge",
+      "route-lock",
+      "command",
+      "battlecard",
+      "truth-table",
+      "public-release",
+      "operations-value",
+      "buyer-value"
+    ]);
+    expect(board.proofMoves.find((move) => move.id === "route-lock")).toMatchObject({
+      screen: "Demo Concierge",
+      endpoint: `${SUBMISSION_PROOF.deployedUrl}/api/demo-concierge`,
+      proof: expect.stringContaining("route lock"),
+      score: expect.any(Number)
+    });
+    expect(board.proofMoves.find((move) => move.id === "route-lock")?.score).toBeGreaterThanOrEqual(92);
     expect(board.proofMoves.find((move) => move.id === "operations-value")).toMatchObject({
       screen: "Observability Oracle",
       endpoint: `${SUBMISSION_PROOF.deployedUrl}/api/observability-oracle`,
       proof: expect.stringContaining("operational buyer proof")
     });
     expect(board.pitchOrder[0]).toMatchObject({ screen: "Demo Concierge", proofMoveId: "concierge" });
-    expect(board.criteria.find((criterion) => criterion.id === "usability")?.decisiveProof).toContain("Demo Concierge");
+    expect(board.criteria.find((criterion) => criterion.id === "usability")?.decisiveProof).toContain("Judge Route Lock");
     expect(board.pitchOrder.find((step) => step.id === "buyer-value")).toMatchObject({
       screen: "Observability Oracle + Pilot Economics",
       proofMoveId: "operations-value"
@@ -351,7 +367,17 @@ describe("prize strategy board", () => {
       method: "message/send",
       skill: "prize.strategy",
       demoConcierge: {
-        readiness: expect.any(String)
+        readiness: expect.any(String),
+        routeLock: {
+          readiness: "locked-external-watch",
+          score: expect.any(Number),
+          steps: expect.arrayContaining([
+            expect.objectContaining({
+              id: "judge-command",
+              proofUrl: `${SUBMISSION_PROOF.deployedUrl}/api/judge-command-center`
+            })
+          ])
+        }
       },
       observabilityOracle: {
         readiness: expect.any(String),

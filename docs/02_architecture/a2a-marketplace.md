@@ -138,10 +138,11 @@
 
 ## Demo Concierge Surface
 
-- `POST /api/demo-concierge`: 審査員、買い手、提出者の最初の1クリック、話す台詞、証拠URL、成功条件を固定する
+- `POST /api/demo-concierge`: 審査員、買い手、提出者の最初の1クリック、話す台詞、証拠URL、成功条件を固定し、Judge Route Lockで0-90秒の一本道に圧縮する
 - Persona lanes: 初見審査員、Platform/SRE buyer、ハッカソン提出者ごとにentry question、first click、value moment、score lift、step endpointを返す
+- Route lock: judge/buyer/submitter laneからlocked steps、proof URL到達率、ひと息台詞、捨てる導線を返し、初見審査員の自由探索を防ぐ
 - Friction cuts: 機能過多、実用性説明、競合差別化の迷いを、どの証拠順で減らすかを返す
-- A2A payload: `demo.concierge` skillとしてconcierge score、readiness、single next click、persona lanes、success criteriaを返す
+- A2A payload: `demo.concierge` skillとしてconcierge score、readiness、single next click、route lock、persona lanes、success criteriaを返す
 
 ## Judge Rehearsal Surface
 
@@ -170,15 +171,15 @@
 
 - `POST /api/prize-strategy`: 審査5項目のtarget score、現在スコア、足りない証拠、最終ピッチ順を優勝作戦へ束ねる
 - Criteria board: AI中心性、課題アプローチ、ユーザビリティ、実用性、実装力をtarget 92点のgapとして評価する
-- Proof moves: Demo Concierge、Judge Command Center、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economicsを最終ピッチで開く順番へ変換する
+- Proof moves: Demo Concierge、Judge Route Lock、Judge Command Center、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economicsを最終ピッチで開く順番へ変換する
 - Risks: 外部提出URL、公開revision、弱い採点軸、command blockerをowner付きの次アクションにする
 - A2A payload: `prize.strategy` skillとしてprize score、readiness、criteria gaps、proof moves、risksを返す
 
 ## Win Gap Radar Surface
 
-- `POST /api/win-gap-radar`: Competitive Battlecard、SWOT、MVP Audit、Finalist、Acceptance Matrix、Prize Strategy、Submission Launch Gateを横断し、優勝に必要なMVP gapをfeature betsへ変換する
+- `POST /api/win-gap-radar`: Competitive Battlecard、SWOT、MVP Audit、Finalist、Acceptance Matrix、Prize Strategy、Demo Concierge、Submission Launch Gateを横断し、優勝に必要なMVP gapをfeature betsへ変換する
 - Gap lanes: AI中心性、競合アプローチ、初回UX、実用性、実装証拠、外部提出closeoutをscore/status/priority付きで返す
-- Feature bets: いま作るべき機能仮説、受入条件、証拠URLを返し、不要な汎用workflow builderや本番決済はcut listに落とす
+- Feature bets: Judge Route Lockなど、いま作るべき機能仮説、受入条件、証拠URLを返し、不要な汎用workflow builderや本番決済はcut listに落とす
 - Honest external gate: ProtoPedia作品URLと動画URLが未発行なら、`submission-closeout` を `close-now` とし、submit-ready/finalist-readyとは呼ばない
 - A2A payload: `win.gap.radar` skillとしてradar score、readiness、lane statuses、feature bets、external gapsを返す
 

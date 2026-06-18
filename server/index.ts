@@ -3466,6 +3466,7 @@ app.post("/api/win-gap-radar", async (req, res) => {
       acceptance,
       prizeStrategy,
       observabilityOracle,
+      demoConcierge,
       submissionLaunch
     })
   );
@@ -5114,6 +5115,7 @@ app.post("/a2a", async (req, res) => {
     acceptance,
     prizeStrategy,
     observabilityOracle,
+    demoConcierge,
     submissionLaunch
   });
   const architecturePack = buildArchitecturePack({
@@ -5196,6 +5198,17 @@ app.post("/a2a", async (req, res) => {
                   conciergeScore: demoConcierge.conciergeScore,
                   readiness: demoConcierge.readiness,
                   singleNextClick: demoConcierge.singleNextClick,
+                  routeLock: {
+                    lockScore: demoConcierge.routeLock.lockScore,
+                    readiness: demoConcierge.routeLock.readiness,
+                    routeStepScore: demoConcierge.routeLock.routeStepScore,
+                    proofLinkScore: demoConcierge.routeLock.proofLinkScore,
+                    lockedSteps: demoConcierge.routeLock.lockedSteps.map((step) => ({
+                      id: step.id,
+                      status: step.status,
+                      proofUrl: step.proofUrl
+                    }))
+                  },
                   lanes: demoConcierge.lanes.map((lane) => ({
                     id: lane.id,
                     persona: lane.persona,
@@ -5286,12 +5299,16 @@ app.post("/a2a", async (req, res) => {
                     id: lane.id,
                     status: lane.status,
                     score: lane.score,
-                    priority: lane.priority
+                    priority: lane.priority,
+                    proofUrl: lane.proofUrl,
+                    demoCue: lane.demoCue,
+                    mvpEvidence: lane.mvpEvidence
                   })),
                   featureBets: winGapRadar.featureBets.map((bet) => ({
                     id: bet.id,
                     priority: bet.priority,
-                    status: bet.status
+                    status: bet.status,
+                    proofUrl: bet.proofUrl
                   })),
                   externalGaps: winGapRadar.externalGaps.map((gap) => gap.id)
                 },

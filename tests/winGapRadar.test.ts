@@ -328,6 +328,7 @@ function fixture() {
     acceptance,
     prizeStrategy,
     observabilityOracle,
+    demoConcierge,
     submissionLaunch
   });
 }
@@ -348,6 +349,12 @@ describe("win gap radar", () => {
       "submission-closeout"
     ]);
     expect(radar.lanes.find((lane) => lane.id === "approach-moat")?.competitorPressure).toContain("代替");
+    expect(radar.lanes.find((lane) => lane.id === "usability-first-run")).toMatchObject({
+      proofUrl: `${SUBMISSION_PROOF.deployedUrl}/api/demo-concierge`,
+      demoCue: "Demo Concierge -> Judge Route Lock -> Locked proof steps",
+      mvpEvidence: expect.stringContaining("route lock")
+    });
+    expect(radar.lanes.find((lane) => lane.id === "usability-first-run")?.score).toBeGreaterThanOrEqual(88);
     expect(radar.lanes.find((lane) => lane.id === "practical-value")).toMatchObject({
       proofUrl: `${SUBMISSION_PROOF.deployedUrl}/api/observability-oracle`,
       demoCue: "Demo Concierge buyer lane -> Observability Oracle -> Pilot Economics",
@@ -362,6 +369,10 @@ describe("win gap radar", () => {
       priority: "now",
       status: "close-now"
     });
+    expect(radar.featureBets.find((bet) => bet.id === "judge-route-lock")).toMatchObject({
+      label: "Judge Route Lock",
+      proofUrl: `${SUBMISSION_PROOF.deployedUrl}/api/demo-concierge`
+    });
     expect(radar.cutList.map((item) => item.id)).toEqual(expect.arrayContaining(["full-workflow-builder", "marketplace-payments"]));
     expect(radar.externalGaps.map((gap) => gap.id)).toEqual(expect.arrayContaining(["protopedia", "video"]));
     expect(radar.a2aPayload).toMatchObject({
@@ -375,6 +386,7 @@ describe("win gap radar", () => {
         submissionLaunch: `${SUBMISSION_PROOF.deployedUrl}/api/submission-launch`
       }
     });
+    expect(radar.proofScript).toContain("Judge Route Lockで0-90秒のlocked stepsと捨てる導線を見せる。");
     expect(radar.proofScript).toContain("Observability Oracleでbuyer SLO、公開運用判断、次のAI買い足しループを見せる。");
   });
 });

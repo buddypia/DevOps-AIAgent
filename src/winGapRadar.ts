@@ -1,5 +1,6 @@
 import type { AcceptanceRow, JudgeAcceptanceMatrix } from "./acceptanceMatrix.js";
 import type { CompetitiveBattlecard } from "./competitiveBattlecard.js";
+import type { DemoConcierge } from "./demoConcierge.js";
 import type { FinalistGap, FinalistPanel, FinalistSimulation } from "./finalist.js";
 import type { MarketIntelReport } from "./marketIntel.js";
 import type { MoatStressScenario, MoatStressTest } from "./moatStress.js";
@@ -198,6 +199,7 @@ export function buildWinGapRadar(input: {
   acceptance: JudgeAcceptanceMatrix;
   prizeStrategy: PrizeStrategyBoard;
   observabilityOracle?: ObservabilityOracle;
+  demoConcierge?: DemoConcierge;
   submissionLaunch: SubmissionLaunchGate;
 }): WinGapRadar {
   const base = input.baseUrl.replace(/\/$/, "");
@@ -209,6 +211,7 @@ export function buildWinGapRadar(input: {
   const releaseRow = acceptanceRow(input.acceptance, "release-drift");
   const oracleScore = input.observabilityOracle ? observabilityProofScore(input.observabilityOracle) : undefined;
   const buyerSlo = input.observabilityOracle?.receipts.find((receipt) => receipt.id === "buyer-slo");
+  const routeLock = input.demoConcierge?.routeLock;
 
   const lanes = [
     lane({
@@ -257,16 +260,21 @@ export function buildWinGapRadar(input: {
       scores: [
         acceptanceRow(input.acceptance, "usability-first-run")?.score ?? 0,
         finalistPanel(input.finalist, "usability")?.score ?? 0,
-        prizeCriterion(input.prizeStrategy, "usability")?.currentScore ?? 0
+        prizeCriterion(input.prizeStrategy, "usability")?.currentScore ?? 0,
+        routeLock?.lockScore ?? acceptanceRow(input.acceptance, "usability-first-run")?.score ?? 0,
+        routeLock?.routeStepScore ?? acceptanceRow(input.acceptance, "usability-first-run")?.score ?? 0
       ],
       competitorPressure: "DifyやGoogle Marketplaceより迷う導線だと、初見の体験価値で負ける。",
       swotSignal: swotSignal(input.strategy, "weaknesses"),
-      mvpEvidence: acceptanceRow(input.acceptance, "usability-first-run")?.evidence ?? "User Pilot evidence missing.",
-      judgeImpact: "審査基準3。機能数ではなく、最初の1クリックで価値へ到達させる。",
-      featureHypothesis: "審査員、買い手、提出者ごとのfirst clickを常時見える場所へ置く。",
-      nextAction: prizeCriterion(input.prizeStrategy, "usability")?.nextAction ?? "Demo Conciergeから審査導線を始める。",
+      mvpEvidence:
+        routeLock === undefined
+          ? acceptanceRow(input.acceptance, "usability-first-run")?.evidence ?? "User Pilot evidence missing."
+          : `${routeLock.lockScore} route lock / ${routeLock.readiness}; ${routeLock.lockedSteps.length} locked proof steps.`,
+      judgeImpact: "審査基準3。機能数ではなく、最初の1クリックと90秒の一本道で価値へ到達させる。",
+      featureHypothesis: "審査員、買い手、提出者ごとのfirst clickを、proof URL付きのJudge Route Lockへ固定する。",
+      nextAction: routeLock === undefined ? (prizeCriterion(input.prizeStrategy, "usability")?.nextAction ?? "Demo Conciergeから審査導線を始める。") : "Judge Route Lockのlocked stepsだけを30秒動画と最終ピッチで辿る。",
       proofUrl: absoluteUrl(base, "/api/demo-concierge"),
-      demoCue: "Demo Concierge -> Judge lane -> First 90 seconds"
+      demoCue: routeLock === undefined ? "Demo Concierge -> Judge lane -> First 90 seconds" : "Demo Concierge -> Judge Route Lock -> Locked proof steps"
     }),
     lane({
       id: "practical-value",
@@ -361,6 +369,16 @@ export function buildWinGapRadar(input: {
       proofUrl: absoluteUrl(base, "/api/competitive-battlecard")
     },
     {
+      id: "judge-route-lock",
+      label: "Judge Route Lock",
+      priority: routeLock && routeLock.lockScore >= 92 ? "later" : "next",
+      status: featureBetStatus(routeLock && routeLock.lockScore >= 92 ? "later" : "next", false),
+      why: "Usabilityは説明の上手さではなく、初見審査員が迷わず証拠へ到達するかで決まる。",
+      build: "Demo Conciergeのjudge/buyer/submitter laneから、0-90秒のlocked steps、proof URL、ひと息台詞、捨てる導線を生成する。",
+      acceptance: "Judge Route Lockが92点以上で、すべてのlocked stepがwatch以上、proof URLが到達可能な形で返る。",
+      proofUrl: absoluteUrl(base, "/api/demo-concierge")
+    },
+    {
       id: "buyer-proof-forward",
       label: "Buyer Proof Forward",
       priority: (acceptanceRow(input.acceptance, "pilot-economics")?.status ?? "watch") === "accepted" ? "later" : "next",
@@ -438,6 +456,7 @@ export function buildWinGapRadar(input: {
     ],
     proofScript: [
       "Demo Conciergeで最初のクリックを固定する。",
+      ...(routeLock ? ["Judge Route Lockで0-90秒のlocked stepsと捨てる導線を見せる。"] : []),
       "Competitive Battlecardで最弱競合への短い回答、source、SWOTを見せる。",
       "Win Gap Radarで、MVP不足をfeature betsとcut listへ変換したことを見せる。",
       ...(input.observabilityOracle ? ["Observability Oracleでbuyer SLO、公開運用判断、次のAI買い足しループを見せる。"] : []),

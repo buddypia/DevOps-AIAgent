@@ -521,6 +521,92 @@ h1 {
   text-transform: uppercase;
 }
 
+.concierge-route-lock {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.48fr) minmax(420px, 1fr);
+  gap: 1px;
+  background: #cbd7dd;
+}
+
+.concierge-route-lock > section,
+.concierge-route-lock > div {
+  min-width: 0;
+  padding: 14px;
+  background: #fbfdff;
+}
+
+.concierge-route-lock > section {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  border-top: 5px solid #14606b;
+}
+
+.concierge-route-lock > section > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.concierge-route-lock > section strong {
+  color: #14606b;
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.concierge-route-lock h3 {
+  font-size: 1.18rem;
+}
+
+.concierge-route-lock p,
+.concierge-route-lock small {
+  color: #39484f;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.concierge-route-lock > div {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.concierge-route-lock article {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #cbd7dd;
+  border-left: 4px solid var(--green);
+  border-radius: 8px;
+  background: #f9fcfd;
+}
+
+.concierge-route-lock article.watch {
+  border-left-color: var(--amber);
+  background: #fff8e6;
+}
+
+.concierge-route-lock article.blocked {
+  border-left-color: var(--rose);
+  background: #fff1f2;
+}
+
+.concierge-route-lock article span {
+  color: #14606b;
+  font-size: 0.7rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.concierge-route-lock article strong {
+  font-size: 0.94rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
 .concierge-lanes {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -11308,8 +11394,13 @@ pre {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .concierge-route-lock,
   .concierge-lanes {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
+  }
+
+  .concierge-route-lock > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .concierge-grid {
@@ -11465,6 +11556,7 @@ pre {
   .command-buttons,
   .command-grid,
   .concierge-summary,
+  .concierge-route-lock,
   .concierge-lanes,
   .concierge-grid,
   .rehearsal-inputs,
@@ -11597,6 +11689,10 @@ pre {
   .ops-grid,
   .lower-grid,
   .analysis-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .concierge-route-lock > div {
     grid-template-columns: 1fr;
   }
 

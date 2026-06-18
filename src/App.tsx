@@ -403,6 +403,32 @@ function DemoConciergePanel({
             </div>
           </div>
 
+          <div className="concierge-route-lock">
+            <section>
+              <div>
+                <span className={cx("risk-chip", concierge.routeLock.readiness === "locked" ? "low" : concierge.routeLock.readiness === "locked-external-watch" ? "medium" : "high")}>
+                  {concierge.routeLock.readiness}
+                </span>
+                <strong>{concierge.routeLock.lockScore}</strong>
+              </div>
+              <h3>Judge Route Lock</h3>
+              <p>{concierge.routeLock.oneBreathScript}</p>
+              <small>
+                {concierge.routeLock.routeStepScore} route steps / {concierge.routeLock.proofLinkScore} proof links
+              </small>
+            </section>
+            <div>
+              {concierge.routeLock.lockedSteps.map((step) => (
+                <article key={step.id} className={step.status}>
+                  <span>{step.timeRange}</span>
+                  <strong>{step.screen}</strong>
+                  <p>{step.click}</p>
+                  <small>{step.judgeSignal}</small>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="concierge-lanes">
             {concierge.lanes.map((lane) => (
               <article key={lane.id}>

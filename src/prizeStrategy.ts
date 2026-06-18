@@ -174,6 +174,14 @@ function proofMoves(input: {
             endpoint: absoluteUrl(baseUrl, "/api/demo-concierge"),
             proof: `${demoConcierge.conciergeScore} concierge score / ${demoConcierge.readiness}`,
             score: demoConcierge.conciergeScore
+          },
+          {
+            id: "route-lock",
+            label: "Judge route lock",
+            screen: "Demo Concierge",
+            endpoint: absoluteUrl(baseUrl, "/api/demo-concierge"),
+            proof: `${demoConcierge.routeLock.lockScore} route lock / ${demoConcierge.routeLock.readiness}`,
+            score: demoConcierge.routeLock.lockScore
           }
         ]
       : []),
@@ -311,6 +319,7 @@ export function buildPrizeStrategyBoard(input: {
   const { baseUrl, strategy, acceptance, autopilot, command, battlecard, demoConcierge, pilotEconomics, observabilityOracle, releaseDrift } = input;
   const normalizedBase = baseUrl.replace(/\/$/, "");
   const oracleScore = observabilityOracle ? observabilityProofScore(observabilityOracle) : undefined;
+  const routeLock = demoConcierge?.routeLock;
   const criteria = [
     criterionItem({
       id: "agent-centrality",
@@ -347,16 +356,27 @@ export function buildPrizeStrategyBoard(input: {
       scores: [
         criterion(strategy, "usability")?.score ?? 0,
         row(acceptance, "usability-first-run")?.score ?? 0,
-        row(acceptance, "usability-first-run")?.score ?? 0,
+        routeLock?.lockScore ?? row(acceptance, "usability-first-run")?.score ?? 0,
+        routeLock?.routeStepScore ?? row(acceptance, "usability-first-run")?.score ?? 0,
+        routeLock?.proofLinkScore ?? row(acceptance, "usability-first-run")?.score ?? 0,
         numericMetric(command, "tour"),
         lane(autopilot, "demo")?.score ?? 0,
         command.commandScore,
         demoConcierge?.conciergeScore ?? command.commandScore
       ],
-      decisiveProof: "Demo Concierge、Prize Strategy、Judge Command Center、Judge Tourが初見の採点作戦とクリック順を固定する。",
+      decisiveProof:
+        routeLock === undefined
+          ? "Demo Concierge、Prize Strategy、Judge Command Center、Judge Tourが初見の採点作戦とクリック順を固定する。"
+          : "Demo ConciergeのJudge Route Lockが、最初の90秒、proof URL、ひと息台詞、捨てる導線まで固定する。",
       missingProof: "機能が多く、初見審査員がどこを押すべきか迷うリスク。",
-      demoMove: "Demo Conciergeでpersona別のfirst clickを見せ、First 90 secondsのproof buttonsを上から辿る。",
-      nextAction: "Prize pitchでは機能一覧を話さず、Demo Conciergeのjudge laneから進める。"
+      demoMove:
+        routeLock === undefined
+          ? "Demo Conciergeでpersona別のfirst clickを見せ、First 90 secondsのproof buttonsを上から辿る。"
+          : "Demo ConciergeのJudge Route Lockで、0-90秒のlocked stepsだけを上から辿る。",
+      nextAction:
+        routeLock === undefined
+          ? "Prize pitchでは機能一覧を話さず、Demo Conciergeのjudge laneから進める。"
+          : "Prize pitchでは機能一覧を話さず、Judge Route Lockのlocked stepsだけを録画する。"
     }),
     criterionItem({
       id: "practicality",
@@ -499,7 +519,12 @@ export function buildPrizeStrategyBoard(input: {
         ? {
             score: demoConcierge.conciergeScore,
             readiness: demoConcierge.readiness,
-            singleNextClick: demoConcierge.singleNextClick
+            singleNextClick: demoConcierge.singleNextClick,
+            routeLock: {
+              score: demoConcierge.routeLock.lockScore,
+              readiness: demoConcierge.routeLock.readiness,
+              steps: demoConcierge.routeLock.lockedSteps.map((step) => ({ id: step.id, status: step.status, proofUrl: step.proofUrl }))
+            }
           }
         : null,
       observabilityOracle: observabilityOracle

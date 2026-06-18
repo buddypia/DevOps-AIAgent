@@ -23,7 +23,7 @@
 - MVP Audit: 必須技術、審査5項目、DevOps証拠、提出3点をハードゲートで判定し、外部未発行URLをwatchとして残す
 - Judge Brief: 競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページに圧縮
 - Judge Command Center: Judge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
-- Demo Concierge: 審査員、買い手、提出者ごとの最初の1クリック、台詞、証拠URL、成功条件を固定する
+- Demo Concierge: 審査員、買い手、提出者ごとの最初の1クリック、台詞、証拠URL、成功条件を固定し、Judge Route Lockで0-90秒の一本道に圧縮する
 - Judge Rehearsal Room: 90秒の開く画面、話す台詞、想定質問、録画チェックを1つのrun roomに束ねる
 - Winner Proof Packet: 審査5項目ごとの主張、証拠URL、競合/SWOT反論、録画cue、提出copyを1枚に束ねる
 - Final Submission Runway: 2026/7/10 23:59 JSTから逆算し、動画、ProtoPedia、構成図、最終フォームを検収順に束ねる
@@ -96,7 +96,7 @@
 
 ## Win Gap Radar
 
-`Win Gap Radar` は、競合分析/SWOTを「資料」ではなくMVP改善backlogに変換するパネルです。Competitive Battlecard、MVP Audit、Finalist Simulator、Judge Acceptance Matrix、Prize Strategy、Submission Launch Gateを横断し、審査5項目ごとのlane、今閉じるfeature bet、やらないcut list、外部提出gapを返します。ProtoPedia作品URLと動画URLが未入力なら、コード側のMVPがcredibleでも `submit-ready` とは呼ばず `submission-closeout` を `close-now` にします。
+`Win Gap Radar` は、競合分析/SWOTを「資料」ではなくMVP改善backlogに変換するパネルです。Competitive Battlecard、MVP Audit、Finalist Simulator、Judge Acceptance Matrix、Prize Strategy、Demo Concierge、Submission Launch Gateを横断し、審査5項目ごとのlane、今閉じるfeature bet、やらないcut list、外部提出gapを返します。ProtoPedia作品URLと動画URLが未入力なら、コード側のMVPがcredibleでも `submit-ready` とは呼ばず `submission-closeout` を `close-now` にします。
 
 - API: `POST /api/win-gap-radar`
 - App UI: `Build gap radar`
@@ -128,11 +128,11 @@
 
 ## Demo Concierge
 
-`Demo Concierge` は、機能が多いことで初見審査員が迷うリスクを、persona別の最初の1クリックへ圧縮するパネルです。初見審査員、Platform/SRE buyer、ハッカソン提出者ごとに、入口の質問、押すボタン、話す台詞、開く証拠URL、成功条件を固定し、Prize Strategyのusability/practicality/approach証拠にも接続します。
+`Demo Concierge` は、機能が多いことで初見審査員が迷うリスクを、persona別の最初の1クリックとJudge Route Lockへ圧縮するパネルです。初見審査員、Platform/SRE buyer、ハッカソン提出者ごとに、入口の質問、押すボタン、話す台詞、開く証拠URL、成功条件を固定し、0-90秒のlocked steps、捨てる導線、proof URL到達率をPrize Strategyのusability/practicality/approach証拠にも接続します。
 
 - API: `POST /api/demo-concierge`
 - App UI: `Build concierge`
-- Output: concierge score、readiness、3 persona lanes、success criteria、friction cuts、A2A `demo.concierge` payload
+- Output: concierge score、readiness、Judge Route Lock、3 persona lanes、success criteria、friction cuts、A2A `demo.concierge` payload
 
 ## Judge Rehearsal Room
 
@@ -160,7 +160,7 @@
 
 ## Prize Strategy Board
 
-`Prize Strategy Board` は、MVPが足りるかではなく、ハッカソン優勝に必要な採点作戦を固定するパネルです。審査5項目ごとにtarget score、現在スコア、足りない証拠、demo move、次アクションを返し、Demo Concierge、Judge Command Center、Competitive Battlecard、Acceptance Matrix、Release Drift Guard、Observability Oracle、Pilot Economicsを最終ピッチ順へ束ねます。
+`Prize Strategy Board` は、MVPが足りるかではなく、ハッカソン優勝に必要な採点作戦を固定するパネルです。審査5項目ごとにtarget score、現在スコア、足りない証拠、demo move、次アクションを返し、Demo Concierge、Judge Route Lock、Judge Command Center、Competitive Battlecard、Acceptance Matrix、Release Drift Guard、Observability Oracle、Pilot Economicsを最終ピッチ順へ束ねます。
 
 - API: `POST /api/prize-strategy`
 - App UI: `Build prize strategy`

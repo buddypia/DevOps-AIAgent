@@ -41,7 +41,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - MVP Auditで、必須技術、審査5項目、DevOps証拠、提出3点をpass/watch/failで監査し、外部未発行URLを合格扱いにしない
 - Judge Briefで、競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページにまとめる
 - Judge Command Centerで、Judge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
-- Demo Conciergeで、審査員、買い手、提出者ごとの最初の1クリック、台詞、証拠URL、成功条件を固定する
+- Demo Conciergeで、審査員、買い手、提出者ごとの最初の1クリック、台詞、証拠URL、成功条件を固定し、Judge Route Lockで0-90秒のlocked stepsに圧縮する
 - Judge Rehearsal Roomで、90秒segments、想定質問、scorecard、録画チェックを固定する
 - Winner Proof Packetで、審査5項目ごとの主張、証拠URL、競合/SWOT反論、録画cue、提出copyを1枚に束ねる
 - Final Submission Runwayで、2026/7/10 23:59 JSTから逆算し、動画、ProtoPedia、構成図、最終フォームを検収順にする
@@ -89,7 +89,7 @@ React UI
   -> MVP Audit hard gates
   -> Judge Brief one-page judge readout
   -> Judge Command Center first 90 seconds cockpit
-  -> Demo Concierge persona first-click lanes
+  -> Demo Concierge persona first-click lanes + Judge Route Lock
   -> Judge Tour 90-second judge walkthrough
   -> User Pilot Lab first-run usability paths
   -> Squad Optimizer budget-aware squad search
@@ -122,7 +122,7 @@ React UI
 
 | Time | Shot |
 | --- | --- |
-| 0-4s | Demo Conciergeで、審査員・買い手・提出者の最初の1クリックを固定し、機能一覧ではなく証拠順から始める |
+| 0-4s | Demo Conciergeで、Judge Route Lockの0-90秒locked stepsを見せ、機能一覧ではなく証拠順から始める |
 | 4-8s | Judge Command Centerで、最初に押す証拠、MVP受入状態、公開revision drift、残ブロッカーを1画面で見せる |
 | 8-11s | Judge Tourで90秒導線、5つのjudge claims、外部URL不足を見せる |
 | 11-14s | Squad Optimizerで140予算内の最適編成、+22のUX追加ギャップ、swap planを見せる |

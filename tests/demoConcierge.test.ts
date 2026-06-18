@@ -226,6 +226,19 @@ describe("demo concierge", () => {
     expect(concierge.lanes.map((lane) => lane.id)).toEqual(["judge", "buyer", "submitter"]);
     expect(concierge.lanes.every((lane) => lane.steps.length >= 2)).toBe(true);
     expect(concierge.lanes.find((lane) => lane.id === "buyer")?.steps[0]?.endpoint).toBe(`${SUBMISSION_PROOF.deployedUrl}/api/pilot-economics`);
+    expect(concierge.routeLock).toMatchObject({
+      readiness: "locked-external-watch",
+      proofLinkScore: 100
+    });
+    expect(concierge.routeLock.lockScore).toBeGreaterThanOrEqual(92);
+    expect(concierge.routeLock.lockedSteps.map((step) => step.id)).toEqual([
+      "judge-command",
+      "judge-acceptance",
+      "submitter-battlecard",
+      "buyer-economics",
+      "submitter-prize"
+    ]);
+    expect(concierge.routeLock.bypassedDistractions.map((item) => item.id)).toEqual(["feature-tour", "free-navigation", "external-gap-hiding"]);
     expect(concierge.successCriteria.map((item) => item.id)).toEqual([
       "single-next-click",
       "three-persona-lanes",
@@ -236,6 +249,16 @@ describe("demo concierge", () => {
     expect(concierge.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "demo.concierge",
+      routeLock: {
+        readiness: "locked-external-watch",
+        proofLinkScore: 100,
+        lockedSteps: expect.arrayContaining([
+          expect.objectContaining({
+            id: "judge-command",
+            proofUrl: `${SUBMISSION_PROOF.deployedUrl}/api/judge-command-center`
+          })
+        ])
+      },
       endpoints: {
         demoConcierge: `${SUBMISSION_PROOF.deployedUrl}/api/demo-concierge`
       }
