@@ -579,13 +579,14 @@ async function liveJsonProbe(input: {
   url: string;
   required: boolean;
   init?: RequestInit;
+  timeoutMs?: number;
   evaluate: (payload: unknown) => { status: LiveEvidenceStatus; score?: number; evidence: string };
 }) {
   const startedAt = Date.now();
   try {
     const response = await fetch(input.url, {
       ...input.init,
-      signal: AbortSignal.timeout(3500)
+      signal: AbortSignal.timeout(input.timeoutMs ?? 3500)
     });
     const latencyMs = Date.now() - startedAt;
     if (!response.ok) {
@@ -1770,6 +1771,7 @@ async function buildReleaseDriftForTarget(input: {
       label: "Target Acceptance Matrix endpoint",
       url: `${targetBaseUrl}/api/acceptance-matrix`,
       required: true,
+      timeoutMs: 20000,
       init: {
         method: "POST",
         headers: { ...(targetProbeHeaders ?? {}), "Content-Type": "application/json" },
