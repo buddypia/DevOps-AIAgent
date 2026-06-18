@@ -28,22 +28,23 @@
 20. `src/firstClick.ts` がトップ画面直下のJudge First-Click Stripに必要なGET証拠リンクと審査理由を固定する
 21. `src/firstClickSmoke.ts` がFirst-ClickのGET証拠ページをsentinel付きSmoke Lockとして検収する
 22. `src/objectionArena.ts` がWinner Packetから競合/SWOT、AI中心性、実用性、公開revisionへの最終質疑レーンを生成する
-23. `src/judgeTour.ts` がJudge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
-24. `src/judgeCommandCenter.ts` がJudge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
-25. `src/prizeStrategy.ts` が審査5項目の目標点、現在証拠、足りない証拠、最終ピッチ順を優勝作戦に束ねる
-26. `src/userPilot.ts` が開発リード、Platform/SRE、提出者の初回利用導線、摩擦、次クリックを検証する
-27. `src/squadOptimizer.ts` が予算内のAI編成を総当たりし、必須技術カバレッジ、交換計画、追加予算ギャップを返す
-28. `src/liveEvidence.ts` が公開Cloud Run、Agent Card、A2A、Squad Optimizer、CIのライブ証拠をスコア化する
-29. `src/releaseDrift.ts` が提出用Cloud Run URLのAgent Card、Acceptance Matrix、A2A artifactのrevision driftを検知する
-30. `src/deployRecovery.ts` がrelease drift、gcloud認証、Cloud Build、公開再検証を復旧計画にする
-31. `src/demoReceipt.ts` が審査導線、競合反論、編成判断、公開証拠、外部提出URLをsha256 digest付き検収票にする
-32. `src/acceptanceMatrix.ts` が必須技術、審査5項目、公開証拠、提出物をaccepted/watch/blockedの受入表にする
-33. `src/autonomyLedger.ts` が市場探索、判断、契約、A2A委任、検証、運用、提出をAI自律性台帳にする
-34. `src/security.ts` がSecret Manager、IP allowlist、入力制限、A2A信頼境界、CIを審査用セキュリティ証拠にする
-35. `src/impact.ts` が対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性証拠にする
-36. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
-37. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-38. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+23. `src/winnerSufficiency.ts` がMVP、競合/SWOT、公開証拠、first-click、Feature Freeze、提出URLを優勝線のyes/no判定に束ねる
+24. `src/judgeTour.ts` がJudge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
+25. `src/judgeCommandCenter.ts` がJudge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
+26. `src/prizeStrategy.ts` が審査5項目の目標点、現在証拠、足りない証拠、最終ピッチ順を優勝作戦に束ねる
+27. `src/userPilot.ts` が開発リード、Platform/SRE、提出者の初回利用導線、摩擦、次クリックを検証する
+28. `src/squadOptimizer.ts` が予算内のAI編成を総当たりし、必須技術カバレッジ、交換計画、追加予算ギャップを返す
+29. `src/liveEvidence.ts` が公開Cloud Run、Agent Card、A2A、Squad Optimizer、CIのライブ証拠をスコア化する
+30. `src/releaseDrift.ts` が提出用Cloud Run URLのAgent Card、Acceptance Matrix、A2A artifactのrevision driftを検知する
+31. `src/deployRecovery.ts` がrelease drift、gcloud認証、Cloud Build、公開再検証を復旧計画にする
+32. `src/demoReceipt.ts` が審査導線、競合反論、編成判断、公開証拠、外部提出URLをsha256 digest付き検収票にする
+33. `src/acceptanceMatrix.ts` が必須技術、審査5項目、公開証拠、提出物をaccepted/watch/blockedの受入表にする
+34. `src/autonomyLedger.ts` が市場探索、判断、契約、A2A委任、検証、運用、提出をAI自律性台帳にする
+35. `src/security.ts` がSecret Manager、IP allowlist、入力制限、A2A信頼境界、CIを審査用セキュリティ証拠にする
+36. `src/impact.ts` が対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性証拠にする
+37. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
+38. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+39. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -79,6 +80,7 @@
   - `judge.proof`
   - `judge.brief`
   - `judge.command`
+  - `winner.sufficiency`
   - `prize.strategy`
   - `judge.tour`
   - `user.pilot`
@@ -205,6 +207,14 @@
 - Submission copy: ProtoPedia本文や動画説明へ貼るone-line、winner thesis、proof order、missing external URLを返す
 - A2A payload: `winner.packet` skillとしてpacket score、readiness、release lock、criteria proof URLs、endpoint群を返す
 
+## Winner Sufficiency Surface
+
+- `GET /winner-sufficiency`: MVP Readiness、Competitive SWOT、Win Gap Radar、First-Click Smoke、Submission Launchを束ね、「機能は本当に十分か」を審査員が直接読めるHTMLで返す
+- `GET /api/winner-sufficiency`: 同じ判定をA2A/自動検証用JSONとして返す
+- Sufficiency checks: MVP core、Competitive/SWOT proof、Public release、First-click proof、Feature Freeze、Submission Launchをpassed/watch/blockedで検収する
+- Verdict: `winner-sufficient`、`external-closeout`、`public-drift`、`needs-feature-work` の4状態で、機能追加を止めるべきか、外部提出を閉じるべきか、公開再デプロイすべきかを分ける
+- A2A payload: `winner.sufficiency` skillとしてsufficiency score、verdict、checks、actions、endpoint群を返す
+
 ## Objection Arena Surface
 
 - `GET /objection-arena`: Winner Packetの審査5項目、question deck、Release Driftを最終質疑用HTMLに変換する
@@ -286,8 +296,8 @@
 
 ## Release Drift Surface
 
-- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Feature Freeze Lock tag、Winner Release Lock tag、Objection Lock tag、First-Click Smoke Lock tag、Finalist Release Drift tag、Criteria Duel tag、GET Proof Snapshot tag、Recording Script tag、Submission Launch tag、Architecture Pack tag、Pilot Value tag、Deploy Recovery GET Proof tag、Acceptance Matrix、A2A artifactを返しているかを検査する
-- Drift probes: target health、Agent Card skill surface、Acceptance Matrix endpoint、MVP Readiness endpoint、Recording Script endpoint、Architecture Pack endpoint、Submission Launch endpoint、Pilot Value endpoint、Objection Arena endpoint、First-Click Smoke endpoint、Deploy Recovery page、A2A artifact endpoints、latest main CIを同時に評価する
+- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Feature Freeze Lock tag、Winner Release Lock tag、Winner Sufficiency Lock tag、Objection Lock tag、First-Click Smoke Lock tag、Finalist Release Drift tag、Criteria Duel tag、GET Proof Snapshot tag、Recording Script tag、Submission Launch tag、Architecture Pack tag、Pilot Value tag、Deploy Recovery GET Proof tag、Acceptance Matrix、A2A artifactを返しているかを検査する
+- Drift probes: target health、Agent Card skill surface、Acceptance Matrix endpoint、MVP Readiness endpoint、Recording Script endpoint、Architecture Pack endpoint、Submission Launch endpoint、Pilot Value endpoint、Objection Arena endpoint、First-Click Smoke endpoint、Winner Sufficiency page、Deploy Recovery page、A2A artifact endpoints、latest main CIを同時に評価する
 - Verdict: 最新なら `release-current`、公開URLが古いなら `deploy-drift`、health/CIが落ちたら `release-blocked`
 - Runbook: `gcloud auth login`、Cloud Build submit、Agent Card skill count、MVP Readiness、Recording Script、Pilot Value、Acceptance Matrix、A2A artifactの再確認コマンドを返す
 - A2A payload: `release.drift` skillとしてdrift score、missing skills、redeploy action、target endpointを返す
@@ -520,6 +530,7 @@
 - Judge command center: `/api/judge-command-center`
 - Judge rehearsal: `/api/judge-rehearsal`
 - Winner proof packet: `/winner-packet` and `/api/winner-packet`
+- Winner sufficiency: `/winner-sufficiency` and `/api/winner-sufficiency`
 - Objection arena: `/objection-arena` and `/api/objection-arena`
 - First-click smoke: `/first-click-smoke` and `/api/first-click-smoke`
 - Final submission runway: `/api/submission-runway`
