@@ -1068,6 +1068,21 @@ function UserPilotPanel({
             </div>
           </div>
 
+          {pilot.guideRails.length > 0 && (
+            <div className="pilot-guide-rails">
+              {pilot.guideRails.map((rail) => (
+                <article key={rail.id}>
+                  <div>
+                    <strong>{rail.label}</strong>
+                    <span>-{rail.reducesSeconds}s</span>
+                  </div>
+                  <p>{rail.screen}</p>
+                  <small>{rail.evidence}</small>
+                </article>
+              ))}
+            </div>
+          )}
+
           <div className="pilot-paths">
             {pilot.paths.map((path) => (
               <article key={path.id}>

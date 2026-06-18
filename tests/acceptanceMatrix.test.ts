@@ -216,8 +216,10 @@ describe("judge acceptance matrix", () => {
     expect(matrix.rows.find((row) => row.id === "competitive-swot")?.evidence).toContain("SWOT");
     expect(matrix.rows.find((row) => row.id === "submission-assets")?.status).toBe("watch");
     expect(matrix.rows.find((row) => row.id === "demo-receipt")?.status).toBe("watch");
+    expect(matrix.rows.find((row) => row.id === "usability-first-run")?.status).toBe("accepted");
     expect(matrix.rows.find((row) => row.id === "pilot-economics")?.status).toBe("accepted");
     expect(matrix.nextActions.map((action) => action.id)).toEqual(expect.arrayContaining(["submission-assets", "demo-receipt"]));
+    expect(matrix.nextActions.map((action) => action.id)).not.toContain("usability-first-run");
     expect(matrix.digest.digest).toMatch(/^[a-f0-9]{64}$/);
     expect(matrix.a2aPayload).toMatchObject({
       method: "message/send",

@@ -58,18 +58,21 @@ describe("user pilot lab", () => {
   test("turns the weakest usability lane into target-user first-run paths", () => {
     const { userPilot } = fixture();
 
-    expect(userPilot.pilotScore).toBeGreaterThanOrEqual(80);
-    expect(userPilot.readiness).toBe("needs-guidance");
+    expect(userPilot.pilotScore).toBeGreaterThanOrEqual(86);
+    expect(userPilot.readiness).toBe("pilot-ready");
     expect(userPilot.paths).toHaveLength(3);
     expect(userPilot.paths.map((path) => path.id)).toEqual(["dev-lead", "platform-sre", "hackathon-submitter"]);
-    expect(Math.max(...userPilot.paths.map((path) => path.timeToValueSeconds))).toBeLessThanOrEqual(180);
-    expect(userPilot.frictions.map((friction) => friction.id)).toContain("ux-capability-gap");
+    expect(Math.max(...userPilot.paths.map((path) => path.timeToValueSeconds))).toBeLessThanOrEqual(120);
+    expect(userPilot.frictions.map((friction) => friction.id)).not.toContain("ux-capability-gap");
+    expect(userPilot.guideRails.map((rail) => rail.id)).toEqual(["score-first", "proof-buttons", "external-gate"]);
     expect(userPilot.nextClicks.map((click) => click.id)).toEqual(expect.arrayContaining(["build-prize-strategy", "build-tour", "issue-contracts", "run-impact", "hire-next"]));
     expect(userPilot.validationChecklist.every((item) => item.status !== "blocked")).toBe(true);
+    expect(userPilot.validationChecklist.find((item) => item.id === "guided-first-run")?.status).toBe("clear");
     expect(userPilot.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "user.pilot",
-      readiness: "needs-guidance"
+      readiness: "pilot-ready",
+      guideRails: expect.arrayContaining([expect.objectContaining({ id: "score-first" })])
     });
   });
 

@@ -1798,6 +1798,49 @@ h1 {
   text-transform: uppercase;
 }
 
+.pilot-guide-rails {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  gap: 1px;
+  background: #c9d6d8;
+}
+
+.pilot-guide-rails article {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 13px 14px;
+  border-top: 4px solid #345c72;
+  background: #f5fbfb;
+}
+
+.pilot-guide-rails article > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pilot-guide-rails strong,
+.pilot-guide-rails p,
+.pilot-guide-rails small {
+  overflow-wrap: anywhere;
+}
+
+.pilot-guide-rails span {
+  color: var(--green);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.pilot-guide-rails p,
+.pilot-guide-rails small {
+  color: #414a4d;
+  line-height: 1.42;
+}
+
 .pilot-paths {
   display: grid;
   grid-template-columns: repeat(3, minmax(320px, 1fr));
@@ -8915,6 +8958,7 @@ pre {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
   }
 
+  .pilot-guide-rails,
   .pilot-paths,
   .pilot-grid {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
@@ -9119,6 +9163,7 @@ pre {
     .tour-steps,
     .tour-grid,
     .pilot-summary,
+    .pilot-guide-rails,
     .pilot-paths,
     .pilot-grid,
     .optimizer-inputs,

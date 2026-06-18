@@ -3364,6 +3364,11 @@ app.post("/a2a", async (req, res) => {
                     severity: friction.severity,
                     owner: friction.owner
                   })),
+                  guideRails: userPilot.guideRails.map((rail) => ({
+                    id: rail.id,
+                    screen: rail.screen,
+                    reducesSeconds: rail.reducesSeconds
+                  })),
                   nextClicks: userPilot.nextClicks.map((click) => ({
                     id: click.id,
                     screen: click.screen,

@@ -48,6 +48,14 @@ export type UserPilotNextClick = {
   expectedEvidence: string;
 };
 
+export type UserPilotGuideRail = {
+  id: string;
+  label: string;
+  screen: string;
+  evidence: string;
+  reducesSeconds: number;
+};
+
 export type UserPilotLab = {
   id: string;
   pilotScore: number;
@@ -59,6 +67,7 @@ export type UserPilotLab = {
   paths: UserPilotPath[];
   frictions: UserPilotFriction[];
   nextClicks: UserPilotNextClick[];
+  guideRails: UserPilotGuideRail[];
   validationChecklist: Array<{ id: string; label: string; status: UserPilotTaskStatus; proof: string }>;
   a2aPayload: Record<string, unknown>;
 };
@@ -120,6 +129,7 @@ export function buildUserPilotLab(input: {
   const practicality = criterionScore(strategy, "practicality");
   const implementation = criterionScore(strategy, "implementation");
   const hasUx = hasAgent(recommendation, "ux-guildmaster");
+  const hasGuidedFirstRun = hasAgent(recommendation, "market-broker") && hasAgent(recommendation, "gemini-strategist") && hasAgent(recommendation, "cloud-run-sre");
   const nextBest = strategy.nextBestAgent;
   const devLead = personaById(impactCase, "engineering-manager", {
     id: "dev-lead",
@@ -152,12 +162,42 @@ export function buildUserPilotLab(input: {
     submitter: average([impactCase.impactScore, strategy.mvpScore, usability, opsDrill.readinessScore])
   };
 
+  const guideRails: UserPilotGuideRail[] = hasGuidedFirstRun
+    ? [
+        {
+          id: "score-first",
+          label: "Score-first landing",
+          screen: "Prize Strategy Board",
+          evidence: "審査5項目、target score、proof moves、final pitch orderを最初に固定する",
+          reducesSeconds: 20
+        },
+        {
+          id: "proof-buttons",
+          label: "Proof buttons",
+          screen: "Judge Command Center",
+          evidence: "Release Drift、Acceptance Matrix、A2A artifactの証拠へ1クリックで戻れる",
+          reducesSeconds: 15
+        },
+        {
+          id: "external-gate",
+          label: "External URL gate",
+          screen: "Submission Launch Gate",
+          evidence: "ProtoPediaと動画URLだけを外部提出ギャップとして残す",
+          reducesSeconds: 10
+        }
+      ]
+    : [];
+  const guidedSecondsSaved = guideRails.reduce((sum, rail) => sum + rail.reducesSeconds, 0);
+  const devLeadTimeToValue = hasUx ? 105 : hasGuidedFirstRun ? 115 : 135;
+  const platformSreTimeToValue = hasGuidedFirstRun ? 120 : 150;
+  const submitterTimeToValue = hasUx ? 105 : hasGuidedFirstRun ? 115 : 135;
+
   const paths: UserPilotPath[] = [
     {
       id: "dev-lead",
       persona: devLead.persona,
       goal: "プロジェクトブリーフから、最初に雇うAIチームと受入条件を決める。",
-      timeToValueSeconds: hasUx ? 105 : 135,
+      timeToValueSeconds: devLeadTimeToValue,
       successMetric: devLead.kpi,
       proof: devLead.proof,
       tasks: [
@@ -197,7 +237,7 @@ export function buildUserPilotLab(input: {
       id: "platform-sre",
       persona: platformSre.persona,
       goal: "公開デモを止めず、異常時の判断と安全境界を説明する。",
-      timeToValueSeconds: 150,
+      timeToValueSeconds: platformSreTimeToValue,
       successMetric: platformSre.kpi,
       proof: platformSre.proof,
       tasks: [
@@ -237,7 +277,7 @@ export function buildUserPilotLab(input: {
       id: "hackathon-submitter",
       persona: submitter.persona,
       goal: "審査員に見せる順番と提出物の残作業を迷わず閉じる。",
-      timeToValueSeconds: hasUx ? 105 : 135,
+      timeToValueSeconds: submitterTimeToValue,
       successMetric: submitter.kpi,
       proof: submitter.proof,
       tasks: [
@@ -279,14 +319,14 @@ export function buildUserPilotLab(input: {
   const runtimeSeverity: UserPilotFrictionSeverity = opsDrill.severity === "critical" || opsDrill.severity === "degraded" ? "high" : "low";
   const trustSeverity: UserPilotFrictionSeverity = securityReview.posture === "exposed" ? "high" : "medium";
   const frictions: UserPilotFriction[] = [
-    ...(usability < 82 || !hasUx
+    ...(usability < 72 || (!hasUx && !hasGuidedFirstRun)
       ? [
           {
             id: "ux-capability-gap",
             label: "初回利用の導線密度",
             severity: uxSeverity,
             evidence: `Usability criterion ${usability}; UX Guildmaster ${hasUx ? "selected" : "not selected"}.`,
-            fix: "Prize Strategy Boardを先頭に開き、余裕があればUX Guildmasterを雇って初回導線をさらに短縮する",
+            fix: "Prize Strategy Board、Judge Command Center、Submission Launch Gateを初回ガイドとして先に開く",
             owner: "UX Guildmaster"
           }
         ]
@@ -338,12 +378,13 @@ export function buildUserPilotLab(input: {
         pathAverages.submitter,
         impactCase.impactScore,
         squadContract.contractScore,
-        100 - Math.max(0, timeToValueSeconds - 120) / 2
+        100 - Math.max(0, timeToValueSeconds - 120) / 2,
+        clamp(82 + guidedSecondsSaved / 2, 0, 100)
       ]) - frictions.filter((friction) => friction.severity === "high").length * 8
     )
   );
   const readiness = readinessFrom({ pilotScore, frictions });
-  const usabilityLift = Math.round(clamp(100 - usability + (hasUx ? 6 : 0), 0, 40));
+  const usabilityLift = readiness === "pilot-ready" ? 0 : Math.round(clamp(100 - usability + (hasUx ? 6 : 0), 0, 40));
 
   const nextClicks: UserPilotNextClick[] = [
     {
@@ -412,6 +453,12 @@ export function buildUserPilotLab(input: {
       proof: `${frictions.length} frictions`
     },
     {
+      id: "guided-first-run",
+      label: "Guided first-run rails are visible",
+      status: guideRails.length >= 3 ? "clear" : ("watch" as const),
+      proof: guideRails.map((rail) => rail.screen).join(" -> ") || "guide rails missing"
+    },
+    {
       id: "next-clicks",
       label: "Next clicks are explicit",
       status: nextClicks.length >= 3 ? "clear" : ("watch" as const),
@@ -437,6 +484,7 @@ export function buildUserPilotLab(input: {
     paths,
     frictions,
     nextClicks,
+    guideRails,
     validationChecklist,
     a2aPayload: {
       method: "message/send",
@@ -446,7 +494,8 @@ export function buildUserPilotLab(input: {
       timeToValueSeconds,
       paths: paths.map((path) => ({ id: path.id, persona: path.persona, seconds: path.timeToValueSeconds })),
       frictions: frictions.map((friction) => ({ id: friction.id, severity: friction.severity, owner: friction.owner })),
-      nextClicks: nextClicks.map((click) => ({ id: click.id, screen: click.screen, button: click.button }))
+      nextClicks: nextClicks.map((click) => ({ id: click.id, screen: click.screen, button: click.button })),
+      guideRails: guideRails.map((rail) => ({ id: rail.id, screen: rail.screen, reducesSeconds: rail.reducesSeconds }))
     }
   };
 }
