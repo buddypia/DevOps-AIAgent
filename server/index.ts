@@ -1066,6 +1066,23 @@ app.post("/api/demo-run", (req, res) => {
 
   const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
   const strategy = buildWinningStrategy(recommendation);
+  const marketIntel = buildMarketIntelReport({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy
+  });
+  const moatStress = buildMoatStressTest({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    marketIntel
+  });
+  const competitiveBattlecard = buildCompetitiveBattlecard({
+    baseUrl: publicBaseUrl(req),
+    strategy,
+    marketIntel,
+    moatStress
+  });
   const mission = buildMissionRun(recommendation, strategy, "審査員が30秒で価値、証拠、提出準備、運用性を理解できる順番を生成する。");
   const opsDrill = buildOpsDrill(recommendation, strategy);
   const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
@@ -1113,7 +1130,8 @@ app.post("/api/demo-run", (req, res) => {
       opsDrill,
       pitch,
       finalist,
-      publisher
+      publisher,
+      battlecard: competitiveBattlecard
     })
   );
 });
@@ -1222,6 +1240,23 @@ app.post("/api/dossier", async (req, res) => {
 
   const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
   const strategy = buildWinningStrategy(recommendation);
+  const marketIntel = buildMarketIntelReport({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy
+  });
+  const moatStress = buildMoatStressTest({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    marketIntel
+  });
+  const competitiveBattlecard = buildCompetitiveBattlecard({
+    baseUrl: publicBaseUrl(req),
+    strategy,
+    marketIntel,
+    moatStress
+  });
   const mission = buildMissionRun(recommendation, strategy, "ProtoPedia提出本文、動画録画順、証拠リンク、残ギャップを1つの提出ドシエに束ねる。");
   const opsDrill = buildOpsDrill(recommendation, strategy);
   const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
@@ -1267,7 +1302,8 @@ app.post("/api/dossier", async (req, res) => {
     opsDrill,
     pitch,
     finalist,
-    publisher
+    publisher,
+    battlecard: competitiveBattlecard
   });
   const [geminiResult, ciResult] = await Promise.allSettled([
     runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
@@ -1314,7 +1350,8 @@ app.post("/api/dossier", async (req, res) => {
       publisher,
       demoRunway,
       autopilot,
-      proof
+      proof,
+      battlecard: competitiveBattlecard
     })
   );
 });

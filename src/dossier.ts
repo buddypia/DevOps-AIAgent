@@ -1,4 +1,5 @@
 import type { DemoRunway } from "./demoRunway.js";
+import type { BattlecardStatus, CompetitiveBattlecard } from "./competitiveBattlecard.js";
 import type { FinalistSimulation } from "./finalist.js";
 import type { MissionRun } from "./mission.js";
 import type { PitchRun } from "./pitch.js";
@@ -54,10 +55,22 @@ export type DossierVideoChapter = {
   status: PublisherStatus;
 };
 
+export type DossierCompetitiveReceipt = {
+  id: string;
+  competitor: string;
+  status: PublisherStatus;
+  objection: string;
+  proofRoute: string;
+  recordingCue: string;
+  protopediaLine: string;
+  acceptance: string;
+};
+
 export type DossierHandoffPacket = {
   submitFields: DossierHandoffField[];
   protopediaFields: DossierHandoffField[];
   videoChapters: DossierVideoChapter[];
+  competitiveReceipts: DossierCompetitiveReceipt[];
   architecturePack: ArchitecturePack;
   proofLinks: DossierLink[];
   missingOnly: Array<{ id: string; label: string; target: string; action: string }>;
@@ -109,6 +122,10 @@ function baseUrlFromProof(proof: JudgeProof, mission: MissionRun) {
   return proof.links.app.replace(/\/$/, "");
 }
 
+function statusFromBattlecard(status: BattlecardStatus): PublisherStatus {
+  return status === "lead" ? "ready" : "watch";
+}
+
 export function buildSubmissionDossier(input: {
   recommendation: Recommendation;
   strategy: WinningStrategy;
@@ -119,19 +136,42 @@ export function buildSubmissionDossier(input: {
   demoRunway: DemoRunway;
   autopilot: WinningAutopilotRun;
   proof: JudgeProof;
+  battlecard?: CompetitiveBattlecard;
 }): SubmissionDossier {
-  const { recommendation, strategy, mission, pitch, finalist, publisher, demoRunway, autopilot, proof } = input;
+  const { recommendation, strategy, mission, pitch, finalist, publisher, demoRunway, autopilot, proof, battlecard } = input;
   const selectedAgents = recommendation.selected.map((agent) => agent.name).join(" / ") || "A2A Market Broker";
   const pasteField = (id: string) => publisher.pasteFields.find((field) => field.id === id);
   const externalGapIds = new Set([...publisher.missingExternal.map((item) => item.id), ...autopilot.blockers.map((item) => item.id)]);
   const readiness: DossierReadiness = externalGapIds.size === 0 ? "ready-to-submit" : "needs-external-urls";
+  const competitiveReceipts: DossierCompetitiveReceipt[] =
+    battlecard?.objectionReceipts.slice(0, 4).map((receipt) => ({
+      id: receipt.id,
+      competitor: receipt.competitor,
+      status: statusFromBattlecard(receipt.status),
+      objection: receipt.objection,
+      proofRoute: receipt.proofRoute,
+      recordingCue: receipt.recordingCue,
+      protopediaLine: receipt.protopediaLine,
+      acceptance: receipt.acceptance
+    })) ?? [];
   const opening = `Win Autopilotの判定は${autopilot.winScore}点/${autopilot.readiness}。${selectedAgents} が、競合/SWOT、A2A委任、Cloud Run運用、提出証拠、30秒デモ導線を一括で束ねます。`;
   const judgeEvidence = [
     `Judge Proof overall ${proof.overallScore}、CI ${proof.ci.conclusion}`,
     `Finalist ${finalist.finalistScore} (${finalist.finalistBand}) / ${finalist.judgeConsensus}`,
     `Demo Runway ${demoRunway.totalSeconds}秒/${demoRunway.steps.length} steps`,
-    `競合 ${strategy.competitors.length}件、SWOT、moat ${strategy.moatScore}`
+    `競合 ${strategy.competitors.length}件、SWOT、moat ${strategy.moatScore}`,
+    ...(battlecard ? [`Competitive Battlecard ${battlecard.battleScore} (${battlecard.readiness}) / 反論レシート${competitiveReceipts.length}件`] : [])
   ];
+  const competitiveCopy = competitiveReceipts
+    .map((receipt) =>
+      [
+        `- ${receipt.competitor}: ${receipt.objection}`,
+        `  - 提出文: ${receipt.protopediaLine}`,
+        `  - 証拠: ${receipt.proofRoute}`,
+        `  - 検収: ${receipt.acceptance}`
+      ].join("\n")
+    )
+    .join("\n");
   const copyBlocks: DossierCopyBlock[] = [
     block("title", "作品タイトル", "ProtoPedia title", pasteField("title")?.value ?? mission.submissionPack.protopediaTitle),
     block("one-liner", "一言説明", "ProtoPedia summary", pasteField("one-liner")?.value ?? ""),
@@ -140,6 +180,9 @@ export function buildSubmissionDossier(input: {
     block("features", "特徴", "ProtoPedia features", pasteField("features")?.value ?? ""),
     block("technology", "技術構成", "ProtoPedia technology", pasteField("technology")?.value ?? ""),
     block("demo-flow", "デモの見どころ", "ProtoPedia demo description", demoRunway.recordingCues.map((cue) => `- ${cue}`).join("\n")),
+    ...(competitiveReceipts.length > 0
+      ? [block("competitive-objections", "競合反論レシート", "ProtoPedia story / judge Q&A", competitiveCopy)]
+      : []),
     block("judge-proof", "審査向け証拠", "ProtoPedia notes", [opening, markdownList(judgeEvidence)].join("\n")),
     block("tags", "タグ", "ProtoPedia tags", pasteField("tags")?.value ?? mission.submissionPack.tags.join(", "))
   ];
@@ -177,6 +220,9 @@ export function buildSubmissionDossier(input: {
     "0-4s: Market Intelで公式ソース付き競合比較とAI能力調達の勝ち筋を見せる",
     "4-8s: MVP Auditで必須技術、審査5項目、DevOps証拠、提出3点のwatch/failを見せる",
     "8-12s: Win Autopilotでwin score、残アクション、証拠デッキを見せる",
+    ...competitiveReceipts
+      .slice(0, 2)
+      .map((receipt) => `16-21s: Competitive Battlecardで${receipt.competitor}への反論、SWOT、証拠routeを同時に見せる`),
     ...demoRunway.recordingCues
   ];
   const submitFields: DossierHandoffField[] = [
@@ -257,6 +303,7 @@ export function buildSubmissionDossier(input: {
     submitFields,
     protopediaFields,
     videoChapters,
+    competitiveReceipts,
     architecturePack,
     proofLinks: links,
     missingOnly
@@ -291,6 +338,9 @@ export function buildSubmissionDossier(input: {
     "",
     markdownSection("審査向け証拠", markdownList(judgeEvidence)),
     "",
+    ...(competitiveReceipts.length > 0
+      ? [markdownSection("競合反論レシート", competitiveCopy), ""]
+      : []),
     markdownSection("30秒動画録画順", markdownList(recordingPlan)),
     "",
     markdownSection(
@@ -354,6 +404,12 @@ export function buildSubmissionDossier(input: {
         submitFields: submitFields.map((item) => ({ id: item.id, target: item.target, status: item.status })),
         protopediaFields: protopediaFields.map((item) => ({ id: item.id, target: item.target, status: item.status })),
         videoChapters: videoChapters.map((item) => ({ id: item.id, timeRange: item.timeRange, screen: item.screen, status: item.status })),
+        competitiveReceipts: competitiveReceipts.map((item) => ({
+          id: item.id,
+          competitor: item.competitor,
+          status: item.status,
+          proofRoute: item.proofRoute
+        })),
         architecturePack: {
           score: architecturePack.architectureScore,
           readiness: architecturePack.readiness,

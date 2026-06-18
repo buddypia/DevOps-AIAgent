@@ -1,13 +1,16 @@
 import { describe, expect, test } from "vitest";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine";
 import { buildWinningAutopilot } from "../src/autopilot";
+import { buildCompetitiveBattlecard } from "../src/competitiveBattlecard";
 import { buildSquadContract } from "../src/contracts";
 import { buildDemoRunway } from "../src/demoRunway";
 import { buildSubmissionDossier } from "../src/dossier";
 import { buildFinalistSimulation } from "../src/finalist";
 import { buildJudgeDrill } from "../src/judgeDrill";
 import { DEFAULT_PROJECT_BRIEF } from "../src/market";
+import { buildMarketIntelReport } from "../src/marketIntel";
 import { buildMissionRun } from "../src/mission";
+import { buildMoatStressTest } from "../src/moatStress";
 import { buildOpsDrill } from "../src/ops";
 import { buildPitchRun } from "../src/pitch";
 import { buildJudgeProof } from "../src/proof";
@@ -21,6 +24,9 @@ describe("submission dossier", () => {
     const baseUrl = "https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app";
     const recommendation = recommendSquad(DEFAULT_PROJECT_BRIEF, ["market-broker", "gemini-strategist", "cloud-run-sre"], 140);
     const strategy = buildWinningStrategy(recommendation);
+    const marketIntel = buildMarketIntelReport({ baseUrl, recommendation, strategy });
+    const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
+    const battlecard = buildCompetitiveBattlecard({ baseUrl, strategy, marketIntel, moatStress });
     const mission = buildMissionRun(recommendation, strategy);
     const opsDrill = buildOpsDrill(recommendation, strategy);
     const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
@@ -28,7 +34,7 @@ describe("submission dossier", () => {
     const judgeDrill = buildJudgeDrill({ baseUrl, recommendation, strategy, mission, opsDrill, pitch });
     const finalist = buildFinalistSimulation({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, judgeDrill, squadContract });
     const publisher = buildProtoPediaPublisher({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist });
-    const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher });
+    const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher, battlecard });
     const ci: CiProof = {
       status: "passed",
       conclusion: "success",
@@ -70,13 +76,14 @@ describe("submission dossier", () => {
       publisher,
       demoRunway,
       autopilot,
-      proof
+      proof,
+      battlecard
     });
 
     expect(dossier.dossierScore).toBeGreaterThanOrEqual(84);
     expect(dossier.readiness).toBe("needs-external-urls");
     expect(dossier.copyBlocks.map((block) => block.id)).toEqual(
-      expect.arrayContaining(["title", "one-liner", "problem", "users", "features", "technology", "demo-flow", "judge-proof", "tags"])
+      expect.arrayContaining(["title", "one-liner", "problem", "users", "features", "technology", "demo-flow", "competitive-objections", "judge-proof", "tags"])
     );
     expect(dossier.links.map((link) => link.id)).toEqual(expect.arrayContaining(["github", "cloud-run", "ci", "architecture", "protopedia", "video"]));
     expect(dossier.links.filter((link) => link.status === "watch").map((link) => link.id)).toEqual(expect.arrayContaining(["protopedia", "video"]));
@@ -90,6 +97,11 @@ describe("submission dossier", () => {
     });
     expect(dossier.handoffPacket.protopediaFields.map((field) => field.id)).toEqual(expect.arrayContaining(["problem", "features", "technology", "tags"]));
     expect(dossier.handoffPacket.videoChapters.length).toBeGreaterThanOrEqual(8);
+    expect(dossier.handoffPacket.competitiveReceipts.find((receipt) => receipt.id === "google-adk")).toMatchObject({
+      competitor: expect.stringContaining("ADK"),
+      status: expect.stringMatching(/ready|watch/),
+      protopediaLine: expect.stringContaining("本作")
+    });
     expect(dossier.handoffPacket.architecturePack).toMatchObject({
       readiness: "needs-external-urls",
       diagramUrl: `${baseUrl}/assets/a2a-marketplace-architecture.svg`
@@ -99,6 +111,8 @@ describe("submission dossier", () => {
     );
     expect(dossier.handoffPacket.missingOnly.map((item) => item.id)).toEqual(expect.arrayContaining(["protopedia-url", "video-url"]));
     expect(dossier.markdown).toContain("30秒動画録画順");
+    expect(dossier.markdown).toContain("競合反論レシート");
+    expect(dossier.markdown).toContain("Google ADK");
     expect(dossier.markdown).toContain("提出フォームパケット");
     expect(dossier.markdown).toContain("動画チャプター");
     expect(dossier.markdown).toContain("システム構成図パケット");
@@ -110,6 +124,7 @@ describe("submission dossier", () => {
       handoffPacket: {
         submitFields: expect.arrayContaining([expect.objectContaining({ id: "github-url", status: "ready" })]),
         videoChapters: expect.arrayContaining([expect.objectContaining({ id: "proof-first" })]),
+        competitiveReceipts: expect.arrayContaining([expect.objectContaining({ id: "google-adk" })]),
         architecturePack: {
           readiness: "needs-external-urls",
           diagramUrl: `${baseUrl}/assets/a2a-marketplace-architecture.svg`

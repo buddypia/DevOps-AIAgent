@@ -8405,6 +8405,105 @@ h1 {
   line-height: 1.42;
 }
 
+.dossier-competitive {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  background: #fffdf9;
+}
+
+.dossier-competitive h3,
+.demo-competitive h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.dossier-competitive > div,
+.demo-competitive > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dossier-competitive article,
+.demo-competitive article {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid #d7d2c8;
+  border-left: 4px solid var(--teal);
+  border-radius: 8px;
+  background: #f7f8f2;
+}
+
+.demo-competitive article {
+  border-color: #c8d3e2;
+  border-left-color: var(--blue);
+  background: #f9fbff;
+}
+
+.dossier-competitive article.watch,
+.demo-competitive article.watch {
+  border-left-color: var(--amber);
+  background: #fff8e6;
+}
+
+.dossier-competitive article > div,
+.demo-competitive article > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dossier-competitive strong,
+.dossier-competitive p,
+.dossier-competitive small,
+.dossier-competitive b,
+.demo-competitive strong,
+.demo-competitive p,
+.demo-competitive small,
+.demo-competitive b {
+  overflow-wrap: anywhere;
+}
+
+.dossier-competitive span,
+.demo-competitive span {
+  color: var(--teal);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.demo-competitive span {
+  color: var(--blue);
+}
+
+.dossier-competitive article.watch span,
+.demo-competitive article.watch span {
+  color: #8a5b17;
+}
+
+.dossier-competitive p,
+.dossier-competitive small,
+.dossier-competitive b,
+.demo-competitive p,
+.demo-competitive small,
+.demo-competitive b {
+  color: #46443e;
+  line-height: 1.42;
+}
+
+.demo-competitive b,
+.dossier-competitive b {
+  font-size: 0.76rem;
+}
+
 .dossier-copy {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -8695,6 +8794,13 @@ h1 {
   font-size: 0.78rem;
   font-weight: 900;
   text-decoration: none;
+}
+
+.demo-competitive {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  background: #f9fbff;
 }
 
 .demo-grid {
@@ -11215,6 +11321,11 @@ pre {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
   }
 
+  .dossier-competitive > div,
+  .demo-competitive > div {
+    grid-template-columns: repeat(2, minmax(320px, 1fr));
+  }
+
   .demo-steps {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
   }
@@ -11424,6 +11535,11 @@ pre {
   }
 
   .dossier-handoff section > div {
+    grid-template-columns: 1fr;
+  }
+
+  .dossier-competitive > div,
+  .demo-competitive > div {
     grid-template-columns: 1fr;
   }
 

@@ -199,7 +199,7 @@ function buildObjectionReceipts(cards: CompetitiveBattlecardCard[]): Competitive
         proofRoute: card.proofRoute,
         mvpUpgrade: `${card.competitor}への反論を${priorityVerb}: source ${card.sourceUrls.length}件、SWOT、proof routeを同じカードで開く。`,
         recordingCue: card.recordingCue,
-        protopediaLine: `${card.competitor}は${card.whereTheyWin}に強い。本作は${card.whereWeWin}`,
+        protopediaLine: `${card.competitor}は${card.category}領域で強い競合です。本作は既存基盤の置き換えではなく、AI能力の調達、A2A委任、Cloud Run上の検収証拠に焦点を当てます。`,
         acceptance: "審査質問に15秒で回答し、公式ソース、SWOTシグナル、公開証拠routeを同時に提示できる。"
       };
     });

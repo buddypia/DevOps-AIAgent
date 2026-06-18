@@ -1,3 +1,4 @@
+import type { BattlecardStatus, CompetitiveBattlecard } from "./competitiveBattlecard.js";
 import type { FinalistSimulation } from "./finalist.js";
 import type { MissionRun } from "./mission.js";
 import type { OpsDrill } from "./ops.js";
@@ -36,6 +37,17 @@ export type DemoRisk = {
   mitigation: string;
 };
 
+export type DemoCompetitiveProof = {
+  id: string;
+  competitor: string;
+  status: DemoStepStatus;
+  objection: string;
+  swotSignal: string;
+  proofRoute: string;
+  recordingCue: string;
+  protopediaLine: string;
+};
+
 export type DemoRunway = {
   id: string;
   demoScore: number;
@@ -46,6 +58,7 @@ export type DemoRunway = {
   steps: DemoRunwayStep[];
   proofLinks: DemoProofLink[];
   risks: DemoRisk[];
+  competitiveProofReel: DemoCompetitiveProof[];
   recordingCues: string[];
   nextActions: string[];
   a2aPayload: Record<string, unknown>;
@@ -73,6 +86,10 @@ function statusFromWarnings(count: number): DemoStepStatus {
   return count === 0 ? "ready" : "watch";
 }
 
+function statusFromBattlecard(status: BattlecardStatus): DemoStepStatus {
+  return status === "lead" ? "ready" : "watch";
+}
+
 export function buildDemoRunway(input: {
   baseUrl: string;
   recommendation: Recommendation;
@@ -82,12 +99,14 @@ export function buildDemoRunway(input: {
   pitch: PitchRun;
   finalist: FinalistSimulation;
   publisher: ProtoPediaPublisher;
+  battlecard?: CompetitiveBattlecard;
 }): DemoRunway {
-  const { baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher } = input;
+  const { baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher, battlecard } = input;
   const appUrl = mission.submissionPack.deployedUrl || baseUrl;
   const proofUrl = absoluteUrl(baseUrl, "/api/proof");
   const finalistUrl = absoluteUrl(baseUrl, "/api/finalist");
   const publisherUrl = absoluteUrl(baseUrl, "/api/publisher");
+  const battlecardUrl = absoluteUrl(baseUrl, "/api/competitive-battlecard");
   const contractUrl = absoluteUrl(baseUrl, "/api/contracts");
   const strategyUrl = absoluteUrl(baseUrl, mission.submissionPack.storyMarkdownPath);
   const missionUrl = absoluteUrl(baseUrl, "/api/mission");
@@ -99,6 +118,17 @@ export function buildDemoRunway(input: {
   const finalistWarnings = finalist.gaps.length;
   const totalSeconds = 30;
   const durations = [4, 4, 4, 4, 5, 4, 3, 2];
+  const competitiveProofReel: DemoCompetitiveProof[] =
+    battlecard?.objectionReceipts.slice(0, 3).map((receipt) => ({
+      id: receipt.id,
+      competitor: receipt.competitor,
+      status: statusFromBattlecard(receipt.status),
+      objection: receipt.objection,
+      swotSignal: `${receipt.swotSignal.quadrant}: ${receipt.swotSignal.title}`,
+      proofRoute: receipt.proofRoute,
+      recordingCue: receipt.recordingCue,
+      protopediaLine: receipt.protopediaLine
+    })) ?? [];
 
   const steps: DemoRunwayStep[] = [
     {
@@ -149,11 +179,17 @@ export function buildDemoRunway(input: {
       id: "strategy-swot",
       order: 5,
       timeRange: timeRange(16, durations[4]),
-      screen: "Winning Strategy",
-      action: "競合、SWOT、Judge Scorecard、Next hireを見せる",
-      narration: `競合${strategy.competitors.length}件とSWOTから、作る基盤ではなくAI能力調達に勝ち筋を寄せます。`,
-      evidence: `Judge ${strategy.judgeScore}, moat ${strategy.moatScore}`,
-      evidenceUrl: strategyUrl,
+      screen: battlecard ? "Winning Strategy + Competitive Battlecard" : "Winning Strategy",
+      action: battlecard
+        ? "競合、SWOT、Battlecard反論、Judge Scorecard、Next hireを見せる"
+        : "競合、SWOT、Judge Scorecard、Next hireを見せる",
+      narration: battlecard
+        ? `競合${strategy.competitors.length}件とSWOTに、${competitiveProofReel.length}件の反論レシートを重ねて勝ち筋を固定します。`
+        : `競合${strategy.competitors.length}件とSWOTから、作る基盤ではなくAI能力調達に勝ち筋を寄せます。`,
+      evidence: battlecard
+        ? `Judge ${strategy.judgeScore}, moat ${strategy.moatScore}, battle ${battlecard.battleScore}`
+        : `Judge ${strategy.judgeScore}, moat ${strategy.moatScore}`,
+      evidenceUrl: battlecard ? battlecardUrl : strategyUrl,
       status: "ready"
     },
     {
@@ -227,9 +263,14 @@ export function buildDemoRunway(input: {
     { id: "proof", label: "Judge Proof API", url: proofUrl, proof: "Gemini/Cloud Run/A2A/CI receipt" },
     { id: "finalist", label: "Finalist API", url: finalistUrl, proof: "審査員5役の模擬判定" },
     { id: "publisher", label: "Publisher API", url: publisherUrl, proof: "ProtoPedia貼り付け本文" },
+    ...(battlecard ? [{ id: "battlecard", label: "Competitive Battlecard", url: battlecardUrl, proof: "競合反論とSWOT receipt" }] : []),
     { id: "agent-card", label: "Agent Card", url: agentCardUrl, proof: "A2A skill surface" },
     { id: "ci", label: "GitHub Actions", url: SUBMISSION_PROOF.ciWorkflowUrl, proof: "公開品質ゲート" },
     { id: "mission", label: "Mission API", url: missionUrl, proof: "A2A委任と提出パック" }
+  ];
+  const recordingCues = [
+    ...steps.map((step) => `${step.timeRange} ${step.screen}: ${step.narration}`),
+    ...competitiveProofReel.map((receipt) => `16-21s Competitive Battlecard: ${receipt.competitor}への反論を開く。${receipt.recordingCue}`)
   ];
 
   return {
@@ -245,7 +286,8 @@ export function buildDemoRunway(input: {
     steps,
     proofLinks,
     risks,
-    recordingCues: steps.map((step) => `${step.timeRange} ${step.screen}: ${step.narration}`),
+    competitiveProofReel,
+    recordingCues,
     nextActions:
       risks.length > 0
         ? risks.map((risk) => risk.mitigation)
@@ -264,6 +306,13 @@ export function buildDemoRunway(input: {
         screen: step.screen,
         status: step.status,
         evidenceUrl: step.evidenceUrl
+      })),
+      competitiveProofReel: competitiveProofReel.map((receipt) => ({
+        id: receipt.id,
+        competitor: receipt.competitor,
+        status: receipt.status,
+        proofRoute: receipt.proofRoute,
+        protopediaLine: receipt.protopediaLine
       })),
       risks: risks.map((risk) => ({ id: risk.id, mitigation: risk.mitigation }))
     }

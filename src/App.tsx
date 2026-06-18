@@ -5429,6 +5429,28 @@ function SubmissionDossierPanel({
             </section>
           </div>
 
+          {dossier.handoffPacket.competitiveReceipts.length > 0 && (
+            <div className="dossier-competitive">
+              <h3>
+                <Crosshair size={15} />
+                Competitive objection receipts
+              </h3>
+              <div>
+                {dossier.handoffPacket.competitiveReceipts.map((receipt) => (
+                  <article key={receipt.id} className={receipt.status}>
+                    <div>
+                      <strong>{receipt.competitor}</strong>
+                      <span>{receipt.status}</span>
+                    </div>
+                    <p>{receipt.objection}</p>
+                    <small>{receipt.protopediaLine}</small>
+                    <b>{receipt.proofRoute}</b>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="dossier-copy">
             {dossier.copyBlocks.map((block) => (
               <article key={block.id} className={block.status}>
@@ -5595,6 +5617,28 @@ function DemoRunwayPanel({
               </article>
             ))}
           </div>
+
+          {runway.competitiveProofReel.length > 0 && (
+            <div className="demo-competitive">
+              <h3>
+                <Crosshair size={15} />
+                Competitive proof reel
+              </h3>
+              <div>
+                {runway.competitiveProofReel.map((receipt) => (
+                  <article key={receipt.id} className={receipt.status}>
+                    <div>
+                      <strong>{receipt.competitor}</strong>
+                      <span>{receipt.status}</span>
+                    </div>
+                    <p>{receipt.objection}</p>
+                    <small>{receipt.swotSignal}</small>
+                    <b>{receipt.proofRoute}</b>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="demo-grid">
             <section>

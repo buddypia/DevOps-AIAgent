@@ -52,9 +52,9 @@
 - Judge Drill: 審査5項目と主要競合への厳しい質問、短い回答、60秒回答パス、証拠リンク、次アクションを生成する
 - Finalist: 審査員5役の模擬判定で、最終候補スコア、落選理由、残ギャップ、次の一手を生成する
 - Publisher: ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
-- Demo Runway: Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線に束ねる
+- Demo Runway: Judge Proof、Finalist、Publisher、Marketplace、Strategy、Competitive Battlecard、Mission、Opsを30秒の審査員導線に束ね、競合反論リールを録画キューへ落とす
 - Win Autopilot: 競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を一括で走らせ、勝てる状態と残アクションを返す
-- Submission Dossier: ProtoPedia本文、動画録画順、提出リンク、最終チェック、Markdownを1つに束ねる
+- Submission Dossier: ProtoPedia本文、競合反論レシート、動画録画順、提出リンク、最終チェック、Markdownを1つに束ねる
 - Visual asset: `image_gen` で生成した `public/assets/agent-marketplace-hero.png`
 
 ## Winning Strategy Layer
@@ -346,11 +346,11 @@
 
 ## Demo Runway
 
-`Demo Runway` は審査員の初見体験を一本化する入口です。Judge Proof、Finalist Simulator、Submission Publisher、Marketplace、Winning Strategy、Contract/Mission、Ops Drillを30秒の順番に並べ、証拠リンク、録画キュー、外部URL残リスクを返します。
+`Demo Runway` は審査員の初見体験を一本化する入口です。Judge Proof、Finalist Simulator、Submission Publisher、Marketplace、Winning Strategy、Competitive Battlecard、Contract/Mission、Ops Drillを30秒の順番に並べ、証拠リンク、競合反論リール、録画キュー、外部URL残リスクを返します。
 
 - API: `POST /api/demo-run`
 - App UI: `Run demo runway`
-- Output: demo score、8-step judge route、proof links、recording cues、external risks、A2A `demo.runway` payload
+- Output: demo score、8-step judge route、proof links、competitive proof reel、recording cues、external risks、A2A `demo.runway` payload
 
 ## Pitch Director
 
@@ -386,11 +386,11 @@
 
 ## Submission Dossier
 
-`Submission Dossier` は外部提出直前の作業束です。Submission Publisher、Win Autopilot、Demo Runway、Judge Proofをまとめ、ProtoPediaに貼る本文、提出リンク、30秒録画順、構成図パケット、最終チェック、Markdownドシエを返します。
+`Submission Dossier` は外部提出直前の作業束です。Submission Publisher、Win Autopilot、Demo Runway、Competitive Battlecard、Judge Proofをまとめ、ProtoPediaに貼る本文、競合反論レシート、提出リンク、30秒録画順、構成図パケット、最終チェック、Markdownドシエを返します。
 
 - API: `POST /api/dossier`
 - App UI: `Run submission dossier`
-- Output: dossier score、copy blocks、submission links、recording plan、handoff packet、architecture pack、final checks、Markdown、A2A `submission.dossier` payload
+- Output: dossier score、copy blocks、submission links、recording plan、competitive receipts、handoff packet、architecture pack、final checks、Markdown、A2A `submission.dossier` payload
 
 ## Architecture Pack
 
