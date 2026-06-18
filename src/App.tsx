@@ -6879,6 +6879,7 @@ function JudgeProofBundle({
                 Live Links
               </h3>
               <div className="proof-links">
+                <a href="/api/judge-snapshot" target="_blank" rel="noreferrer">Judge Snapshot</a>
                 <a href={proof.links.app} target="_blank" rel="noreferrer">Cloud Run</a>
                 <a href={proof.links.github} target="_blank" rel="noreferrer">GitHub</a>
                 <a href={proof.links.ci} target="_blank" rel="noreferrer">GitHub Actions</a>

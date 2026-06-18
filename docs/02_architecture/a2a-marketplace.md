@@ -80,6 +80,7 @@
   - `deploy.recover`
   - `demo.receipt`
   - `acceptance.matrix`
+  - `judge.snapshot`
 
 ## Strategy Surface
 
@@ -116,6 +117,13 @@
 - Competitive Proof Lock: 競合カバレッジ、公式ソース、SWOT mapping、反論receipt、Objection Replay、live source lockをsealed/watch/missingで検収する
 - Judge script: 質疑で話す順番を「相手の強みを認める → 調達体験へずらす → 証拠を開く」に固定する
 - A2A payload: `competitive.battlecard` skillとしてbattle score、readiness、card verdicts、top risks、proof lockを返す
+
+## Public Judge Snapshot Surface
+
+- `GET /api/judge-snapshot`: Judge Proof、Competitive Battlecard、Criteria Duel、Agent Card、CI、深掘り用POST curlを、審査員が直接開ける初回証拠URLへ束ねる
+- Direct-open proof: ProtoPediaや提出本文に貼ったリンクが、POST method errorではなくreadiness、proof score、競合/SWOT証拠、運用証拠を返す
+- Live drift option: `?live=1` の時だけRelease Drift Guardを実行し、通常GETは初回表示の安定性を優先する
+- A2A payload: `judge.snapshot` skillとしてdirectOpen、readiness、proof score、Criteria Duel score、endpoint群を返す
 
 ## MVP Audit Surface
 
@@ -234,7 +242,7 @@
 
 ## Release Drift Surface
 
-- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Feature Freeze Lock tag、Winner Release Lock tag、Finalist Release Drift tag、Criteria Duel tag、Acceptance Matrix、A2A artifactを返しているかを検査する
+- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Feature Freeze Lock tag、Winner Release Lock tag、Finalist Release Drift tag、Criteria Duel tag、GET Proof Snapshot tag、Acceptance Matrix、A2A artifactを返しているかを検査する
 - Drift probes: target health、Agent Card skill surface、Acceptance Matrix endpoint、A2A artifact endpoints、latest main CIを同時に評価する
 - Verdict: 最新なら `release-current`、公開URLが古いなら `deploy-drift`、health/CIが落ちたら `release-blocked`
 - Runbook: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Acceptance Matrix、A2A artifactの再確認コマンドを返す
@@ -244,7 +252,7 @@
 
 - `POST /api/deploy-recovery`: Release Drift Guardの結果と直近gcloudエラーを、再デプロイ復旧計画に変換する
 - Checks: target health、skill surface、Cloud Build auth、A2A artifact、latest main CIをready/watch/blockedで返す
-- Commands: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Recording Lock / Feature Freeze Lock / Winner Release Lock / Finalist Release Drift / Criteria Duel のrequired signal tags、`/api/deploy-recovery`、A2A `deployRecoveryEndpoint` の再検証コマンドを返す
+- Commands: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Recording Lock / Feature Freeze Lock / Winner Release Lock / Finalist Release Drift / Criteria Duel / GET Proof Snapshot のrequired signal tags、`/api/deploy-recovery`、A2A `deployRecoveryEndpoint` の再検証コマンドを返す
 - A2A payload: `deploy.recover` skillとしてrecovery score、readiness、blocking commands、blockersを返す
 
 ## Demo Receipt Surface
