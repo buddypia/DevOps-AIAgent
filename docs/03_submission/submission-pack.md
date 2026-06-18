@@ -57,7 +57,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Ops Drillで、Cloud Run公開デモの稼働シグナルから継続・ロールバック・追加雇用を判断する
 - Judge Proofで、Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1クリックの証拠束にし、sha256 receiptで照合できるようにする
 - Pitch Directorで、30秒動画の録画順、読み上げ台詞、字幕、証拠リンク、提出残リスクを生成する
-- Judge Drillで、審査5項目ごとの厳しい質問、回答、証拠リンク、デモで開く画面を生成する
+- Judge Drillで、審査5項目と主要競合への厳しい質問、回答、60秒回答パス、証拠リンク、デモで開く画面を生成する
 - Finalist Simulatorで、審査員5役の最終候補判定、落選理由、残ギャップ、次の一手を生成する
 - Submission Publisherで、ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
 - Demo Runwayで、Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線に束ねる

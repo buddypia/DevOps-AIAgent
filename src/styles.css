@@ -7464,6 +7464,104 @@ h1 {
   text-transform: uppercase;
 }
 
+.judge-cross-exam {
+  display: grid;
+  grid-template-columns: minmax(520px, 1.3fr) minmax(360px, 0.7fr);
+  gap: 1px;
+  background: #dbcbd2;
+}
+
+.judge-cross-exam > section {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+  background: #fffafb;
+}
+
+.judge-cross-exam h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.judge-cross-exam section > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.judge-cross-exam article,
+.judge-cross-exam li {
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid #dbcbd2;
+  border-left: 4px solid #7b8794;
+  border-radius: 8px;
+  background: #f9f4f6;
+}
+
+.judge-cross-exam article.medium {
+  border-left-color: var(--amber);
+  background: #fff8e6;
+}
+
+.judge-cross-exam article.high {
+  border-left-color: var(--rose);
+  background: #fff1f2;
+}
+
+.judge-cross-exam article > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.judge-cross-exam h4 {
+  margin-top: 9px;
+  font-size: 0.98rem;
+  line-height: 1.3;
+}
+
+.judge-cross-exam p,
+.judge-cross-exam small,
+.judge-cross-exam li span {
+  color: #4b4248;
+  line-height: 1.45;
+}
+
+.judge-cross-exam span {
+  color: #8a334b;
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.judge-cross-exam strong,
+.judge-cross-exam h4,
+.judge-cross-exam p,
+.judge-cross-exam small {
+  overflow-wrap: anywhere;
+}
+
+.judge-cross-exam ol {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.judge-cross-exam li {
+  display: grid;
+  gap: 5px;
+}
+
 .judge-objections {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -9062,6 +9160,14 @@ pre {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
   }
 
+  .judge-cross-exam {
+    grid-template-columns: 1fr;
+  }
+
+  .judge-cross-exam section > div {
+    grid-template-columns: repeat(2, minmax(320px, 1fr));
+  }
+
   .receipt-stamps {
     grid-template-columns: repeat(3, minmax(220px, 1fr));
   }
@@ -9309,6 +9415,7 @@ pre {
     .pitch-scene-rail,
     .pitch-grid,
     .judge-summary,
+    .judge-cross-exam,
     .judge-objections,
     .judge-grid,
     .finalist-summary,
@@ -9331,6 +9438,10 @@ pre {
   }
 
   .dossier-handoff section > div {
+    grid-template-columns: 1fr;
+  }
+
+  .judge-cross-exam section > div {
     grid-template-columns: 1fr;
   }
 

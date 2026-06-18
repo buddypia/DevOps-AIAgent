@@ -39,7 +39,7 @@
 - Operate: Ops DrillがCloud Run公開デモの稼働シグナルを読み、継続・ロールバック・追加雇用を判断
 - Proof: Judge ProofがGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1クリックで証拠束にする
 - Pitch: Pitch Directorが30秒動画の録画順、字幕、証拠リンク、提出残リスクを生成する
-- Judge Drill: 審査5項目ごとの厳しい質問、短い回答、証拠リンク、次アクションを生成する
+- Judge Drill: 審査5項目と主要競合への厳しい質問、短い回答、60秒回答パス、証拠リンク、次アクションを生成する
 - Finalist: 審査員5役の模擬判定で、最終候補スコア、落選理由、残ギャップ、次の一手を生成する
 - Publisher: ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
 - Demo Runway: Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線に束ねる
@@ -288,11 +288,11 @@
 
 ## Judge Drill
 
-`Judge Drill` は、審査員からの厳しい質問に備える反証ボードです。AIエージェント中心性、課題アプローチ、ユーザビリティ、実用性、実装力の5項目ごとに、想定質問、15秒回答、証拠リンク、デモで開くべき画面を生成します。
+`Judge Drill` は、審査員からの厳しい質問に備える反証ボードです。AIエージェント中心性、課題アプローチ、ユーザビリティ、実用性、実装力の5項目ごとの想定質問に加え、Competitive Battlecard、Market Intel、Moat Stressを束ねたCross-exam deckを生成し、ADK/LangGraph等への60秒回答パス、証拠リンク、デモで開くべき画面を固定します。
 
 - API: `POST /api/judge-drill`
 - App UI: `Run judge drill`
-- Output: hardest question、5 objection cards、cross-exam runbook、evidence links、A2A payload
+- Output: hardest question、5 objection cards、cross-exam deck、60s answer path、cross-exam runbook、evidence links、A2A payload
 
 ## Finalist Simulator
 

@@ -4686,6 +4686,44 @@ function JudgeDrillPanel({
             </div>
           </div>
 
+          <div className="judge-cross-exam">
+            <section>
+              <h3>
+                <ShieldCheck size={15} />
+                Cross-exam deck
+              </h3>
+              <div>
+                {drill.crossExamDeck.map((card) => (
+                  <article key={card.id} className={card.risk}>
+                    <div>
+                      <strong>{card.competitor}</strong>
+                      <span>{card.risk}</span>
+                    </div>
+                    <h4>{card.triggerQuestion}</h4>
+                    <p>{card.answerPattern}</p>
+                    <small>{card.fallbackLine}</small>
+                    <span>+{card.scoreLift} scoring lever</span>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Gauge size={15} />
+                60s answer path
+              </h3>
+              <ol>
+                {drill.timeboxedAnswer.map((step) => (
+                  <li key={step.timeRange}>
+                    <strong>{step.timeRange}</strong>
+                    <span>{step.move}</span>
+                    <small>{step.proof}</small>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          </div>
+
           <div className="judge-objections">
             {drill.objections.map((objection) => (
               <article key={objection.id} className={objection.risk}>

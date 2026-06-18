@@ -1,4 +1,7 @@
+import { buildCompetitiveBattlecard } from "./competitiveBattlecard.js";
+import { buildMarketIntelReport } from "./marketIntel.js";
 import type { MissionRun } from "./mission.js";
+import { buildMoatStressTest } from "./moatStress.js";
 import type { OpsDrill } from "./ops.js";
 import type { PitchRun } from "./pitch.js";
 import { SUBMISSION_PROOF } from "./submission.js";
@@ -27,6 +30,30 @@ export type JudgeEvidenceLink = {
   proof: string;
 };
 
+export type JudgeCrossExamProofStep = {
+  id: string;
+  screen: string;
+  endpoint: string;
+  say: string;
+};
+
+export type JudgeCrossExamCard = {
+  id: string;
+  competitor: string;
+  risk: JudgeRisk;
+  triggerQuestion: string;
+  answerPattern: string;
+  proofSteps: JudgeCrossExamProofStep[];
+  fallbackLine: string;
+  scoreLift: number;
+};
+
+export type JudgeTimebox = {
+  timeRange: string;
+  move: string;
+  proof: string;
+};
+
 export type JudgeDrill = {
   id: string;
   readinessScore: number;
@@ -34,6 +61,8 @@ export type JudgeDrill = {
   openingRebuttal: string;
   closingLine: string;
   objections: JudgeObjection[];
+  crossExamDeck: JudgeCrossExamCard[];
+  timeboxedAnswer: JudgeTimebox[];
   evidenceLinks: JudgeEvidenceLink[];
   crossExamRunbook: string[];
   a2aPayload: Record<string, unknown>;
@@ -121,6 +150,12 @@ function evidenceForCriterion(input: {
   };
 }
 
+function crossExamRisk(threatLevel: string, score: number): JudgeRisk {
+  if (threatLevel === "high") return "high";
+  if (threatLevel === "medium" || score < 88) return "medium";
+  return "low";
+}
+
 export function buildJudgeDrill(input: {
   baseUrl: string;
   recommendation: Recommendation;
@@ -130,7 +165,11 @@ export function buildJudgeDrill(input: {
   pitch: PitchRun;
 }): JudgeDrill {
   const { baseUrl, recommendation, strategy, mission, opsDrill, pitch } = input;
+  const normalizedBase = baseUrl.replace(/\/$/, "");
   const selectedAgents = recommendation.selected.map((agent) => agent.name).join(" / ") || "A2A Market Broker";
+  const marketIntel = buildMarketIntelReport({ baseUrl: normalizedBase, recommendation, strategy });
+  const moatStress = buildMoatStressTest({ baseUrl: normalizedBase, recommendation, strategy, marketIntel });
+  const battlecard = buildCompetitiveBattlecard({ baseUrl: normalizedBase, strategy, marketIntel, moatStress });
   const objections = strategy.judgeCriteria.map((criterion) => {
     const { evidence, evidenceUrl } = evidenceForCriterion({ criterion, baseUrl, strategy, mission, opsDrill, pitch });
     return {
@@ -159,6 +198,68 @@ export function buildJudgeDrill(input: {
     const riskWeight: Record<JudgeRisk, number> = { high: 3, medium: 2, low: 1 };
     return riskWeight[right.risk] - riskWeight[left.risk];
   })[0];
+  const crossExamDeck: JudgeCrossExamCard[] = [...battlecard.cards]
+    .sort((left, right) => {
+      const riskWeight: Record<string, number> = { risk: 3, parity: 2, lead: 1 };
+      return riskWeight[right.status] - riskWeight[left.status] || right.score - left.score;
+    })
+    .slice(0, 3)
+    .map((card) => ({
+      id: card.id,
+      competitor: card.competitor,
+      risk: crossExamRisk(card.threatLevel, card.score),
+      triggerQuestion: card.judgeQuestion,
+      answerPattern: [
+        `まず相手の強みを認めます: ${card.whereTheyWin}.`,
+        `次に争点をずらします: ${card.whereWeWin}`,
+        `最後にこの証拠を開きます: ${card.proofRoute}`
+      ].join(" "),
+      proofSteps: [
+        {
+          id: "battlecard",
+          screen: "Competitive Battlecard",
+          endpoint: `${normalizedBase}/api/competitive-battlecard`,
+          say: card.shortAnswer
+        },
+        {
+          id: "sources",
+          screen: "Market Intel sources",
+          endpoint: `${normalizedBase}/api/market-intel`,
+          say: `${card.sourceUrls.length} source links and SWOT receipts support this answer.`
+        },
+        {
+          id: "live-proof",
+          screen: "Release Drift + Agent Card",
+          endpoint: `${normalizedBase}/api/release-drift`,
+          say: "公開Cloud Runが最新Agent CardとA2A artifactを返すことを確認します。"
+        }
+      ],
+      fallbackLine: "それは置き換えではなく前段です。作る基盤ではなく、どのAI能力を雇い、A2Aで委任し、Cloud Run上で検収するかを判断する体験です。",
+      scoreLift: Math.max(1, 92 - card.score)
+    }));
+  const primaryCrossExam = crossExamDeck[0];
+  const timeboxedAnswer: JudgeTimebox[] = [
+    {
+      timeRange: "0-10s",
+      move: "相手の強みを先に認める",
+      proof: primaryCrossExam ? `${primaryCrossExam.competitor}: ${primaryCrossExam.triggerQuestion}` : hardest?.question ?? "競合質問を確認する"
+    },
+    {
+      timeRange: "10-25s",
+      move: "作る基盤から、AI能力調達とA2A検収へ争点をずらす",
+      proof: battlecard.thesis
+    },
+    {
+      timeRange: "25-45s",
+      move: "Battlecard、Market Intel、Release Driftを順に開く",
+      proof: primaryCrossExam?.proofSteps.map((step) => step.screen).join(" -> ") ?? "Judge Proof -> Agent Card"
+    },
+    {
+      timeRange: "45-60s",
+      move: "審査5項目のどれを証明したかで締める",
+      proof: "AI中心性、課題アプローチ、実装力を同じ証拠で説明する"
+    }
+  ];
   const evidenceLinks: JudgeEvidenceLink[] = [
     {
       id: "app",
@@ -212,8 +313,13 @@ export function buildJudgeDrill(input: {
     openingRebuttal: "この作品はAIエージェントを作るだけでなく、必要能力の発見、購入判断、A2A委任、Cloud Run運用、提出証跡までをAIの判断ループとして閉じています。",
     closingLine: "審査では、最初にWin Autopilot、次にJudge Proof、最後にDemo RunwayとAgent Cardを開けば、価値と実装の両方を確認できます。",
     objections,
+    crossExamDeck,
+    timeboxedAnswer,
     evidenceLinks,
     crossExamRunbook: [
+      "Cross-exam deckで最も強い競合質問を選び、相手の強みを先に認める",
+      "Competitive Battlecardで短い回答、source、SWOT receiptsを同時に見せる",
+      "Release Drift Guardで公開Cloud Runが最新skill surfaceを返すことを確認する",
       "Run win autopilotでwin score、残アクション、証拠デッキを見せる",
       "Run demo runwayで30秒の審査員導線、証拠リンク、外部残リスクを見せる",
       "Run judge proofでGemini/Cloud Run/A2A/CI receiptを見せる",
@@ -227,6 +333,14 @@ export function buildJudgeDrill(input: {
       skill: "judge.drill",
       readinessScore,
       hardestQuestion: hardest?.question ?? null,
+      crossExamDeck: crossExamDeck.map((card) => ({
+        id: card.id,
+        competitor: card.competitor,
+        risk: card.risk,
+        scoreLift: card.scoreLift,
+        firstProof: card.proofSteps[0]?.endpoint
+      })),
+      timeboxedAnswer,
       objections: objections.map((objection) => ({
         criterionId: objection.criterionId,
         risk: objection.risk,

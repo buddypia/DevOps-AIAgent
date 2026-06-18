@@ -338,8 +338,8 @@ function agentCard(baseUrl: string) {
       {
         id: "judge.drill",
         name: "Prepare skeptical judge rebuttals",
-        description: "審査5項目ごとの厳しめ質問、短い回答、証拠リンク、次アクションを生成する。",
-        tags: ["judge-drill", "qa", "rebuttal", "evidence", "scorecard"]
+        description: "審査5項目と主要競合への厳しめ質問、短い回答、60秒回答パス、証拠リンク、次アクションを生成する。",
+        tags: ["judge-drill", "qa", "rebuttal", "cross-exam", "evidence", "scorecard"]
       },
       {
         id: "finalist.simulate",
@@ -3529,6 +3529,14 @@ app.post("/a2a", async (req, res) => {
                   id: judgeDrill.id,
                   readinessScore: judgeDrill.readinessScore,
                   hardestQuestion: judgeDrill.hardestQuestion,
+                  crossExamDeck: judgeDrill.crossExamDeck.map((card) => ({
+                    id: card.id,
+                    competitor: card.competitor,
+                    risk: card.risk,
+                    scoreLift: card.scoreLift,
+                    firstProof: card.proofSteps[0]?.endpoint
+                  })),
+                  timeboxedAnswer: judgeDrill.timeboxedAnswer,
                   objections: judgeDrill.objections.map((objection) => ({
                     criterionId: objection.criterionId,
                     risk: objection.risk,
