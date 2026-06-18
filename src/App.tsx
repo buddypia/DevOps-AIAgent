@@ -54,6 +54,7 @@ import type { OpsDrill } from "./ops";
 import type { PilotEconomics } from "./pilotEconomics";
 import type { PitchRun } from "./pitch";
 import type { JudgeProof } from "./proof";
+import type { PrizeStrategyBoard } from "./prizeStrategy";
 import type { ProtoPediaPublisher } from "./publisher";
 import type { ReleaseDriftGuard } from "./releaseDrift";
 import type { SecurityReview } from "./security";
@@ -320,6 +321,165 @@ function JudgeCommandCenterPanel({
           <Trophy size={28} />
           <strong>Build command centerで、最初に押す証拠、90秒導線、残ブロッカーを1画面にまとめます。</strong>
           <p>機能一覧を説明するのではなく、審査員が最初に見る順番を固定します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function PrizeStrategyPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [board, setBoard] = useState<PrizeStrategyBoard | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildPrizeStrategy() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/prize-strategy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setBoard((await response.json()) as PrizeStrategyBoard);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section id="prize-strategy" className="prize-strategy">
+      <div className="prize-heading">
+        <div>
+          <span className="eyebrow">Prize strategy board</span>
+          <h2>
+            <Crosshair size={20} />
+            Win the scorecard
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildPrizeStrategy} disabled={loading} title="審査5項目の優勝作戦を生成">
+          <Trophy size={17} />
+          {loading ? "Scoring" : "Build prize strategy"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Prize strategy request failed: {error}</p>}
+
+      {board ? (
+        <div className="prize-body">
+          <div className="prize-summary">
+            <div>
+              <span className={cx("risk-chip", board.readiness === "winner-ready" ? "low" : board.readiness === "finalist-track" ? "medium" : "high")}>
+                {board.readiness}
+              </span>
+              <h3>{board.headline}</h3>
+              <p>{board.hardTruth}</p>
+              <strong>{board.winHypothesis}</strong>
+            </div>
+            <div className="prize-score">
+              <strong>{board.prizeScore}</strong>
+              <span>prize score</span>
+            </div>
+          </div>
+
+          <div className="prize-criteria">
+            {board.criteria.map((criterion) => (
+              <article key={criterion.id} className={criterion.status}>
+                <div>
+                  <span>{criterion.label}</span>
+                  <strong>{criterion.currentScore}</strong>
+                </div>
+                <p>target {criterion.targetScore} / delta {criterion.delta}</p>
+                <small>{criterion.decisiveProof}</small>
+                <b>{criterion.demoMove}</b>
+              </article>
+            ))}
+          </div>
+
+          <div className="prize-grid">
+            <section>
+              <h3>
+                <BadgeCheck size={15} />
+                Proof moves
+              </h3>
+              <div className="prize-moves">
+                {board.proofMoves.map((move) => (
+                  <a key={move.id} href={move.endpoint} target="_blank" rel="noreferrer">
+                    <span>{move.screen}</span>
+                    <strong>{move.label}</strong>
+                    <p>{move.proof}</p>
+                    <small>{move.score}</small>
+                  </a>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Film size={15} />
+                Final pitch order
+              </h3>
+              <div className="prize-pitch">
+                {board.pitchOrder.map((step) => (
+                  <article key={step.id}>
+                    <div>
+                      <strong>{step.timeRange}</strong>
+                      <span>{step.proofMoveId}</span>
+                    </div>
+                    <p>{step.screen}</p>
+                    <small>{step.say}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <AlertTriangle size={15} />
+                Risks to close
+              </h3>
+              <div className="prize-risks">
+                {board.risks.length > 0 ? (
+                  board.risks.slice(0, 6).map((risk) => (
+                    <article key={risk.id} className={risk.priority}>
+                      <div>
+                        <strong>{risk.owner}</strong>
+                        <span>{risk.priority}</span>
+                      </div>
+                      <p>{risk.risk}</p>
+                      <small>{risk.action}</small>
+                    </article>
+                  ))
+                ) : (
+                  <article className="clear">
+                    <strong>No prize risks</strong>
+                    <p>{board.judgeClose}</p>
+                  </article>
+                )}
+              </div>
+              <h3>
+                <Terminal size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(board.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="prize-empty">
+          <Crosshair size={28} />
+          <strong>Build prize strategyで、審査5項目の目標点、現在証拠、最終ピッチ順、残リスクを優勝作戦にします。</strong>
+          <p>MVPが足りるかではなく、どの証拠で採点を取りに行くかを固定します。</p>
         </div>
       )}
     </section>
@@ -5315,6 +5475,7 @@ export default function App() {
       </section>
 
       <JudgeCommandCenterPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <PrizeStrategyPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeTourPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SquadOptimizerPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MoatStressPanel recommendation={recommendation} projectBrief={projectBrief} />

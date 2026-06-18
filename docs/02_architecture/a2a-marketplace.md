@@ -26,19 +26,20 @@
 18. `src/judgeBrief.ts` が競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員向け1ページに圧縮する
 19. `src/judgeTour.ts` がJudge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
 20. `src/judgeCommandCenter.ts` がJudge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
-21. `src/userPilot.ts` が開発リード、Platform/SRE、提出者の初回利用導線、摩擦、次クリックを検証する
-22. `src/squadOptimizer.ts` が予算内のAI編成を総当たりし、必須技術カバレッジ、交換計画、追加予算ギャップを返す
-23. `src/liveEvidence.ts` が公開Cloud Run、Agent Card、A2A、Squad Optimizer、CIのライブ証拠をスコア化する
-24. `src/releaseDrift.ts` が提出用Cloud Run URLのAgent Card、Acceptance Matrix、A2A artifactのrevision driftを検知する
-25. `src/deployRecovery.ts` がrelease drift、gcloud認証、Cloud Build、公開再検証を復旧計画にする
-26. `src/demoReceipt.ts` が審査導線、競合反論、編成判断、公開証拠、外部提出URLをsha256 digest付き検収票にする
-27. `src/acceptanceMatrix.ts` が必須技術、審査5項目、公開証拠、提出物をaccepted/watch/blockedの受入表にする
-28. `src/autonomyLedger.ts` が市場探索、判断、契約、A2A委任、検証、運用、提出をAI自律性台帳にする
-29. `src/security.ts` がSecret Manager、IP allowlist、入力制限、A2A信頼境界、CIを審査用セキュリティ証拠にする
-30. `src/impact.ts` が対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性証拠にする
-31. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
-32. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-33. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+21. `src/prizeStrategy.ts` が審査5項目の目標点、現在証拠、足りない証拠、最終ピッチ順を優勝作戦に束ねる
+22. `src/userPilot.ts` が開発リード、Platform/SRE、提出者の初回利用導線、摩擦、次クリックを検証する
+23. `src/squadOptimizer.ts` が予算内のAI編成を総当たりし、必須技術カバレッジ、交換計画、追加予算ギャップを返す
+24. `src/liveEvidence.ts` が公開Cloud Run、Agent Card、A2A、Squad Optimizer、CIのライブ証拠をスコア化する
+25. `src/releaseDrift.ts` が提出用Cloud Run URLのAgent Card、Acceptance Matrix、A2A artifactのrevision driftを検知する
+26. `src/deployRecovery.ts` がrelease drift、gcloud認証、Cloud Build、公開再検証を復旧計画にする
+27. `src/demoReceipt.ts` が審査導線、競合反論、編成判断、公開証拠、外部提出URLをsha256 digest付き検収票にする
+28. `src/acceptanceMatrix.ts` が必須技術、審査5項目、公開証拠、提出物をaccepted/watch/blockedの受入表にする
+29. `src/autonomyLedger.ts` が市場探索、判断、契約、A2A委任、検証、運用、提出をAI自律性台帳にする
+30. `src/security.ts` がSecret Manager、IP allowlist、入力制限、A2A信頼境界、CIを審査用セキュリティ証拠にする
+31. `src/impact.ts` が対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性証拠にする
+32. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
+33. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+34. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -69,6 +70,7 @@
   - `judge.proof`
   - `judge.brief`
   - `judge.command`
+  - `prize.strategy`
   - `judge.tour`
   - `user.pilot`
   - `squad.optimize`
@@ -132,6 +134,14 @@
 - Proof buttons: 90秒導線、競合回答、MVP受入表、公開revision、導入採算、勝ち筋判定の6証拠へ移動できる
 - Blockers: 公開Cloud Runのrevision drift、受入表blocked、外部提出URLwatchをowner付きの次アクションへ変換する
 - A2A payload: `judge.command` skillとしてcommand score、readiness、metrics、proof buttons、blockersを返す
+
+## Prize Strategy Surface
+
+- `POST /api/prize-strategy`: 審査5項目のtarget score、現在スコア、足りない証拠、最終ピッチ順を優勝作戦へ束ねる
+- Criteria board: AI中心性、課題アプローチ、ユーザビリティ、実用性、実装力をtarget 92点のgapとして評価する
+- Proof moves: Judge Command Center、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economicsを最終ピッチで開く順番へ変換する
+- Risks: 外部提出URL、公開revision、弱い採点軸、command blockerをowner付きの次アクションにする
+- A2A payload: `prize.strategy` skillとしてprize score、readiness、criteria gaps、proof moves、risksを返す
 
 ## Judge Tour Surface
 
@@ -258,6 +268,7 @@
 - `POST /api/competitive-battlecard`: 公式ソース、SWOT、競合反論、証拠routeを審査回答カードとして評価する
 - `POST /api/mvp-audit`: MVPハードゲート、審査lane、提出blockerを評価する
 - `POST /api/judge-command-center`: 初回審査用の証拠ボタン、90秒timeline、残ブロッカーを評価する
+- `POST /api/prize-strategy`: 審査5項目の優勝作戦、proof moves、final pitch orderを返す
 - `POST /api/pitch`: 30秒動画のshot list、voiceover、lower thirds、recording checklist、提出残リスクを返す
 - `POST /api/judge-drill`: 審査5項目ごとの厳しめ質問、回答、証拠リンク、デモ画面を返す
 - `POST /api/finalist`: 審査員5役の最終候補判定、落選理由、残ギャップ、次の一手を返す

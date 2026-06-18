@@ -31,6 +31,7 @@ import { buildOpsDrill } from "../src/ops.js";
 import { buildPilotEconomics } from "../src/pilotEconomics.js";
 import { buildPitchRun } from "../src/pitch.js";
 import { buildJudgeProof } from "../src/proof.js";
+import { buildPrizeStrategyBoard } from "../src/prizeStrategy.js";
 import { buildProtoPediaPublisher } from "../src/publisher.js";
 import { buildReleaseDriftGuard, type ReleaseDriftProbe } from "../src/releaseDrift.js";
 import { buildSecurityReview } from "../src/security.js";
@@ -200,6 +201,12 @@ function agentCard(baseUrl: string) {
         name: "Build the judge command center",
         description: "Judge Tour、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを初回審査導線へ束ねる。",
         tags: ["judge-command", "first-run", "acceptance", "release-drift", "demo"]
+      },
+      {
+        id: "prize.strategy",
+        name: "Build the prize strategy board",
+        description: "審査5項目の目標点、現在証拠、足りない証拠、最終ピッチ順を優勝作戦へ束ねる。",
+        tags: ["prize-strategy", "judge-score", "pitch", "swot", "proof"]
       },
       {
         id: "judge.tour",
@@ -1602,6 +1609,7 @@ app.post("/api/live-evidence", async (req, res) => {
         const hasReleaseDrift = skills.some((skill) => skill.id === "release.drift");
         const hasPilotEconomics = skills.some((skill) => skill.id === "pilot.economics");
         const hasJudgeCommand = skills.some((skill) => skill.id === "judge.command");
+        const hasPrizeStrategy = skills.some((skill) => skill.id === "prize.strategy");
         const hasDeployRecovery = skills.some((skill) => skill.id === "deploy.recover");
         return hasEvidence &&
           hasOptimizer &&
@@ -1612,17 +1620,18 @@ app.post("/api/live-evidence", async (req, res) => {
           hasReleaseDrift &&
           hasPilotEconomics &&
           hasJudgeCommand &&
+          hasPrizeStrategy &&
           hasDeployRecovery &&
-          skills.length >= 36
+          skills.length >= 37
           ? {
               status: "passed",
               score: 100,
-              evidence: `Agent Card exposes ${skills.length} skills including competitive.battlecard, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
+              evidence: `Agent Card exposes ${skills.length} skills including prize.strategy, competitive.battlecard, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
             }
           : {
               status: "watch",
               score: 72,
-              evidence: `Agent Card exposes ${skills.length} skills; expected battlecard, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
+              evidence: `Agent Card exposes ${skills.length} skills; expected prize strategy, battlecard, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
             };
       }
     }),
@@ -1673,14 +1682,15 @@ app.post("/api/live-evidence", async (req, res) => {
           data?.releaseDriftEndpoint &&
           data?.pilotEconomicsEndpoint &&
           data?.judgeCommandEndpoint &&
+          data?.prizeStrategyEndpoint &&
           data?.deployRecoveryEndpoint
           ? {
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, pilotEconomicsEndpoint, judgeCommandEndpoint, and deployRecoveryEndpoint."
+                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, pilotEconomicsEndpoint, judgeCommandEndpoint, prizeStrategyEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -1721,6 +1731,7 @@ async function buildReleaseDriftForTarget(input: {
     "release.drift",
     "pilot.economics",
     "judge.command",
+    "prize.strategy",
     "deploy.recover",
     "competitive.battlecard",
     "win.autopilot"
@@ -1809,14 +1820,15 @@ async function buildReleaseDriftForTarget(input: {
           data?.demoReceiptEndpoint &&
           data?.pilotEconomicsEndpoint &&
           data?.judgeCommandEndpoint &&
+          data?.prizeStrategyEndpoint &&
           data?.competitiveBattlecardEndpoint &&
           data?.deployRecoveryEndpoint
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, judgeCommandEndpoint, competitiveBattlecardEndpoint, and deployRecoveryEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, judgeCommandEndpoint, prizeStrategyEndpoint, competitiveBattlecardEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -2257,6 +2269,207 @@ app.post("/api/judge-command-center", async (req, res) => {
       autopilot,
       competitiveBattlecard,
       judgeTour,
+      pilotEconomics,
+      releaseDrift
+    })
+  );
+});
+
+app.post("/api/prize-strategy", async (req, res) => {
+  const parsed = CommandCenterSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const baseUrl = publicBaseUrl(req);
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const marketIntel = buildMarketIntelReport({ baseUrl, recommendation, strategy });
+  const mission = buildMissionRun(recommendation, strategy, "審査5項目の目標点、現在証拠、最終ピッチ順を優勝作戦として束ねる。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const pitch = buildPitchRun({ baseUrl, recommendation, strategy, mission, opsDrill });
+  const judgeDrill = buildJudgeDrill({ baseUrl, recommendation, strategy, mission, opsDrill, pitch });
+  const finalist = buildFinalistSimulation({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    judgeDrill,
+    squadContract
+  });
+  const publisher = buildProtoPediaPublisher({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist });
+  const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher });
+  const [geminiResult, ciResult] = await Promise.allSettled([
+    runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
+    fetchCiProof()
+  ]);
+  const gemini =
+    geminiResult.status === "fulfilled"
+      ? geminiResult.value
+      : localGeminiRecommendation(
+          recommendation,
+          geminiResult.reason instanceof Error ? geminiResult.reason.message : "Gemini request failed"
+        );
+  const ci = ciResult.status === "fulfilled" ? ciResult.value : ciUnavailable("CI status promise rejected");
+  const proof = buildJudgeProof({ baseUrl, recommendation, strategy, mission, opsDrill, gemini, ci });
+  const autopilot = buildWinningAutopilot({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    squadContract,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    proof
+  });
+  const dossier = buildSubmissionDossier({
+    recommendation,
+    strategy,
+    mission,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    autopilot,
+    proof
+  });
+  const mvpAudit = buildMvpAudit({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    finalist,
+    autopilot,
+    dossier,
+    proof,
+    marketIntel
+  });
+  const judgeBrief = buildJudgeBrief({
+    baseUrl,
+    recommendation,
+    strategy,
+    marketIntel,
+    mvpAudit,
+    autopilot,
+    dossier,
+    proof,
+    finalist
+  });
+  const securityReview = buildSecurityReview({
+    baseUrl,
+    recommendation,
+    strategy,
+    allowlist: ipAllowlistSummary,
+    ci,
+    geminiSecretConfigured: geminiSecretConfigured()
+  });
+  const impactCase = buildImpactCase({ recommendation, strategy, opsDrill, securityReview });
+  const userPilot = buildUserPilotLab({
+    recommendation,
+    strategy,
+    impactCase,
+    opsDrill,
+    securityReview,
+    squadContract
+  });
+  const pilotEconomics = buildPilotEconomics({
+    recommendation,
+    strategy,
+    impactCase,
+    userPilot,
+    squadContract,
+    opsDrill,
+    securityReview
+  });
+  const submissionLaunch = buildSubmissionLaunchGate({
+    protopediaUrl: parsed.data.protopediaUrl,
+    videoUrl: parsed.data.videoUrl,
+    mvpAudit,
+    dossier,
+    proof,
+    publisher
+  });
+  const judgeTour = buildJudgeTour({
+    baseUrl,
+    recommendation,
+    strategy,
+    marketIntel,
+    judgeBrief,
+    impactCase,
+    securityReview,
+    proof,
+    demoRunway,
+    submissionLaunch
+  });
+  const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
+  const competitiveBattlecard = buildCompetitiveBattlecard({
+    baseUrl,
+    strategy,
+    marketIntel,
+    moatStress
+  });
+  const squadOptimizer = buildSquadOptimizer({
+    projectBrief: parsed.data.projectBrief,
+    selectedAgentIds: parsed.data.selectedAgentIds,
+    budget: 140,
+    maxSquadSize: 4
+  });
+  const demoReceipt = buildJudgeDemoReceipt({
+    baseUrl,
+    recommendation,
+    strategy,
+    moatStress,
+    squadOptimizer
+  });
+  const releaseDrift = parsed.data.skipReleaseDrift
+    ? undefined
+    : await buildReleaseDriftForTarget({
+        currentBaseUrl: baseUrl,
+        targetBaseUrl: parsed.data.targetUrl || SUBMISSION_PROOF.deployedUrl,
+        projectBrief: parsed.data.projectBrief,
+        selectedAgentIds: parsed.data.selectedAgentIds,
+        forwardedHeaders: selfProbeHeaders(req)
+      });
+  const acceptance = buildJudgeAcceptanceMatrix({
+    baseUrl,
+    strategy,
+    marketIntel,
+    mvpAudit,
+    autopilot,
+    proof,
+    userPilot,
+    impactCase,
+    pilotEconomics,
+    securityReview,
+    demoReceipt,
+    releaseDrift
+  });
+  const command = buildJudgeCommandCenter({
+    baseUrl,
+    acceptance,
+    autopilot,
+    competitiveBattlecard,
+    judgeTour,
+    pilotEconomics,
+    releaseDrift
+  });
+
+  res.json(
+    buildPrizeStrategyBoard({
+      baseUrl,
+      strategy,
+      acceptance,
+      autopilot,
+      command,
+      battlecard: competitiveBattlecard,
       pilotEconomics,
       releaseDrift
     })
@@ -2925,6 +3138,15 @@ app.post("/a2a", (req, res) => {
     judgeTour,
     pilotEconomics
   });
+  const prizeStrategy = buildPrizeStrategyBoard({
+    baseUrl: publicBaseUrl(req),
+    strategy,
+    acceptance,
+    autopilot: winAutopilot,
+    command: judgeCommand,
+    battlecard: competitiveBattlecard,
+    pilotEconomics
+  });
 
   res.json({
     jsonrpc: "2.0",
@@ -2992,6 +3214,27 @@ app.post("/a2a", (req, res) => {
                   topRisks: competitiveBattlecard.topRisks.map((risk) => ({
                     id: risk.id,
                     severity: risk.severity
+                  }))
+                },
+                prizeStrategy: {
+                  id: prizeStrategy.id,
+                  prizeScore: prizeStrategy.prizeScore,
+                  readiness: prizeStrategy.readiness,
+                  criteria: prizeStrategy.criteria.map((criterion) => ({
+                    id: criterion.id,
+                    score: criterion.currentScore,
+                    target: criterion.targetScore,
+                    status: criterion.status
+                  })),
+                  proofMoves: prizeStrategy.proofMoves.map((move) => ({
+                    id: move.id,
+                    score: move.score,
+                    endpoint: move.endpoint
+                  })),
+                  risks: prizeStrategy.risks.map((risk) => ({
+                    id: risk.id,
+                    priority: risk.priority,
+                    owner: risk.owner
                   }))
                 },
                 mvpAudit: {
@@ -3304,6 +3547,7 @@ app.post("/a2a", (req, res) => {
                 marketIntelEndpoint: `${publicBaseUrl(req)}/api/market-intel`,
                 moatStressEndpoint: `${publicBaseUrl(req)}/api/moat-stress`,
                 competitiveBattlecardEndpoint: `${publicBaseUrl(req)}/api/competitive-battlecard`,
+                prizeStrategyEndpoint: `${publicBaseUrl(req)}/api/prize-strategy`,
                 mvpAuditEndpoint: `${publicBaseUrl(req)}/api/mvp-audit`,
                 judgeBriefEndpoint: `${publicBaseUrl(req)}/api/judge-brief`,
                 autonomyLedgerEndpoint: `${publicBaseUrl(req)}/api/autonomy-ledger`,
