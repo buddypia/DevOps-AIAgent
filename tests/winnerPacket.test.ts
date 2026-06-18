@@ -4,16 +4,55 @@ import type { CompetitiveBattlecard } from "../src/competitiveBattlecard";
 import type { JudgeRehearsalRoom } from "../src/judgeRehearsal";
 import type { PilotEconomics } from "../src/pilotEconomics";
 import type { PrizeStrategyBoard } from "../src/prizeStrategy";
+import { buildReleaseDriftGuard, type ReleaseDriftProbe } from "../src/releaseDrift";
 import type { SubmissionCloseoutWorkbench } from "../src/submissionCloseout";
 import { SUBMISSION_PROOF } from "../src/submission";
 import { buildWinnerProofPacket } from "../src/winnerPacket";
 
 const baseUrl = SUBMISSION_PROOF.deployedUrl;
 
-function fixture(input: { closeoutReady?: boolean; blockedAcceptance?: boolean } = {}) {
+function passedProbe(id: string): ReleaseDriftProbe {
+  return {
+    id,
+    label: id,
+    status: "passed",
+    score: 100,
+    url: `${baseUrl}/${id}`,
+    evidence: `${id} passed.`,
+    required: true
+  };
+}
+
+function releaseDriftFixture(mode: "current" | "drift" = "current") {
+  return buildReleaseDriftGuard({
+    currentBaseUrl: "http://localhost:8080",
+    targetBaseUrl: baseUrl,
+    expectedSkillIds: ["winner.packet", "release.drift", "judge.rehearsal", "win.gap.radar"],
+    observedSkillIds: ["winner.packet", "release.drift", "judge.rehearsal", "win.gap.radar"],
+    requiredSkillIds: ["winner.packet", "release.drift", "judge.rehearsal", "win.gap.radar"],
+    requiredAgentCardSignals: ["judge.rehearsal:tag:recording-lock", "win.gap.radar:tag:feature-freeze-lock"],
+    observedAgentCardSignals: mode === "current" ? ["judge.rehearsal:tag:recording-lock", "win.gap.radar:tag:feature-freeze-lock"] : [],
+    generatedAt: "2026-06-18T00:00:00.000Z",
+    probes: [
+      passedProbe("target-health"),
+      {
+        ...passedProbe("agent-card-skill-surface"),
+        status: mode === "current" ? "passed" : "watch",
+        score: mode === "current" ? 100 : 58,
+        evidence: mode === "current" ? "Target Agent Card exposes required winner signals." : "Target Agent Card misses required winner signals."
+      },
+      passedProbe("acceptance-endpoint"),
+      passedProbe("a2a-artifact"),
+      passedProbe("ci-main")
+    ]
+  });
+}
+
+function fixture(input: { closeoutReady?: boolean; blockedAcceptance?: boolean; releaseMode?: "current" | "drift" | "none" } = {}) {
+  const releaseDrift = input.releaseMode === "none" ? undefined : releaseDriftFixture(input.releaseMode ?? "current");
   const acceptance = {
-    acceptanceScore: input.blockedAcceptance ? 61 : 93,
-    verdict: input.blockedAcceptance ? "not-accepted" : input.closeoutReady ? "ready-to-submit" : "accepted-with-external-gaps"
+    acceptanceScore: input.blockedAcceptance || input.releaseMode === "drift" ? 61 : 93,
+    verdict: input.blockedAcceptance || input.releaseMode === "drift" ? "not-accepted" : input.closeoutReady ? "ready-to-submit" : "accepted-with-external-gaps"
   } as JudgeAcceptanceMatrix;
   const battlecard = {
     battleScore: 91,
@@ -80,7 +119,8 @@ function fixture(input: { closeoutReady?: boolean; blockedAcceptance?: boolean }
     pilotEconomics,
     prize,
     rehearsal,
-    closeout
+    closeout,
+    releaseDrift
   });
 }
 
@@ -94,13 +134,23 @@ describe("winner proof packet", () => {
     expect(packet.criteria.every((criterion) => criterion.proofUrl.startsWith(baseUrl))).toBe(true);
     expect(packet.judgeQuestions.length).toBeGreaterThanOrEqual(2);
     expect(packet.submissionCopy.missingExternal).toEqual(["protopedia-url", "video-url"]);
+    expect(packet.releaseLock).toMatchObject({
+      readiness: "release-current",
+      status: "ready",
+      verdict: "release-current"
+    });
     expect(packet.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "winner.packet",
       readiness: "external-gap-packet",
+      releaseLock: {
+        readiness: "release-current",
+        verdict: "release-current"
+      },
       endpoints: {
         winnerPacket: `${baseUrl}/api/winner-packet`,
-        judgeRehearsal: `${baseUrl}/api/judge-rehearsal`
+        judgeRehearsal: `${baseUrl}/api/judge-rehearsal`,
+        releaseDrift: `${baseUrl}/api/release-drift`
       }
     });
   });
@@ -110,6 +160,7 @@ describe("winner proof packet", () => {
 
     expect(packet.readiness).toBe("winner-packet-ready");
     expect(packet.submissionCopy.missingExternal).toHaveLength(0);
+    expect(packet.releaseLock.status).toBe("ready");
     expect(packet.nextAction).toContain("Record");
   });
 
@@ -118,5 +169,24 @@ describe("winner proof packet", () => {
 
     expect(packet.readiness).toBe("needs-proof");
     expect(packet.nextAction).toContain("Fix");
+  });
+
+  test("blocks the winner packet when the public Cloud Run revision is stale", () => {
+    const packet = fixture({ closeoutReady: true, releaseMode: "drift" });
+
+    expect(packet.readiness).toBe("needs-proof");
+    expect(packet.releaseLock).toMatchObject({
+      readiness: "release-drift-watch",
+      status: "blocked",
+      verdict: "deploy-drift",
+      missingAgentCardSignals: ["judge.rehearsal:tag:recording-lock", "win.gap.radar:tag:feature-freeze-lock"]
+    });
+    expect(packet.nextAction).toContain("Cloud Run");
+    expect(packet.a2aPayload).toMatchObject({
+      releaseLock: {
+        status: "blocked",
+        verdict: "deploy-drift"
+      }
+    });
   });
 });

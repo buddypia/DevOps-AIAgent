@@ -1240,7 +1240,7 @@ h1 {
 
 .winner-inputs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(320px, 1fr));
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
   gap: 1px;
   background: #bdc8b4;
 }
@@ -1331,6 +1331,66 @@ h1 {
   font-size: 0.76rem;
   font-weight: 950;
   text-transform: uppercase;
+}
+
+.winner-release-lock {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(120px, 0.16fr) minmax(260px, 0.8fr) minmax(260px, 0.9fr);
+  gap: 12px;
+  align-items: center;
+  padding: 13px 16px;
+  border-top: 5px solid var(--green);
+  background: #f2faf2;
+}
+
+.winner-release-lock.watch {
+  border-top-color: var(--amber);
+  background: #fff8e6;
+}
+
+.winner-release-lock.blocked {
+  border-top-color: var(--rose);
+  background: #fff1f2;
+}
+
+.winner-release-lock > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.winner-release-lock > div:nth-child(2) {
+  justify-items: end;
+}
+
+.winner-release-lock span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.winner-release-lock strong {
+  color: #182719;
+  font-size: 1rem;
+  line-height: 1.12;
+}
+
+.winner-release-lock > div:nth-child(2) strong {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.winner-release-lock p,
+.winner-release-lock small {
+  min-width: 0;
+  color: #3f463f;
+  line-height: 1.36;
+  overflow-wrap: anywhere;
+}
+
+.winner-release-lock small {
+  font-weight: 800;
 }
 
 .winner-criteria {
@@ -13658,6 +13718,7 @@ pre {
   .runway-summary,
   .runway-tracks,
   .runway-grid,
+  .winner-release-lock,
   .prize-summary,
   .prize-criteria,
   .prize-usability-lock,
@@ -13838,6 +13899,10 @@ pre {
   }
 
   .finalist-release-card > div:nth-child(2) {
+    justify-items: start;
+  }
+
+  .winner-release-lock > div:nth-child(2) {
     justify-items: start;
   }
 

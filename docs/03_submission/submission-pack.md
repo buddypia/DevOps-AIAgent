@@ -44,6 +44,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Demo Conciergeで、審査員、買い手、提出者ごとの最初の1クリック、台詞、証拠URL、成功条件を固定し、Judge Route LockとFirst-Run Focus Lockで0-90秒のlocked stepsに圧縮する
 - Judge Rehearsal Roomで、Final Pitch Defense Lock、90秒segments、想定質問、scorecard、録画チェックを固定する
 - Winner Proof Packetで、審査5項目ごとの主張、証拠URL、競合/SWOT反論、録画cue、提出copyを1枚に束ねる
+- Winner Proof Packetで、Winner Release Lockを同時に表示し、公開Cloud Run revisionが古い状態を勝ち証拠として扱わない
 - Final Submission Runwayで、2026/7/10 23:59 JSTから逆算し、動画、ProtoPedia、構成図、最終フォームを検収順にする
 - Judge Tourで、Judge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
 - User Pilot Labで、開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証する

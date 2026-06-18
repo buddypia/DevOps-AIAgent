@@ -144,11 +144,11 @@
 
 ## Winner Proof Packet
 
-`Winner Proof Packet` は、審査5項目をばらばらのパネルではなく1つの勝ち証拠に圧縮するパネルです。AI中心性、課題アプローチ、ユーザビリティ、実用性、実装力ごとに、短い主張、開く証拠URL、競合/SWOT反論、録画cue、ProtoPediaに貼るproof orderを返します。
+`Winner Proof Packet` は、審査5項目をばらばらのパネルではなく1つの勝ち証拠に圧縮するパネルです。AI中心性、課題アプローチ、ユーザビリティ、実用性、実装力ごとに、短い主張、開く証拠URL、競合/SWOT反論、録画cue、ProtoPediaに貼るproof orderを返します。Winner Release Lockで公開Cloud Run revisionも同時に検収し、古い公開URLを勝ち証拠として扱いません。
 
 - API: `POST /api/winner-packet`
 - App UI: `Build packet`
-- Output: packet score、readiness、5 criteria proof cards、objection answers、recording order、submission copy、A2A `winner.packet` payload
+- Output: packet score、readiness、Winner Release Lock、5 criteria proof cards、objection answers、recording order、submission copy、A2A `winner.packet` payload
 
 ## Final Submission Runway
 

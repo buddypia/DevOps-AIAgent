@@ -4306,7 +4306,8 @@ app.post("/api/winner-packet", async (req, res) => {
       pilotEconomics,
       prize: prizeStrategy,
       rehearsal: judgeRehearsal,
-      closeout: submissionCloseout
+      closeout: submissionCloseout,
+      releaseDrift
     })
   );
 });
@@ -4542,7 +4543,8 @@ app.post("/api/submission-runway", async (req, res) => {
     pilotEconomics,
     prize: prizeStrategy,
     rehearsal: judgeRehearsal,
-    closeout: submissionCloseout
+    closeout: submissionCloseout,
+    releaseDrift
   });
 
   res.json(
@@ -5167,7 +5169,8 @@ app.post("/a2a", async (req, res) => {
     pilotEconomics,
     prize: prizeStrategy,
     rehearsal: judgeRehearsal,
-    closeout: submissionCloseout
+    closeout: submissionCloseout,
+    releaseDrift
   });
   const submissionRunway = buildFinalSubmissionRunway({
     baseUrl: publicBaseUrl(req),

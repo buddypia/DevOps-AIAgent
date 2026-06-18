@@ -812,6 +812,7 @@ function WinnerPacketPanel({
   const [packet, setPacket] = useState<WinnerProofPacket | null>(null);
   const [protopediaUrl, setProtopediaUrl] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  const [targetUrl, setTargetUrl] = useState<string>(SUBMISSION_PROOF.deployedUrl);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -825,9 +826,9 @@ function WinnerPacketPanel({
         body: JSON.stringify({
           projectBrief,
           selectedAgentIds: recommendation.selected.map((agent) => agent.id),
-          skipReleaseDrift: true,
           protopediaUrl,
-          videoUrl
+          videoUrl,
+          targetUrl
         })
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -864,6 +865,10 @@ function WinnerPacketPanel({
           <span>Video URL</span>
           <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://vimeo.com/..." />
         </label>
+        <label>
+          <span>Target Cloud Run URL</span>
+          <input value={targetUrl} onChange={(event) => setTargetUrl(event.target.value)} placeholder={SUBMISSION_PROOF.deployedUrl} />
+        </label>
       </div>
 
       {error && <p className="error-text">Winner packet request failed: {error}</p>}
@@ -883,6 +888,22 @@ function WinnerPacketPanel({
               <strong>{packet.packetScore}</strong>
               <span>packet score</span>
             </div>
+          </div>
+
+          <div className={cx("winner-release-lock", packet.releaseLock.status)}>
+            <div>
+              <span>Release lock</span>
+              <strong>{packet.releaseLock.readiness}</strong>
+              <small>{packet.releaseLock.targetBaseUrl || "not checked"}</small>
+            </div>
+            <div>
+              <strong>{packet.releaseLock.score}</strong>
+              <span>{packet.releaseLock.verdict}</span>
+            </div>
+            <p>{packet.releaseLock.nextAction}</p>
+            <small>
+              missing skills {packet.releaseLock.missingSkills.length} / missing signals {packet.releaseLock.missingAgentCardSignals.join(", ") || "none"}
+            </small>
           </div>
 
           <div className="winner-criteria">

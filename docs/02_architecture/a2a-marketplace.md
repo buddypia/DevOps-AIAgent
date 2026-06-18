@@ -160,11 +160,12 @@
 
 ## Winner Proof Packet Surface
 
-- `POST /api/winner-packet`: 審査5項目ごとの主張、証拠URL、競合/SWOT反論、録画cue、提出copyを1枚のpacketへ束ねる
+- `POST /api/winner-packet`: 審査5項目ごとの主張、証拠URL、競合/SWOT反論、録画cue、Release Drift、提出copyを1枚のpacketへ束ねる
 - Criteria cards: AI中心性、課題アプローチ、ユーザビリティ、実用性、実装力をscore/status/proof URL付きで返す
+- Winner Release Lock: 公開Cloud Run revisionが最新でない場合、勝ち証拠packetをreadyにせず再デプロイを次アクションにする
 - Objection answers: Judge Rehearsalのquestion deckとCompetitive Battlecardのtop risksを、質疑で開く証拠URLへ変換する
 - Submission copy: ProtoPedia本文や動画説明へ貼るone-line、winner thesis、proof order、missing external URLを返す
-- A2A payload: `winner.packet` skillとしてpacket score、readiness、criteria proof URLs、endpoint群を返す
+- A2A payload: `winner.packet` skillとしてpacket score、readiness、release lock、criteria proof URLs、endpoint群を返す
 
 ## Final Submission Runway Surface
 
@@ -349,7 +350,7 @@
 - `POST /api/judge-command-center`: 初回審査用の証拠ボタン、90秒timeline、残ブロッカーを評価する
 - `POST /api/demo-concierge`: persona別のfirst click、台詞、証拠URL、成功条件を返す
 - `POST /api/judge-rehearsal`: Final Pitch Defense Lock、Judge Recording Lock、90秒segments、想定質問、scorecard、録画チェックを返す
-- `POST /api/winner-packet`: 審査5項目の証拠URL、反論回答、録画cue、提出copyを返す
+- `POST /api/winner-packet`: 審査5項目の証拠URL、反論回答、録画cue、Winner Release Lock、提出copyを返す
 - `POST /api/submission-runway`: 提出締切から逆算した動画、ProtoPedia、構成図、最終フォームの検収順を返す
 - `POST /api/prize-strategy`: 審査5項目の優勝作戦、proof moves、final pitch orderを返す
 - `POST /api/pitch`: 30秒動画のshot list、voiceover、lower thirds、recording checklist、提出残リスクを返す

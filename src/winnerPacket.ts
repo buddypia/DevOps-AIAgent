@@ -3,6 +3,7 @@ import type { CompetitiveBattlecard } from "./competitiveBattlecard.js";
 import type { JudgeRehearsalRoom, JudgeRehearsalStatus } from "./judgeRehearsal.js";
 import type { PilotEconomics } from "./pilotEconomics.js";
 import type { PrizeCriterion, PrizeStrategyBoard } from "./prizeStrategy.js";
+import type { ReleaseDriftGuard, ReleaseDriftVerdict } from "./releaseDrift.js";
 import type { SubmissionCloseoutWorkbench } from "./submissionCloseout.js";
 
 export type WinnerPacketReadiness = "winner-packet-ready" | "external-gap-packet" | "needs-proof";
@@ -38,6 +39,22 @@ export type WinnerPacketSubmissionCopy = {
   tags: string[];
 };
 
+export type WinnerReleaseLockReadiness = "release-current" | "release-drift-watch" | "release-blocked" | "release-not-checked";
+
+export type WinnerReleaseLock = {
+  id: string;
+  readiness: WinnerReleaseLockReadiness;
+  status: WinnerPacketStatus;
+  score: number;
+  verdict: ReleaseDriftVerdict | "not-checked";
+  targetBaseUrl: string;
+  proof: string;
+  nextAction: string;
+  missingSkills: string[];
+  missingAgentCardSignals: string[];
+  evidenceUrl: string;
+};
+
 export type WinnerProofPacket = {
   id: string;
   packetScore: number;
@@ -48,6 +65,7 @@ export type WinnerProofPacket = {
   criteria: WinnerCriterionPacket[];
   judgeQuestions: WinnerQuestionPacket[];
   recordingOrder: Array<{ id: string; timeRange: string; screen: string; proofUrl: string; status: WinnerPacketStatus }>;
+  releaseLock: WinnerReleaseLock;
   submissionCopy: WinnerPacketSubmissionCopy;
   a2aPayload: Record<string, unknown>;
 };
@@ -74,6 +92,45 @@ function statusFromScore(score: number): WinnerPacketStatus {
 
 function statusFromRehearsal(status: JudgeRehearsalStatus): WinnerPacketStatus {
   return status;
+}
+
+function buildReleaseLock(baseUrl: string, releaseDrift?: ReleaseDriftGuard): WinnerReleaseLock {
+  const evidenceUrl = absoluteUrl(baseUrl, "/api/release-drift");
+  if (!releaseDrift) {
+    return {
+      id: "winner-release-lock-not-checked",
+      readiness: "release-not-checked",
+      status: "watch",
+      score: 70,
+      verdict: "not-checked",
+      targetBaseUrl: "",
+      proof: "Release Drift Guard was not checked for this winner packet.",
+      nextAction: "Run Winner Packet with Release Drift enabled before recording or submitting.",
+      missingSkills: [],
+      missingAgentCardSignals: [],
+      evidenceUrl
+    };
+  }
+
+  const status: WinnerPacketStatus = releaseDrift.verdict === "release-current" ? "ready" : "blocked";
+  const readiness: WinnerReleaseLockReadiness =
+    releaseDrift.verdict === "release-current" ? "release-current" : releaseDrift.verdict === "deploy-drift" ? "release-drift-watch" : "release-blocked";
+  return {
+    id: `winner-release-lock-${releaseDrift.driftScore}-${readiness}`,
+    readiness,
+    status,
+    score: releaseDrift.verdict === "release-current" ? 100 : releaseDrift.verdict === "deploy-drift" ? 35 : 20,
+    verdict: releaseDrift.verdict,
+    targetBaseUrl: releaseDrift.targetBaseUrl,
+    proof: `${releaseDrift.verdict}; ${releaseDrift.observedSkillCount}/${releaseDrift.expectedSkillCount} skills; missing skills ${releaseDrift.missingSkills.join(", ") || "none"}; missing signals ${releaseDrift.missingAgentCardSignals.join(", ") || "none"}.`,
+    nextAction:
+      releaseDrift.verdict === "release-current"
+        ? "Release Drift Guard is current; keep this proof in the recording."
+        : releaseDrift.nextActions[0]?.action ?? "Redeploy latest main to Cloud Run and rerun Release Drift Guard.",
+    missingSkills: releaseDrift.missingSkills,
+    missingAgentCardSignals: releaseDrift.missingAgentCardSignals,
+    evidenceUrl
+  };
 }
 
 function criterionById(prize: PrizeStrategyBoard, id: string): PrizeCriterion | undefined {
@@ -114,9 +171,14 @@ function readinessFrom(input: {
   acceptance: JudgeAcceptanceMatrix;
   closeout: SubmissionCloseoutWorkbench;
   criteria: WinnerCriterionPacket[];
+  releaseLock: WinnerReleaseLock;
 }): WinnerPacketReadiness {
-  if (input.acceptance.verdict === "not-accepted" || input.criteria.some((criterion) => criterion.status === "blocked")) return "needs-proof";
-  if (input.closeout.readiness !== "ready-to-submit" || input.acceptance.verdict === "accepted-with-external-gaps") return "external-gap-packet";
+  if (input.acceptance.verdict === "not-accepted" || input.criteria.some((criterion) => criterion.status === "blocked") || input.releaseLock.status === "blocked") {
+    return "needs-proof";
+  }
+  if (input.closeout.readiness !== "ready-to-submit" || input.acceptance.verdict === "accepted-with-external-gaps" || input.releaseLock.status !== "ready") {
+    return "external-gap-packet";
+  }
   return input.packetScore >= 90 ? "winner-packet-ready" : "external-gap-packet";
 }
 
@@ -128,9 +190,11 @@ export function buildWinnerProofPacket(input: {
   prize: PrizeStrategyBoard;
   rehearsal: JudgeRehearsalRoom;
   closeout: SubmissionCloseoutWorkbench;
+  releaseDrift?: ReleaseDriftGuard;
 }): WinnerProofPacket {
-  const { baseUrl, acceptance, battlecard, pilotEconomics, prize, rehearsal, closeout } = input;
+  const { baseUrl, acceptance, battlecard, pilotEconomics, prize, rehearsal, closeout, releaseDrift } = input;
   const base = baseUrl.replace(/\/$/, "");
+  const releaseLock = buildReleaseLock(base, releaseDrift);
   const strongestBattlecard = [...battlecard.cards].sort((left, right) => right.score - left.score)[0];
   const highestBuyerObjection = pilotEconomics.buyerObjections[0];
   const criteria: WinnerCriterionPacket[] = [
@@ -211,14 +275,24 @@ export function buildWinnerProofPacket(input: {
   const externalGaps = closeout.urlStatuses.filter((item) => item.status !== "ready").map((item) => item.id);
   const packetScore = Math.round(
     clamp(
-      average([acceptance.acceptanceScore, battlecard.battleScore, pilotEconomics.economicsScore, prize.prizeScore, rehearsal.rehearsalScore, closeout.closeoutScore]) +
+      average([
+        acceptance.acceptanceScore,
+        battlecard.battleScore,
+        pilotEconomics.economicsScore,
+        prize.prizeScore,
+        rehearsal.rehearsalScore,
+        closeout.closeoutScore,
+        releaseLock.score
+      ]) +
         (criteria.every((criterion) => criterion.status === "ready") ? 3 : 0) -
         Math.min(5, externalGaps.length * 2)
     )
   );
-  const readiness = readinessFrom({ packetScore, acceptance, closeout, criteria });
+  const readiness = readinessFrom({ packetScore, acceptance, closeout, criteria, releaseLock });
   const nextAction =
-    readiness === "needs-proof"
+    releaseLock.status !== "ready"
+      ? releaseLock.nextAction
+      : readiness === "needs-proof"
       ? (criteria.find((criterion) => criterion.status === "blocked")?.show ?? "Fix blocked winner proof")
       : readiness === "external-gap-packet"
         ? closeout.nextAction.label
@@ -246,6 +320,7 @@ export function buildWinnerProofPacket(input: {
       proofUrl: segment.proofUrl,
       status: statusFromRehearsal(segment.status)
     })),
+    releaseLock,
     submissionCopy: {
       oneLine: "AI能力を市場から選び、雇い、A2Aで委任し、Cloud Run運用と提出証拠まで閉じるDevOpsエージェント。",
       winnerThesis: prize.winHypothesis,
@@ -259,6 +334,15 @@ export function buildWinnerProofPacket(input: {
       packetScore,
       readiness,
       nextAction,
+      releaseLock: {
+        readiness: releaseLock.readiness,
+        status: releaseLock.status,
+        verdict: releaseLock.verdict,
+        score: releaseLock.score,
+        targetBaseUrl: releaseLock.targetBaseUrl,
+        missingSkills: releaseLock.missingSkills,
+        missingAgentCardSignals: releaseLock.missingAgentCardSignals
+      },
       criteria: criteria.map((criterion) => ({
         id: criterion.id,
         status: criterion.status,
@@ -269,6 +353,7 @@ export function buildWinnerProofPacket(input: {
         judgeRehearsal: absoluteUrl(base, "/api/judge-rehearsal"),
         competitiveBattlecard: absoluteUrl(base, "/api/competitive-battlecard"),
         pilotEconomics: absoluteUrl(base, "/api/pilot-economics"),
+        releaseDrift: absoluteUrl(base, "/api/release-drift"),
         submissionCloseout: absoluteUrl(base, "/api/submission-closeout")
       }
     }
