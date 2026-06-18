@@ -71,11 +71,11 @@
 
 ## Market Intel Board
 
-`Market Intel Board` は、競合分析を「やったつもり」にせず、審査員に見せられるソース付き証拠へ変換するパネルです。Gemini Enterprise Agent Platform、Google ADK、A2A protocol、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの一次情報リンクを持ち、競合ごとの強み、露出する隙、こちらの反撃、デモで見せる証拠を返します。
+`Market Intel Board` は、競合分析を「やったつもり」にせず、審査員に見せられるソース付き証拠へ変換するパネルです。Gemini Enterprise Agent Platform、Google ADK、A2A protocol、Cloud Marketplace A2A agent requirements、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの一次情報リンクを持ち、競合ごとの強み、露出する隙、こちらの反撃、デモで見せる証拠を返します。Source Ledgerでは、各ソースのreview日、fresh/watch、審査で使う一言、紐づく競合を表示します。
 
 - API: `POST /api/market-intel`
 - App UI: `Run market intel`
-- Output: market score、source checklist、competitor cuts、judge answers、next moves、A2A `market.intel` payload
+- Output: market score、source freshness、source ledger、source checklist、competitor cuts、judge answers、next moves、A2A `market.intel` payload
 
 ## Moat Stress Test
 

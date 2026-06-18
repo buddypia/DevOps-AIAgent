@@ -4518,6 +4518,10 @@ function MarketIntelPanel({
               </span>
               <h3>{intel.headline}</h3>
               <p>{intel.thesis}</p>
+              <small>
+                reviewed {intel.sourceFreshness.reviewedAt} / {intel.sourceFreshness.freshCount} fresh sources /{" "}
+                {intel.sourceFreshness.competitorCoveragePercent}% competitor coverage
+              </small>
             </div>
             <div className="intel-score">
               <strong>{intel.marketScore}</strong>
@@ -4587,6 +4591,26 @@ function MarketIntelPanel({
                     </div>
                     <p>{move.action}</p>
                     <small>{move.proof}</small>
+                  </article>
+                ))}
+              </div>
+              <h3>
+                <FileText size={15} />
+                Source ledger
+              </h3>
+              <div className="intel-ledger">
+                {intel.sourceLedger.map((source) => (
+                  <article key={source.id} className={source.freshness}>
+                    <div>
+                      <strong>{source.label}</strong>
+                      <span>{source.freshness}</span>
+                    </div>
+                    <p>{source.currentSignal}</p>
+                    <small>{source.judgeUse}</small>
+                    <em>{source.competitorIds.length > 0 ? source.competitorIds.join(" / ") : "runtime context"}</em>
+                    <a href={source.url} target="_blank" rel="noreferrer">
+                      Source <ExternalLink size={13} />
+                    </a>
                   </article>
                 ))}
               </div>

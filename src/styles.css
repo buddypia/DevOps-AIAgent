@@ -7014,14 +7014,16 @@ h1 {
 
 .intel-comparisons,
 .intel-answers,
-.intel-moves {
+.intel-moves,
+.intel-ledger {
   display: grid;
   gap: 8px;
 }
 
 .intel-comparisons article,
 .intel-answers article,
-.intel-moves article {
+.intel-moves article,
+.intel-ledger article {
   display: grid;
   gap: 7px;
   padding: 11px;
@@ -7043,9 +7045,15 @@ h1 {
   background: #fff9e9;
 }
 
+.intel-ledger article.watch {
+  border-left-color: var(--amber);
+  background: #fff9e9;
+}
+
 .intel-comparisons article > div,
 .intel-answers article > div,
-.intel-moves article > div {
+.intel-moves article > div,
+.intel-ledger article > div {
   display: flex;
   align-items: start;
   justify-content: space-between;
@@ -7054,7 +7062,8 @@ h1 {
 
 .intel-comparisons span,
 .intel-answers span,
-.intel-moves span {
+.intel-moves span,
+.intel-ledger span {
   color: var(--teal);
   font-size: 0.72rem;
   font-weight: 950;
@@ -7069,19 +7078,40 @@ h1 {
 .intel-answers small,
 .intel-moves p,
 .intel-moves small,
+.intel-ledger p,
+.intel-ledger small,
+.intel-ledger em,
 .intel-empty p {
   color: #374548;
   line-height: 1.42;
 }
 
 .intel-comparisons em,
-.intel-comparisons b {
+.intel-comparisons b,
+.intel-ledger em {
   font-style: normal;
 }
 
 .intel-comparisons b {
   color: #24515a;
   font-weight: 900;
+}
+
+.intel-ledger em {
+  color: #24515a;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.intel-ledger a {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--teal);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-decoration: none;
 }
 
 .intel-grid pre {

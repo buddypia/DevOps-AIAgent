@@ -8,6 +8,10 @@ Agent-To-Agent Marketplaceは、エージェントフレームワークやノー
 
 競合分析は資料で終わらせず、`POST /api/moat-stress` とアプリ内 `Stress-test moat` で審査員の反論へ変換する。各競合に対して「相手が強い点」「こちらの回答」「見せる証拠」「残リスク」「録画順」を返し、ADK/LangGraph/CrewAI/Dify/AgentOpsを否定せず、調達・A2A委任・公開証拠の体験へ話を戻す。
 
+## Source Ledger
+
+`POST /api/market-intel` は、Source Ledgerとして公式/一次ソースのreview日、fresh/watch、審査で使う一言、紐づく競合を返す。2026-06-18時点で、Gemini Enterprise Agent Platform、Google ADK、A2A toolkit、Cloud Marketplace A2A agent requirements、LangGraph、CrewAI、Dify、AgentOps、Cloud Runを確認対象にし、競合比較が古い印象にならないようにする。
+
 ## Win Gap Radar
 
 `POST /api/win-gap-radar` は、競合分析/SWOT/MVP Audit/Finalist/Acceptance/Prize Strategyを横断し、優勝に必要なMVP gapをfeature betsへ変換する。現時点ではProtoPedia作品URLと動画URLが外部gapなので、`submission-closeout` を `close-now` として扱い、submit-readyとは呼ばない。
@@ -52,8 +56,10 @@ Agent-To-Agent Marketplaceは、エージェントフレームワークやノー
 ## Sources
 
 - Google Cloud ADK documentation: https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/adk
+- Gemini Enterprise Agent Platform launch: https://cloud.google.com/blog/products/ai-machine-learning/introducing-gemini-enterprise-agent-platform
 - Google A2A announcement: https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/
 - Google Cloud A2A upgrade / AI Agent Marketplace: https://cloud.google.com/blog/products/ai-machine-learning/agent2agent-protocol-is-getting-an-upgrade
+- Cloud Marketplace A2A agent requirements: https://docs.cloud.google.com/marketplace/docs/partners/ai-agents
 - LangGraph workflows and agents: https://docs.langchain.com/oss/python/langgraph/workflows-agents
 - CrewAI open source: https://crewai.com/open-source
 - Dify GitHub README: https://github.com/langgenius/dify

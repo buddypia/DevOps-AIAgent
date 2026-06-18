@@ -237,7 +237,7 @@ export function buildWinGapRadar(input: {
       ],
       competitorPressure:
         weakestBattlecard
-          ? `${weakestBattlecard.competitor}: ${weakestBattlecard.judgeQuestion}`
+          ? `${weakestBattlecard.competitor}: ${weakestBattlecard.judgeQuestion} 代替リスクとしてsource、SWOT、proof routeを先に開く。`
           : weakestMoat?.objection ?? "競合との差分が薄く見える。",
       swotSignal: swotSignal(input.strategy, "threats"),
       mvpEvidence: acceptanceRow(input.acceptance, "competitive-swot")?.evidence ?? input.battlecard.thesis,

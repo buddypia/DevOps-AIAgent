@@ -28,6 +28,9 @@ describe("competitive battlecard", () => {
     expect(battlecard.cards.find((card) => card.id === "google-adk")?.sourceUrls.map((source) => source.url)).toEqual(
       expect.arrayContaining(["https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/adk"])
     );
+    expect(battlecard.cards.find((card) => card.id === "a2a-marketplace")?.sourceUrls.map((source) => source.url)).toEqual(
+      expect.arrayContaining(["https://docs.cloud.google.com/marketplace/docs/partners/ai-agents"])
+    );
     expect(battlecard.cards.find((card) => card.id === "a2a-marketplace")?.swotLinks.map((link) => link.quadrant)).toEqual(
       expect.arrayContaining(["strengths", "opportunities", "threats", "weaknesses"])
     );
