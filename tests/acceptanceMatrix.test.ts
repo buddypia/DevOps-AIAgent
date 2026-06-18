@@ -19,6 +19,7 @@ import { buildPitchRun } from "../src/pitch";
 import { buildJudgeProof } from "../src/proof";
 import type { CiProof } from "../src/proof";
 import { buildProtoPediaPublisher } from "../src/publisher";
+import { buildReleaseDriftGuard, type ReleaseDriftProbe } from "../src/releaseDrift";
 import { buildSecurityReview } from "../src/security";
 import { SUBMISSION_PROOF } from "../src/submission";
 import { buildSquadOptimizer } from "../src/squadOptimizer";
@@ -41,6 +42,16 @@ const ci: CiProof = {
   evidence: "Latest main CI run completed successfully.",
   runId: 1
 };
+
+const passedDriftProbe = (id: string): ReleaseDriftProbe => ({
+  id,
+  label: id,
+  status: "passed",
+  score: 100,
+  url: `${SUBMISSION_PROOF.deployedUrl}/${id}`,
+  evidence: `${id} passed`,
+  required: true
+});
 
 function fixture() {
   const baseUrl = SUBMISSION_PROOF.deployedUrl;
@@ -201,6 +212,62 @@ describe("judge acceptance matrix", () => {
       verdict: "accepted-with-external-gaps",
       endpoints: {
         acceptanceMatrix: `${SUBMISSION_PROOF.deployedUrl}/api/acceptance-matrix`
+      }
+    });
+  });
+
+  test("does not accept the MVP when the deployed Cloud Run revision is stale", () => {
+    const data = fixture();
+    const releaseDrift = buildReleaseDriftGuard({
+      currentBaseUrl: "http://127.0.0.1:8090",
+      targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
+      expectedSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift"],
+      observedSkillIds: ["evidence.monitor"],
+      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift"],
+      probes: [
+        passedDriftProbe("target-health"),
+        {
+          ...passedDriftProbe("agent-card-skill-surface"),
+          status: "watch",
+          score: 58,
+          evidence: "Target Agent Card exposes 29/32 skills."
+        },
+        {
+          ...passedDriftProbe("acceptance-endpoint"),
+          status: "missing",
+          score: 24,
+          evidence: "Acceptance Matrix endpoint is stale."
+        },
+        {
+          ...passedDriftProbe("a2a-artifact"),
+          status: "watch",
+          score: 62,
+          evidence: "A2A artifact lacks releaseDriftEndpoint."
+        },
+        passedDriftProbe("ci-main")
+      ]
+    });
+    const matrix = buildJudgeAcceptanceMatrix({
+      ...data,
+      releaseDrift,
+      generatedAt: "2026-06-18T00:00:00.000Z"
+    });
+
+    expect(matrix.verdict).toBe("not-accepted");
+    expect(matrix.rows).toHaveLength(13);
+    expect(matrix.rows.find((row) => row.id === "release-drift")).toMatchObject({
+      status: "blocked",
+      score: releaseDrift.driftScore
+    });
+    expect(matrix.nextActions.map((action) => action.id)).toContain("release-drift");
+    expect(matrix.decisiveProof.find((proof) => proof.id === "release")).toMatchObject({
+      value: "deploy-drift"
+    });
+    expect(matrix.a2aPayload).toMatchObject({
+      skill: "acceptance.matrix",
+      verdict: "not-accepted",
+      endpoints: {
+        releaseDrift: `${SUBMISSION_PROOF.deployedUrl}/api/release-drift`
       }
     });
   });

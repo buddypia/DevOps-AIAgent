@@ -5,6 +5,7 @@ import type { ImpactCase } from "./impact.js";
 import type { MarketIntelReport } from "./marketIntel.js";
 import type { MvpAuditGate, MvpAuditReport } from "./mvpAudit.js";
 import type { JudgeProof } from "./proof.js";
+import type { ReleaseDriftGuard } from "./releaseDrift.js";
 import type { SecurityReview } from "./security.js";
 import type { WinningStrategy } from "./strategy.js";
 import type { UserPilotLab } from "./userPilot.js";
@@ -116,10 +117,11 @@ function row(input: AcceptanceRow): AcceptanceRow {
 
 function actionFromRow(rowItem: AcceptanceRow): AcceptanceAction {
   const external = rowItem.id === "submission-assets" || rowItem.id === "demo-receipt";
+  const release = rowItem.id === "release-drift";
   return {
     id: rowItem.id,
-    priority: rowItem.status === "blocked" || external ? "now" : "next",
-    owner: external ? "Submission owner" : rowItem.area === "proof" ? "Cloud Run SRE" : "A2A Market Broker",
+    priority: rowItem.status === "blocked" || external || release ? "now" : "next",
+    owner: release ? "Cloud Run SRE" : external ? "Submission owner" : rowItem.area === "proof" ? "Cloud Run SRE" : "A2A Market Broker",
     action: rowItem.nextAction,
     proof: rowItem.evidence
   };
@@ -142,6 +144,7 @@ export function buildJudgeAcceptanceMatrix(input: {
   impactCase: ImpactCase;
   securityReview: SecurityReview;
   demoReceipt: JudgeDemoReceipt;
+  releaseDrift?: ReleaseDriftGuard;
   generatedAt?: string;
 }): JudgeAcceptanceMatrix {
   const base = input.baseUrl.replace(/\/$/, "");
@@ -266,6 +269,19 @@ export function buildJudgeAcceptanceMatrix(input: {
       nextAction: liveLane?.action ?? "Live Evidence Monitorを実行する"
     }),
     row({
+      id: "release-drift",
+      label: "Cloud Run revision",
+      area: "proof",
+      status: input.releaseDrift?.verdict === "release-current" ? "accepted" : "blocked",
+      score: input.releaseDrift?.driftScore ?? 0,
+      requirement: "提出用Cloud Run URLが最新Agent Card、Acceptance Matrix、A2A artifactを返すこと",
+      evidence: input.releaseDrift
+        ? `${input.releaseDrift.verdict}; ${input.releaseDrift.observedSkillCount}/${input.releaseDrift.expectedSkillCount} skills; missing ${input.releaseDrift.missingSkills.join(", ") || "none"}.`
+        : "Release Drift Guard evidence missing.",
+      proofUrl: absoluteUrl(base, "/api/release-drift"),
+      nextAction: input.releaseDrift?.verdict === "release-current" ? "Release Drift Guardを審査前に再実行する" : "Cloud BuildでCloud Runへ最新mainを再デプロイする"
+    }),
+    row({
       id: "security-boundary",
       label: "Security boundary",
       area: "proof",
@@ -298,7 +314,7 @@ export function buildJudgeAcceptanceMatrix(input: {
       proofUrl: absoluteUrl(base, "/api/demo-receipt"),
       nextAction: input.demoReceipt.actions[0]?.action ?? "Judge Demo Receiptのdigestを提出メモへ控える"
     })
-  ];
+  ].filter((item) => item.id !== "release-drift" || input.releaseDrift);
 
   const acceptanceScore = Math.round(clamp(average(rows.map((item) => item.score))));
   const verdict = verdictFrom(rows);
@@ -308,7 +324,8 @@ export function buildJudgeAcceptanceMatrix(input: {
     verdict,
     rows: rows.map((item) => ({ id: item.id, status: item.status, score: item.score })),
     proofDigest: input.proof.receipt.digest,
-    demoReceiptDigest: input.demoReceipt.digest.digest
+    demoReceiptDigest: input.demoReceipt.digest.digest,
+    releaseDriftVerdict: input.releaseDrift?.verdict ?? "not-checked"
   };
   const acceptanceDigest = digest(payload);
 
@@ -331,12 +348,15 @@ export function buildJudgeAcceptanceMatrix(input: {
       { id: "mvp", label: "MVP band", value: input.mvpAudit.band, proof: input.mvpAudit.verdict },
       { id: "win", label: "Win readiness", value: input.autopilot.readiness, proof: `${input.autopilot.lanes.length} lanes / ${input.autopilot.winScore}` },
       { id: "brief", label: "Judge brief", value: input.marketIntel.status, proof: `${input.marketIntel.sources.length} sources` },
+      ...(input.releaseDrift
+        ? [{ id: "release", label: "Release drift", value: input.releaseDrift.verdict, proof: `${input.releaseDrift.observedSkillCount}/${input.releaseDrift.expectedSkillCount} skills` }]
+        : []),
       { id: "receipt", label: "Receipt digest", value: acceptanceDigest.slice(0, 16), proof: input.demoReceipt.digest.digest }
     ],
     digest: {
       algorithm: "sha256",
       digest: acceptanceDigest,
-      verification: "Recompute sha256 over acceptanceScore, verdict, row statuses, Judge Proof digest, and Demo Receipt digest."
+      verification: "Recompute sha256 over acceptanceScore, verdict, row statuses, Judge Proof digest, Demo Receipt digest, and Release Drift verdict."
     },
     a2aPayload: {
       method: "message/send",
@@ -351,6 +371,7 @@ export function buildJudgeAcceptanceMatrix(input: {
         acceptanceMatrix: absoluteUrl(base, "/api/acceptance-matrix"),
         mvpAudit: absoluteUrl(base, "/api/mvp-audit"),
         winRun: absoluteUrl(base, "/api/win-run"),
+        releaseDrift: absoluteUrl(base, "/api/release-drift"),
         demoReceipt: absoluteUrl(base, "/api/demo-receipt")
       }
     }

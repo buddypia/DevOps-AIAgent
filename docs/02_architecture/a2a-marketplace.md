@@ -161,8 +161,8 @@
 
 ## Acceptance Matrix Surface
 
-- `POST /api/acceptance-matrix`: 必須技術、審査5項目、競合/SWOT、公開証拠、提出物、Demo Receiptを12行の受入表へ束ねる
-- Rows: Cloud Run、Google AI、A2A中心性、競合/SWOT、Moat反論、User Pilot、Impact、Implementation、Live Evidence、Security、Submission assets、Demo Receiptをaccepted/watch/blockedで返す
+- `POST /api/acceptance-matrix`: 必須技術、審査5項目、競合/SWOT、公開証拠、Release Drift、提出物、Demo Receiptを通常13行の受入表へ束ねる
+- Rows: Cloud Run、Google AI、A2A中心性、競合/SWOT、Moat反論、User Pilot、Impact、Implementation、Live Evidence、Release Drift、Security、Submission assets、Demo Receiptをaccepted/watch/blockedで返す
 - Verdict: blockedがあれば `not-accepted`、外部URLなどwatchだけなら `accepted-with-external-gaps`、全行acceptedなら `ready-to-submit`
 - Digest: row statuses、Judge Proof digest、Demo Receipt digestからsha256を作り、質疑で同じ受入状態を照合する
 - A2A payload: `acceptance.matrix` skillとしてacceptance score、verdict、row statuses、next actions、endpointを返す

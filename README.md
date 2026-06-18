@@ -136,11 +136,11 @@
 
 ## Judge Acceptance Matrix
 
-`Judge Acceptance Matrix` は、MVP判定を最後に曖昧にしないための受入表です。Cloud Run/Gemini/A2Aの必須技術、審査5項目、競合/SWOTとMoat反論、Live Evidence、Security/Impact/User Pilot、ProtoPedia/動画URL、Judge Demo Receiptを12行のaccepted/watch/blockedに束ねます。外部提出URLが未発行なら、本体が受入可能でも `accepted-with-external-gaps` として残します。
+`Judge Acceptance Matrix` は、MVP判定を最後に曖昧にしないための受入表です。Cloud Run/Gemini/A2Aの必須技術、審査5項目、競合/SWOTとMoat反論、Live Evidence、Release Drift、Security/Impact/User Pilot、ProtoPedia/動画URL、Judge Demo Receiptを通常13行のaccepted/watch/blockedに束ねます。外部提出URLが未発行、または公開Cloud Runが古いrevisionなら、本体の実装だけを合格扱いにしません。
 
 - API: `POST /api/acceptance-matrix`
 - App UI: `Build acceptance matrix`
-- Output: acceptance score、verdict、12 acceptance rows、next actions、sha256 digest、A2A `acceptance.matrix` payload
+- Output: acceptance score、verdict、release drift row、acceptance rows、next actions、sha256 digest、A2A `acceptance.matrix` payload
 
 ## Autonomy Ledger
 

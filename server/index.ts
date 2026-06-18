@@ -75,6 +75,10 @@ const LiveEvidenceSchema = SquadOptimizerSchema;
 const ReleaseDriftSchema = RecommendSchema.extend({
   targetUrl: z.string().url().optional()
 });
+const AcceptanceMatrixSchema = RecommendSchema.extend({
+  targetUrl: z.string().url().optional(),
+  skipReleaseDrift: z.boolean().optional()
+});
 
 function publicBaseUrl(req: express.Request) {
   const configured = process.env.PUBLIC_BASE_URL;
@@ -1596,15 +1600,14 @@ app.post("/api/live-evidence", async (req, res) => {
   );
 });
 
-app.post("/api/release-drift", async (req, res) => {
-  const parsed = ReleaseDriftSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
-    return;
-  }
-
-  const currentBaseUrl = publicBaseUrl(req);
-  const targetBaseUrl = (parsed.data.targetUrl || SUBMISSION_PROOF.deployedUrl).replace(/\/$/, "");
+async function buildReleaseDriftForTarget(input: {
+  currentBaseUrl: string;
+  targetBaseUrl: string;
+  projectBrief: string;
+  selectedAgentIds: string[];
+}) {
+  const currentBaseUrl = input.currentBaseUrl.replace(/\/$/, "");
+  const targetBaseUrl = input.targetBaseUrl.replace(/\/$/, "");
   const expectedSkillIds = agentCard(currentBaseUrl).skills.map((skill) => skill.id);
   const requiredSkillIds = ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "win.autopilot"];
   let observedSkillIds: string[] = [];
@@ -1655,8 +1658,9 @@ app.post("/api/release-drift", async (req, res) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          projectBrief: parsed.data.projectBrief,
-          selectedAgentIds: parsed.data.selectedAgentIds
+          projectBrief: input.projectBrief,
+          selectedAgentIds: input.selectedAgentIds,
+          skipReleaseDrift: true
         })
       },
       evaluate: (payload) => {
@@ -1677,7 +1681,7 @@ app.post("/api/release-drift", async (req, res) => {
         body: JSON.stringify({
           id: "release-drift-guard",
           method: "message/send",
-          params: { text: parsed.data.projectBrief }
+          params: { text: input.projectBrief }
         })
       },
       evaluate: (payload) => {
@@ -1700,14 +1704,32 @@ app.post("/api/release-drift", async (req, res) => {
     required: true
   };
 
+  return buildReleaseDriftGuard({
+    currentBaseUrl,
+    targetBaseUrl,
+    expectedSkillIds,
+    observedSkillIds,
+    requiredSkillIds,
+    probes: [healthProbe, cardProbe, acceptanceProbe, a2aProbe, ciProbe]
+  });
+}
+
+app.post("/api/release-drift", async (req, res) => {
+  const parsed = ReleaseDriftSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const currentBaseUrl = publicBaseUrl(req);
+  const targetBaseUrl = (parsed.data.targetUrl || SUBMISSION_PROOF.deployedUrl).replace(/\/$/, "");
+
   res.json(
-    buildReleaseDriftGuard({
+    await buildReleaseDriftForTarget({
       currentBaseUrl,
       targetBaseUrl,
-      expectedSkillIds,
-      observedSkillIds,
-      requiredSkillIds,
-      probes: [healthProbe, cardProbe, acceptanceProbe, a2aProbe, ciProbe],
+      projectBrief: parsed.data.projectBrief,
+      selectedAgentIds: parsed.data.selectedAgentIds
     })
   );
 });
@@ -1753,7 +1775,7 @@ app.post("/api/demo-receipt", (req, res) => {
 });
 
 app.post("/api/acceptance-matrix", async (req, res) => {
-  const parsed = RecommendSchema.safeParse(req.body);
+  const parsed = AcceptanceMatrixSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
     return;
@@ -1860,6 +1882,14 @@ app.post("/api/acceptance-matrix", async (req, res) => {
     moatStress,
     squadOptimizer
   });
+  const releaseDrift = parsed.data.skipReleaseDrift
+    ? undefined
+    : await buildReleaseDriftForTarget({
+        currentBaseUrl: baseUrl,
+        targetBaseUrl: parsed.data.targetUrl || SUBMISSION_PROOF.deployedUrl,
+        projectBrief: parsed.data.projectBrief,
+        selectedAgentIds: parsed.data.selectedAgentIds
+      });
 
   res.json(
     buildJudgeAcceptanceMatrix({
@@ -1872,7 +1902,8 @@ app.post("/api/acceptance-matrix", async (req, res) => {
       userPilot,
       impactCase,
       securityReview,
-      demoReceipt
+      demoReceipt,
+      releaseDrift
     })
   );
 });
