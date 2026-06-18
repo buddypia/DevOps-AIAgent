@@ -13,6 +13,7 @@ const expectedSkillIds = [
   "judge.command",
   "judge.rehearsal",
   "winner.packet",
+  "submission.runway",
   "prize.strategy",
   "win.gap.radar",
   "submission.closeout",
@@ -46,7 +47,7 @@ describe("deploy recovery plan", () => {
           ...passedProbe("agent-card-skill-surface"),
           status: "watch",
           score: 58,
-          evidence: "Target Agent Card exposes 29/42 skills."
+          evidence: "Target Agent Card exposes 29/43 skills."
         },
         {
           ...passedProbe("acceptance-endpoint"),

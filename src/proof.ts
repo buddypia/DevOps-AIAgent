@@ -225,7 +225,7 @@ export function buildJudgeProof(input: {
       label: "A2A Agent Card and JSON-RPC endpoint",
       status: hasMarketBroker ? "passed" : "watch",
       evidence:
-        "Agent Card exposes market.discover, agent.hire, contract.issue, task.delegate, strategy.audit, market.intel, moat.stress, competitive.battlecard, mvp.audit, acceptance.matrix, judge.brief, judge.command, judge.rehearsal, winner.packet, prize.strategy, win.gap.radar, judge.tour, user.pilot, squad.optimize, evidence.monitor, release.drift, deploy.recover, demo.receipt, autonomy.ledger, mission.run, submission.package, submission.publish, submission.dossier, submission.launch, submission.closeout, security.review, impact.case, pilot.economics, demo.runway, win.autopilot, ops.drill, ci.verify, pitch.director, judge.drill, finalist.simulate, and judge.proof.",
+        "Agent Card exposes market.discover, agent.hire, contract.issue, task.delegate, strategy.audit, market.intel, moat.stress, competitive.battlecard, mvp.audit, acceptance.matrix, judge.brief, judge.command, judge.rehearsal, winner.packet, submission.runway, prize.strategy, win.gap.radar, judge.tour, user.pilot, squad.optimize, evidence.monitor, release.drift, deploy.recover, demo.receipt, autonomy.ledger, mission.run, submission.package, submission.publish, submission.dossier, submission.launch, submission.closeout, security.review, impact.case, pilot.economics, demo.runway, win.autopilot, ops.drill, ci.verify, pitch.director, judge.drill, finalist.simulate, and judge.proof.",
       url: links.agentCard
     },
     {
@@ -312,6 +312,7 @@ export function buildJudgeProof(input: {
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/submission-closeout")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/judge-rehearsal")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/winner-packet")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
+      `curl -s -X POST ${absoluteUrl(baseUrl, "/api/submission-runway")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"skipReleaseDrift":true}'`,
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/deploy-recovery")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/impact-case")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
       `curl -s -X POST ${absoluteUrl(baseUrl, "/api/pilot-economics")} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,

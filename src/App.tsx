@@ -65,6 +65,7 @@ import type { OptimizedSquadCandidate, SquadOptimizerRun } from "./squadOptimize
 import type { SubmissionDossier } from "./dossier";
 import type { SubmissionCloseoutWorkbench } from "./submissionCloseout";
 import type { SubmissionLaunchGate } from "./submissionLaunch";
+import type { FinalSubmissionRunway } from "./submissionRunway";
 import { buildWinningStrategy } from "./strategy";
 import type { SwotQuadrant, WinningStrategy } from "./strategy";
 import type { CapabilityKey, GeminiRecommendation, MarketAgent, Recommendation } from "./types";
@@ -802,6 +803,167 @@ function WinnerPacketPanel({
           <Trophy size={28} />
           <strong>Build packetで、審査5項目ごとの主張、証拠URL、反論回答、録画cueを1つにまとめます。</strong>
           <p>競合/SWOT、初回UX、実用価値、実装証拠をバラバラに見せず、勝ち筋として提出に貼れる形へ圧縮します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SubmissionRunwayPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [runway, setRunway] = useState<FinalSubmissionRunway | null>(null);
+  const [protopediaUrl, setProtopediaUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildRunway() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/submission-runway", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+          skipReleaseDrift: true,
+          protopediaUrl,
+          videoUrl
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setRunway((await response.json()) as FinalSubmissionRunway);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="submission-runway">
+      <div className="runway-heading">
+        <div>
+          <span className="eyebrow">Final submission runway</span>
+          <h2>
+            <Rocket size={20} />
+            Deadline workback to 2026/7/10
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildRunway} disabled={loading} title="提出締切から逆算して残作業を束ねる">
+          <ClipboardCheck size={17} />
+          {loading ? "Planning" : "Build runway"}
+        </button>
+      </div>
+
+      <div className="runway-inputs">
+        <label>
+          <span>ProtoPedia work URL</span>
+          <input value={protopediaUrl} onChange={(event) => setProtopediaUrl(event.target.value)} placeholder="https://protopedia.net/prototype/..." />
+        </label>
+        <label>
+          <span>Video URL</span>
+          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://drive.google.com/..." />
+        </label>
+      </div>
+
+      {error && <p className="error-text">Submission runway request failed: {error}</p>}
+
+      {runway ? (
+        <div className="runway-body">
+          <div className="runway-summary">
+            <div>
+              <span className={cx("risk-chip", runway.readiness === "on-track" ? "low" : runway.readiness === "deadline-risk" ? "medium" : "high")}>
+                {runway.readiness}
+              </span>
+              <h3>{runway.headline}</h3>
+              <p>{runway.hardTruth}</p>
+              <strong>
+                Next: {runway.nextAction.label} by {runway.nextAction.dueDate}
+              </strong>
+            </div>
+            <div className="runway-score">
+              <strong>{runway.runwayScore}</strong>
+              <span>{runway.daysRemaining} days left</span>
+            </div>
+          </div>
+
+          <div className="runway-tracks">
+            {runway.tracks.map((track) => (
+              <section key={track.id} className={track.status}>
+                <div>
+                  <span>{track.status}</span>
+                  <strong>{track.score}</strong>
+                </div>
+                <h3>{track.label}</h3>
+                <p>{track.summary}</p>
+                {track.milestones.map((milestone) => (
+                  <article key={milestone.id} className={milestone.status}>
+                    <div>
+                      <strong>{milestone.label}</strong>
+                      <span>{milestone.dueDate}</span>
+                    </div>
+                    <p>{milestone.action}</p>
+                    <small>{milestone.acceptance}</small>
+                    <a href={milestone.proofUrl} target="_blank" rel="noreferrer">
+                      Proof <ExternalLink size={13} />
+                    </a>
+                  </article>
+                ))}
+              </section>
+            ))}
+          </div>
+
+          <div className="runway-grid">
+            <section>
+              <h3>
+                <CheckCircle2 size={15} />
+                Daily plan
+              </h3>
+              {runway.dailyPlan.map((item) => (
+                <article key={item}>
+                  <p>{item}</p>
+                </article>
+              ))}
+            </section>
+            <section>
+              <h3>
+                <BadgeCheck size={15} />
+                Evidence locks
+              </h3>
+              {runway.evidenceLocks.map((lock) => (
+                <article key={lock.id} className={lock.status}>
+                  <div>
+                    <strong>{lock.label}</strong>
+                    <span>{lock.status}</span>
+                  </div>
+                  <p>{lock.proof}</p>
+                  <a href={lock.url} target="_blank" rel="noreferrer">
+                    Open <ExternalLink size={13} />
+                  </a>
+                </article>
+              ))}
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(runway.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="runway-empty">
+          <Rocket size={28} />
+          <strong>Build runwayで、7/10 23:59 JSTから逆算した提出作業、証拠URL、検収条件を1つにまとめます。</strong>
+          <p>Winner Packetの勝ち証拠を、動画、ProtoPedia、構成図、最終提出フォームへ落とし込みます。</p>
         </div>
       )}
     </section>
@@ -6396,6 +6558,7 @@ export default function App() {
       <DemoConciergePanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeRehearsalPanel recommendation={recommendation} projectBrief={projectBrief} />
       <WinnerPacketPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <SubmissionRunwayPanel recommendation={recommendation} projectBrief={projectBrief} />
       <PrizeStrategyPanel recommendation={recommendation} projectBrief={projectBrief} />
       <WinGapRadarPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeTourPanel recommendation={recommendation} projectBrief={projectBrief} />

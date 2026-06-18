@@ -159,6 +159,13 @@
 - Submission copy: ProtoPedia本文や動画説明へ貼るone-line、winner thesis、proof order、missing external URLを返す
 - A2A payload: `winner.packet` skillとしてpacket score、readiness、criteria proof URLs、endpoint群を返す
 
+## Final Submission Runway Surface
+
+- `POST /api/submission-runway`: 2026/7/10 23:59 JSTから逆算し、動画、ProtoPedia、構成図、Launch Gate、最終フォームをworkback planへ束ねる
+- Tracks: winner proof、ProtoPedia assets、demo video、final launchをscore/status/due date/proof URL付きで返す
+- Evidence locks: Winner Packet、Submission Closeout、Submission Launch Gate、Release Drift Guardを提出直前の検収URLとして固定する
+- A2A payload: `submission.runway` skillとしてrunway score、readiness、days remaining、next action、endpoint群を返す
+
 ## Prize Strategy Surface
 
 - `POST /api/prize-strategy`: 審査5項目のtarget score、現在スコア、足りない証拠、最終ピッチ順を優勝作戦へ束ねる
@@ -317,6 +324,7 @@
 - `POST /api/demo-concierge`: persona別のfirst click、台詞、証拠URL、成功条件を返す
 - `POST /api/judge-rehearsal`: 90秒segments、想定質問、scorecard、録画チェックを返す
 - `POST /api/winner-packet`: 審査5項目の証拠URL、反論回答、録画cue、提出copyを返す
+- `POST /api/submission-runway`: 提出締切から逆算した動画、ProtoPedia、構成図、最終フォームの検収順を返す
 - `POST /api/prize-strategy`: 審査5項目の優勝作戦、proof moves、final pitch orderを返す
 - `POST /api/pitch`: 30秒動画のshot list、voiceover、lower thirds、recording checklist、提出残リスクを返す
 - `POST /api/judge-drill`: 審査5項目と主要競合への厳しめ質問、回答、60秒回答パス、証拠リンク、デモ画面を返す
@@ -397,6 +405,7 @@
 - Judge command center: `/api/judge-command-center`
 - Judge rehearsal: `/api/judge-rehearsal`
 - Winner proof packet: `/api/winner-packet`
+- Final submission runway: `/api/submission-runway`
 - Judge tour: `/api/judge-tour`
 - User pilot: `/api/user-pilot`
 - Squad optimizer: `/api/squad-optimizer`

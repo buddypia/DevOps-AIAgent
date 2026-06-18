@@ -61,6 +61,7 @@ const requiredSkillIds = [
   "judge.command",
   "judge.rehearsal",
   "winner.packet",
+  "submission.runway",
   "prize.strategy",
   "deploy.recover",
   "competitive.battlecard",
