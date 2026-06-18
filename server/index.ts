@@ -16,6 +16,7 @@ import { buildSubmissionDossier } from "../src/dossier.js";
 import { buildFinalistSimulation } from "../src/finalist.js";
 import { buildImpactCase } from "../src/impact.js";
 import { buildJudgeBrief } from "../src/judgeBrief.js";
+import { buildJudgeCommandCenter } from "../src/judgeCommandCenter.js";
 import { buildJudgeDrill } from "../src/judgeDrill.js";
 import { buildJudgeTour } from "../src/judgeTour.js";
 import { buildLiveEvidenceRun, type LiveEvidenceStatus } from "../src/liveEvidence.js";
@@ -79,6 +80,10 @@ const ReleaseDriftSchema = RecommendSchema.extend({
 const AcceptanceMatrixSchema = RecommendSchema.extend({
   targetUrl: z.string().url().optional(),
   skipReleaseDrift: z.boolean().optional()
+});
+const CommandCenterSchema = AcceptanceMatrixSchema.extend({
+  protopediaUrl: z.string().optional(),
+  videoUrl: z.string().optional()
 });
 
 function publicBaseUrl(req: express.Request) {
@@ -178,6 +183,12 @@ function agentCard(baseUrl: string) {
         name: "Build the one-page judge brief",
         description: "競合差別化、MVP監査、証拠、30秒導線、残リスクを審査員向けの1枚に束ねる。",
         tags: ["judge-brief", "demo", "mvp", "market-intelligence", "submission"]
+      },
+      {
+        id: "judge.command",
+        name: "Build the judge command center",
+        description: "Judge Tour、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを初回審査導線へ束ねる。",
+        tags: ["judge-command", "first-run", "acceptance", "release-drift", "demo"]
       },
       {
         id: "judge.tour",
@@ -1540,16 +1551,25 @@ app.post("/api/live-evidence", async (req, res) => {
         const hasAcceptance = skills.some((skill) => skill.id === "acceptance.matrix");
         const hasReleaseDrift = skills.some((skill) => skill.id === "release.drift");
         const hasPilotEconomics = skills.some((skill) => skill.id === "pilot.economics");
-        return hasEvidence && hasOptimizer && hasMoat && hasReceipt && hasAcceptance && hasReleaseDrift && hasPilotEconomics && skills.length >= 33
+        const hasJudgeCommand = skills.some((skill) => skill.id === "judge.command");
+        return hasEvidence &&
+          hasOptimizer &&
+          hasMoat &&
+          hasReceipt &&
+          hasAcceptance &&
+          hasReleaseDrift &&
+          hasPilotEconomics &&
+          hasJudgeCommand &&
+          skills.length >= 34
           ? {
               status: "passed",
               score: 100,
-              evidence: `Agent Card exposes ${skills.length} skills including pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
+              evidence: `Agent Card exposes ${skills.length} skills including judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
             }
           : {
               status: "watch",
               score: 72,
-              evidence: `Agent Card exposes ${skills.length} skills; expected pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
+              evidence: `Agent Card exposes ${skills.length} skills; expected judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
             };
       }
     }),
@@ -1597,14 +1617,15 @@ app.post("/api/live-evidence", async (req, res) => {
           data?.demoReceiptEndpoint &&
           data?.acceptanceMatrixEndpoint &&
           data?.releaseDriftEndpoint &&
-          data?.pilotEconomicsEndpoint
+          data?.pilotEconomicsEndpoint &&
+          data?.judgeCommandEndpoint
           ? {
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, and pilotEconomicsEndpoint."
+                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, pilotEconomicsEndpoint, and judgeCommandEndpoint."
             }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -1636,7 +1657,7 @@ async function buildReleaseDriftForTarget(input: {
   const currentBaseUrl = input.currentBaseUrl.replace(/\/$/, "");
   const targetBaseUrl = input.targetBaseUrl.replace(/\/$/, "");
   const expectedSkillIds = agentCard(currentBaseUrl).skills.map((skill) => skill.id);
-  const requiredSkillIds = ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "win.autopilot"];
+  const requiredSkillIds = ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command", "win.autopilot"];
   let observedSkillIds: string[] = [];
 
   const [healthProbe, cardProbe, acceptanceProbe, a2aProbe, ci] = await Promise.all([
@@ -1713,9 +1734,13 @@ async function buildReleaseDriftForTarget(input: {
       },
       evaluate: (payload) => {
         const data = (payload as { result?: { artifacts?: Array<{ parts?: Array<{ data?: Record<string, unknown> }> }> } }).result?.artifacts?.[0]?.parts?.[0]?.data;
-        return data?.releaseDriftEndpoint && data?.acceptanceMatrixEndpoint && data?.demoReceiptEndpoint && data?.pilotEconomicsEndpoint
-          ? { status: "passed", score: 100, evidence: "A2A artifact exposes releaseDriftEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, and pilotEconomicsEndpoint." }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+        return data?.releaseDriftEndpoint && data?.acceptanceMatrixEndpoint && data?.demoReceiptEndpoint && data?.pilotEconomicsEndpoint && data?.judgeCommandEndpoint
+          ? {
+              status: "passed",
+              score: 100,
+              evidence: "A2A artifact exposes releaseDriftEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, and judgeCommandEndpoint."
+            }
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -1940,6 +1965,189 @@ app.post("/api/acceptance-matrix", async (req, res) => {
       pilotEconomics,
       securityReview,
       demoReceipt,
+      releaseDrift
+    })
+  );
+});
+
+app.post("/api/judge-command-center", async (req, res) => {
+  const parsed = CommandCenterSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const baseUrl = publicBaseUrl(req);
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const marketIntel = buildMarketIntelReport({ baseUrl, recommendation, strategy });
+  const mission = buildMissionRun(recommendation, strategy, "審査員が最初の90秒で見る証拠、残ブロッカー、次クリックを1画面に束ねる。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const pitch = buildPitchRun({ baseUrl, recommendation, strategy, mission, opsDrill });
+  const judgeDrill = buildJudgeDrill({ baseUrl, recommendation, strategy, mission, opsDrill, pitch });
+  const finalist = buildFinalistSimulation({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    judgeDrill,
+    squadContract
+  });
+  const publisher = buildProtoPediaPublisher({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist });
+  const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher });
+  const [geminiResult, ciResult] = await Promise.allSettled([
+    runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
+    fetchCiProof()
+  ]);
+  const gemini =
+    geminiResult.status === "fulfilled"
+      ? geminiResult.value
+      : localGeminiRecommendation(
+          recommendation,
+          geminiResult.reason instanceof Error ? geminiResult.reason.message : "Gemini request failed"
+        );
+  const ci = ciResult.status === "fulfilled" ? ciResult.value : ciUnavailable("CI status promise rejected");
+  const proof = buildJudgeProof({ baseUrl, recommendation, strategy, mission, opsDrill, gemini, ci });
+  const autopilot = buildWinningAutopilot({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    squadContract,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    proof
+  });
+  const dossier = buildSubmissionDossier({
+    recommendation,
+    strategy,
+    mission,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    autopilot,
+    proof
+  });
+  const mvpAudit = buildMvpAudit({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    finalist,
+    autopilot,
+    dossier,
+    proof,
+    marketIntel
+  });
+  const judgeBrief = buildJudgeBrief({
+    baseUrl,
+    recommendation,
+    strategy,
+    marketIntel,
+    mvpAudit,
+    autopilot,
+    dossier,
+    proof,
+    finalist
+  });
+  const securityReview = buildSecurityReview({
+    baseUrl,
+    recommendation,
+    strategy,
+    allowlist: ipAllowlistSummary,
+    ci,
+    geminiSecretConfigured: geminiSecretConfigured()
+  });
+  const impactCase = buildImpactCase({ recommendation, strategy, opsDrill, securityReview });
+  const userPilot = buildUserPilotLab({
+    recommendation,
+    strategy,
+    impactCase,
+    opsDrill,
+    securityReview,
+    squadContract
+  });
+  const pilotEconomics = buildPilotEconomics({
+    recommendation,
+    strategy,
+    impactCase,
+    userPilot,
+    squadContract,
+    opsDrill,
+    securityReview
+  });
+  const submissionLaunch = buildSubmissionLaunchGate({
+    protopediaUrl: parsed.data.protopediaUrl,
+    videoUrl: parsed.data.videoUrl,
+    mvpAudit,
+    dossier,
+    proof,
+    publisher
+  });
+  const judgeTour = buildJudgeTour({
+    baseUrl,
+    recommendation,
+    strategy,
+    marketIntel,
+    judgeBrief,
+    impactCase,
+    securityReview,
+    proof,
+    demoRunway,
+    submissionLaunch
+  });
+  const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
+  const squadOptimizer = buildSquadOptimizer({
+    projectBrief: parsed.data.projectBrief,
+    selectedAgentIds: parsed.data.selectedAgentIds,
+    budget: 140,
+    maxSquadSize: 4
+  });
+  const demoReceipt = buildJudgeDemoReceipt({
+    baseUrl,
+    recommendation,
+    strategy,
+    moatStress,
+    squadOptimizer
+  });
+  const releaseDrift = parsed.data.skipReleaseDrift
+    ? undefined
+    : await buildReleaseDriftForTarget({
+        currentBaseUrl: baseUrl,
+        targetBaseUrl: parsed.data.targetUrl || SUBMISSION_PROOF.deployedUrl,
+        projectBrief: parsed.data.projectBrief,
+        selectedAgentIds: parsed.data.selectedAgentIds
+      });
+  const acceptance = buildJudgeAcceptanceMatrix({
+    baseUrl,
+    strategy,
+    marketIntel,
+    mvpAudit,
+    autopilot,
+    proof,
+    userPilot,
+    impactCase,
+    pilotEconomics,
+    securityReview,
+    demoReceipt,
+    releaseDrift
+  });
+
+  res.json(
+    buildJudgeCommandCenter({
+      baseUrl,
+      acceptance,
+      autopilot,
+      judgeTour,
+      pilotEconomics,
       releaseDrift
     })
   );
@@ -2560,6 +2768,14 @@ app.post("/a2a", (req, res) => {
     budget: 140,
     maxSquadSize: 4
   });
+  const moatStress = buildMoatStressTest({ baseUrl: publicBaseUrl(req), recommendation, strategy, marketIntel });
+  const demoReceipt = buildJudgeDemoReceipt({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    moatStress,
+    squadOptimizer
+  });
   const judgeTour = buildJudgeTour({
     baseUrl: publicBaseUrl(req),
     recommendation,
@@ -2571,6 +2787,26 @@ app.post("/a2a", (req, res) => {
     proof,
     demoRunway,
     submissionLaunch
+  });
+  const acceptance = buildJudgeAcceptanceMatrix({
+    baseUrl: publicBaseUrl(req),
+    strategy,
+    marketIntel,
+    mvpAudit,
+    autopilot: winAutopilot,
+    proof,
+    userPilot,
+    impactCase,
+    pilotEconomics,
+    securityReview,
+    demoReceipt
+  });
+  const judgeCommand = buildJudgeCommandCenter({
+    baseUrl: publicBaseUrl(req),
+    acceptance,
+    autopilot: winAutopilot,
+    judgeTour,
+    pilotEconomics
   });
 
   res.json({
@@ -2801,6 +3037,27 @@ app.post("/a2a", (req, res) => {
                     severity: blocker.severity
                   }))
                 },
+                judgeCommand: {
+                  id: judgeCommand.id,
+                  commandScore: judgeCommand.commandScore,
+                  readiness: judgeCommand.readiness,
+                  openingMove: judgeCommand.openingMove,
+                  metrics: judgeCommand.metrics.map((metric) => ({
+                    id: metric.id,
+                    value: metric.value,
+                    status: metric.status
+                  })),
+                  proofButtons: judgeCommand.proofButtons.map((button) => ({
+                    id: button.id,
+                    status: button.status,
+                    endpoint: button.endpoint
+                  })),
+                  blockers: judgeCommand.blockers.map((blocker) => ({
+                    id: blocker.id,
+                    priority: blocker.priority,
+                    owner: blocker.owner
+                  }))
+                },
                 mission: {
                   id: mission.id,
                   summary: mission.summary,
@@ -2920,6 +3177,7 @@ app.post("/a2a", (req, res) => {
                 securityReviewEndpoint: `${publicBaseUrl(req)}/api/security-review`,
                 impactCaseEndpoint: `${publicBaseUrl(req)}/api/impact-case`,
                 pilotEconomicsEndpoint: `${publicBaseUrl(req)}/api/pilot-economics`,
+                judgeCommandEndpoint: `${publicBaseUrl(req)}/api/judge-command-center`,
                 userPilotEndpoint: `${publicBaseUrl(req)}/api/user-pilot`,
                 squadOptimizerEndpoint: `${publicBaseUrl(req)}/api/squad-optimizer`,
                 liveEvidenceEndpoint: `${publicBaseUrl(req)}/api/live-evidence`,

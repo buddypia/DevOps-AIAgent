@@ -39,6 +39,7 @@ import type { DemoRunway } from "./demoRunway";
 import type { FinalistSimulation } from "./finalist";
 import type { ImpactCase } from "./impact";
 import type { JudgeBrief } from "./judgeBrief";
+import type { JudgeCommandCenter } from "./judgeCommandCenter";
 import type { JudgeDrill } from "./judgeDrill";
 import type { JudgeTour } from "./judgeTour";
 import type { LiveEvidenceRun } from "./liveEvidence";
@@ -163,6 +164,163 @@ function AgentCard({
         {selected ? "Hired" : "Hire"}
       </button>
     </article>
+  );
+}
+
+function JudgeCommandCenterPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [center, setCenter] = useState<JudgeCommandCenter | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildCommandCenter() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/judge-command-center", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setCenter((await response.json()) as JudgeCommandCenter);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="judge-command">
+      <div className="command-heading">
+        <div>
+          <span className="eyebrow">Judge command center</span>
+          <h2>
+            <Trophy size={20} />
+            First 90 seconds
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildCommandCenter} disabled={loading} title="審査員の初回導線を構築">
+          <Play size={17} />
+          {loading ? "Building" : "Build command center"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Judge command request failed: {error}</p>}
+
+      {center ? (
+        <div className="command-body">
+          <div className="command-summary">
+            <div>
+              <span className={cx("risk-chip", center.readiness === "pitch-ready" ? "low" : center.readiness === "external-gaps" ? "medium" : "high")}>
+                {center.readiness}
+              </span>
+              <h3>{center.headline}</h3>
+              <p>{center.hardTruth}</p>
+              <strong>{center.openingMove}</strong>
+            </div>
+            <div className="command-score">
+              <strong>{center.commandScore}</strong>
+              <span>command score</span>
+            </div>
+          </div>
+
+          <div className="command-metrics">
+            {center.metrics.map((metric) => (
+              <article key={metric.id} className={metric.status}>
+                <span>{metric.label}</span>
+                <strong>{metric.value}</strong>
+                <p>{metric.evidence}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className="command-buttons">
+            {center.proofButtons.map((button) => (
+              <a key={button.id} href={`#${button.id}`} className={button.status} title={`${button.reason} API: ${button.endpoint}`}>
+                <span>{button.status}</span>
+                <strong>{button.buttonLabel}</strong>
+                <p>{button.label} / {button.score}</p>
+                <small>{button.reason}</small>
+              </a>
+            ))}
+          </div>
+
+          <div className="command-grid">
+            <section>
+              <h3>
+                <Film size={15} />
+                90-second timeline
+              </h3>
+              <div className="command-timeline">
+                {center.timeline.map((step) => (
+                  <article key={step.id} className={step.status}>
+                    <div>
+                      <strong>{step.timeRange}</strong>
+                      <span>{step.status}</span>
+                    </div>
+                    <p>{step.screen}: {step.click}</p>
+                    <small>{step.say}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <AlertTriangle size={15} />
+                Blockers
+              </h3>
+              <div className="command-blockers">
+                {center.blockers.length > 0 ? (
+                  center.blockers.map((blocker) => (
+                    <article key={blocker.id} className={blocker.priority}>
+                      <div>
+                        <strong>{blocker.owner}</strong>
+                        <span>{blocker.priority}</span>
+                      </div>
+                      <p>{blocker.action}</p>
+                      <small>{blocker.proof}</small>
+                    </article>
+                  ))
+                ) : (
+                  <article className="clear">
+                    <strong>No blockers</strong>
+                    <p>この順番で録画と提出確認へ進めます。</p>
+                  </article>
+                )}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <FileText size={15} />
+                Judge script
+              </h3>
+              <ol className="command-script">
+                {center.judgeScript.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ol>
+              <pre>{JSON.stringify(center.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="command-empty">
+          <Trophy size={28} />
+          <strong>Build command centerで、最初に押す証拠、90秒導線、残ブロッカーを1画面にまとめます。</strong>
+          <p>機能一覧を説明するのではなく、審査員が最初に見る順番を固定します。</p>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -539,7 +697,7 @@ function JudgeTourPanel({
   }
 
   return (
-    <section className="judge-tour">
+    <section id="judge-tour" className="judge-tour">
       <div className="tour-heading">
         <div>
           <span className="eyebrow">Judge tour</span>
@@ -1252,7 +1410,7 @@ function ReleaseDriftPanel({
   }
 
   return (
-    <section className="live-evidence release-drift">
+    <section id="release-drift" className="live-evidence release-drift">
       <div className="evidence-heading">
         <div>
           <span className="eyebrow">Release drift guard</span>
@@ -1889,7 +2047,7 @@ function AcceptanceMatrixPanel({
   }
 
   return (
-    <section className="acceptance-matrix">
+    <section id="acceptance-matrix" className="acceptance-matrix">
       <div className="acceptance-heading">
         <div>
           <span className="eyebrow">Judge acceptance matrix</span>
@@ -2514,7 +2672,7 @@ function PilotEconomicsPanel({
   }
 
   return (
-    <section className="pilot-economics">
+    <section id="pilot-economics" className="pilot-economics">
       <div className="economics-heading">
         <div>
           <span className="eyebrow">Buyer proof</span>
@@ -3167,7 +3325,7 @@ function WinAutopilotPanel({
   }
 
   return (
-    <section className="win-autopilot">
+    <section id="win-autopilot" className="win-autopilot">
       <div className="autopilot-heading">
         <div>
           <span className="eyebrow">Win autopilot</span>
@@ -4813,6 +4971,7 @@ export default function App() {
         </div>
       </section>
 
+      <JudgeCommandCenterPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeTourPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SquadOptimizerPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MoatStressPanel recommendation={recommendation} projectBrief={projectBrief} />

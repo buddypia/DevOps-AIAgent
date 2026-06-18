@@ -10,6 +10,7 @@ const expectedSkillIds = [
   "acceptance.matrix",
   "release.drift",
   "pilot.economics",
+  "judge.command",
   "win.autopilot"
 ];
 
@@ -30,7 +31,7 @@ describe("release drift guard", () => {
       targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
       expectedSkillIds,
       observedSkillIds: ["market.discover", "agent.hire", "evidence.monitor", "win.autopilot"],
-      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics"],
+      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command"],
       generatedAt: "2026-06-18T00:00:00.000Z",
       probes: [
         passedProbe("target-health"),
@@ -57,7 +58,7 @@ describe("release drift guard", () => {
     });
 
     expect(guard.verdict).toBe("deploy-drift");
-    expect(guard.missingSkills).toEqual(expect.arrayContaining(["demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics"]));
+    expect(guard.missingSkills).toEqual(expect.arrayContaining(["demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command"]));
     expect(guard.nextActions.map((action) => action.id)).toEqual(expect.arrayContaining(["agent-card-skill-surface", "acceptance-endpoint"]));
     expect(guard.runbook.join("\n")).toContain("gcloud builds submit");
     expect(guard.a2aPayload).toMatchObject({
@@ -73,7 +74,7 @@ describe("release drift guard", () => {
       targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
       expectedSkillIds,
       observedSkillIds: expectedSkillIds,
-      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics"],
+      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command"],
       probes: [
         passedProbe("target-health"),
         passedProbe("agent-card-skill-surface"),

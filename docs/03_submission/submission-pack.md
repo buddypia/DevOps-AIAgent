@@ -39,6 +39,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Moat Stress Testで、ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsからの反論を先に受け、証拠付き回答と録画順を表示する
 - MVP Auditで、必須技術、審査5項目、DevOps証拠、提出3点をpass/watch/failで監査し、外部未発行URLを合格扱いにしない
 - Judge Briefで、競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページにまとめる
+- Judge Command Centerで、Judge Tour、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
 - Judge Tourで、Judge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
 - User Pilot Labで、開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証する
 - Squad Optimizerで、予算内のAI編成を総当たりし、現行維持、交換、追加予算ギャップを判断する
@@ -76,6 +77,7 @@ React UI
   -> Moat Stress Test competitor rebuttal board
   -> MVP Audit hard gates
   -> Judge Brief one-page judge readout
+  -> Judge Command Center first 90 seconds cockpit
   -> Judge Tour 90-second judge walkthrough
   -> User Pilot Lab first-run usability paths
   -> Squad Optimizer budget-aware squad search
@@ -107,9 +109,10 @@ React UI
 
 | Time | Shot |
 | --- | --- |
-| 0-4s | Judge Tourで90秒導線、5つのjudge claims、外部URL不足を最初に見せる |
-| 4-8s | Squad Optimizerで140予算内の最適編成、+22のUX追加ギャップ、swap planを見せる |
-| 8-12s | Moat Stress Testで「既存ツールでよくない？」への反論と見せる証拠を競合別に出す |
+| 0-4s | Judge Command Centerで、最初に押す証拠、MVP受入状態、公開revision drift、残ブロッカーを1画面で見せる |
+| 4-7s | Judge Tourで90秒導線、5つのjudge claims、外部URL不足を見せる |
+| 7-10s | Squad Optimizerで140予算内の最適編成、+22のUX追加ギャップ、swap planを見せる |
+| 10-12s | Moat Stress Testで「既存ツールでよくない？」への反論と見せる証拠を競合別に出す |
 | 12-15s | Live Evidence Monitorで公開Cloud Run、Agent Card、A2A、Optimizer、CIの5 probesを見せる |
 | 15-18s | Release Drift Guardで提出URLが最新skill surfaceか、古いrevisionならdeploy-driftかを見せる |
 | 18-20s | Judge Demo Receiptでstamp、外部URLwatch、sha256 digestを控える |
@@ -141,6 +144,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mvp-audit \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/judge-brief \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/judge-command-center \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/judge-tour \
