@@ -163,6 +163,127 @@ h1 {
   line-height: 1;
 }
 
+.first-click-strip {
+  margin-top: 14px;
+  border: 1px solid #242b27;
+  border-radius: 8px;
+  background: #fffdf7;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.first-click-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px;
+  color: #fffdf7;
+  border-bottom: 1px solid #242b27;
+  background: #1d2d2a;
+}
+
+.first-click-heading .eyebrow {
+  color: #b7f7d7;
+}
+
+.first-click-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 1.34rem;
+}
+
+.first-click-primary {
+  flex: 0 0 auto;
+  color: #14342f;
+  background: #b7f7d7;
+}
+
+.first-click-scorecards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background: #c9d4ce;
+}
+
+.first-click-scorecards article {
+  min-width: 0;
+  min-height: 118px;
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  padding: 14px;
+  background: #fffdf7;
+}
+
+.first-click-scorecards span,
+.first-click-link span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.first-click-scorecards strong {
+  font-size: 1.35rem;
+  line-height: 1.05;
+}
+
+.first-click-scorecards p,
+.first-click-link p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.first-click-links {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+}
+
+.first-click-link {
+  min-width: 0;
+  min-height: 168px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-content: start;
+  gap: 7px 9px;
+  padding: 12px;
+  border: 1px solid #c9d4ce;
+  border-radius: 8px;
+  color: var(--ink);
+  text-decoration: none;
+  background: #f8faf4;
+}
+
+.first-click-link svg {
+  grid-row: span 2;
+  color: var(--teal);
+}
+
+.first-click-link strong,
+.first-click-link p {
+  grid-column: 2;
+  overflow-wrap: anywhere;
+}
+
+.first-click-link strong {
+  font-size: 1.04rem;
+}
+
+.first-click-link.primary {
+  border-color: #7fc8b8;
+  background: #e7f6ef;
+}
+
+.first-click-link.watch {
+  border-color: #ead39a;
+  background: #fff8e6;
+}
+
 .judge-command {
   margin-top: 14px;
   border: 1px solid #242b27;
@@ -13800,6 +13921,9 @@ pre {
   }
 
   .market-sky,
+  .first-click-heading,
+  .first-click-scorecards,
+  .first-click-links,
   .command-summary,
   .command-metrics,
   .command-buttons,

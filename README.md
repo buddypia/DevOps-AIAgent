@@ -22,6 +22,7 @@
 - Win Gap Radar: 競合/SWOT、MVP監査、最終候補判定、Prize Strategyを横断し、優勝に必要なMVP gapをfeature bets、Feature Freeze Lock、cut listへ変換する
 - MVP Audit: 必須技術、審査5項目、DevOps証拠、提出3点をハードゲートで判定し、外部未発行URLをwatchとして残す
 - Judge Brief: 競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページに圧縮
+- Judge First-Click Strip: Cloud Runのトップ画面直下からJudge Snapshot、Winner Packet、Competitive SWOT、MVP Readiness、Autonomy、Pilot Value、Recording、Submission AssetsへPOSTなしで移動できる入口を固定
 - Judge Command Center: Judge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
 - Demo Concierge: 審査員、買い手、提出者ごとの最初の1クリック、台詞、証拠URL、成功条件を固定し、Judge Route LockとFirst-Run Focus Lockで0-90秒の一本道に圧縮する
 - Judge Rehearsal Room: 90秒の開く画面、話す台詞、想定質問、録画チェックを1つのrun roomに束ねる
@@ -108,7 +109,7 @@
 
 ## Public Judge Snapshot
 
-`Public Judge Snapshot` は、POST専用の深い証拠APIとGETで直接開ける証拠ページを、審査員の初回入口へ束ねます。Judge Proof、Competitive Battlecard、Criteria Duel、Agent Card、CI、Cloud Run、Competitive SWOT、Autonomy Snapshot、MVP Readiness、Pilot Value、Recording Script、Submission Assets、深掘り用curlをHTMLで表示し、`/api/judge-snapshot?live=1` を付けた時だけRelease Drift Guardもライブ実行します。これによりProtoPediaや提出本文に貼った証拠URLをクリックしただけで、競合/SWOT・AI中心性・実用性・実装証拠・運用証拠の全体像を確認できます。
+`Public Judge Snapshot` は、POST専用の深い証拠APIとGETで直接開ける証拠ページを、審査員の初回入口へ束ねます。トップ画面のJudge First-Click StripからJudge Snapshot、Winner Packet、Competitive SWOT、Autonomy Snapshot、MVP Readiness、Pilot Value、Recording Script、Submission AssetsへPOSTなしで移動できます。Judge Proof、Competitive Battlecard、Criteria Duel、Agent Card、CI、Cloud Run、深掘り用curlをHTMLで表示し、`/api/judge-snapshot?live=1` を付けた時だけRelease Drift Guardもライブ実行します。これによりProtoPediaや提出本文に貼った証拠URLをクリックしただけで、競合/SWOT・AI中心性・実用性・実装証拠・運用証拠の全体像を確認できます。
 
 - Page: `GET /judge-snapshot`
 - API: `GET /api/judge-snapshot`

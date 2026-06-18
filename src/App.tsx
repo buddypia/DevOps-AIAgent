@@ -42,6 +42,7 @@ import type { DemoConcierge } from "./demoConcierge";
 import type { DemoRunway } from "./demoRunway";
 import type { ExternalEvidenceRun } from "./externalEvidence";
 import type { FinalistSimulation } from "./finalist";
+import { FIRST_CLICK_PROOF_LINKS, FIRST_CLICK_SCORECARDS, type FirstClickProofLink } from "./firstClick";
 import type { ImpactCase } from "./impact";
 import type { JudgeBrief } from "./judgeBrief";
 import type { JudgeCommandCenter } from "./judgeCommandCenter";
@@ -106,6 +107,58 @@ function scoreTone(value: number) {
 
 function yen(value: number) {
   return `¥${value.toLocaleString("ja-JP")}`;
+}
+
+function FirstClickIcon({ link }: { link: FirstClickProofLink }) {
+  if (link.id === "judge-snapshot") return <Trophy size={18} />;
+  if (link.id === "winner-packet") return <BadgeCheck size={18} />;
+  if (link.id === "competitive-swot") return <Crosshair size={18} />;
+  if (link.id === "mvp-readiness") return <ClipboardCheck size={18} />;
+  if (link.id === "autonomy-snapshot") return <Workflow size={18} />;
+  if (link.id === "pilot-value") return <TrendingUp size={18} />;
+  if (link.id === "recording-script") return <Film size={18} />;
+  return <FileText size={18} />;
+}
+
+function JudgeFirstClickStrip() {
+  return (
+    <section className="first-click-strip" aria-labelledby="first-click-title">
+      <div className="first-click-heading">
+        <div>
+          <span className="eyebrow">Judge first click</span>
+          <h2 id="first-click-title">
+            <Trophy size={20} />
+            Start with proof, not feature hunting
+          </h2>
+        </div>
+        <a href="/judge-snapshot" target="_blank" rel="noreferrer" className="icon-link first-click-primary">
+          <ExternalLink size={16} />
+          Open snapshot
+        </a>
+      </div>
+
+      <div className="first-click-scorecards">
+        {FIRST_CLICK_SCORECARDS.map((card) => (
+          <article key={card.id}>
+            <span>{card.label}</span>
+            <strong>{card.value}</strong>
+            <p>{card.proof}</p>
+          </article>
+        ))}
+      </div>
+
+      <div className="first-click-links">
+        {FIRST_CLICK_PROOF_LINKS.map((link) => (
+          <a key={link.id} href={link.href} target="_blank" rel="noreferrer" className={cx("first-click-link", link.tone)}>
+            <FirstClickIcon link={link} />
+            <span>{link.signal}</span>
+            <strong>{link.label}</strong>
+            <p>{link.judgeValue}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function CapabilityBar({ label, value }: { label: string; value: number }) {
@@ -8202,6 +8255,7 @@ export default function App() {
         </div>
       </section>
 
+      <JudgeFirstClickStrip />
       <JudgeCommandCenterPanel recommendation={recommendation} projectBrief={projectBrief} />
       <DemoConciergePanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeRehearsalPanel recommendation={recommendation} projectBrief={projectBrief} />
