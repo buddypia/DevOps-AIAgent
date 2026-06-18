@@ -2064,7 +2064,8 @@ app.post("/api/acceptance-matrix", async (req, res) => {
         currentBaseUrl: baseUrl,
         targetBaseUrl: parsed.data.targetUrl || SUBMISSION_PROOF.deployedUrl,
         projectBrief: parsed.data.projectBrief,
-        selectedAgentIds: parsed.data.selectedAgentIds
+        selectedAgentIds: parsed.data.selectedAgentIds,
+        forwardedHeaders: selfProbeHeaders(req)
       });
 
   res.json(
@@ -2245,7 +2246,8 @@ app.post("/api/judge-command-center", async (req, res) => {
         currentBaseUrl: baseUrl,
         targetBaseUrl: parsed.data.targetUrl || SUBMISSION_PROOF.deployedUrl,
         projectBrief: parsed.data.projectBrief,
-        selectedAgentIds: parsed.data.selectedAgentIds
+        selectedAgentIds: parsed.data.selectedAgentIds,
+        forwardedHeaders: selfProbeHeaders(req)
       });
   const acceptance = buildJudgeAcceptanceMatrix({
     baseUrl,
