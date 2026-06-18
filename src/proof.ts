@@ -5,6 +5,7 @@ import type { OpsDrill } from "./ops.js";
 import type { WinningStrategy } from "./strategy.js";
 
 export type ProofStatus = "passed" | "watch" | "missing";
+export type GeminiProofReadiness = "gemini-live" | "fallback-visible" | "needs-gemini-proof";
 
 export type ProofItem = {
   id: string;
@@ -25,6 +26,25 @@ export type CiProof = {
   runId?: number;
 };
 
+export type GeminiProofCheck = {
+  id: string;
+  label: string;
+  status: ProofStatus;
+  evidence: string;
+  acceptance: string;
+};
+
+export type GeminiProofLock = {
+  id: string;
+  score: number;
+  readiness: GeminiProofReadiness;
+  headline: string;
+  model: string;
+  source: GeminiRecommendation["source"];
+  checks: GeminiProofCheck[];
+  judgeAnswer: string;
+};
+
 export type ProofReceiptPayload = {
   proofId: string;
   issuedAt: string;
@@ -40,6 +60,11 @@ export type ProofReceiptPayload = {
   };
   geminiSource: GeminiRecommendation["source"];
   geminiModel: string;
+  geminiProofLock: {
+    score: number;
+    readiness: GeminiProofReadiness;
+    checks: Array<{ id: string; status: ProofStatus }>;
+  };
   proofItemStatuses: Array<{ id: string; status: ProofStatus }>;
   missionId: string;
   opsDrillId: string;
@@ -77,6 +102,7 @@ export type JudgeProof = {
     story: string;
   };
   proofItems: ProofItem[];
+  geminiProofLock: GeminiProofLock;
   receipt: ProofReceipt;
   runbook: string[];
   gemini: GeminiRecommendation;
@@ -133,6 +159,10 @@ function scoreFromStatus(status: ProofStatus) {
   return 35;
 }
 
+function statusFromBoolean(value: boolean, fallback: ProofStatus = "watch"): ProofStatus {
+  return value ? "passed" : fallback;
+}
+
 function absoluteUrl(baseUrl: string, path: string) {
   if (path.startsWith("https://")) return path;
   return `${baseUrl.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
@@ -167,6 +197,101 @@ export function proofDigest(payload: ProofReceiptPayload) {
   return createHash("sha256").update(JSON.stringify(canonicalize(payload))).digest("hex");
 }
 
+function buildGeminiProofLock(input: {
+  recommendation: Recommendation;
+  mission: MissionRun;
+  opsDrill: OpsDrill;
+  gemini: GeminiRecommendation;
+  ci: CiProof;
+}): GeminiProofLock {
+  const { recommendation, mission, opsDrill, gemini, ci } = input;
+  const hasLiveGemini = gemini.source === "gemini";
+  const hasGeminiStrategist = recommendation.selected.some((agent) => agent.id === "gemini-strategist");
+  const structuredFields = [
+    gemini.executiveSummary,
+    gemini.winningAngle,
+    gemini.pitchScript,
+    ...gemini.risks,
+    ...gemini.nextActions
+  ].filter((value) => value.trim().length > 0);
+  const hasStructuredOutput = structuredFields.length >= 5;
+  const decisionCount = mission.decisions.length + opsDrill.decisions.length;
+  const checks: GeminiProofCheck[] = [
+    {
+      id: "live-gemini-response",
+      label: "Live Gemini response",
+      status: hasLiveGemini ? "passed" : "watch",
+      evidence: hasLiveGemini ? `${gemini.model} returned a live strategy response.` : `Fallback is visible: ${gemini.executiveSummary}`,
+      acceptance: "Gemini APIが使えた場合はlive、使えない場合もfallbackを偽らず表示する。"
+    },
+    {
+      id: "gemini-strategist-selected",
+      label: "Gemini Strategist selected",
+      status: statusFromBoolean(hasGeminiStrategist),
+      evidence: hasGeminiStrategist
+        ? "Selected squad includes Gemini Strategist as a first-class AI agent."
+        : "Selected squad does not include Gemini Strategist.",
+      acceptance: "必須AI技術を周辺機能ではなく、選定済みエージェントとして勝ち筋に組み込む。"
+    },
+    {
+      id: "structured-judge-output",
+      label: "Structured judge output",
+      status: hasLiveGemini && hasStructuredOutput ? "passed" : hasStructuredOutput ? "watch" : "missing",
+      evidence: `${structuredFields.length} structured fields across summary, angle, risks, next actions, and pitch.`,
+      acceptance: "審査で使う勝ち筋、リスク、次アクション、ピッチをJSON構造で返せる。"
+    },
+    {
+      id: "autonomy-decision-use",
+      label: "Autonomy decision use",
+      status: statusFromBoolean(decisionCount >= 6),
+      evidence: `${mission.decisions.length} mission decisions / ${opsDrill.decisions.length} ops decisions feed the proof bundle.`,
+      acceptance: "Gemini分析を単発回答ではなく、弱点補強、運用判断、提出runbookへ接続する。"
+    },
+    {
+      id: "receipt-replayable",
+      label: "Receipt replayable",
+      status: ci.status === "missing" ? "watch" : "passed",
+      evidence: `Receipt stores geminiSource=${gemini.source}, geminiModel=${gemini.model}, CI=${ci.conclusion}.`,
+      acceptance: "質疑で同じ状態をsha256 receiptとCIリンクから再確認できる。"
+    },
+    {
+      id: "honest-fallback-boundary",
+      label: "Honest fallback boundary",
+      status: hasLiveGemini ? "passed" : "watch",
+      evidence: hasLiveGemini
+        ? "Gemini path is live; fallback remains only a demo continuity guard."
+        : "Fallback response is explicitly marked and does not claim live Gemini execution.",
+      acceptance: "Geminiが落ちてもデモは継続するが、live実行とfallbackを混同しない。"
+    }
+  ];
+  const score = Math.round(clamp(average(checks.map((check) => scoreFromStatus(check.status)))));
+  const readiness: GeminiProofReadiness =
+    checks.some((check) => check.status === "missing")
+      ? "needs-gemini-proof"
+      : hasLiveGemini && score >= 90
+        ? "gemini-live"
+        : "fallback-visible";
+
+  return {
+    id: `gemini-proof-${score}-${readiness}`,
+    score,
+    readiness,
+    headline:
+      readiness === "gemini-live"
+        ? "Gemini is live and tied to the judging proof."
+        : readiness === "fallback-visible"
+          ? "Gemini fallback is honest; live proof should be rerun on Cloud Run before judging."
+          : "Gemini proof is incomplete for the required AI technology gate.",
+    model: gemini.model,
+    source: gemini.source,
+    checks,
+    judgeAnswer:
+      readiness === "gemini-live"
+        ? `Gemini ${gemini.model} is not decorative: it generates the winning angle, risks, next actions, and pitch script used by Mission, Ops, and Judge Proof.`
+        : "この環境ではfallbackを明示しています。提出前はCloud Runの /api/proof を再実行し、gemini-live のreceiptを提示します。"
+  };
+}
+
 export function buildJudgeProof(input: {
   baseUrl: string;
   recommendation: Recommendation;
@@ -184,9 +309,10 @@ export function buildJudgeProof(input: {
   const readyRequirements = mission.submissionPack.requirements.filter((item) => item.status === "ready").length;
   const requirementScore = Math.round((readyRequirements / mission.submissionPack.requirements.length) * 100);
   const ciScore = scoreFromStatus(ciProof.status);
+  const geminiProofLock = buildGeminiProofLock({ recommendation, mission, opsDrill, gemini, ci: ciProof });
 
   const scores = {
-    ai: hasGemini ? 100 : 68,
+    ai: Math.round(average([hasGemini ? 100 : 68, geminiProofLock.score])),
     cloudRun: mission.submissionPack.deployedUrl.startsWith("https://") ? 100 : 42,
     a2a: hasMarketBroker ? 100 : 70,
     strategy: Math.round(average([strategy.judgeScore, strategy.moatScore])),
@@ -281,6 +407,11 @@ export function buildJudgeProof(input: {
     },
     geminiSource: gemini.source,
     geminiModel: gemini.model,
+    geminiProofLock: {
+      score: geminiProofLock.score,
+      readiness: geminiProofLock.readiness,
+      checks: geminiProofLock.checks.map((check) => ({ id: check.id, status: check.status }))
+    },
     proofItemStatuses: proofItems.map((item) => ({ id: item.id, status: item.status })),
     missionId: mission.id,
     opsDrillId: opsDrill.id,
@@ -301,6 +432,7 @@ export function buildJudgeProof(input: {
     scores,
     links,
     proofItems,
+    geminiProofLock,
     receipt,
     runbook: [
       `curl -s ${absoluteUrl(baseUrl, "/api/healthz")}`,

@@ -6163,6 +6163,44 @@ function JudgeProofBundle({
             </div>
           </div>
 
+          <div className="proof-gemini-lock">
+            <div className="proof-gemini-copy">
+              <span
+                className={cx(
+                  "risk-chip",
+                  proof.geminiProofLock.readiness === "gemini-live" ? "low" : proof.geminiProofLock.readiness === "fallback-visible" ? "medium" : "high"
+                )}
+              >
+                {proof.geminiProofLock.readiness}
+              </span>
+              <h3>
+                <Sparkles size={16} />
+                Gemini Proof Lock
+              </h3>
+              <p>{proof.geminiProofLock.headline}</p>
+              <strong>{proof.geminiProofLock.judgeAnswer}</strong>
+              <small>
+                {proof.geminiProofLock.source} / {proof.geminiProofLock.model}
+              </small>
+            </div>
+            <div className="proof-gemini-score">
+              <strong>{proof.geminiProofLock.score}</strong>
+              <span>gemini proof</span>
+            </div>
+            <div className="proof-gemini-checks">
+              {proof.geminiProofLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.evidence}</p>
+                  <small>{check.acceptance}</small>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="proof-score-grid">
             <StrategyMeter label="AI" value={proof.scores.ai} />
             <StrategyMeter label="Cloud Run" value={proof.scores.cloudRun} />

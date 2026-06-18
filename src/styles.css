@@ -9560,6 +9560,119 @@ h1 {
   text-transform: uppercase;
 }
 
+.proof-gemini-lock {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.82fr) minmax(150px, 0.22fr) minmax(420px, 1.25fr);
+  gap: 1px;
+  background: var(--line);
+}
+
+.proof-gemini-copy,
+.proof-gemini-score,
+.proof-gemini-checks {
+  min-width: 0;
+  padding: 14px;
+  background: #fffdf9;
+}
+
+.proof-gemini-copy {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+}
+
+.proof-gemini-copy h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #14342f;
+  font-size: 1.08rem;
+}
+
+.proof-gemini-copy p,
+.proof-gemini-copy strong,
+.proof-gemini-copy small,
+.proof-gemini-checks p,
+.proof-gemini-checks small {
+  color: #434a46;
+  line-height: 1.43;
+  overflow-wrap: anywhere;
+}
+
+.proof-gemini-copy strong {
+  color: #0b6158;
+}
+
+.proof-gemini-score {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  color: #fffdf7;
+  background: #12324a;
+}
+
+.proof-gemini-score strong {
+  font-size: 3.25rem;
+  line-height: 0.96;
+}
+
+.proof-gemini-score span {
+  color: rgba(255, 253, 247, 0.72);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.proof-gemini-checks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.proof-gemini-checks article {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--teal);
+  border-radius: 8px;
+  background: #f6f8f4;
+}
+
+.proof-gemini-checks article.watch {
+  border-left-color: var(--amber);
+  background: #fff8e6;
+}
+
+.proof-gemini-checks article.missing {
+  border-left-color: var(--rose);
+  background: #fff2f2;
+}
+
+.proof-gemini-checks article > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.proof-gemini-checks span {
+  color: var(--teal);
+  font-size: 0.7rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.proof-gemini-checks article.watch span {
+  color: #8a5b17;
+}
+
+.proof-gemini-checks article.missing span {
+  color: #9d2d2d;
+}
+
 .proof-score-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -11906,6 +12019,14 @@ pre {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .proof-gemini-lock {
+    grid-template-columns: minmax(320px, 1fr) minmax(180px, 0.36fr);
+  }
+
+  .proof-gemini-checks {
+    grid-column: 1 / -1;
+  }
+
   .tour-claims,
   .tour-steps {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -12291,6 +12412,8 @@ pre {
     .demo-steps,
     .demo-grid,
     .proof-summary,
+    .proof-gemini-lock,
+    .proof-gemini-checks,
     .proof-score-grid,
     .proof-grid,
     .pitch-summary,

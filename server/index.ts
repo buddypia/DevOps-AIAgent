@@ -409,8 +409,8 @@ function agentCard(baseUrl: string) {
       {
         id: "judge.proof",
         name: "Build one-click judge proof bundle",
-        description: "Gemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、CI、Pitch、Judge Drill、Finalist、提出URLを1つの審査証拠束として返す。",
-        tags: ["judge-proof", "gemini", "cloud-run", "a2a", "ci", "pitch", "judge-drill", "finalist", "submission"]
+        description: "Gemini Proof Lock、Cloud Run、A2A、競合/SWOT、Mission、Ops、CI、Pitch、Judge Drill、Finalist、提出URLを1つの審査証拠束として返す。",
+        tags: ["judge-proof", "gemini", "gemini-proof-lock", "cloud-run", "a2a", "ci", "pitch", "judge-drill", "finalist", "submission"]
       }
     ],
     supportsAuthenticatedExtendedCard: false

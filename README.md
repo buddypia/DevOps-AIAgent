@@ -339,11 +339,11 @@
 
 ## Judge Proof
 
-`Judge Proof` はWin Autopilotの次に開く証拠束です。Geminiの実応答、Cloud Run公開URL、A2A Agent Card、競合/SWOT、Mission Control、Ops Drill、GitHub Actions CI、提出URLをまとめ、AI・Google Cloud・DevOps・A2A・提出準備の状態を1レスポンスで確認できます。
+`Judge Proof` はWin Autopilotの次に開く証拠束です。Gemini Proof Lock、Cloud Run公開URL、A2A Agent Card、競合/SWOT、Mission Control、Ops Drill、GitHub Actions CI、提出URLをまとめ、AI・Google Cloud・DevOps・A2A・提出準備の状態を1レスポンスで確認できます。Geminiがliveなら `gemini-live`、鍵やAPI不調でfallbackなら `fallback-visible` として、必須AI技術の証拠境界を隠しません。
 
 - API: `POST /api/proof`
 - App UI: `Run judge proof`
-- Output: overall proof score、7カテゴリスコア、live links、proof runbook、sha256 receipt
+- Output: overall proof score、Gemini Proof Lock、7カテゴリスコア、live links、proof runbook、sha256 receipt
 
 ## Win Autopilot
 

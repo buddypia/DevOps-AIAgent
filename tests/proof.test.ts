@@ -29,6 +29,19 @@ describe("judge proof bundle", () => {
       expect.arrayContaining(["gemini", "cloud-run", "a2a", "strategy", "mission", "ops", "ci", "submission"])
     );
     expect(proof.proofItems.find((item) => item.id === "gemini")?.status).toBe("watch");
+    expect(proof.geminiProofLock.readiness).toBe("fallback-visible");
+    expect(proof.geminiProofLock.checks.map((check) => check.id)).toEqual([
+      "live-gemini-response",
+      "gemini-strategist-selected",
+      "structured-judge-output",
+      "autonomy-decision-use",
+      "receipt-replayable",
+      "honest-fallback-boundary"
+    ]);
+    expect(proof.geminiProofLock.checks.find((check) => check.id === "live-gemini-response")?.status).toBe("watch");
+    expect(proof.receipt.payload.geminiProofLock).toMatchObject({
+      readiness: "fallback-visible"
+    });
     expect(proof.proofItems.find((item) => item.id === "ci")?.status).toBe("watch");
     expect(proof.scores.ci).toBeGreaterThanOrEqual(70);
     expect(proof.proofItems.find((item) => item.id === "a2a")?.evidence).toContain("impact.case");
@@ -48,5 +61,41 @@ describe("judge proof bundle", () => {
     expect(proof.strategy.topCompetitor).toContain("Google");
     expect(proof.mission.submissionScore).toBeGreaterThanOrEqual(80);
     expect(proof.opsDrill.nextOpsAgent).toBe("Observability Oracle");
+  });
+
+  test("locks live Gemini proof when the Gemini path returns", () => {
+    const recommendation = recommendSquad(DEFAULT_PROJECT_BRIEF, ["market-broker", "gemini-strategist", "cloud-run-sre"], 140);
+    const strategy = buildWinningStrategy(recommendation);
+    const mission = buildMissionRun(recommendation, strategy);
+    const opsDrill = buildOpsDrill(recommendation, strategy);
+    const gemini = {
+      ...localGeminiRecommendation(recommendation, "unit test"),
+      source: "gemini" as const,
+      model: "gemini-3.5-flash"
+    };
+    const proof = buildJudgeProof({
+      baseUrl: "https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app",
+      recommendation,
+      strategy,
+      mission,
+      opsDrill,
+      gemini,
+      ci: {
+        status: "passed",
+        conclusion: "success",
+        url: "https://github.com/buddypia/DevOps-AIAgent/actions/runs/1",
+        workflowUrl: "https://github.com/buddypia/DevOps-AIAgent/actions/workflows/ci.yml",
+        branch: "main",
+        checkedAt: "2026-06-18T00:00:00.000Z",
+        evidence: "CI passed",
+        runId: 1
+      }
+    });
+
+    expect(proof.geminiProofLock.readiness).toBe("gemini-live");
+    expect(proof.geminiProofLock.score).toBeGreaterThanOrEqual(90);
+    expect(proof.geminiProofLock.checks.every((check) => check.status === "passed")).toBe(true);
+    expect(proof.proofItems.find((item) => item.id === "gemini")?.status).toBe("passed");
+    expect(proof.receipt.payload.geminiProofLock.readiness).toBe("gemini-live");
   });
 });
