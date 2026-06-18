@@ -36,7 +36,7 @@
 - Finalist: 審査員5役の模擬判定で、最終候補スコア、落選理由、残ギャップ、次の一手を生成する
 - Publisher: ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
 - Demo Runway: Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線に束ねる
-- Win Autopilot: 競合/SWOT、証拠、最終候補判定、提出、運用を一括で走らせ、勝てる状態と残アクションを返す
+- Win Autopilot: 競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を一括で走らせ、勝てる状態と残アクションを返す
 - Submission Dossier: ProtoPedia本文、動画録画順、提出リンク、最終チェック、Markdownを1つに束ねる
 - Visual asset: `image_gen` で生成した `public/assets/agent-marketplace-hero.png`
 
@@ -201,11 +201,11 @@
 
 ## Win Autopilot
 
-`Win Autopilot` は審査員と提出者が最初に押す一括実行入口です。競合/SWOT、Mission、Contract、Ops、Judge Proof、Finalist、Submission Publisher、Demo Runwayを束ね、win score、8 lanes、残ブロッカー、証拠デッキ、A2A `win.autopilot` payloadを返します。
+`Win Autopilot` は審査員と提出者が最初に押す一括実行入口です。競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress Test、Squad Optimizer、Mission、Contract、Ops、Judge Proof、Finalist、Submission Publisher、Demo Runwayを束ね、win score、12 lanes、残ブロッカー、証拠デッキ、A2A `win.autopilot` payloadを返します。A2A payloadの `decisiveProof` にはlive evidence score、receipt digest、moat verdict、squad readinessを含めます。
 
 - API: `POST /api/win-run`
 - App UI: `Run win autopilot`
-- Output: win score、readiness、lane scorecards、next actions、evidence deck、autonomy trace
+- Output: win score、readiness、12 lane scorecards、decisive proof、next actions、evidence deck、autonomy trace
 
 ## Demo Runway
 

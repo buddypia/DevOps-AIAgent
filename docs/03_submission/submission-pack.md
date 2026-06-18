@@ -56,7 +56,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Finalist Simulatorで、審査員5役の最終候補判定、落選理由、残ギャップ、次の一手を生成する
 - Submission Publisherで、ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
 - Demo Runwayで、Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線に束ねる
-- Win Autopilotで、競合/SWOT、証拠、最終候補判定、提出、運用を一括判定し、win scoreと残アクションを返す
+- Win Autopilotで、競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を一括判定し、win scoreと残アクションを返す
 - Submission Dossierで、ProtoPedia本文、動画録画順、提出リンク、最終チェック、Markdownを1つに束ねる
 - Gemini 3.5 Flashで勝ち筋、残リスク、30秒ピッチを生成する
 - Cloud RunでUI、API、Agent Card、A2A endpointを単一サービスとして公開する

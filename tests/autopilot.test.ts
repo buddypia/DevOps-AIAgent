@@ -73,16 +73,39 @@ describe("winning autopilot", () => {
     expect(autopilot.winScore).toBeGreaterThanOrEqual(84);
     expect(autopilot.readiness).toBe("external-gaps");
     expect(autopilot.lanes.map((lane) => lane.id)).toEqual(
-      expect.arrayContaining(["proof", "demo", "strategy", "autonomy", "finalist", "publisher", "ops", "contract"])
+      expect.arrayContaining([
+        "proof",
+        "live-evidence",
+        "demo-receipt",
+        "moat-stress",
+        "squad-optimizer",
+        "demo",
+        "strategy",
+        "autonomy",
+        "finalist",
+        "publisher",
+        "ops",
+        "contract"
+      ])
     );
+    expect(autopilot.lanes.find((lane) => lane.id === "demo-receipt")).toMatchObject({ status: "watch" });
+    expect(autopilot.lanes.find((lane) => lane.id === "moat-stress")?.score).toBeGreaterThanOrEqual(86);
     expect(autopilot.blockers.map((action) => action.id)).toEqual(expect.arrayContaining(["record-video", "publish-protopedia"]));
-    expect(autopilot.evidenceDeck.map((item) => item.id)).toEqual(expect.arrayContaining(["app", "proof", "demo", "finalist", "publisher", "agent-card", "ci"]));
-    expect(autopilot.autonomyTrace.map((item) => item.phase)).toEqual(["sense", "decide", "delegate", "verify", "rehearse", "submit"]);
+    expect(autopilot.evidenceDeck.map((item) => item.id)).toEqual(
+      expect.arrayContaining(["app", "proof", "live-evidence", "demo-receipt", "moat-stress", "squad-optimizer", "demo", "finalist", "publisher", "agent-card", "ci"])
+    );
+    expect(autopilot.autonomyTrace.map((item) => item.phase)).toEqual(["sense", "decide", "delegate", "stress", "optimize", "verify", "rehearse", "seal", "submit"]);
     expect(autopilot.judgeNarrative).toContain("Win Autopilot");
+    expect(autopilot.judgeNarrative).toContain("Judge Demo Receipt");
     expect(autopilot.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "win.autopilot",
-      readiness: "external-gaps"
+      readiness: "external-gaps",
+      decisiveProof: {
+        moatVerdict: "defensible",
+        squadReadiness: "needs-more-budget"
+      }
     });
+    expect((autopilot.a2aPayload as { decisiveProof?: { receiptDigest?: string } }).decisiveProof?.receiptDigest).toMatch(/^[a-f0-9]{64}$/);
   });
 });
