@@ -3,7 +3,7 @@ import express from "express";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { z } from "zod";
-import { ipAllowlistMiddleware, ipAllowlistSummary } from "./ipAllowlist.js";
+import { getClientIp, ipAllowlistMiddleware, ipAllowlistSummary } from "./ipAllowlist.js";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js";
 import { buildWinningAutopilot } from "../src/autopilot.js";
 import { buildAutonomyLedger } from "../src/autonomyLedger.js";
@@ -73,6 +73,15 @@ function publicBaseUrl(req: express.Request) {
   if (configured) return configured.replace(/\/$/, "");
   const proto = req.header("x-forwarded-proto") || req.protocol;
   return `${proto}://${req.get("host")}`;
+}
+
+function selfProbeHeaders(req: express.Request, extraHeaders: Record<string, string> = {}) {
+  const clientIp = getClientIp(req);
+  return {
+    ...(clientIp ? { "X-Forwarded-For": clientIp } : {}),
+    "X-Forwarded-Proto": req.header("x-forwarded-proto") || req.protocol,
+    ...extraHeaders
+  };
 }
 
 function agentCard(baseUrl: string) {
@@ -1400,12 +1409,14 @@ app.post("/api/live-evidence", async (req, res) => {
 
   const baseUrl = publicBaseUrl(req);
   const selectedAgentIds = parsed.data.selectedAgentIds;
+  const forwardedHeaders = selfProbeHeaders(req);
   const [healthProbe, cardProbe, optimizerProbe, a2aProbe, ci] = await Promise.all([
     liveJsonProbe({
       id: "health",
       label: "Cloud Run health endpoint",
       url: `${baseUrl}/api/healthz`,
       required: true,
+      init: { headers: forwardedHeaders },
       evaluate: (payload) => {
         const body = payload as { ok?: boolean; service?: string };
         return body.ok && body.service === "a2a-agent-marketplace"
@@ -1418,6 +1429,7 @@ app.post("/api/live-evidence", async (req, res) => {
       label: "A2A Agent Card",
       url: `${baseUrl}/.well-known/agent-card.json`,
       required: true,
+      init: { headers: forwardedHeaders },
       evaluate: (payload) => {
         const skills = Array.isArray((payload as { skills?: unknown[] }).skills) ? ((payload as { skills: Array<{ id?: string }> }).skills) : [];
         const hasEvidence = skills.some((skill) => skill.id === "evidence.monitor");
@@ -1434,7 +1446,7 @@ app.post("/api/live-evidence", async (req, res) => {
       required: true,
       init: {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: selfProbeHeaders(req, { "Content-Type": "application/json" }),
         body: JSON.stringify({
           projectBrief: parsed.data.projectBrief,
           selectedAgentIds,
@@ -1456,7 +1468,7 @@ app.post("/api/live-evidence", async (req, res) => {
       required: true,
       init: {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: selfProbeHeaders(req, { "Content-Type": "application/json" }),
         body: JSON.stringify({
           id: "live-evidence-monitor",
           method: "message/send",
