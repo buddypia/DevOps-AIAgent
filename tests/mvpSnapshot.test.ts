@@ -61,6 +61,7 @@ const expectedSkillIds = [
   "release.drift",
   "mvp.snapshot",
   "pilot.economics",
+  "pilot.value.snapshot",
   "demo.concierge",
   "judge.command",
   "judge.rehearsal",
@@ -289,7 +290,7 @@ describe("MVP readiness snapshot", () => {
     expect(snapshot.summary.releaseVerdict).toBe("deploy-drift");
     expect(snapshot.summary.blockedRows).toBeGreaterThan(0);
     expect(snapshot.links.map((link) => link.url)).toEqual(
-      expect.arrayContaining([`${baseUrl}/judge-snapshot`, `${baseUrl}/competitive-swot`, `${baseUrl}/submission-assets`, `${baseUrl}/recording-script`])
+      expect.arrayContaining([`${baseUrl}/judge-snapshot`, `${baseUrl}/competitive-swot`, `${baseUrl}/submission-assets`, `${baseUrl}/recording-script`, `${baseUrl}/pilot-value`])
     );
     expect(snapshot.postApis.map((api) => api.url)).toEqual(
       expect.arrayContaining([`${baseUrl}/api/mvp-audit`, `${baseUrl}/api/acceptance-matrix`, `${baseUrl}/api/release-drift`, `${baseUrl}/api/deploy-recovery`])
@@ -304,7 +305,9 @@ describe("MVP readiness snapshot", () => {
         competitiveSwotSnapshot: `${baseUrl}/competitive-swot`,
         submissionAssetsPage: `${baseUrl}/submission-assets`,
         recordingScript: `${baseUrl}/recording-script`,
-        recordingScriptJson: `${baseUrl}/api/recording-script`
+        recordingScriptJson: `${baseUrl}/api/recording-script`,
+        pilotValue: `${baseUrl}/pilot-value`,
+        pilotValueJson: `${baseUrl}/api/pilot-value`
       }
     });
   });
@@ -327,6 +330,7 @@ describe("MVP readiness snapshot", () => {
     expect(html).toContain("Release Drift");
     expect(html).toContain("Submission Assets");
     expect(html).toContain("Recording Script");
+    expect(html).toContain("Pilot Value Snapshot");
     expect(html).toContain("mvp.snapshot");
     expect(html).toContain("&lt;script&gt;alert(&#39;mvp&#39;)&lt;/script&gt;");
     expect(html).not.toContain("<script>alert('mvp')</script>");

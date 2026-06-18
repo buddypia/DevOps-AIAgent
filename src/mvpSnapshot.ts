@@ -148,6 +148,7 @@ export function buildMvpSnapshot(input: {
   const winGapRadarUrl = endpoint(baseUrl, "/api/win-gap-radar");
   const judgeCommandUrl = endpoint(baseUrl, "/api/judge-command-center");
   const recordingScriptUrl = endpoint(baseUrl, "/recording-script");
+  const pilotValueUrl = endpoint(baseUrl, "/pilot-value");
   const targetBaseUrl = input.releaseDrift?.targetBaseUrl ?? baseUrl;
   const postApis: MvpSnapshotPostApi[] = [
     {
@@ -262,6 +263,13 @@ export function buildMvpSnapshot(input: {
         purpose: "30秒動画の録画台本、字幕、証拠リンク、公開手順を直接開く。"
       },
       {
+        id: "pilot-value",
+        label: "Pilot Value Snapshot",
+        method: "GET",
+        url: pilotValueUrl,
+        purpose: "実用性、初回体験、導入採算を審査員が直接読むHTML証拠。"
+      },
+      {
         id: "agent-card",
         label: "A2A Agent Card",
         method: "GET",
@@ -294,7 +302,7 @@ export function buildMvpSnapshot(input: {
         ? "公開revision driftはPOST /api/release-drift、または /mvp-readiness?live=1 で最終確認する。"
         : `Release Drift verdict: ${releaseVerdict}; missing skills ${input.releaseDrift?.missingSkills.length ?? 0}; missing signals ${input.releaseDrift?.missingAgentCardSignals.length ?? 0}.`,
       gaps > 0 ? `外部提出gapは${gaps}件。Submission AssetsとRecording ScriptでProtoPedia作品URLと動画URLを閉じる。` : "外部提出gapはありません。",
-      "深掘りはMVP Audit、Acceptance Matrix、Win Gap Radar、Judge Command CenterのPOST証拠を再実行する。"
+      "深掘りはMVP Audit、Acceptance Matrix、Pilot Value、Win Gap Radar、Judge Command Centerの証拠を再実行する。"
     ],
     a2aPayload: {
       method: "message/send",
@@ -321,6 +329,8 @@ export function buildMvpSnapshot(input: {
         submissionAssetsPage: endpoint(baseUrl, "/submission-assets"),
         recordingScript: recordingScriptUrl,
         recordingScriptJson: endpoint(baseUrl, "/api/recording-script"),
+        pilotValue: pilotValueUrl,
+        pilotValueJson: endpoint(baseUrl, "/api/pilot-value"),
         agentCard: endpoint(baseUrl, "/.well-known/agent-card.json")
       }
     }

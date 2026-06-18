@@ -67,6 +67,7 @@
   - `security.review`
   - `impact.case`
   - `pilot.economics`
+  - `pilot.value.snapshot`
   - `demo.runway`
   - `win.autopilot`
   - `ops.drill`
@@ -236,6 +237,13 @@
 - Next clicks: Judge Tour、Contract Desk、Impact Case、Marketplaceなど、次に押すべきボタンを明示する
 - A2A payload: `user.pilot` skillとしてpilot score、readiness、paths、frictions、next clicksを返す
 
+## Pilot Value Snapshot Surface
+
+- `GET /pilot-value`: Impact Case、User Pilot、Pilot Economicsを、実用性・体験価値・導入採算の直接HTML証拠へ束ねる
+- `GET /api/pilot-value`: 同じ実用性snapshotをA2A/自動検証用のJSONとして返す
+- Buyer proof: 3 persona、first-run path、時間短縮、回収日数、Pilot Evidence Lock、buyer objectionsを1ページに固定する
+- A2A payload: `pilot.value.snapshot` skillとしてreadiness、payback days、monthly value、buyer objections、endpoint群を返す
+
 ## Squad Optimizer Surface
 
 - `POST /api/squad-optimizer`: 予算と最大編成数を受け取り、候補編成を総当たりして最適解を返す
@@ -260,17 +268,17 @@
 
 ## Release Drift Surface
 
-- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Feature Freeze Lock tag、Winner Release Lock tag、Finalist Release Drift tag、Criteria Duel tag、GET Proof Snapshot tag、Recording Script tag、Acceptance Matrix、A2A artifactを返しているかを検査する
-- Drift probes: target health、Agent Card skill surface、Acceptance Matrix endpoint、MVP Readiness endpoint、Recording Script endpoint、A2A artifact endpoints、latest main CIを同時に評価する
+- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Feature Freeze Lock tag、Winner Release Lock tag、Finalist Release Drift tag、Criteria Duel tag、GET Proof Snapshot tag、Recording Script tag、Pilot Value tag、Acceptance Matrix、A2A artifactを返しているかを検査する
+- Drift probes: target health、Agent Card skill surface、Acceptance Matrix endpoint、MVP Readiness endpoint、Recording Script endpoint、Pilot Value endpoint、A2A artifact endpoints、latest main CIを同時に評価する
 - Verdict: 最新なら `release-current`、公開URLが古いなら `deploy-drift`、health/CIが落ちたら `release-blocked`
-- Runbook: `gcloud auth login`、Cloud Build submit、Agent Card skill count、MVP Readiness、Recording Script、Acceptance Matrix、A2A artifactの再確認コマンドを返す
+- Runbook: `gcloud auth login`、Cloud Build submit、Agent Card skill count、MVP Readiness、Recording Script、Pilot Value、Acceptance Matrix、A2A artifactの再確認コマンドを返す
 - A2A payload: `release.drift` skillとしてdrift score、missing skills、redeploy action、target endpointを返す
 
 ## Deploy Recovery Surface
 
 - `POST /api/deploy-recovery`: Release Drift Guardの結果と直近gcloudエラーを、再デプロイ復旧計画に変換する
 - Checks: target health、skill surface、Cloud Build auth、A2A artifact、latest main CIをready/watch/blockedで返す
-- Commands: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Recording Lock / Feature Freeze Lock / Winner Release Lock / Finalist Release Drift / Criteria Duel / GET Proof Snapshot / MVP Readiness Snapshot / Recording Script のrequired signal tags、`/api/mvp-readiness`、`/api/recording-script`、`/api/deploy-recovery`、A2A `recordingScriptPageEndpoint` / `deployRecoveryEndpoint` の再検証コマンドを返す
+- Commands: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Recording Lock / Feature Freeze Lock / Winner Release Lock / Finalist Release Drift / Criteria Duel / GET Proof Snapshot / MVP Readiness Snapshot / Recording Script / Pilot Value のrequired signal tags、`/api/mvp-readiness`、`/api/recording-script`、`/api/pilot-value`、`/api/deploy-recovery`、A2A `recordingScriptPageEndpoint` / `pilotValueSnapshotEndpoint` / `deployRecoveryEndpoint` の再検証コマンドを返す
 - A2A payload: `deploy.recover` skillとしてrecovery score、readiness、blocking commands、blockersを返す
 
 ## Demo Receipt Surface
@@ -431,6 +439,7 @@
 - Security review proof: `security.review` skillとして、Secret/IP/input/A2A/CIの安全境界をA2A payloadにも含める
 - Impact proof: `impact.case` skillとして、実用性の定量指標、ユーザー別KPI、導入計画をA2A payloadにも含める
 - Pilot economics proof: `pilot.economics` skillとして、Pilot Evidence Lock、導入費用、回収日数、価格レーン、買い手の反論をA2A payloadにも含める
+- Pilot value snapshot proof: `pilot.value.snapshot` skillとして、Impact/User Pilot/Pilot EconomicsをGETで開ける実用性HTMLにも含める
 - Demo concierge proof: `demo.concierge` skillとして、審査員/買い手/提出者のfirst click、証拠URL、成功条件、friction cutsをA2A payloadにも含める
 - Judge command proof: `judge.command` skillとして、最初の90秒で押す証拠、Competitive Battlecard、公開revision drift、MVP受入状態、導入採算、残ブロッカーをA2A payloadにも含める
 - Win gap radar proof: `win.gap.radar` skillとして、競合/SWOTから導いたMVP gap lanes、feature bets、Feature Freeze Lock、cut list、外部提出closeoutをA2A payloadにも含める
@@ -494,6 +503,7 @@
 - Security review: `/api/security-review`
 - Impact case: `/api/impact-case`
 - Pilot economics: `/api/pilot-economics`
+- Pilot value snapshot: `/pilot-value`
 - Ops drill: `/api/ops-drill`
 - Contracts: `/api/contracts`
 - Publisher: `/api/publisher`

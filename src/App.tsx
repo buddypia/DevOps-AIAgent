@@ -6890,6 +6890,7 @@ function JudgeProofBundle({
                 <a href="/competitive-swot" target="_blank" rel="noreferrer">Competitive SWOT</a>
                 <a href="/submission-assets" target="_blank" rel="noreferrer">Submission Assets</a>
                 <a href="/recording-script" target="_blank" rel="noreferrer">Recording Script</a>
+                <a href="/pilot-value" target="_blank" rel="noreferrer">Pilot Value</a>
                 <a href={proof.links.app} target="_blank" rel="noreferrer">Cloud Run</a>
                 <a href={proof.links.github} target="_blank" rel="noreferrer">GitHub</a>
                 <a href={proof.links.ci} target="_blank" rel="noreferrer">GitHub Actions</a>

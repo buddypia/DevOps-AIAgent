@@ -288,6 +288,7 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - Architecture Pack API: `POST /api/architecture-pack`
 - Gemini Proof Lock: run `POST /api/proof` and confirm `geminiProofLock.readiness` is `gemini-live` on Cloud Run before final submission
 - Usability Proof Lock: run `POST /api/proof` and confirm `usabilityProofLock.readiness` is `usability-budget-watch` or `usability-locked`; if it is `usability-budget-watch`, explain the +22 UX Guildmaster gap with Squad Optimizer
+- Pilot Value Snapshot: open `GET /pilot-value` before judging and confirm practical value, first-run UX, buyer objections, and payback days are visible in one page
 - Final Submit Lock: run `POST /api/submission-launch` and confirm `finalSubmitLock.readiness` is `findy-form-sealed`; before real URLs exist it should remain `external-url-watch`, not submit-ready
 - Judge Rehearsal API: `POST /api/judge-rehearsal`
 - Final Pitch Defense Lock: run `POST /api/judge-rehearsal` and confirm `defenseLock` is not `needs-defense-proof` before recording final Q&A
