@@ -1357,6 +1357,48 @@ function PrizeStrategyPanel({
             </div>
           ) : null}
 
+          {board.criteriaLock ? (
+            <div className="prize-criteria-lock">
+              <section>
+                <div>
+                  <span
+                    className={cx(
+                      "risk-chip",
+                      board.criteriaLock.readiness === "criteria-locked"
+                        ? "low"
+                        : board.criteriaLock.readiness === "criteria-external-watch"
+                          ? "medium"
+                          : "high"
+                    )}
+                  >
+                    {board.criteriaLock.readiness}
+                  </span>
+                  <strong>{board.criteriaLock.internalScore}</strong>
+                </div>
+                <h3>Prize Criteria Lock</h3>
+                <p>{board.criteriaLock.operatorLine}</p>
+                <small>
+                  sealed {board.criteriaLock.sealedCount} / watch {board.criteriaLock.watchCount} / missing {board.criteriaLock.missingCount} /
+                  lock {board.criteriaLock.lockScore}
+                </small>
+              </section>
+              <div>
+                {board.criteriaLock.checks.map((check) => (
+                  <article key={check.id} className={check.status}>
+                    <div>
+                      <strong>{check.label}</strong>
+                      <span>{check.status}</span>
+                    </div>
+                    <p>{check.proof}</p>
+                    <a href={check.evidenceUrl} target="_blank" rel="noreferrer">
+                      Evidence <ExternalLink size={13} />
+                    </a>
+                  </article>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           <div className="prize-grid">
             <section>
               <h3>

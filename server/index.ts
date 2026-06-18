@@ -229,8 +229,8 @@ function agentCard(baseUrl: string) {
       {
         id: "prize.strategy",
         name: "Build the prize strategy board",
-        description: "審査5項目の目標点、現在証拠、Prize Usability Lock、最終ピッチ順を優勝作戦へ束ねる。",
-        tags: ["prize-strategy", "judge-score", "pitch", "swot", "proof", "usability-lock"]
+        description: "審査5項目の目標点、現在証拠、Prize Usability Lock、Prize Criteria Lock、最終ピッチ順を優勝作戦へ束ねる。",
+        tags: ["prize-strategy", "judge-score", "pitch", "swot", "proof", "usability-lock", "criteria-lock"]
       },
       {
         id: "win.gap.radar",

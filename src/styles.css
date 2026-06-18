@@ -2001,6 +2001,117 @@ h1 {
   text-decoration: none;
 }
 
+.prize-criteria-lock {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.42fr) minmax(520px, 1fr);
+  gap: 1px;
+  background: #d6d0bd;
+}
+
+.prize-criteria-lock > section,
+.prize-criteria-lock > div {
+  min-width: 0;
+  padding: 14px;
+  background: #fffdf7;
+}
+
+.prize-criteria-lock > section {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  border-top: 5px solid #214d48;
+}
+
+.prize-criteria-lock > section > div,
+.prize-criteria-lock article > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.prize-criteria-lock > section strong {
+  color: #214d48;
+  font-size: 2.7rem;
+  line-height: 1;
+}
+
+.prize-criteria-lock h3 {
+  font-size: 1.08rem;
+}
+
+.prize-criteria-lock > section p,
+.prize-criteria-lock > section small {
+  color: #454334;
+  line-height: 1.46;
+  overflow-wrap: anywhere;
+}
+
+.prize-criteria-lock > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.prize-criteria-lock article {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #d6d0bd;
+  border-left: 4px solid var(--green);
+  border-radius: 8px;
+  background: #fffef8;
+}
+
+.prize-criteria-lock article.watch {
+  border-left-color: var(--amber);
+  background: #fff8e6;
+}
+
+.prize-criteria-lock article.missing {
+  border-left-color: var(--rose);
+  background: #fff1f2;
+}
+
+.prize-criteria-lock article * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.prize-criteria-lock article span {
+  color: var(--teal);
+  font-size: 0.7rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.prize-criteria-lock article.watch span {
+  color: #8a5b17;
+}
+
+.prize-criteria-lock article.missing span {
+  color: #9d2d2d;
+}
+
+.prize-criteria-lock article p {
+  color: #454334;
+  line-height: 1.42;
+}
+
+.prize-criteria-lock article a {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--blue);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
 .prize-grid {
   display: grid;
   grid-template-columns: minmax(330px, 0.9fr) minmax(420px, 1.15fr) minmax(360px, 1fr);
@@ -12873,6 +12984,7 @@ pre {
   .dossier-quality-lock > div,
   .closeout-dry-run-lock > div,
   .prize-usability-lock > div,
+  .prize-criteria-lock > div,
   .closeout-quality-lock > div {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -12983,6 +13095,7 @@ pre {
   .prize-summary,
   .prize-criteria,
   .prize-usability-lock,
+  .prize-criteria-lock,
   .prize-grid,
   .gap-summary,
   .gap-lanes,
@@ -13126,6 +13239,7 @@ pre {
   .dossier-quality-lock > div,
   .closeout-dry-run-lock > div,
   .prize-usability-lock > div,
+  .prize-criteria-lock > div,
   .closeout-quality-lock > div,
   .economics-evidence-lock > div {
     grid-template-columns: 1fr;

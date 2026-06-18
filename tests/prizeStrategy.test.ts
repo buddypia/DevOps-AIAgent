@@ -322,7 +322,7 @@ describe("prize strategy board", () => {
   test("turns judge evidence into a five-criterion winning plan", () => {
     const board = fixture();
 
-    expect(board.prizeScore).toBeGreaterThanOrEqual(88);
+    expect(board.prizeScore).toBeGreaterThanOrEqual(92);
     expect(board.readiness).toBe("finalist-track");
     expect(board.criteria.map((criterion) => criterion.id)).toEqual([
       "agent-centrality",
@@ -332,6 +332,7 @@ describe("prize strategy board", () => {
       "implementation"
     ]);
     expect(board.criteria.every((criterion) => criterion.targetScore === 92)).toBe(true);
+    expect(board.criteria.every((criterion) => criterion.status === "winner-ready")).toBe(true);
     expect(board.criteria.find((criterion) => criterion.id === "usability")).toMatchObject({
       status: "winner-ready",
       decisiveProof: expect.stringContaining("Prize Usability Lock")
@@ -348,10 +349,25 @@ describe("prize strategy board", () => {
         expect.objectContaining({ id: "external-gap-honesty", status: "watch" })
       ])
     });
+    expect(board.criteriaLock).toMatchObject({
+      readiness: "criteria-external-watch",
+      internalScore: 100,
+      sealedCount: 5,
+      watchCount: 1,
+      missingCount: 0,
+      checks: expect.arrayContaining([
+        expect.objectContaining({ id: "agent-centrality-proof", criterionId: "agent-centrality", status: "sealed" }),
+        expect.objectContaining({ id: "approach-proof", criterionId: "approach", status: "sealed" }),
+        expect.objectContaining({ id: "practicality-proof", criterionId: "practicality", status: "sealed" }),
+        expect.objectContaining({ id: "implementation-proof", criterionId: "implementation", status: "sealed" }),
+        expect.objectContaining({ id: "external-submit-truth", criterionId: "submission", status: "watch" })
+      ])
+    });
     expect(board.proofMoves.map((move) => move.id)).toEqual([
       "concierge",
       "route-lock",
       "usability-lock",
+      "criteria-lock",
       "command",
       "battlecard",
       "objection-replay",
@@ -380,6 +396,12 @@ describe("prize strategy board", () => {
       proof: expect.stringContaining("internal usability"),
       score: 100
     });
+    expect(board.proofMoves.find((move) => move.id === "criteria-lock")).toMatchObject({
+      screen: "Prize Strategy Board",
+      endpoint: `${SUBMISSION_PROOF.deployedUrl}/api/prize-strategy`,
+      proof: expect.stringContaining("internal criteria"),
+      score: 100
+    });
     expect(board.proofMoves.find((move) => move.id === "operations-value")).toMatchObject({
       screen: "Observability Oracle",
       endpoint: `${SUBMISSION_PROOF.deployedUrl}/api/observability-oracle`,
@@ -406,6 +428,13 @@ describe("prize strategy board", () => {
         internalScore: 100,
         checks: expect.arrayContaining([
           expect.objectContaining({ id: "external-gap-honesty", status: "watch" })
+        ])
+      },
+      criteriaLock: {
+        readiness: "criteria-external-watch",
+        internalScore: 100,
+        checks: expect.arrayContaining([
+          expect.objectContaining({ id: "external-submit-truth", criterionId: "submission", status: "watch" })
         ])
       },
       competitiveBattlecard: {

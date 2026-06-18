@@ -13,6 +13,8 @@ export type PrizeCriterionStatus = "winner-ready" | "finalist-track" | "needs-pr
 export type PrizeActionPriority = "now" | "next";
 export type PrizeUsabilityLockStatus = "sealed" | "watch" | "missing";
 export type PrizeUsabilityLockReadiness = "usability-locked" | "usability-external-watch" | "needs-usability-proof";
+export type PrizeCriteriaLockStatus = "sealed" | "watch" | "missing";
+export type PrizeCriteriaLockReadiness = "criteria-locked" | "criteria-external-watch" | "needs-criteria-proof";
 
 export type PrizeCriterion = {
   id: string;
@@ -75,6 +77,28 @@ export type PrizeUsabilityLock = {
   checks: PrizeUsabilityLockCheck[];
 };
 
+export type PrizeCriteriaLockCheck = {
+  id: string;
+  criterionId: string;
+  label: string;
+  status: PrizeCriteriaLockStatus;
+  score: number;
+  proof: string;
+  evidenceUrl: string;
+};
+
+export type PrizeCriteriaLock = {
+  id: string;
+  lockScore: number;
+  internalScore: number;
+  readiness: PrizeCriteriaLockReadiness;
+  sealedCount: number;
+  watchCount: number;
+  missingCount: number;
+  operatorLine: string;
+  checks: PrizeCriteriaLockCheck[];
+};
+
 export type PrizeStrategyBoard = {
   id: string;
   prizeScore: number;
@@ -87,6 +111,7 @@ export type PrizeStrategyBoard = {
   pitchOrder: PrizePitchStep[];
   risks: PrizeRisk[];
   usabilityLock?: PrizeUsabilityLock;
+  criteriaLock?: PrizeCriteriaLock;
   judgeClose: string;
   a2aPayload: Record<string, unknown>;
 };
@@ -135,11 +160,28 @@ function usabilityLockScore(status: PrizeUsabilityLockStatus) {
   return 20;
 }
 
+function criteriaLockScore(status: PrizeCriteriaLockStatus) {
+  if (status === "sealed") return 100;
+  if (status === "watch") return 88;
+  return 20;
+}
+
 function usabilityLockCheck(input: Omit<PrizeUsabilityLockCheck, "score"> & { score?: number }): PrizeUsabilityLockCheck {
   return {
     ...input,
     score: Math.round(clamp(input.score ?? usabilityLockScore(input.status)))
   };
+}
+
+function criteriaLockCheck(input: Omit<PrizeCriteriaLockCheck, "score"> & { score?: number }): PrizeCriteriaLockCheck {
+  return {
+    ...input,
+    score: Math.round(clamp(input.score ?? criteriaLockScore(input.status)))
+  };
+}
+
+function criteriaLockValue(lock: PrizeCriteriaLock | undefined, criterionId: string) {
+  return lock?.checks.find((check) => check.criterionId === criterionId)?.score ?? 0;
 }
 
 function criterionItem(input: {
@@ -197,11 +239,12 @@ function proofMoves(input: {
   battlecard: CompetitiveBattlecard;
   demoConcierge?: DemoConcierge;
   usabilityLock?: PrizeUsabilityLock;
+  criteriaLock?: PrizeCriteriaLock;
   pilotEconomics: PilotEconomics;
   observabilityOracle?: ObservabilityOracle;
   releaseDrift?: ReleaseDriftGuard;
 }): PrizeProofMove[] {
-  const { baseUrl, acceptance, command, battlecard, demoConcierge, usabilityLock, pilotEconomics, observabilityOracle, releaseDrift } = input;
+  const { baseUrl, acceptance, command, battlecard, demoConcierge, usabilityLock, criteriaLock, pilotEconomics, observabilityOracle, releaseDrift } = input;
   const oracleScore = observabilityOracle ? observabilityProofScore(observabilityOracle) : undefined;
   return [
     ...(demoConcierge
@@ -234,6 +277,18 @@ function proofMoves(input: {
                 }
               ]
             : [])
+        ]
+      : []),
+    ...(criteriaLock
+      ? [
+          {
+            id: "criteria-lock",
+            label: "Five-criterion proof lock",
+            screen: "Prize Strategy Board",
+            endpoint: absoluteUrl(baseUrl, "/api/prize-strategy"),
+            proof: `${criteriaLock.internalScore} internal criteria / ${criteriaLock.readiness}`,
+            score: criteriaLock.internalScore
+          }
         ]
       : []),
     {
@@ -477,6 +532,149 @@ function buildUsabilityLock(input: {
   };
 }
 
+function buildCriteriaLock(input: {
+  baseUrl: string;
+  acceptance: JudgeAcceptanceMatrix;
+  autopilot: WinningAutopilotRun;
+  command: JudgeCommandCenter;
+  battlecard: CompetitiveBattlecard;
+  usabilityLock?: PrizeUsabilityLock;
+  pilotEconomics: PilotEconomics;
+  observabilityOracle?: ObservabilityOracle;
+  releaseDrift?: ReleaseDriftGuard;
+}): PrizeCriteriaLock {
+  const normalizedBase = input.baseUrl.replace(/\/$/, "");
+  const { acceptance, autopilot, command, battlecard, usabilityLock, pilotEconomics, observabilityOracle, releaseDrift } = input;
+  const oracleScore = observabilityOracle ? observabilityProofScore(observabilityOracle) : undefined;
+  const externalWatchCount = acceptance.rows.filter((item) => item.area === "submission" && item.status !== "accepted").length;
+  const agentScore = Math.round(
+    clamp(
+      average([
+        row(acceptance, "a2a-agent-center")?.score ?? 0,
+        lane(autopilot, "autonomy")?.score ?? 0,
+        command.commandScore
+      ])
+    )
+  );
+  const approachSourceCount = battlecard.proofLock.coverage.sourceUrlCount;
+  const approachSwotCount = battlecard.proofLock.coverage.swotLinkCount;
+  const practicalityReady =
+    pilotEconomics.economicsScore >= 90 &&
+    pilotEconomics.unitEconomics.paybackDays <= 30 &&
+    (pilotEconomics.evidenceLock.readiness === "buyer-ready" || pilotEconomics.evidenceLock.readiness === "pilot-locked") &&
+    (oracleScore ?? pilotEconomics.economicsScore) >= 90;
+  const publicReleaseCurrent =
+    releaseDrift?.verdict === "release-current" &&
+    releaseDrift.driftScore >= 96 &&
+    releaseDrift.observedSkillCount >= releaseDrift.expectedSkillCount;
+  const implementationReady =
+    publicReleaseCurrent ||
+    ((row(acceptance, "release-drift")?.score ?? 0) >= 90 &&
+      (row(acceptance, "live-public-proof")?.score ?? 0) >= 90 &&
+      (row(acceptance, "security-boundary")?.score ?? 0) >= 88);
+  const checks = [
+    criteriaLockCheck({
+      id: "agent-centrality-proof",
+      criterionId: "agent-centrality",
+      label: "AI is the actor, not decoration",
+      status:
+        agentScore >= 90 && (row(acceptance, "a2a-agent-center")?.score ?? 0) >= 90 && command.commandScore >= 88
+          ? "sealed"
+          : agentScore >= 84
+            ? "watch"
+            : "missing",
+      proof: `${agentScore} blended A2A/autonomy/command proof; ${command.openingMove}`,
+      evidenceUrl: absoluteUrl(normalizedBase, "/api/judge-command-center")
+    }),
+    criteriaLockCheck({
+      id: "approach-proof",
+      criterionId: "approach",
+      label: "Competitive/SWOT answer is rehearsed",
+      status:
+        battlecard.proofLock.proofScore >= 92 &&
+        battlecard.objectionReplay.replayScore >= 92 &&
+        approachSourceCount >= 10 &&
+        approachSwotCount >= 12
+          ? "sealed"
+          : battlecard.proofLock.readiness === "needs-counterproof" || battlecard.objectionReplay.readiness === "needs-counterproof"
+            ? "missing"
+            : "watch",
+      proof: `${battlecard.proofLock.proofScore} proof lock; ${battlecard.objectionReplay.replayScore} replay; ${approachSourceCount} sources / ${approachSwotCount} SWOT links.`,
+      evidenceUrl: absoluteUrl(normalizedBase, "/api/competitive-battlecard")
+    }),
+    criteriaLockCheck({
+      id: "usability-proof",
+      criterionId: "usability",
+      label: "First-run path is internally locked",
+      status:
+        usabilityLock && usabilityLock.internalScore >= 92 && usabilityLock.missingCount === 0
+          ? "sealed"
+          : usabilityLock && usabilityLock.internalScore >= 88
+            ? "watch"
+            : "missing",
+      proof: usabilityLock
+        ? `${usabilityLock.internalScore} internal usability; ${usabilityLock.sealedCount} sealed / ${usabilityLock.watchCount} watch.`
+        : "Prize Usability Lock has not been generated.",
+      evidenceUrl: absoluteUrl(normalizedBase, "/api/prize-strategy")
+    }),
+    criteriaLockCheck({
+      id: "practicality-proof",
+      criterionId: "practicality",
+      label: "Buyer value and operation value are connected",
+      status: practicalityReady ? "sealed" : pilotEconomics.economicsScore >= 84 ? "watch" : "missing",
+      proof: `${pilotEconomics.economicsScore} economics / ${pilotEconomics.unitEconomics.paybackDays}d payback / ${oracleScore ?? pilotEconomics.economicsScore} oracle proof.`,
+      evidenceUrl: absoluteUrl(normalizedBase, "/api/pilot-economics")
+    }),
+    criteriaLockCheck({
+      id: "implementation-proof",
+      criterionId: "implementation",
+      label: "Public implementation can be rechecked",
+      status: implementationReady ? "sealed" : (releaseDrift?.driftScore ?? row(acceptance, "release-drift")?.score ?? 0) >= 84 ? "watch" : "missing",
+      proof: releaseDrift
+        ? `${releaseDrift.driftScore} release drift / ${releaseDrift.verdict}; ${releaseDrift.observedSkillCount}/${releaseDrift.expectedSkillCount} skills visible.`
+        : `${row(acceptance, "live-public-proof")?.score ?? 0} live proof; Release Drift Guard not checked.`,
+      evidenceUrl: absoluteUrl(normalizedBase, "/api/release-drift")
+    }),
+    criteriaLockCheck({
+      id: "external-submit-truth",
+      criterionId: "submission",
+      label: "External submission truth stays visible",
+      status: acceptance.verdict === "not-accepted" ? "missing" : externalWatchCount > 0 ? "watch" : "sealed",
+      proof:
+        externalWatchCount > 0
+          ? `${externalWatchCount} external submission rows remain watch, not hidden as winner-ready.`
+          : "ProtoPedia, video, and public submission evidence are accepted.",
+      evidenceUrl: absoluteUrl(normalizedBase, "/api/acceptance-matrix")
+    })
+  ];
+  const nonExternalChecks = checks.filter((check) => check.id !== "external-submit-truth");
+  const sealedCount = checks.filter((check) => check.status === "sealed").length;
+  const watchCount = checks.filter((check) => check.status === "watch").length;
+  const missingCount = checks.filter((check) => check.status === "missing").length;
+  const internalScore = Math.round(clamp(average(nonExternalChecks.map((check) => check.score))));
+  const lockScore = Math.round(clamp(average(checks.map((check) => check.score))));
+  const nonExternalSealed = nonExternalChecks.every((check) => check.status === "sealed");
+  const readiness: PrizeCriteriaLockReadiness =
+    missingCount > 0 || !nonExternalSealed ? "needs-criteria-proof" : externalWatchCount > 0 ? "criteria-external-watch" : "criteria-locked";
+
+  return {
+    id: `prize-criteria-lock-${lockScore}-${readiness}`,
+    lockScore,
+    internalScore,
+    readiness,
+    sealedCount,
+    watchCount,
+    missingCount,
+    operatorLine:
+      readiness === "criteria-locked"
+        ? "All five judging criteria and external submission proof are locked for the prize pitch."
+        : readiness === "criteria-external-watch"
+          ? "All five judging criteria are internally sealed; only ProtoPedia/video submission evidence remains watch."
+          : "One or more judging criteria still lacks a sealed proof route before the prize pitch.",
+    checks
+  };
+}
+
 export function buildPrizeStrategyBoard(input: {
   baseUrl: string;
   strategy: WinningStrategy;
@@ -494,6 +692,17 @@ export function buildPrizeStrategyBoard(input: {
   const oracleScore = observabilityOracle ? observabilityProofScore(observabilityOracle) : undefined;
   const routeLock = demoConcierge?.routeLock;
   const usabilityLock = buildUsabilityLock({ baseUrl: normalizedBase, acceptance, command, demoConcierge });
+  const criteriaLock = buildCriteriaLock({
+    baseUrl: normalizedBase,
+    acceptance,
+    autopilot,
+    command,
+    battlecard,
+    usabilityLock,
+    pilotEconomics,
+    observabilityOracle,
+    releaseDrift
+  });
   const criteria = [
     criterionItem({
       id: "agent-centrality",
@@ -502,7 +711,9 @@ export function buildPrizeStrategyBoard(input: {
         criterion(strategy, "agentCentrality")?.score ?? 0,
         row(acceptance, "a2a-agent-center")?.score ?? 0,
         lane(autopilot, "autonomy")?.score ?? 0,
-        command.commandScore
+        command.commandScore,
+        criteriaLockValue(criteriaLock, "agent-centrality"),
+        criteriaLock.internalScore
       ],
       decisiveProof: "Agent Card、A2A payload、Mission/Autonomy LedgerでAIが判断と委任を担う。",
       missingProof: "AIが価値の中心ではなくダッシュボードに見えるリスク。",
@@ -518,7 +729,9 @@ export function buildPrizeStrategyBoard(input: {
         row(acceptance, "moat-rebuttal")?.score ?? 0,
         battlecard.battleScore,
         battlecard.objectionReplay.replayScore,
-        demoConcierge?.conciergeScore ?? battlecard.battleScore
+        demoConcierge?.conciergeScore ?? battlecard.battleScore,
+        criteriaLockValue(criteriaLock, "approach"),
+        criteriaLock.internalScore
       ],
       decisiveProof: "Competitive BattlecardのObjection Replayが、最弱競合への質問、公式ソース、SWOT、公開proof routeを30秒順に固定する。",
       missingProof: "ADK/LangGraph/Difyでよいのでは、という質問に飲み込まれるリスク。",
@@ -537,6 +750,8 @@ export function buildPrizeStrategyBoard(input: {
         demoConcierge?.focusLock.focusScore ?? command.commandScore,
         usabilityLock?.internalScore ?? demoConcierge?.conciergeScore ?? command.commandScore,
         usabilityLock?.lockScore ?? demoConcierge?.conciergeScore ?? command.commandScore,
+        criteriaLockValue(criteriaLock, "usability"),
+        criteriaLock.internalScore,
         numericMetric(command, "tour"),
         lane(autopilot, "demo")?.score ?? 0,
         command.commandScore
@@ -564,7 +779,9 @@ export function buildPrizeStrategyBoard(input: {
         row(acceptance, "pilot-economics")?.score ?? 0,
         pilotEconomics.economicsScore,
         oracleScore ?? pilotEconomics.economicsScore,
-        demoConcierge?.conciergeScore ?? pilotEconomics.economicsScore
+        demoConcierge?.conciergeScore ?? pilotEconomics.economicsScore,
+        criteriaLockValue(criteriaLock, "practicality"),
+        criteriaLock.internalScore
       ],
       decisiveProof:
         oracleScore === undefined
@@ -589,7 +806,9 @@ export function buildPrizeStrategyBoard(input: {
         row(acceptance, "live-public-proof")?.score ?? 0,
         row(acceptance, "release-drift")?.score ?? releaseDrift?.driftScore ?? 88,
         row(acceptance, "security-boundary")?.score ?? 0,
-        observabilityOracle?.oracleScore ?? row(acceptance, "live-public-proof")?.score ?? 0
+        observabilityOracle?.oracleScore ?? row(acceptance, "live-public-proof")?.score ?? 0,
+        criteriaLockValue(criteriaLock, "implementation"),
+        criteriaLock.internalScore
       ],
       decisiveProof:
         oracleScore === undefined
@@ -617,7 +836,7 @@ export function buildPrizeStrategyBoard(input: {
     )
   );
   const readiness = readinessFrom({ prizeScore, criteria, acceptance, command, autopilot, releaseDrift });
-  const moves = proofMoves({ baseUrl, acceptance, command, battlecard, demoConcierge, usabilityLock, pilotEconomics, observabilityOracle, releaseDrift });
+  const moves = proofMoves({ baseUrl, acceptance, command, battlecard, demoConcierge, usabilityLock, criteriaLock, pilotEconomics, observabilityOracle, releaseDrift });
   const riskItems = risks({ acceptance, command, battlecard, criteria, releaseDrift });
   const weakest = [...criteria].sort((left, right) => left.currentScore - right.currentScore)[0];
 
@@ -676,10 +895,13 @@ export function buildPrizeStrategyBoard(input: {
     ],
     risks: riskItems,
     usabilityLock,
+    criteriaLock,
     judgeClose:
       weakest && weakest.delta > 0
         ? `${weakest.label} is the next scoring lever: ${weakest.nextAction}`
-        : "All five judging criteria have winner-ready proof; rerun Release Drift and seal the submission URLs before final submission.",
+        : criteriaLock.readiness === "criteria-external-watch"
+          ? "All five judging criteria have winner-ready proof; only ProtoPedia and demo video URLs remain external watch rows."
+          : "All five judging criteria have winner-ready proof; rerun Release Drift and seal the submission URLs before final submission.",
     a2aPayload: {
       method: "message/send",
       skill: "prize.strategy",
@@ -701,6 +923,18 @@ export function buildPrizeStrategyBoard(input: {
             checks: usabilityLock.checks.map((check) => ({ id: check.id, status: check.status, score: check.score, evidenceUrl: check.evidenceUrl }))
           }
         : null,
+      criteriaLock: {
+        lockScore: criteriaLock.lockScore,
+        internalScore: criteriaLock.internalScore,
+        readiness: criteriaLock.readiness,
+        checks: criteriaLock.checks.map((check) => ({
+          id: check.id,
+          criterionId: check.criterionId,
+          status: check.status,
+          score: check.score,
+          evidenceUrl: check.evidenceUrl
+        }))
+      },
       competitiveBattlecard: {
         score: battlecard.battleScore,
         readiness: battlecard.readiness,

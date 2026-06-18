@@ -28,7 +28,7 @@
 - Winner Proof Packet: 審査5項目ごとの主張、証拠URL、競合/SWOT反論、録画cue、提出copyを1枚に束ねる
 - Final Submission Runway: 2026/7/10 23:59 JSTから逆算し、動画、ProtoPedia、構成図、最終フォームを検収順に束ねる
 - External Evidence Verifier: 公開GitHub、Cloud Run、ProtoPedia作品URL、動画URLが審査員から開けるかをライブ検証する
-- Prize Strategy Board: 審査5項目の目標点、現在証拠、足りない証拠、最終ピッチ順を優勝作戦として束ねる
+- Prize Strategy Board: 審査5項目の目標点、現在証拠、足りない証拠、Prize Criteria Lock、最終ピッチ順を優勝作戦として束ねる
 - Judge Tour: Judge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
 - User Pilot Lab: 開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証し、摩擦と次クリックを出す
 - Squad Optimizer: 予算内のAI編成を総当たりし、審査スコア、必須技術カバレッジ、交換計画、追加予算ギャップを返す
@@ -160,11 +160,11 @@
 
 ## Prize Strategy Board
 
-`Prize Strategy Board` は、MVPが足りるかではなく、ハッカソン優勝に必要な採点作戦を固定するパネルです。審査5項目ごとにtarget score、現在スコア、足りない証拠、demo move、次アクションを返し、Demo Concierge、Judge Route Lock、Prize Usability Lock、Judge Command Center、Competitive Battlecard、Objection Replay、Acceptance Matrix、Release Drift Guard、Observability Oracle、Pilot Economicsを最終ピッチ順へ束ねます。Prize Usability Lockは外部URL watchをUsability不足として二重減点せず、first click、90秒route、proof URL、Focus path、persona lanes、opening command、外部gap honestyを分けて検収します。
+`Prize Strategy Board` は、MVPが足りるかではなく、ハッカソン優勝に必要な採点作戦を固定するパネルです。審査5項目ごとにtarget score、現在スコア、足りない証拠、demo move、次アクションを返し、Demo Concierge、Judge Route Lock、Prize Usability Lock、Prize Criteria Lock、Judge Command Center、Competitive Battlecard、Objection Replay、Acceptance Matrix、Release Drift Guard、Observability Oracle、Pilot Economicsを最終ピッチ順へ束ねます。Prize Usability Lockは外部URL watchをUsability不足として二重減点せず、first click、90秒route、proof URL、Focus path、persona lanes、opening command、外部gap honestyを分けて検収します。Prize Criteria LockはAI中心性、課題アプローチ、ユーザビリティ、実用性、実装力をsealed/watch/missingで検収し、ProtoPedia/動画URLだけを外部watchとして残します。
 
 - API: `POST /api/prize-strategy`
 - App UI: `Build prize strategy`
-- Output: prize score、criteria、Prize Usability Lock、proof moves、pitch order、risks、A2A `prize.strategy` payload
+- Output: prize score、criteria、Prize Usability Lock、Prize Criteria Lock、proof moves、pitch order、risks、A2A `prize.strategy` payload
 
 ## Judge Tour
 

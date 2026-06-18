@@ -174,12 +174,13 @@
 
 ## Prize Strategy Surface
 
-- `POST /api/prize-strategy`: 審査5項目のtarget score、現在スコア、足りない証拠、最終ピッチ順を優勝作戦へ束ねる
+- `POST /api/prize-strategy`: 審査5項目のtarget score、現在スコア、足りない証拠、Prize Criteria Lock、最終ピッチ順を優勝作戦へ束ねる
 - Criteria board: AI中心性、課題アプローチ、ユーザビリティ、実用性、実装力をtarget 92点のgapとして評価する
 - Proof moves: Demo Concierge、Judge Route Lock、Judge Command Center、Competitive Battlecard、Objection Replay、Acceptance Matrix、Release Drift、Pilot Economicsを最終ピッチで開く順番へ変換する
 - Prize Usability Lock: 外部URL watchをUsability不足として二重減点せず、first click、90秒route、proof URL、Focus path、persona lanes、opening command、外部gap honestyをsealed/watch/missingで分離する
+- Prize Criteria Lock: AI中心性、課題アプローチ、ユーザビリティ、実用性、実装力を既存証拠routeでsealed/watch/missingにし、ProtoPedia/動画URLだけを外部watchとして残す
 - Risks: 外部提出URL、公開revision、弱い採点軸、command blockerをowner付きの次アクションにする
-- A2A payload: `prize.strategy` skillとしてprize score、readiness、criteria gaps、Prize Usability Lock、proof moves、risksを返す
+- A2A payload: `prize.strategy` skillとしてprize score、readiness、criteria gaps、Prize Usability Lock、Prize Criteria Lock、proof moves、risksを返す
 
 ## Win Gap Radar Surface
 
