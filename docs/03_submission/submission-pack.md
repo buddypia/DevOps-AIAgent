@@ -289,6 +289,7 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - Final Submit Lock: run `POST /api/submission-launch` and confirm `finalSubmitLock.readiness` is `findy-form-sealed`; before real URLs exist it should remain `external-url-watch`, not submit-ready
 - Judge Rehearsal API: `POST /api/judge-rehearsal`
 - Final Pitch Defense Lock: run `POST /api/judge-rehearsal` and confirm `defenseLock` is not `needs-defense-proof` before recording final Q&A
+- Judge Recording Lock: run `POST /api/judge-rehearsal` and confirm `recordingLock.readiness` is `recording-external-watch` before recording; after real ProtoPedia/video URLs exist it should become `recording-ready`
 - Winner Proof Packet API: `POST /api/winner-packet`
 - Final Submission Runway API: `POST /api/submission-runway`
 - Agent Task Board API: `POST /api/task-board`

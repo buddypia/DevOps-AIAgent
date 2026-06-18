@@ -224,8 +224,8 @@ function agentCard(baseUrl: string) {
       {
         id: "judge.rehearsal",
         name: "Rehearse the 90-second judge run",
-        description: "Judge Command、Demo Concierge、Prize Strategy、Judge Drill、Closeoutを90秒台本と最終質疑Defense Lockへ束ねる。",
-        tags: ["judge-rehearsal", "demo", "first-run", "usability", "pitch", "qa-defense"]
+        description: "Judge Command、Demo Concierge、Prize Strategy、Judge Drill、Closeoutを90秒台本、Recording Lock、最終質疑Defense Lockへ束ねる。",
+        tags: ["judge-rehearsal", "demo", "recording-lock", "first-run", "usability", "pitch", "qa-defense"]
       },
       {
         id: "winner.packet",

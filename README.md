@@ -136,11 +136,11 @@
 
 ## Judge Rehearsal Room
 
-`Judge Rehearsal Room` は、初見審査員に機能一覧を浴びせないための90秒実演リハーサルです。Judge Command Center、Demo Concierge、Judge Tour、Prize Strategy、Judge Drill、Pilot Economics、Submission Closeoutを束ね、どの画面を開き、何を言い、どの質問へどの証拠URLで答えるかを1つのrun roomにします。Final Pitch Defense Lockで、AI必然性、競合反論、買い手価値、公開実装、外部提出ギャップ、60秒回答パスを最終質疑の防御線として固定します。
+`Judge Rehearsal Room` は、初見審査員に機能一覧を浴びせないための90秒実演リハーサルです。Judge Command Center、Demo Concierge、Judge Tour、Prize Strategy、Judge Drill、Pilot Economics、Submission Closeoutを束ね、どの画面を開き、何を言い、どの質問へどの証拠URLで答えるかを1つのrun roomにします。Final Pitch Defense Lockで、AI必然性、競合反論、買い手価値、公開実装、外部提出ギャップ、60秒回答パスを最終質疑の防御線として固定します。Judge Recording Lockで、公開証拠から始める画面順、90秒timebox、競合/SWOT反論、買い手価値、外部URL未発行を隠さない提出truth、字幕pack、Publication Policy Lock、YouTube/Vimeo公開先までを録画前に検収します。
 
 - API: `POST /api/judge-rehearsal`
 - App UI: `Build rehearsal`
-- Output: rehearsal score、readiness、Final Pitch Defense Lock、90秒segments、question deck、scorecard、capture checklist、A2A `judge.rehearsal` payload
+- Output: rehearsal score、readiness、Final Pitch Defense Lock、Judge Recording Lock、90秒segments、question deck、scorecard、capture checklist、A2A `judge.rehearsal` payload
 
 ## Winner Proof Packet
 

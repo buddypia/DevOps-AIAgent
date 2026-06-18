@@ -9,6 +9,7 @@ import type { SubmissionCloseoutWorkbench } from "./submissionCloseout.js";
 export type JudgeRehearsalReadiness = "rehearsal-ready" | "external-gap-rehearsal" | "needs-rehearsal-fix";
 export type JudgeRehearsalStatus = "ready" | "watch" | "blocked";
 export type FinalPitchDefenseReadiness = "defense-ready" | "external-gap-defense" | "needs-defense-proof";
+export type JudgeRecordingReadiness = "recording-ready" | "recording-external-watch" | "needs-recording-fix";
 
 export type JudgeRehearsalSegment = {
   id: string;
@@ -67,6 +68,38 @@ export type FinalPitchDefenseLock = {
   closingMove: string;
 };
 
+export type JudgeRecordingCheck = {
+  id:
+    | "public-opening"
+    | "ninety-second-timebox"
+    | "competitive-proof"
+    | "buyer-proof"
+    | "submission-truth"
+    | "caption-pack"
+    | "publication-policy"
+    | "publish-target";
+  label: string;
+  status: JudgeRehearsalStatus;
+  proof: string;
+  evidenceUrl: string;
+  acceptance: string;
+};
+
+export type JudgeRecordingLock = {
+  id: string;
+  recordingScore: number;
+  readiness: JudgeRecordingReadiness;
+  headline: string;
+  operatorLine: string;
+  targetDurationSeconds: number;
+  publishTarget: string;
+  readyCount: number;
+  watchCount: number;
+  blockedCount: number;
+  checks: JudgeRecordingCheck[];
+  shotOrder: string[];
+};
+
 export type JudgeRehearsalRoom = {
   id: string;
   rehearsalScore: number;
@@ -80,6 +113,7 @@ export type JudgeRehearsalRoom = {
   scorecard: JudgeRehearsalScorecard[];
   captureChecklist: JudgeRehearsalCapture[];
   defenseLock: FinalPitchDefenseLock;
+  recordingLock: JudgeRecordingLock;
   a2aPayload: Record<string, unknown>;
 };
 
@@ -142,6 +176,12 @@ function defenseStatus(score: number): JudgeRehearsalStatus {
   if (score >= 88) return "ready";
   if (score >= 72) return "watch";
   return "blocked";
+}
+
+function recordingReadiness(input: { blockedCount: number; watchCount: number; externalReady: boolean }): JudgeRecordingReadiness {
+  if (input.blockedCount > 0) return "needs-recording-fix";
+  if (!input.externalReady || input.watchCount > 0) return "recording-external-watch";
+  return "recording-ready";
 }
 
 function buildDefenseLock(input: {
@@ -257,6 +297,124 @@ function buildDefenseLock(input: {
   };
 }
 
+function buildRecordingLock(input: {
+  baseUrl: string;
+  baseRehearsalScore: number;
+  closeout: SubmissionCloseoutWorkbench;
+  segments: JudgeRehearsalSegment[];
+  captureChecklist: JudgeRehearsalCapture[];
+  defenseLock: FinalPitchDefenseLock;
+}): JudgeRecordingLock {
+  const { baseUrl, baseRehearsalScore, closeout, segments, captureChecklist, defenseLock } = input;
+  const segment = (id: string) => segments.find((item) => item.id === id);
+  const opening = segment("open-command");
+  const competitive = segment("competitive-proof");
+  const buyer = segment("buyer-proof");
+  const submission = segment("submission-close");
+  const recordableSegmentStatus = (item?: JudgeRehearsalSegment): JudgeRehearsalStatus => {
+    if (!item) return "watch";
+    return item.status === "blocked" ? "blocked" : "ready";
+  };
+  const malformedExternal = closeout.readiness === "invalid-evidence";
+  const externalReady = closeout.urlStatuses.every((item) => item.status === "ready");
+  const captionsReady = captureChecklist.length >= 6 && captureChecklist.every((item) => item.status !== "blocked");
+  const policyReady = closeout.protopediaPolicyLock.readiness === "publication-ready" || closeout.protopediaPolicyLock.readiness === "prototype-copy-locked";
+  const checks: JudgeRecordingCheck[] = [
+    {
+      id: "public-opening",
+      label: "Open public proof first",
+      status: recordableSegmentStatus(opening),
+      proof: opening ? `${opening.screen}: ${opening.successSignal}` : "Opening segment is missing.",
+      evidenceUrl: opening?.proofUrl ?? absoluteUrl(baseUrl, "/api/judge-command-center"),
+      acceptance: "0-12秒で公開Cloud Run上の証拠画面を開き、ローカル録画ではないことを示す。"
+    },
+    {
+      id: "ninety-second-timebox",
+      label: "90-second route is timed",
+      status: segments.length >= 6 && segments.every((item) => item.timeRange.includes("-")) ? "ready" : "watch",
+      proof: `${segments.length} segments / ${segments.map((item) => item.timeRange).join(" -> ")}`,
+      evidenceUrl: absoluteUrl(baseUrl, "/api/judge-rehearsal"),
+      acceptance: "0-90秒の各区間、開く画面、話す内容、成功シグナルが揃っている。"
+    },
+    {
+      id: "competitive-proof",
+      label: "Competitive proof is captured",
+      status: recordableSegmentStatus(competitive),
+      proof: competitive ? `${competitive.screen}: ${competitive.successSignal}` : "Competitive proof segment is missing.",
+      evidenceUrl: competitive?.proofUrl ?? absoluteUrl(baseUrl, "/api/competitive-battlecard"),
+      acceptance: "既存ツールでよくないか、という質問にsource/SWOT/proof routeで答える章を録画する。"
+    },
+    {
+      id: "buyer-proof",
+      label: "Buyer value proof is captured",
+      status: recordableSegmentStatus(buyer),
+      proof: buyer ? `${buyer.screen}: ${buyer.successSignal}` : "Buyer proof segment is missing.",
+      evidenceUrl: buyer?.proofUrl ?? absoluteUrl(baseUrl, "/api/pilot-economics"),
+      acceptance: "実用性と体験価値を、Pilot Economicsや運用証拠に接続して見せる。"
+    },
+    {
+      id: "submission-truth",
+      label: "Submission truth is visible",
+      status: malformedExternal ? "blocked" : submission?.status === "blocked" ? "blocked" : externalReady ? "ready" : "watch",
+      proof: closeout.urlStatuses.map((item) => `${item.id}:${item.status}`).join(" / "),
+      evidenceUrl: absoluteUrl(baseUrl, "/api/submission-closeout"),
+      acceptance: "外部URLが未発行ならwatchとして画面に残し、submit-readyと誤って言わない。"
+    },
+    {
+      id: "caption-pack",
+      label: "Caption pack is ready",
+      status: captionsReady ? "ready" : "watch",
+      proof: `${captureChecklist.length} capture items / ${captureChecklist.filter((item) => item.status === "blocked").length} blocked`,
+      evidenceUrl: absoluteUrl(baseUrl, "/api/submission-closeout"),
+      acceptance: "録画時に読む字幕、証拠URL、画面名、章立てが撮影前に揃っている。"
+    },
+    {
+      id: "publication-policy",
+      label: "ProtoPedia policy proof is visible",
+      status: policyReady ? (closeout.protopediaPolicyLock.readiness === "publication-ready" ? "ready" : "watch") : "blocked",
+      proof: `${closeout.protopediaPolicyLock.policyScore} / ${closeout.protopediaPolicyLock.readiness}`,
+      evidenceUrl: absoluteUrl(baseUrl, "/api/submission-closeout"),
+      acceptance: "動画と作品ページが、宣伝ではなく作ったプロトタイプの紹介として見えることを示す。"
+    },
+    {
+      id: "publish-target",
+      label: "Publish target is explicit",
+      status: malformedExternal ? "blocked" : externalReady ? "ready" : "watch",
+      proof: closeout.videoProofLock.publishTarget,
+      evidenceUrl: absoluteUrl(baseUrl, "/api/submission-launch"),
+      acceptance: "録画後はYouTubeまたはVimeoのURLを公開し、Submission Launch Gateへ入力する。"
+    }
+  ];
+  const readyCount = checks.filter((check) => check.status === "ready").length;
+  const watchCount = checks.filter((check) => check.status === "watch").length;
+  const blockedCount = checks.filter((check) => check.status === "blocked").length;
+  const readiness = recordingReadiness({ blockedCount, watchCount, externalReady });
+  const recordingScore = Math.round(clamp(average([baseRehearsalScore, defenseLock.defenseScore, closeout.videoProofLock.lockScore, ...checks.map((check) => statusScore(check.status))])));
+
+  return {
+    id: `judge-recording-lock-${recordingScore}-${readiness}`,
+    recordingScore,
+    readiness,
+    headline:
+      readiness === "recording-ready"
+        ? "90秒録画の画面順、字幕、証拠URL、公開先までロック済みです。"
+        : readiness === "recording-external-watch"
+          ? "録画の内部証拠は固まりました。外部URLだけをwatchとして残します。"
+          : "録画前にblockedの画面、字幕、URL証拠を直す必要があります。",
+    operatorLine:
+      readiness === "needs-recording-fix"
+        ? "Do not record until blocked recording evidence is fixed."
+        : "Record the shot order once, publish to YouTube or Vimeo, then seal Submission Launch Gate.",
+    targetDurationSeconds: 90,
+    publishTarget: "YouTube or Vimeo https URL",
+    readyCount,
+    watchCount,
+    blockedCount,
+    checks,
+    shotOrder: segments.map((item) => `${item.timeRange}: ${item.screen} - ${item.open}`)
+  };
+}
+
 export function buildJudgeRehearsalRoom(input: {
   baseUrl: string;
   acceptance: JudgeAcceptanceMatrix;
@@ -276,7 +434,7 @@ export function buildJudgeRehearsalRoom(input: {
     tour.readiness === "needs-fix",
     closeout.readiness === "invalid-evidence"
   ].filter(Boolean).length;
-  const rehearsalScore = Math.round(
+  const baseRehearsalScore = Math.round(
     clamp(
       average([acceptance.acceptanceScore, command.commandScore, concierge.conciergeScore, tour.tourScore, prize.prizeScore, closeout.closeoutScore]) -
         blockedSignals * 10 -
@@ -410,7 +568,7 @@ export function buildJudgeRehearsalRoom(input: {
 
   const defenseLock = buildDefenseLock({
     baseUrl: base,
-    rehearsalScore,
+    rehearsalScore: baseRehearsalScore,
     command,
     prize,
     closeout,
@@ -420,6 +578,15 @@ export function buildJudgeRehearsalRoom(input: {
     captureChecklist,
     judgeDrill
   });
+  const recordingLock = buildRecordingLock({
+    baseUrl: base,
+    baseRehearsalScore,
+    closeout,
+    segments,
+    captureChecklist,
+    defenseLock
+  });
+  const rehearsalScore = Math.round(clamp(average([baseRehearsalScore, defenseLock.defenseScore, recordingLock.recordingScore])));
 
   const readiness = readinessFrom({
     rehearsalScore,
@@ -464,6 +631,7 @@ export function buildJudgeRehearsalRoom(input: {
     scorecard,
     captureChecklist,
     defenseLock,
+    recordingLock,
     a2aPayload: {
       method: "message/send",
       skill: "judge.rehearsal",
@@ -478,6 +646,19 @@ export function buildJudgeRehearsalRoom(input: {
           id: check.id,
           status: check.status,
           proofUrl: check.proofUrl
+        }))
+      },
+      recordingLock: {
+        readiness: recordingLock.readiness,
+        recordingScore: recordingLock.recordingScore,
+        readyCount: recordingLock.readyCount,
+        watchCount: recordingLock.watchCount,
+        blockedCount: recordingLock.blockedCount,
+        publishTarget: recordingLock.publishTarget,
+        checks: recordingLock.checks.map((check) => ({
+          id: check.id,
+          status: check.status,
+          evidenceUrl: check.evidenceUrl
         }))
       },
       endpoints: {

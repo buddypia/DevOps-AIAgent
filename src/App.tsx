@@ -663,6 +663,59 @@ function JudgeRehearsalPanel({
             </div>
           </div>
 
+          <div className="rehearsal-defense-lock rehearsal-recording-lock">
+            <div className="defense-lock-copy">
+              <span
+                className={cx(
+                  "risk-chip",
+                  rehearsal.recordingLock.readiness === "recording-ready"
+                    ? "low"
+                    : rehearsal.recordingLock.readiness === "recording-external-watch"
+                      ? "medium"
+                      : "high"
+                )}
+              >
+                {rehearsal.recordingLock.readiness}
+              </span>
+              <h3>
+                <Film size={16} />
+                Judge Recording Lock
+              </h3>
+              <p>{rehearsal.recordingLock.headline}</p>
+              <strong>{rehearsal.recordingLock.operatorLine}</strong>
+              <small>
+                {rehearsal.recordingLock.targetDurationSeconds}s / {rehearsal.recordingLock.publishTarget}
+              </small>
+            </div>
+            <div className="defense-lock-score">
+              <strong>{rehearsal.recordingLock.recordingScore}</strong>
+              <span>recording score</span>
+              <small>
+                ready {rehearsal.recordingLock.readyCount} / watch {rehearsal.recordingLock.watchCount} / blocked {rehearsal.recordingLock.blockedCount}
+              </small>
+            </div>
+            <div className="defense-lock-checks">
+              {rehearsal.recordingLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.acceptance}</p>
+                  <small>{check.proof}</small>
+                  <a href={check.evidenceUrl} target="_blank" rel="noreferrer">
+                    Evidence <ExternalLink size={13} />
+                  </a>
+                </article>
+              ))}
+            </div>
+            <div className="defense-answer-path">
+              {rehearsal.recordingLock.shotOrder.slice(0, 5).map((shot) => (
+                <p key={shot}>{shot}</p>
+              ))}
+            </div>
+          </div>
+
           <div className="rehearsal-segments">
             {rehearsal.segments.map((segment) => (
               <article key={segment.id} className={segment.status}>

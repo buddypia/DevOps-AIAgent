@@ -260,7 +260,7 @@ describe("judge rehearsal room", () => {
     const rehearsal = fixture();
 
     expect(rehearsal.readiness).toBe("external-gap-rehearsal");
-    expect(rehearsal.rehearsalScore).toBeGreaterThanOrEqual(80);
+    expect(rehearsal.rehearsalScore).toBeGreaterThanOrEqual(85);
     expect(rehearsal.nextRun).toContain("Record");
     expect(rehearsal.segments.map((segment) => segment.id)).toEqual([
       "open-command",
@@ -284,12 +284,32 @@ describe("judge rehearsal room", () => {
       "sixty-second-answer-path"
     ]);
     expect(rehearsal.defenseLock.checks.find((check) => check.id === "sixty-second-answer-path")?.status).toBe("ready");
+    expect(rehearsal.recordingLock).toMatchObject({
+      readiness: "recording-external-watch",
+      targetDurationSeconds: 90,
+      publishTarget: "YouTube or Vimeo https URL",
+      blockedCount: 0,
+      checks: expect.arrayContaining([
+        expect.objectContaining({ id: "public-opening", status: "ready" }),
+        expect.objectContaining({ id: "competitive-proof", status: "ready" }),
+        expect.objectContaining({ id: "buyer-proof", status: "ready" }),
+        expect.objectContaining({ id: "submission-truth", status: "watch" }),
+        expect.objectContaining({ id: "publish-target", status: "watch" })
+      ])
+    });
+    expect(rehearsal.recordingLock.recordingScore).toBeGreaterThanOrEqual(90);
+    expect(rehearsal.recordingLock.shotOrder[0]).toContain("Judge Command Center");
     expect(rehearsal.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "judge.rehearsal",
       readiness: "external-gap-rehearsal",
       defenseLock: {
         readiness: "external-gap-defense"
+      },
+      recordingLock: {
+        readiness: "recording-external-watch",
+        publishTarget: "YouTube or Vimeo https URL",
+        checks: expect.arrayContaining([expect.objectContaining({ id: "submission-truth", status: "watch" })])
       },
       endpoints: {
         rehearsal: `${SUBMISSION_PROOF.deployedUrl}/api/judge-rehearsal`,
@@ -310,6 +330,8 @@ describe("judge rehearsal room", () => {
     });
     expect(rehearsal.captureChecklist.find((item) => item.id === "rehearsal-receipt")?.status).toBe("ready");
     expect(rehearsal.defenseLock.checks.find((check) => check.id === "honest-submission-gap")?.status).toBe("ready");
+    expect(rehearsal.recordingLock.readiness).toBe("recording-ready");
+    expect(rehearsal.recordingLock.checks.every((check) => check.status === "ready")).toBe(true);
   });
 
   test("blocks rehearsal when supplied external evidence is malformed", () => {
@@ -325,5 +347,7 @@ describe("judge rehearsal room", () => {
     expect(rehearsal.questionDeck.find((question) => question.id === "submission-gap")?.status).toBe("blocked");
     expect(rehearsal.defenseLock.readiness).toBe("needs-defense-proof");
     expect(rehearsal.defenseLock.checks.find((check) => check.id === "honest-submission-gap")?.status).toBe("blocked");
+    expect(rehearsal.recordingLock.readiness).toBe("needs-recording-fix");
+    expect(rehearsal.recordingLock.checks.find((check) => check.id === "submission-truth")?.status).toBe("blocked");
   });
 });
