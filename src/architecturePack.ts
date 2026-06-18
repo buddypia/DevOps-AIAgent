@@ -43,6 +43,15 @@ export type ArchitecturePack = {
   a2aPayload: Record<string, unknown>;
 };
 
+function escapeHtml(value: unknown) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function clamp(value: number, min = 0, max = 100) {
   return Math.max(min, Math.min(max, value));
 }
@@ -247,7 +256,131 @@ export function buildArchitecturePack(input: {
       nodes: nodes.map((node) => ({ id: node.id, layer: node.layer, proofUrl: node.proofUrl })),
       edges: edges.map((edge) => ({ from: edge.from, to: edge.to, label: edge.label })),
       requirements: requirements.map((item) => ({ id: item.id, status: item.status, proofUrl: item.proofUrl })),
-      endpoint: absoluteUrl(normalizedBase, "/api/architecture-pack")
+      endpoint: absoluteUrl(normalizedBase, "/api/architecture-pack"),
+      pageEndpoint: absoluteUrl(normalizedBase, "/architecture-pack")
     }
   };
+}
+
+function statusTone(status: string) {
+  if (["ready", "submission-ready"].includes(status)) return "good";
+  return "watch";
+}
+
+export function renderArchitecturePackHtml(pack: ArchitecturePack) {
+  const nodes = pack.nodes
+    .map(
+      (node) => `
+        <article class="node ${escapeHtml(node.layer)}">
+          <div><strong>${escapeHtml(node.label)}</strong><span>${escapeHtml(node.layer)}</span></div>
+          <p>${escapeHtml(node.judgeProof)}</p>
+          <a href="${escapeHtml(node.proofUrl)}">${escapeHtml(node.proofUrl)}</a>
+        </article>`
+    )
+    .join("");
+  const edges = pack.edges
+    .map(
+      (edge) => `
+        <article class="edge">
+          <strong>${escapeHtml(edge.from)} -> ${escapeHtml(edge.to)}</strong>
+          <span>${escapeHtml(edge.label)}</span>
+          <p>${escapeHtml(edge.proof)}</p>
+        </article>`
+    )
+    .join("");
+  const requirements = pack.requirements
+    .map(
+      (requirement) => `
+        <article class="requirement ${statusTone(requirement.status)}">
+          <div><strong>${escapeHtml(requirement.label)}</strong><span>${escapeHtml(requirement.status)}</span></div>
+          <p>${escapeHtml(requirement.evidence)}</p>
+          <a href="${escapeHtml(requirement.proofUrl)}">${escapeHtml(requirement.proofUrl)}</a>
+        </article>`
+    )
+    .join("");
+  const checklist = pack.protopediaChecklist.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+
+  return `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architecture Pack</title>
+    <style>
+      :root { color-scheme: light; --ink: #17201d; --muted: #5f6965; --line: #dce5df; --paper: #fbfcfa; --panel: #fff; --green: #13715d; --mint: #e6f4ed; --amber: #8a620d; --amber-bg: #fff4d4; --blue: #245c99; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; }
+      a { color: inherit; overflow-wrap: anywhere; }
+      header, main, footer { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
+      header { padding: 40px 0 20px; }
+      .eyebrow { color: var(--green); font-size: .78rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0; }
+      h1 { margin: 8px 0 10px; font-size: clamp(2rem, 5vw, 4.3rem); line-height: 1; letter-spacing: 0; max-width: 940px; }
+      header p { color: var(--muted); max-width: 860px; }
+      .metrics, .grid { display: grid; gap: 12px; }
+      .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 22px; }
+      .metric, .section, .node, .edge, .requirement { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 1px 0 rgba(23, 32, 29, .03); }
+      .metric { padding: 14px; }
+      .metric span, .node span, .edge span, .requirement span { color: var(--muted); font-size: .74rem; font-weight: 900; text-transform: uppercase; }
+      .metric strong { display: block; margin-top: 6px; font-size: 1.45rem; overflow-wrap: anywhere; }
+      .good { background: var(--mint); border-color: #b9dfd1; }
+      .watch { background: var(--amber-bg); border-color: #ead39a; }
+      .section { padding: 18px; margin: 14px 0; }
+      .section h2 { margin: 0 0 12px; font-size: 1.05rem; }
+      .diagram { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, .72fr); gap: 18px; align-items: start; }
+      img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+      pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; padding: 12px; border-radius: 8px; background: #17201d; color: #eef8f4; font-size: .82rem; }
+      .grid.nodes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .grid.edges, .grid.requirements { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .node, .edge, .requirement { padding: 12px; }
+      .node div, .requirement div { display: flex; justify-content: space-between; gap: 10px; }
+      .node p, .edge p, .requirement p { color: var(--muted); margin: 8px 0; }
+      ul { margin: 0; padding-left: 22px; color: var(--muted); }
+      li + li { margin-top: 8px; }
+      footer { color: var(--muted); font-size: .84rem; padding: 10px 0 36px; }
+      @media (max-width: 860px) { header { padding-top: 28px; } .metrics, .diagram, .grid.nodes, .grid.edges, .grid.requirements { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="eyebrow">Architecture Pack</div>
+      <h1>${escapeHtml(pack.headline)}</h1>
+      <p>${escapeHtml(pack.demoClose)}</p>
+      <section class="metrics">
+        <div class="metric ${statusTone(pack.readiness)}"><span>Readiness</span><strong>${escapeHtml(pack.readiness)}</strong></div>
+        <div class="metric good"><span>Architecture Score</span><strong>${escapeHtml(pack.architectureScore)}</strong></div>
+        <div class="metric good"><span>Nodes</span><strong>${escapeHtml(pack.nodes.length)}</strong></div>
+        <div class="metric watch"><span>Requirements</span><strong>${escapeHtml(pack.requirements.filter((item) => item.status === "ready").length)} / ${escapeHtml(pack.requirements.length)}</strong></div>
+      </section>
+    </header>
+    <main>
+      <section class="section diagram">
+        <div>
+          <h2>System Architecture Diagram</h2>
+          <img src="${escapeHtml(pack.diagramUrl)}" alt="A2A Agent Marketplace system architecture diagram" />
+        </div>
+        <div>
+          <h2>Mermaid</h2>
+          <pre>${escapeHtml(pack.mermaid)}</pre>
+        </div>
+      </section>
+      <section class="section">
+        <h2>Proof Nodes</h2>
+        <div class="grid nodes">${nodes}</div>
+      </section>
+      <section class="section">
+        <h2>DevOps Edges</h2>
+        <div class="grid edges">${edges}</div>
+      </section>
+      <section class="section">
+        <h2>Submission Requirements</h2>
+        <div class="grid requirements">${requirements}</div>
+      </section>
+      <section class="section">
+        <h2>ProtoPedia Checklist</h2>
+        <ul>${checklist}</ul>
+      </section>
+    </main>
+    <footer>${escapeHtml(pack.id)}</footer>
+  </body>
+</html>`;
 }

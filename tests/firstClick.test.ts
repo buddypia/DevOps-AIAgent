@@ -17,6 +17,7 @@ describe("judge first-click proof strip", () => {
       "/autonomy-snapshot",
       "/pilot-value",
       "/recording-script",
+      "/architecture-pack",
       "/submission-assets"
     ]);
     expect(FIRST_CLICK_PROOF_LINKS.every((link) => link.href.startsWith("/") && !link.href.startsWith("/api/"))).toBe(true);
@@ -26,7 +27,7 @@ describe("judge first-click proof strip", () => {
   test("summarizes why the root page is MVP-ready for judges", () => {
     expect(FIRST_CLICK_SCORECARDS.map((card) => card.id)).toEqual(["no-post-first", "criteria-covered", "drift-honesty"]);
     expect(FIRST_CLICK_SCORECARDS.find((card) => card.id === "criteria-covered")?.value).toBe("5/5 covered");
-    expect(FIRST_CLICK_SCORECARDS.find((card) => card.id === "no-post-first")?.value).toBe("9 GET links");
+    expect(FIRST_CLICK_SCORECARDS.find((card) => card.id === "no-post-first")?.value).toBe("10 GET links");
     expect(FIRST_CLICK_SCORECARDS.find((card) => card.id === "drift-honesty")?.proof).toContain("Release Drift");
   });
 
@@ -38,7 +39,7 @@ describe("judge first-click proof strip", () => {
       directOpen: true,
       routeLock: {
         noPostRequired: true,
-        proofPathCount: 9,
+        proofPathCount: 10,
         firstProofPath: "/judge-snapshot",
         requiredAgentCardSignal: FIRST_CLICK_REQUIRED_SIGNAL
       }
@@ -52,6 +53,7 @@ describe("judge first-click proof strip", () => {
       "https://a2a-agent-marketplace.example.com/autonomy-snapshot",
       "https://a2a-agent-marketplace.example.com/pilot-value",
       "https://a2a-agent-marketplace.example.com/recording-script",
+      "https://a2a-agent-marketplace.example.com/architecture-pack",
       "https://a2a-agent-marketplace.example.com/submission-assets"
     ]);
   });

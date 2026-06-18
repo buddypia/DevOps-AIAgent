@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { recommendSquad } from "../src/agentEngine";
-import { buildArchitecturePack } from "../src/architecturePack";
+import { buildArchitecturePack, renderArchitecturePackHtml } from "../src/architecturePack";
 import { DEFAULT_PROJECT_BRIEF } from "../src/market";
 import { buildMissionRun } from "../src/mission";
 import { buildWinningStrategy } from "../src/strategy";
@@ -31,7 +31,27 @@ describe("architecture pack", () => {
       method: "message/send",
       skill: "submission.package",
       architectureScore: pack.architectureScore,
-      endpoint: `${baseUrl}/api/architecture-pack`
+      endpoint: `${baseUrl}/api/architecture-pack`,
+      pageEndpoint: `${baseUrl}/architecture-pack`
     });
+  });
+
+  test("renders a direct-open architecture proof page", () => {
+    const baseUrl = "https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app";
+    const recommendation = recommendSquad(DEFAULT_PROJECT_BRIEF, ["market-broker", "gemini-strategist", "cloud-run-sre"], 140);
+    const strategy = buildWinningStrategy(recommendation);
+    const mission = buildMissionRun(recommendation, strategy);
+    const pack = buildArchitecturePack({ baseUrl, recommendation, strategy, mission });
+    pack.nodes[0].judgeProof = "<script>alert('arch')</script>";
+
+    const html = renderArchitecturePackHtml(pack);
+
+    expect(html).toContain("<!doctype html>");
+    expect(html).toContain("Architecture Pack");
+    expect(html).toContain("System Architecture Diagram");
+    expect(html).toContain("Mermaid");
+    expect(html).toContain(`${baseUrl}/assets/a2a-marketplace-architecture.svg`);
+    expect(html).toContain("&lt;script&gt;alert(&#39;arch&#39;)&lt;/script&gt;");
+    expect(html).not.toContain("<script>alert('arch')</script>");
   });
 });

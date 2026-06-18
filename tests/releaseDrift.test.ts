@@ -52,6 +52,7 @@ const requiredAgentCardSignals = [
   "mvp.snapshot:tag:get-proof",
   "autonomy.snapshot:tag:get-proof",
   "recording.script:tag:get-proof",
+  "submission.package:tag:get-proof",
   "pilot.value.snapshot:tag:get-proof"
 ];
 
@@ -165,7 +166,7 @@ describe("release drift guard", () => {
           ...passedProbe("agent-card-skill-surface"),
           status: "watch",
           score: 58,
-          evidence: "Target Agent Card exposes all skill ids but is missing autonomy.snapshot:tag:get-proof, competitive.battlecard:tag:criteria-duel, competitive.battlecard:tag:win-loss-lock, competitive.snapshot:tag:get-proof, judge.first-click-smoke:tag:first-click-smoke-lock, judge.first-click:tag:first-click-route-lock, judge.objection-arena:tag:objection-lock, judge.snapshot:tag:get-proof, mvp.snapshot:tag:get-proof, recording.script:tag:get-proof, and pilot.value.snapshot:tag:get-proof."
+          evidence: "Target Agent Card exposes all skill ids but is missing autonomy.snapshot:tag:get-proof, competitive.battlecard:tag:criteria-duel, competitive.battlecard:tag:win-loss-lock, competitive.snapshot:tag:get-proof, judge.first-click-smoke:tag:first-click-smoke-lock, judge.first-click:tag:first-click-route-lock, judge.objection-arena:tag:objection-lock, judge.snapshot:tag:get-proof, mvp.snapshot:tag:get-proof, recording.script:tag:get-proof, submission.package:tag:get-proof, and pilot.value.snapshot:tag:get-proof."
         },
         passedProbe("acceptance-endpoint"),
         passedProbe("a2a-artifact"),
@@ -187,9 +188,10 @@ describe("release drift guard", () => {
       "mvp.snapshot:tag:get-proof",
       "pilot.value.snapshot:tag:get-proof",
       "recording.script:tag:get-proof",
+      "submission.package:tag:get-proof",
       "winner.packet:tag:get-proof"
     ]);
-    expect(guard.summary).toContain("0 required skills and 12 required Agent Card signals");
+    expect(guard.summary).toContain("0 required skills and 13 required Agent Card signals");
     expect(guard.runbook.join("\n")).toContain('or .id=="autonomy.snapshot" or .id=="recording.script"');
     expect(guard.runbook.join("\n")).toContain("/api/mvp-readiness");
     expect(guard.runbook.join("\n")).toContain("/api/autonomy-snapshot");
@@ -210,6 +212,7 @@ describe("release drift guard", () => {
         "mvp.snapshot:tag:get-proof",
         "pilot.value.snapshot:tag:get-proof",
         "recording.script:tag:get-proof",
+        "submission.package:tag:get-proof",
         "winner.packet:tag:get-proof"
       ]
     });

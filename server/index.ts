@@ -6,7 +6,7 @@ import { z } from "zod";
 import { getClientIp, ipAllowlistMiddleware, ipAllowlistSummary } from "./ipAllowlist.js";
 import { buildJudgeAcceptanceMatrix } from "../src/acceptanceMatrix.js";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js";
-import { buildArchitecturePack } from "../src/architecturePack.js";
+import { buildArchitecturePack, renderArchitecturePackHtml } from "../src/architecturePack.js";
 import { buildWinningAutopilot } from "../src/autopilot.js";
 import { buildAutonomyLedger } from "../src/autonomyLedger.js";
 import { buildAutonomySnapshot, renderAutonomySnapshotHtml } from "../src/autonomySnapshot.js";
@@ -234,8 +234,8 @@ function agentCard(baseUrl: string) {
       {
         id: FIRST_CLICK_SKILL_ID,
         name: "Route the judge first click",
-        description: "トップ画面直下から9本のGET証拠ページへ迷わず到達できる初回審査導線を固定する。",
-        tags: ["first-click", FIRST_CLICK_ROUTE_LOCK_TAG, "get-proof", "judge-snapshot", "winner-packet", "objection-arena", "mvp-readiness"]
+        description: "トップ画面直下から10本のGET証拠ページへ迷わず到達できる初回審査導線を固定する。",
+        tags: ["first-click", FIRST_CLICK_ROUTE_LOCK_TAG, "get-proof", "judge-snapshot", "winner-packet", "objection-arena", "mvp-readiness", "architecture-pack"]
       },
       {
         id: FIRST_CLICK_SMOKE_SKILL_ID,
@@ -373,7 +373,7 @@ function agentCard(baseUrl: string) {
         id: "submission.package",
         name: "Package ProtoPedia submission assets",
         description: "動画ストーリーボード、システム構成図、ストーリー、必須タグ、提出チェックリストを返す。",
-        tags: ["protopedia", "video", "architecture", "findy_hackathon"]
+        tags: ["protopedia", "video", "architecture", "findy_hackathon", "get-proof"]
       },
       {
         id: "submission.assets",
@@ -1611,6 +1611,34 @@ app.get("/recording-script", async (req, res) => {
   res.type("html").send(renderRecordingScriptHtml(await buildRecordingScriptForRequest(req)));
 });
 
+function buildArchitecturePackForRequest(req: express.Request, input: z.infer<typeof RecommendSchema>) {
+  const recommendation = recommendSquad(input.projectBrief, input.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "ProtoPediaに貼るシステム構成図と、必須技術・A2A・DevOps証拠の対応表を生成する。");
+
+  return buildArchitecturePack({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission
+  });
+}
+
+function defaultArchitecturePackInput(): z.infer<typeof RecommendSchema> {
+  return {
+    projectBrief: DEFAULT_PROJECT_BRIEF,
+    selectedAgentIds: ["market-broker", "gemini-strategist", "cloud-run-sre"]
+  };
+}
+
+app.get("/api/architecture-pack", (req, res) => {
+  res.json(buildArchitecturePackForRequest(req, defaultArchitecturePackInput()));
+});
+
+app.get("/architecture-pack", (req, res) => {
+  res.type("html").send(renderArchitecturePackHtml(buildArchitecturePackForRequest(req, defaultArchitecturePackInput())));
+});
+
 app.post("/api/architecture-pack", (req, res) => {
   const parsed = RecommendSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -1618,18 +1646,7 @@ app.post("/api/architecture-pack", (req, res) => {
     return;
   }
 
-  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
-  const strategy = buildWinningStrategy(recommendation);
-  const mission = buildMissionRun(recommendation, strategy, "ProtoPediaに貼るシステム構成図と、必須技術・A2A・DevOps証拠の対応表を生成する。");
-
-  res.json(
-    buildArchitecturePack({
-      baseUrl: publicBaseUrl(req),
-      recommendation,
-      strategy,
-      mission
-    })
-  );
+  res.json(buildArchitecturePackForRequest(req, parsed.data));
 });
 
 app.post("/api/publisher", (req, res) => {
@@ -2870,6 +2887,7 @@ async function buildReleaseDriftForTarget(input: {
     "mvp.snapshot:tag:get-proof",
     "autonomy.snapshot:tag:get-proof",
     "recording.script:tag:get-proof",
+    "submission.package:tag:get-proof",
     "pilot.value.snapshot:tag:get-proof"
   ];
   const requiredSkillIds = [
@@ -2913,6 +2931,7 @@ async function buildReleaseDriftForTarget(input: {
     mvpReadinessProbe,
     autonomySnapshotProbe,
     recordingScriptProbe,
+    architecturePackProbe,
     pilotValueProbe,
     objectionArenaProbe,
     firstClickSmokeProbe,
@@ -2956,6 +2975,7 @@ async function buildReleaseDriftForTarget(input: {
         const mvpSnapshot = skills.find((skill) => skill.id === "mvp.snapshot");
         const autonomySnapshot = skills.find((skill) => skill.id === "autonomy.snapshot");
         const recordingScript = skills.find((skill) => skill.id === "recording.script");
+        const submissionPackage = skills.find((skill) => skill.id === "submission.package");
         const pilotValueSnapshot = skills.find((skill) => skill.id === "pilot.value.snapshot");
         observedAgentCardSignals = [
           ...(judgeRehearsal?.tags?.includes("recording-lock") ? ["judge.rehearsal:tag:recording-lock"] : []),
@@ -2973,6 +2993,7 @@ async function buildReleaseDriftForTarget(input: {
           ...(mvpSnapshot?.tags?.includes("get-proof") ? ["mvp.snapshot:tag:get-proof"] : []),
           ...(autonomySnapshot?.tags?.includes("get-proof") ? ["autonomy.snapshot:tag:get-proof"] : []),
           ...(recordingScript?.tags?.includes("get-proof") ? ["recording.script:tag:get-proof"] : []),
+          ...(submissionPackage?.tags?.includes("get-proof") ? ["submission.package:tag:get-proof"] : []),
           ...(pilotValueSnapshot?.tags?.includes("get-proof") ? ["pilot.value.snapshot:tag:get-proof"] : [])
         ];
         const missing = requiredSkillIds.filter((skill) => !observedSkillIds.includes(skill));
@@ -3057,6 +3078,20 @@ async function buildReleaseDriftForTarget(input: {
       }
     }),
     liveJsonProbe({
+      id: "architecture-pack-endpoint",
+      label: "Target Architecture Pack endpoint",
+      url: `${targetBaseUrl}/api/architecture-pack`,
+      required: true,
+      timeoutMs: 16000,
+      init: targetProbeHeaders ? { headers: targetProbeHeaders } : undefined,
+      evaluate: (payload) => {
+        const body = payload as { readiness?: string; architectureScore?: number; a2aPayload?: { skill?: string }; nodes?: unknown[]; requirements?: unknown[] };
+        return body.a2aPayload?.skill === "submission.package" && typeof body.readiness === "string" && Array.isArray(body.nodes) && Array.isArray(body.requirements)
+          ? { status: "passed", score: 100, evidence: `Architecture Pack returned ${body.readiness}; score ${body.architectureScore ?? "unknown"}.` }
+          : { status: "missing", score: 24, evidence: "Architecture Pack endpoint did not return the current submission.package JSON payload." };
+      }
+    }),
+    liveJsonProbe({
       id: "pilot-value-endpoint",
       label: "Target Pilot Value endpoint",
       url: `${targetBaseUrl}/api/pilot-value`,
@@ -3131,6 +3166,8 @@ async function buildReleaseDriftForTarget(input: {
           data?.winnerPacketPageEndpoint &&
           data?.submissionRunwayEndpoint &&
           data?.submissionAssetsPageEndpoint &&
+          data?.architecturePackEndpoint &&
+          data?.architecturePackPageEndpoint &&
           data?.recordingScriptPageEndpoint &&
           data?.recordingScriptJsonEndpoint &&
           data?.pilotValueSnapshotEndpoint &&
@@ -3155,9 +3192,9 @@ async function buildReleaseDriftForTarget(input: {
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, objectionArenaEndpoint, objectionArenaPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, firstClickProof, firstClickSmokeEndpoint, firstClickSmokePageEndpoint, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, objectionArenaEndpoint, objectionArenaPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, architecturePackEndpoint, architecturePackPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, firstClickProof, firstClickSmokeEndpoint, firstClickSmokePageEndpoint, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but autonomy snapshot/observability oracle/external evidence/task board/winner packet/objection arena/submission runway/submission assets/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/first-click proof/first-click smoke/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but autonomy snapshot/observability oracle/external evidence/task board/winner packet/objection arena/submission runway/submission assets/architecture pack/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/first-click proof/first-click smoke/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -3188,6 +3225,7 @@ async function buildReleaseDriftForTarget(input: {
       mvpReadinessProbe,
       autonomySnapshotProbe,
       recordingScriptProbe,
+      architecturePackProbe,
       pilotValueProbe,
       objectionArenaProbe,
       firstClickSmokeProbe,
@@ -6863,6 +6901,7 @@ app.post("/a2a", async (req, res) => {
                   }))
                 },
                 architecturePackEndpoint: `${publicBaseUrl(req)}/api/architecture-pack`,
+                architecturePackPageEndpoint: `${publicBaseUrl(req)}/architecture-pack`,
                 dossierEndpoint: `${publicBaseUrl(req)}/api/dossier`,
                 marketIntelEndpoint: `${publicBaseUrl(req)}/api/market-intel`,
                 moatStressEndpoint: `${publicBaseUrl(req)}/api/moat-stress`,

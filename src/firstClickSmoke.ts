@@ -46,6 +46,7 @@ export const FIRST_CLICK_SMOKE_SENTINELS: FirstClickSmokeSentinel[] = [
   { id: "autonomy-snapshot", href: "/autonomy-snapshot", label: "Autonomy Snapshot", sentinel: "Autonomy Snapshot" },
   { id: "pilot-value", href: "/pilot-value", label: "Pilot Value", sentinel: "Pilot Value Snapshot" },
   { id: "recording-script", href: "/recording-script", label: "Recording Script", sentinel: "Recording Script" },
+  { id: "architecture-pack", href: "/architecture-pack", label: "Architecture Pack", sentinel: "Architecture Pack" },
   { id: "submission-assets", href: "/submission-assets", label: "Submission Assets", sentinel: "Submission Assets" }
 ];
 
