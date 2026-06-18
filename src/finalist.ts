@@ -9,6 +9,8 @@ import type { Recommendation } from "./types.js";
 
 export type FinalistBand = "finalist-ready" | "borderline" | "not-mvp";
 export type FinalistVerdict = "advance" | "watch" | "hold";
+export type FinalistInternalLockStatus = "sealed" | "watch" | "blocked";
+export type FinalistInternalLockReadiness = "internal-finalist-ready" | "internal-finalist-external-watch" | "needs-finalist-proof";
 
 export type FinalistPanel = {
   id: string;
@@ -32,6 +34,27 @@ export type FinalistGap = {
   proof: string;
 };
 
+export type FinalistInternalLockCheck = {
+  id: string;
+  label: string;
+  status: FinalistInternalLockStatus;
+  score: number;
+  proof: string;
+  evidenceUrl: string;
+};
+
+export type FinalistInternalLock = {
+  id: string;
+  lockScore: number;
+  internalScore: number;
+  readiness: FinalistInternalLockReadiness;
+  sealedCount: number;
+  watchCount: number;
+  blockedCount: number;
+  operatorLine: string;
+  checks: FinalistInternalLockCheck[];
+};
+
 export type FinalistSimulation = {
   id: string;
   finalistScore: number;
@@ -42,6 +65,7 @@ export type FinalistSimulation = {
   winningMove: string;
   panels: FinalistPanel[];
   gaps: FinalistGap[];
+  internalLock: FinalistInternalLock;
   runbook: string[];
   a2aPayload: Record<string, unknown>;
 };
@@ -79,6 +103,19 @@ function verdict(score: number): FinalistVerdict {
   if (score >= 88) return "advance";
   if (score >= 76) return "watch";
   return "hold";
+}
+
+function internalLockScore(status: FinalistInternalLockStatus) {
+  if (status === "sealed") return 100;
+  if (status === "watch") return 88;
+  return 20;
+}
+
+function internalLockCheck(input: Omit<FinalistInternalLockCheck, "score"> & { score?: number }): FinalistInternalLockCheck {
+  return {
+    ...input,
+    score: Math.round(clamp(input.score ?? internalLockScore(input.status)))
+  };
 }
 
 function panel(input: {
@@ -140,6 +177,106 @@ function uniqueGaps(gaps: FinalistGap[]) {
     seen.add(gap.id);
     return true;
   });
+}
+
+function buildInternalLock(input: {
+  baseUrl: string;
+  strategy: WinningStrategy;
+  mission: MissionRun;
+  opsDrill: OpsDrill;
+  pitch: PitchRun;
+  squadContract: SquadContract;
+  panels: FinalistPanel[];
+  gaps: FinalistGap[];
+  ciReady: number;
+}): FinalistInternalLock {
+  const base = input.baseUrl.replace(/\/$/, "");
+  const holdCount = input.panels.filter((panel) => panel.verdict === "hold").length;
+  const externalGapCount = input.gaps.filter((gap) => gap.severity === "external").length;
+  const externalBlockerCount = input.gaps.filter((gap) => gap.severity === "blocker").length;
+  const swotCount =
+    input.strategy.swot.strengths.length +
+    input.strategy.swot.weaknesses.length +
+    input.strategy.swot.opportunities.length +
+    input.strategy.swot.threats.length;
+  const proofRouteReady = input.pitch.totalSeconds === 30 && input.pitch.scenes.length >= 5 && input.pitch.recordingChecklist.length >= 4;
+  const checks = [
+    internalLockCheck({
+      id: "five-panel-floor",
+      label: "Five judge panels avoid hold",
+      status: holdCount === 0 && input.panels.every((panel) => panel.score >= 76) ? "sealed" : holdCount <= 1 ? "watch" : "blocked",
+      proof: `${input.panels.filter((panel) => panel.verdict === "advance").length} advance / ${input.panels.filter((panel) => panel.verdict === "watch").length} watch / ${holdCount} hold.`,
+      evidenceUrl: absoluteUrl(base, "/api/finalist")
+    }),
+    internalLockCheck({
+      id: "competitive-swot-proof",
+      label: "Competitive and SWOT proof exists",
+      status: input.strategy.competitors.length >= 6 && swotCount >= 8 && input.strategy.moatScore >= 82 ? "sealed" : input.strategy.moatScore >= 74 ? "watch" : "blocked",
+      proof: `${input.strategy.competitors.length} competitors / ${swotCount} SWOT items / ${input.strategy.moatScore} moat score.`,
+      evidenceUrl: absoluteUrl(base, input.mission.submissionPack.storyMarkdownPath)
+    }),
+    internalLockCheck({
+      id: "agent-necessity-proof",
+      label: "A2A agent necessity is visible",
+      status: input.mission.autonomyScore >= 84 && input.squadContract.contractScore >= 88 ? "sealed" : input.mission.autonomyScore >= 76 ? "watch" : "blocked",
+      proof: `${input.mission.autonomyScore} autonomy / ${input.squadContract.contractScore} contract proof.`,
+      evidenceUrl: absoluteUrl(base, "/.well-known/agent-card.json")
+    }),
+    internalLockCheck({
+      id: "demo-route-proof",
+      label: "30-second finalist demo route",
+      status: proofRouteReady ? "sealed" : input.pitch.readinessScore >= 76 ? "watch" : "blocked",
+      proof: `${input.pitch.totalSeconds}s / ${input.pitch.scenes.length} scenes / ${input.pitch.recordingChecklist.length} checklist items.`,
+      evidenceUrl: absoluteUrl(base, "/api/pitch")
+    }),
+    internalLockCheck({
+      id: "ops-ci-proof",
+      label: "Public implementation and CI proof",
+      status: !input.opsDrill.rollbackRecommended && input.ciReady >= 100 && input.mission.verificationScore >= 84 ? "sealed" : input.ciReady >= 80 ? "watch" : "blocked",
+      proof: `${input.opsDrill.readinessScore} ops / ${input.mission.verificationScore} verification / ${input.ciReady} CI.`,
+      evidenceUrl: SUBMISSION_PROOF.ciWorkflowUrl
+    }),
+    internalLockCheck({
+      id: "external-submit-truth",
+      label: "External submission truth stays visible",
+      status: externalBlockerCount > 0 ? "blocked" : externalGapCount > 0 ? "watch" : "sealed",
+      proof:
+        externalGapCount > 0
+          ? `${externalGapCount} external gaps remain: ${input.gaps.map((gap) => gap.id).join(", ")}.`
+          : "ProtoPedia and video submission gaps are closed.",
+      evidenceUrl: absoluteUrl(base, "/api/submission-closeout")
+    })
+  ];
+  const nonExternalChecks = checks.filter((check) => check.id !== "external-submit-truth");
+  const sealedCount = checks.filter((check) => check.status === "sealed").length;
+  const watchCount = checks.filter((check) => check.status === "watch").length;
+  const blockedCount = checks.filter((check) => check.status === "blocked").length;
+  const internalScore = Math.round(clamp(average(nonExternalChecks.map((check) => check.score))));
+  const lockScore = Math.round(clamp(average(checks.map((check) => check.score))));
+  const nonExternalSealed = nonExternalChecks.every((check) => check.status === "sealed");
+  const readiness: FinalistInternalLockReadiness =
+    blockedCount > 0 || !nonExternalSealed
+      ? "needs-finalist-proof"
+      : externalGapCount > 0
+        ? "internal-finalist-external-watch"
+        : "internal-finalist-ready";
+
+  return {
+    id: `finalist-internal-lock-${lockScore}-${readiness}`,
+    lockScore,
+    internalScore,
+    readiness,
+    sealedCount,
+    watchCount,
+    blockedCount,
+    operatorLine:
+      readiness === "internal-finalist-ready"
+        ? "Internal finalist proof and external submission evidence are sealed."
+        : readiness === "internal-finalist-external-watch"
+          ? "Internal finalist proof is sealed; only ProtoPedia/video external submission URLs remain."
+          : "One or more internal finalist proof lanes still needs work before the pitch.",
+    checks
+  };
 }
 
 export function buildFinalistSimulation(input: {
@@ -234,20 +371,33 @@ export function buildFinalistSimulation(input: {
   ];
 
   const rawScore = average(panels.map((item) => item.score));
-  const finalistScore = Math.round(clamp(rawScore - externalPenalty));
   const advanceCount = panels.filter((item) => item.verdict === "advance").length;
   const watchCount = panels.filter((item) => item.verdict === "watch").length;
   const holdCount = panels.filter((item) => item.verdict === "hold").length;
+  const internalLock = buildInternalLock({
+    baseUrl,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    squadContract,
+    panels,
+    gaps: externalGaps,
+    ciReady
+  });
+  const finalistScore = Math.round(clamp(average([rawScore, internalLock.internalScore]) - externalPenalty));
   const weakestPanel = [...panels].sort((left, right) => left.score - right.score)[0];
   const finalistBand: FinalistBand =
     finalistScore >= 88 && externalGaps.length === 0 && holdCount === 0 ? "finalist-ready" : finalistScore >= 78 && holdCount <= 1 ? "borderline" : "not-mvp";
   const winningMove =
     externalGaps.length > 0
-      ? `${externalGaps[0].label}を埋め、Win AutopilotとDemo Runwayの30秒リールにJudge ProofとFinalist Simulatorを入れる。`
+      ? `${externalGaps[0].label}を埋め、Finalist Internal LockとDemo Runwayの30秒リールにJudge Proofを入れる。`
       : weakestPanel?.nextAction ?? "Win Autopilotを開いて証拠からピッチを始める。";
   const advanceDecision =
     finalistBand === "finalist-ready"
       ? "最終候補として押し出せる。証拠起点の30秒ピッチを録画する。"
+      : internalLock.readiness === "internal-finalist-external-watch"
+        ? "内部MVPは最終候補級です。ProtoPedia作品URLと動画URLを発行すれば提出判定へ進めます。"
       : finalistBand === "borderline"
         ? "最終候補圏内。ただし外部URLと最弱審査項目を提出前に潰す。"
         : "MVP未達。hold判定の審査項目を先に実装で補強する。";
@@ -262,6 +412,7 @@ export function buildFinalistSimulation(input: {
     winningMove,
     panels,
     gaps: externalGaps,
+    internalLock,
     runbook: [
       `curl -s -X POST ${finalistUrl} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
       `curl -s -X POST ${proofUrl} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
@@ -290,6 +441,17 @@ export function buildFinalistSimulation(input: {
         severity: gap.severity,
         action: gap.action
       })),
+      internalLock: {
+        lockScore: internalLock.lockScore,
+        internalScore: internalLock.internalScore,
+        readiness: internalLock.readiness,
+        checks: internalLock.checks.map((check) => ({
+          id: check.id,
+          status: check.status,
+          score: check.score,
+          evidenceUrl: check.evidenceUrl
+        }))
+      },
       appUrl
     }
   };

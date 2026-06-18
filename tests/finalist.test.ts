@@ -30,7 +30,7 @@ describe("finalist simulator", () => {
       squadContract
     });
 
-    expect(simulation.finalistScore).toBeGreaterThanOrEqual(78);
+    expect(simulation.finalistScore).toBeGreaterThanOrEqual(86);
     expect(simulation.finalistBand).not.toBe("not-mvp");
     expect(simulation.panels).toHaveLength(5);
     expect(simulation.panels.map((panel) => panel.id)).toEqual(
@@ -40,12 +40,32 @@ describe("finalist simulator", () => {
     expect(simulation.judgeConsensus).toMatch(/advance|watch/);
     expect(simulation.gaps.map((gap) => gap.id)).toEqual(expect.arrayContaining(["protopedia", "video"]));
     expect(simulation.gaps.find((gap) => gap.id === "protopedia")?.severity).toBe("external");
-    expect(simulation.winningMove).toContain("Win Autopilot");
+    expect(simulation.internalLock).toMatchObject({
+      readiness: "internal-finalist-external-watch",
+      internalScore: 100,
+      sealedCount: 5,
+      watchCount: 1,
+      blockedCount: 0,
+      checks: expect.arrayContaining([
+        expect.objectContaining({ id: "five-panel-floor", status: "sealed" }),
+        expect.objectContaining({ id: "competitive-swot-proof", status: "sealed" }),
+        expect.objectContaining({ id: "agent-necessity-proof", status: "sealed" }),
+        expect.objectContaining({ id: "demo-route-proof", status: "sealed" }),
+        expect.objectContaining({ id: "ops-ci-proof", status: "sealed" }),
+        expect.objectContaining({ id: "external-submit-truth", status: "watch" })
+      ])
+    });
+    expect(simulation.advanceDecision).toContain("内部MVP");
+    expect(simulation.winningMove).toContain("Finalist Internal Lock");
     expect(simulation.winningMove).toContain("Demo Runway");
     expect(simulation.runbook.join("\n")).toContain("/api/finalist");
     expect(simulation.a2aPayload).toMatchObject({
       method: "message/send",
-      skill: "finalist.simulate"
+      skill: "finalist.simulate",
+      internalLock: {
+        readiness: "internal-finalist-external-watch",
+        checks: expect.arrayContaining([expect.objectContaining({ id: "external-submit-truth", status: "watch" })])
+      }
     });
   });
 });

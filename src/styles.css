@@ -11493,6 +11493,117 @@ h1 {
   text-decoration: none;
 }
 
+.finalist-internal-lock {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.42fr) minmax(520px, 1fr);
+  gap: 1px;
+  background: #ddd2b7;
+}
+
+.finalist-internal-lock > section,
+.finalist-internal-lock > div {
+  min-width: 0;
+  padding: 14px;
+  background: #fffdf8;
+}
+
+.finalist-internal-lock > section {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  border-top: 5px solid #7a5a24;
+}
+
+.finalist-internal-lock > section > div,
+.finalist-internal-lock article > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.finalist-internal-lock > section strong {
+  color: #7a5a24;
+  font-size: 2.7rem;
+  line-height: 1;
+}
+
+.finalist-internal-lock h3 {
+  font-size: 1.08rem;
+}
+
+.finalist-internal-lock > section p,
+.finalist-internal-lock > section small {
+  color: #474235;
+  line-height: 1.46;
+  overflow-wrap: anywhere;
+}
+
+.finalist-internal-lock > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.finalist-internal-lock article {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #ddd2b7;
+  border-left: 4px solid var(--teal);
+  border-radius: 8px;
+  background: #fffdf8;
+}
+
+.finalist-internal-lock article.watch {
+  border-left-color: var(--amber);
+  background: #fff8e6;
+}
+
+.finalist-internal-lock article.blocked {
+  border-left-color: var(--rose);
+  background: #fff1f2;
+}
+
+.finalist-internal-lock article * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.finalist-internal-lock article span {
+  color: var(--teal);
+  font-size: 0.7rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.finalist-internal-lock article.watch span {
+  color: #8a5b17;
+}
+
+.finalist-internal-lock article.blocked span {
+  color: #9d2d2d;
+}
+
+.finalist-internal-lock article p {
+  color: #474235;
+  line-height: 1.42;
+}
+
+.finalist-internal-lock article a {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--blue);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
 .finalist-grid {
   display: grid;
   grid-template-columns: minmax(320px, 0.9fr) minmax(360px, 1fr) minmax(360px, 1fr);
@@ -13129,6 +13240,10 @@ pre {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .finalist-internal-lock > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .publisher-fields {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
   }
@@ -13326,6 +13441,7 @@ pre {
     .judge-grid,
     .finalist-summary,
     .finalist-panels,
+    .finalist-internal-lock,
     .finalist-grid,
     .publisher-summary,
     .publisher-quality-lock,
@@ -13353,6 +13469,7 @@ pre {
   .dossier-quality-lock > div,
   .closeout-dry-run-lock > div,
   .closeout-asset-lock > div,
+  .finalist-internal-lock > div,
   .prize-usability-lock > div,
   .prize-criteria-lock > div,
   .closeout-quality-lock > div,

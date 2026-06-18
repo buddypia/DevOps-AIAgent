@@ -51,7 +51,7 @@
 - Proof: Judge ProofがGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1クリックで証拠束にする
 - Pitch: Pitch Directorが30秒動画の録画順、字幕、証拠リンク、提出残リスクを生成する
 - Judge Drill: 審査5項目と主要競合への厳しい質問、短い回答、60秒回答パス、証拠リンク、次アクションを生成する
-- Finalist: 審査員5役の模擬判定で、最終候補スコア、落選理由、残ギャップ、次の一手を生成する
+- Finalist: 審査員5役の模擬判定で、最終候補スコア、Finalist Internal Lock、落選理由、残ギャップ、次の一手を生成する
 - Publisher: ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにし、審査5項目・競合/SWOT・必須技術・外部URL状態をProtoPedia Quality Lockで検収する
 - Demo Runway: Judge Proof、Finalist、Publisher、Marketplace、Strategy、Competitive Battlecard、Mission、Opsを30秒の審査員導線に束ね、競合反論リールを録画キューへ落とす
 - Win Autopilot: 競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を一括で走らせ、勝てる状態と残アクションを返す
@@ -379,11 +379,11 @@
 
 ## Finalist Simulator
 
-`Finalist Simulator` は、提出直前に「最終候補へ残れるか」を審査員5役で模擬判定するパネルです。競合/SWOT、Mission、Ops、Contract、Pitch、Judge Drillの証跡を束ね、点数だけでなく落選理由と次の一手を返します。ProtoPedia作品URLや動画URLのような外部提出作業は、合格扱いにせず残ギャップとして明示します。
+`Finalist Simulator` は、提出直前に「最終候補へ残れるか」を審査員5役で模擬判定するパネルです。競合/SWOT、Mission、Ops、Contract、Pitch、Judge Drillの証跡を束ね、点数だけでなく落選理由と次の一手を返します。Finalist Internal Lockは、5パネル、競合/SWOT、A2A必然性、30秒導線、Ops/CIを内部証拠として検収し、ProtoPedia作品URLや動画URLのような外部提出作業は、合格扱いにせず残ギャップとして明示します。
 
 - API: `POST /api/finalist`
 - App UI: `Simulate finalist`
-- Output: finalist score、5 judge panels、remaining gaps、top concern、winning move、A2A payload
+- Output: finalist score、5 judge panels、Finalist Internal Lock、remaining gaps、top concern、winning move、A2A payload
 
 ## Submission Publisher
 

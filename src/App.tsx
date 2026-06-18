@@ -7014,6 +7014,46 @@ function FinalistSimulator({
             ))}
           </div>
 
+          <div className="finalist-internal-lock">
+            <section>
+              <div>
+                <span
+                  className={cx(
+                    "risk-chip",
+                    simulation.internalLock.readiness === "internal-finalist-ready"
+                      ? "low"
+                      : simulation.internalLock.readiness === "internal-finalist-external-watch"
+                        ? "medium"
+                        : "high"
+                  )}
+                >
+                  {simulation.internalLock.readiness}
+                </span>
+                <strong>{simulation.internalLock.internalScore}</strong>
+              </div>
+              <h3>Finalist Internal Lock</h3>
+              <p>{simulation.internalLock.operatorLine}</p>
+              <small>
+                sealed {simulation.internalLock.sealedCount} / watch {simulation.internalLock.watchCount} / blocked {simulation.internalLock.blockedCount} /
+                lock {simulation.internalLock.lockScore}
+              </small>
+            </section>
+            <div>
+              {simulation.internalLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.proof}</p>
+                  <a href={check.evidenceUrl} target="_blank" rel="noreferrer">
+                    Evidence <ExternalLink size={13} />
+                  </a>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="finalist-grid">
             <section>
               <h3>
