@@ -55,7 +55,9 @@
   - `market.intel`
   - `moat.stress`
   - `competitive.battlecard`
+  - `competitive.snapshot`
   - `mvp.audit`
+  - `mvp.snapshot`
   - `mission.run`
   - `autonomy.ledger`
   - `submission.publish`
@@ -133,6 +135,13 @@
 - Judge lanes: 審査5項目のスコア、証拠、次アクションを監査結果に含める
 - Blockers: 未発行のProtoPedia作品URLと動画URLをwatchとして残し、外部作業を合格扱いしない
 - A2A payload: `mvp.audit` skillとしてMVP score、band、gate statuses、blockersを返す
+
+## MVP Readiness Snapshot Surface
+
+- `GET /mvp-readiness`: MVP Audit、Acceptance Matrix、Release Drift、Deploy Recovery、Submission Assetsを審査員が直接読めるHTMLに束ねる
+- `GET /api/mvp-readiness`: 同じ提出可否判断をA2A/自動検証用のJSONとして返す
+- Live drift option: `/mvp-readiness?live=1` の時だけRelease Drift Guardを実行し、通常表示は初回表示の安定性を優先する
+- A2A payload: `mvp.snapshot` skillとしてreadiness、MVP score、acceptance score、release verdict、external gap count、endpoint群を返す
 
 ## Judge Brief Surface
 
@@ -253,7 +262,7 @@
 
 - `POST /api/deploy-recovery`: Release Drift Guardの結果と直近gcloudエラーを、再デプロイ復旧計画に変換する
 - Checks: target health、skill surface、Cloud Build auth、A2A artifact、latest main CIをready/watch/blockedで返す
-- Commands: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Recording Lock / Feature Freeze Lock / Winner Release Lock / Finalist Release Drift / Criteria Duel / GET Proof Snapshot のrequired signal tags、`/api/deploy-recovery`、A2A `deployRecoveryEndpoint` の再検証コマンドを返す
+- Commands: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Recording Lock / Feature Freeze Lock / Winner Release Lock / Finalist Release Drift / Criteria Duel / GET Proof Snapshot / MVP Readiness Snapshot のrequired signal tags、`/api/mvp-readiness`、`/api/deploy-recovery`、A2A `deployRecoveryEndpoint` の再検証コマンドを返す
 - A2A payload: `deploy.recover` skillとしてrecovery score、readiness、blocking commands、blockersを返す
 
 ## Demo Receipt Surface
@@ -357,6 +366,8 @@
 - `POST /api/moat-stress`: 主要競合からの反論、証拠付き回答、録画順を評価する
 - `POST /api/competitive-battlecard`: 公式ソース、SWOT、Criteria Duel、競合反論、証拠routeを審査回答カードとして評価する
 - `POST /api/mvp-audit`: MVPハードゲート、審査lane、提出blockerを評価する
+- `GET /mvp-readiness`: MVP本体、公開revision、外部提出gapをGETで確認する
+- `GET /api/mvp-readiness`: MVP readinessをA2A/自動検証用JSONとして返す
 - `POST /api/judge-command-center`: 初回審査用の証拠ボタン、90秒timeline、残ブロッカーを評価する
 - `POST /api/demo-concierge`: persona別のfirst click、台詞、証拠URL、成功条件を返す
 - `POST /api/judge-rehearsal`: Final Pitch Defense Lock、Judge Recording Lock、90秒segments、想定質問、scorecard、録画チェックを返す
@@ -428,10 +439,12 @@
 - Moat stress proof: `moat.stress` skillとして、競合別の想定反論、反証、見せる証拠、録画順をA2A payloadにも含める
 - Competitive battlecard proof: `competitive.battlecard` skillとして、競合別の短い回答、公式ソース、SWOT receipts、Criteria Duel、Objection Replay、top risksをA2A payloadにも含める
 - Competitive SWOT snapshot proof: `competitive.snapshot` skillとして、6競合、SWOT 4象限、公式ソース、Criteria Duel、Proof LockをGETで開ける審査用HTMLにも含める
+- MVP readiness snapshot proof: `mvp.snapshot` skillとして、MVP Audit、Acceptance Matrix、Release Drift、Deploy Recovery、外部提出gapをGETで開ける提出可否HTMLにも含める
 
 ## Submission Surface
 
 - `GET /api/submission-kit`: 提出タイトル、タグ、ストーリー、動画ストーリーボード、構成図URL、提出チェックリストを返す
+- `GET /mvp-readiness`: MVP本体、外部提出gap、公開revision、復旧runbookを審査員・チームが直接読めるHTMLページに束ねる
 - `GET /submission-assets`: ProtoPedia提出に必要な動画台本、構成図、ストーリー、タグ、提出URLを審査員・チームが直接読めるHTMLページに束ねる
 - `public/assets/a2a-marketplace-architecture.svg`: ProtoPediaに貼れるシステム構成図
 - `POST /api/architecture-pack`: 構成図を提出証拠、Mermaid、必須技術対応表として再生成する
@@ -447,6 +460,7 @@
 - Competitive battlecard: `/api/competitive-battlecard`
 - Win gap radar: `/api/win-gap-radar`
 - MVP audit: `/api/mvp-audit`
+- MVP readiness snapshot: `/api/mvp-readiness` and `/mvp-readiness`
 - Judge brief: `/api/judge-brief`
 - Judge command center: `/api/judge-command-center`
 - Judge rehearsal: `/api/judge-rehearsal`

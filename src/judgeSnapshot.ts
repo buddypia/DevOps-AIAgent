@@ -219,6 +219,13 @@ export function buildJudgeSnapshot(input: {
         purpose: "自動検証やA2A連携で使う機械可読の証拠入口。"
       },
       {
+        id: "mvp-readiness",
+        label: "MVP Readiness Snapshot",
+        method: "GET",
+        url: endpoint(baseUrl, "/mvp-readiness"),
+        purpose: "MVP本体、外部提出gap、公開revisionの提出可否を確認する。"
+      },
+      {
         id: "app",
         label: "Cloud Run App",
         method: "GET",
@@ -298,6 +305,8 @@ export function buildJudgeSnapshot(input: {
       endpoints: {
         judgeSnapshot: endpoint(baseUrl, "/judge-snapshot"),
         judgeSnapshotJson: judgeSnapshotUrl,
+        mvpReadiness: endpoint(baseUrl, "/mvp-readiness"),
+        mvpReadinessJson: endpoint(baseUrl, "/api/mvp-readiness"),
         judgeProof: proofUrl,
         competitiveBattlecard: battlecardUrl,
         demoConcierge: demoConciergeUrl,

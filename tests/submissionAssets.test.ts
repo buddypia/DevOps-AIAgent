@@ -22,7 +22,7 @@ describe("submission assets page", () => {
     expect(page.story).toHaveLength(3);
     expect(page.videoStoryboard).toHaveLength(6);
     expect(page.architecture.diagramUrl).toBe(`${baseUrl}/assets/a2a-marketplace-architecture.svg`);
-    expect(page.links.map((link) => link.id)).toEqual(expect.arrayContaining(["github", "cloud-run", "ci", "architecture", "story", "judge-snapshot"]));
+    expect(page.links.map((link) => link.id)).toEqual(expect.arrayContaining(["github", "cloud-run", "ci", "architecture", "story", "judge-snapshot", "mvp-readiness"]));
     expect(page.requirements.filter((requirement) => requirement.status === "needs-url").map((requirement) => requirement.id)).toEqual(
       expect.arrayContaining(["protopedia", "video"])
     );
@@ -33,6 +33,7 @@ describe("submission assets page", () => {
     expect(html).toContain("findy_hackathon");
     expect(html).toContain("30 Second Video Storyboard");
     expect(html).toContain(`${baseUrl}/judge-snapshot`);
+    expect(html).toContain(`${baseUrl}/mvp-readiness`);
     expect(html).toContain("ProtoPedia提出素材は揃っています");
   });
 

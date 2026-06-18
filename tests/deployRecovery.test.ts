@@ -11,6 +11,7 @@ const expectedSkillIds = [
   "demo.receipt",
   "acceptance.matrix",
   "release.drift",
+  "mvp.snapshot",
   "pilot.economics",
   "demo.concierge",
   "judge.command",
@@ -35,7 +36,8 @@ const requiredAgentCardSignals = [
   "finalist.simulate:tag:release-drift",
   "competitive.battlecard:tag:criteria-duel",
   "competitive.snapshot:tag:get-proof",
-  "judge.snapshot:tag:get-proof"
+  "judge.snapshot:tag:get-proof",
+  "mvp.snapshot:tag:get-proof"
 ];
 
 const passedProbe = (id: string): ReleaseDriftProbe => ({
@@ -152,7 +154,7 @@ describe("deploy recovery plan", () => {
           ...passedProbe("agent-card-skill-surface"),
           status: "watch",
           score: 58,
-          evidence: "Agent Card exposes all skills but misses competitive.battlecard:tag:criteria-duel, competitive.snapshot:tag:get-proof, and judge.snapshot:tag:get-proof."
+          evidence: "Agent Card exposes all skills but misses competitive.battlecard:tag:criteria-duel, competitive.snapshot:tag:get-proof, judge.snapshot:tag:get-proof, and mvp.snapshot:tag:get-proof."
         },
         passedProbe("acceptance-endpoint"),
         passedProbe("a2a-artifact"),
@@ -171,21 +173,24 @@ describe("deploy recovery plan", () => {
       evidence: expect.stringContaining("competitive.battlecard:tag:criteria-duel")
     });
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("judge.snapshot:tag:get-proof");
+    expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("mvp.snapshot:tag:get-proof");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("competitive.snapshot:tag:get-proof");
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")).toMatchObject({
       blocking: true,
       copyGroup: "verify"
     });
-    expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="competitive.snapshot" or .id=="judge.snapshot"');
+    expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="judge.snapshot" or .id=="mvp.snapshot"');
+    expect(plan.commands.find((command) => command.id === "verify-mvp-readiness")?.command).toContain("/api/mvp-readiness");
     expect(plan.steps.find((step) => step.id === "skill-surface")?.status).toBe("blocked");
     expect(plan.blockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["agent-card-signals", "agent-card-skill-surface"]));
     expect(plan.judgeScript.join("\n")).toContain("competitive.battlecard:tag:criteria-duel");
     expect(plan.judgeScript.join("\n")).toContain("competitive.snapshot:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("judge.snapshot:tag:get-proof");
+    expect(plan.judgeScript.join("\n")).toContain("mvp.snapshot:tag:get-proof");
     expect(plan.a2aPayload).toMatchObject({
       skill: "deploy.recover",
       releaseDrift: {
-        missingAgentCardSignals: ["competitive.battlecard:tag:criteria-duel", "competitive.snapshot:tag:get-proof", "judge.snapshot:tag:get-proof"]
+        missingAgentCardSignals: ["competitive.battlecard:tag:criteria-duel", "competitive.snapshot:tag:get-proof", "judge.snapshot:tag:get-proof", "mvp.snapshot:tag:get-proof"]
       }
     });
   });

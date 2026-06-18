@@ -128,6 +128,13 @@ export function buildSubmissionAssetsPage(input: { baseUrl: string; mission: Mis
         url: `${baseUrl}/judge-snapshot`,
         status: "ready",
         purpose: "審査員が直接読む証拠ページ。"
+      },
+      {
+        id: "mvp-readiness",
+        label: "MVP Readiness",
+        url: `${baseUrl}/mvp-readiness`,
+        status: "ready",
+        purpose: "MVP本体、外部gap、公開revisionの提出可否ページ。"
       }
     ],
     pasteFields: [

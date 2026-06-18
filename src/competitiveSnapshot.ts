@@ -212,6 +212,13 @@ export function buildCompetitiveSnapshot(input: {
         purpose: "審査全体の初回証拠ページへ戻る。"
       },
       {
+        id: "mvp-readiness",
+        label: "MVP Readiness Snapshot",
+        method: "GET",
+        url: endpoint(baseUrl, "/mvp-readiness"),
+        purpose: "競合/SWOTがMVP提出可否へ接続していることを確認する。"
+      },
+      {
         id: "agent-card",
         label: "A2A Agent Card",
         method: "GET",
@@ -261,6 +268,7 @@ export function buildCompetitiveSnapshot(input: {
         competitiveSwotSnapshot: competitiveSnapshotUrl,
         competitiveSwotJson: competitiveSnapshotJsonUrl,
         judgeSnapshot: endpoint(baseUrl, "/judge-snapshot"),
+        mvpReadiness: endpoint(baseUrl, "/mvp-readiness"),
         competitiveBattlecard: battlecardUrl,
         marketIntel: marketIntelUrl,
         moatStress: moatStressUrl
