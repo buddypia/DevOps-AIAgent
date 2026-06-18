@@ -4,6 +4,7 @@ import { buildReleaseDriftGuard, type ReleaseDriftProbe } from "../src/releaseDr
 import { SUBMISSION_PROOF } from "../src/submission";
 
 const expectedSkillIds = [
+  "task.delegate",
   "evidence.monitor",
   "demo.receipt",
   "acceptance.matrix",
@@ -38,7 +39,8 @@ describe("deploy recovery plan", () => {
       currentBaseUrl: "http://localhost:8080",
       targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
       expectedSkillIds,
-      observedSkillIds: ["evidence.monitor", "win.autopilot"],
+      observedSkillIds: ["task.delegate",
+  "evidence.monitor", "win.autopilot"],
       requiredSkillIds: expectedSkillIds,
       generatedAt: "2026-06-18T00:00:00.000Z",
       probes: [

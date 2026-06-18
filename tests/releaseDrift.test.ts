@@ -5,6 +5,7 @@ import { SUBMISSION_PROOF } from "../src/submission";
 const expectedSkillIds = [
   "market.discover",
   "agent.hire",
+  "task.delegate",
   "evidence.monitor",
   "demo.receipt",
   "acceptance.matrix",
@@ -39,8 +40,10 @@ describe("release drift guard", () => {
       currentBaseUrl: "http://127.0.0.1:8090",
       targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
       expectedSkillIds,
-      observedSkillIds: ["market.discover", "agent.hire", "evidence.monitor", "win.autopilot"],
-      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"],
+      observedSkillIds: ["market.discover", "agent.hire", "task.delegate",
+  "evidence.monitor", "win.autopilot"],
+      requiredSkillIds: ["task.delegate",
+  "evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"],
       generatedAt: "2026-06-18T00:00:00.000Z",
       probes: [
         passedProbe("target-health"),
@@ -85,7 +88,8 @@ describe("release drift guard", () => {
       targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
       expectedSkillIds,
       observedSkillIds: expectedSkillIds,
-      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"],
+      requiredSkillIds: ["task.delegate",
+  "evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "submission.runway", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard"],
       probes: [
         passedProbe("target-health"),
         passedProbe("agent-card-skill-surface"),

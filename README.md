@@ -14,6 +14,7 @@
 - DevOps: GitHub Actions CI/CD/Cloud Run運用を見据えた推薦、検証コマンド、MCP行列
 - UX: Agent Studio の「AIをキャラクターとして管理する」発想を、市場・購入・編成のゲームループに再構成
 - Contract: 選んだAIごとに成果物、受入条件、SLA、検証コマンド、支払い条件を生成
+- Agent Task Board: 選んだAIごとにA2A `message/send` 形式の仕事票、受入条件、証拠URL、sha256 receiptを生成
 - Strategy: ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsとの差分をアプリ内で比較し、SWOT、審査5項目、提出準備、次に雇うべきAIを算出
 - Market Intel: Gemini Enterprise、ADK、A2A、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較で、差別化仮説と審査回答を生成
 - Moat Stress Test: ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsからの反論を想定し、証拠付き回答と録画順を返す
@@ -36,6 +37,7 @@
 - Judge Demo Receipt: 審査導線、競合反論、編成判断、公開証拠、外部提出URL状態をsha256 digest付きの検収票にする
 - Judge Acceptance Matrix: 必須技術、審査5項目、競合/SWOT、公開証拠、提出物をaccepted/watch/blockedの受入表にする
 - Autonomy Ledger: 市場探索、判断、契約、A2A委任、検証、運用、提出を検収可能なAI自律性台帳に変換
+- Agent Task Board: `task.delegate` を、委任先AI、目的、検収条件、proof URL、A2A payloadへ具体化する
 - Security Sentinel Review: Secret Manager、IP allowlist、Zod入力制限、A2A信頼境界、CIを安全性証拠に変換
 - Impact Case: 対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性・体験価値の証拠に変換
 - Pilot Economics: 時間短縮、導入費用、回収日数、価格レーン、買い手の反論を投資判断の証拠に変換
@@ -232,6 +234,14 @@
 - API: `POST /api/autonomy-ledger`
 - App UI: `Build autonomy ledger`
 - Output: ledger score、verdict、7-phase decision chain、agent handoffs、judge challenge answers、sha256 receipt、A2A `autonomy.ledger` payload
+
+## Agent Task Board
+
+`Agent Task Board` は、Agent Cardの `task.delegate` を表示上の宣言で終わらせず、実行できる仕事票にします。選択済みAIごとに目的、受入条件、検証コマンド、proof URL、A2A `message/send` payloadを生成し、通常時は `delegation-ready`、運用障害時は `blocked` として提出録画前に止めます。
+
+- API: `POST /api/task-board`
+- App UI: `Build task board`
+- Output: task score、readiness、agent work orders、execution order、verification queue、sha256 receipt、A2A `task.delegate` payload
 
 ## Submission Launch Gate
 

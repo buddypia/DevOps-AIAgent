@@ -32,6 +32,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { JudgeAcceptanceMatrix } from "./acceptanceMatrix";
 import { recommendSquad } from "./agentEngine";
 import type { AutonomyLedger } from "./autonomyLedger";
+import type { AgentTaskBoard } from "./taskBoard";
 import type { WinningAutopilotRun } from "./autopilot";
 import type { CompetitiveBattlecard } from "./competitiveBattlecard";
 import type { SquadContract } from "./contracts";
@@ -3643,6 +3644,147 @@ function AutonomyLedgerPanel({
   );
 }
 
+function AgentTaskBoardPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [board, setBoard] = useState<AgentTaskBoard | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildTaskBoard() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/task-board", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setBoard((await response.json()) as AgentTaskBoard);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="task-board">
+      <div className="task-heading">
+        <div>
+          <span className="eyebrow">A2A delegation</span>
+          <h2>
+            <Workflow size={20} />
+            Agent Task Board
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildTaskBoard} disabled={loading} title="A2A仕事票を生成">
+          <ClipboardCheck size={17} />
+          {loading ? "Building" : "Build task board"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Task board request failed: {error}</p>}
+
+      {board ? (
+        <div className="task-body">
+          <div className="task-summary">
+            <div>
+              <span className={cx("risk-chip", board.readiness === "delegation-ready" ? "low" : board.readiness === "watch-verification" ? "medium" : "high")}>
+                {board.readiness}
+              </span>
+              <h3>{board.headline}</h3>
+              <p>{board.hardTruth}</p>
+            </div>
+            <div className="task-score">
+              <strong>{board.taskScore}</strong>
+              <span>task score</span>
+            </div>
+          </div>
+
+          <div className="task-orders">
+            {board.workOrders.map((order) => (
+              <article key={order.id} className={order.status}>
+                <div className="task-order-top">
+                  <span>{order.phase}</span>
+                  <strong>{order.agentName}</strong>
+                  <b>{order.status}</b>
+                </div>
+                <p>{order.objective}</p>
+                <div className="task-acceptance">
+                  {order.acceptance.slice(0, 3).map((item) => (
+                    <small key={item}>{item}</small>
+                  ))}
+                </div>
+                <div className="task-proof-row">
+                  <code>{order.verifier}</code>
+                  <a href={order.proofUrl} target="_blank" rel="noreferrer">
+                    Proof <ExternalLink size={13} />
+                  </a>
+                </div>
+                <em>{order.nextAction}</em>
+              </article>
+            ))}
+          </div>
+
+          <div className="task-grid">
+            <section>
+              <h3>
+                <GitBranch size={15} />
+                Execution order
+              </h3>
+              <ol className="task-list">
+                {board.executionOrder.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ol>
+            </section>
+            <section>
+              <h3>
+                <BadgeCheck size={15} />
+                Verification queue
+              </h3>
+              <div className="task-verifications">
+                {board.verifications.map((verification) => (
+                  <article key={verification.id} className={verification.status}>
+                    <div>
+                      <strong>{verification.label}</strong>
+                      <span>{verification.status}</span>
+                    </div>
+                    <code>{verification.command}</code>
+                    <small>{verification.proof}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                A2A receipt
+              </h3>
+              <pre>{JSON.stringify({ receipt: board.receipt, a2aPayload: board.a2aPayload }, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="task-empty">
+          <Workflow size={28} />
+          <strong>Build task boardで、選んだAIへ渡す仕事票、受入条件、証拠URLをA2A形式に束ねます。</strong>
+          <p>AIエージェント中心性を、分析結果ではなく委任と検収の実行面として見せます。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function SecurityReviewPanel({
   recommendation,
   projectBrief
@@ -6573,6 +6715,7 @@ export default function App() {
       <JudgeBriefPanel recommendation={recommendation} projectBrief={projectBrief} />
       <AcceptanceMatrixPanel recommendation={recommendation} projectBrief={projectBrief} />
       <AutonomyLedgerPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <AgentTaskBoardPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SecurityReviewPanel recommendation={recommendation} projectBrief={projectBrief} />
       <ImpactCasePanel recommendation={recommendation} projectBrief={projectBrief} />
       <PilotEconomicsPanel recommendation={recommendation} projectBrief={projectBrief} />

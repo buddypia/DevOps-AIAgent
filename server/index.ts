@@ -43,6 +43,7 @@ import { buildSubmissionCloseoutWorkbench } from "../src/submissionCloseout.js";
 import { buildSubmissionLaunchGate } from "../src/submissionLaunch.js";
 import { buildFinalSubmissionRunway } from "../src/submissionRunway.js";
 import { SUBMISSION_PROOF } from "../src/submission.js";
+import { buildAgentTaskBoard } from "../src/taskBoard.js";
 import type { CiProof } from "../src/proof.js";
 import { buildWinningStrategy } from "../src/strategy.js";
 import type { GeminiRecommendation } from "../src/types.js";
@@ -159,7 +160,7 @@ function agentCard(baseUrl: string) {
       {
         id: "task.delegate",
         name: "Delegate DevOps task",
-        description: "選ばれたエージェントへA2A message/send形式で検証可能なタスクを渡す。",
+        description: "選ばれたエージェントへA2A message/send形式で検証可能な仕事票、受入条件、証拠URLを渡す。",
         tags: ["json-rpc", "handoff", "cloud-run"]
       },
       {
@@ -1665,6 +1666,7 @@ app.post("/api/live-evidence", async (req, res) => {
       init: { headers: forwardedHeaders },
       evaluate: (payload) => {
         const skills = Array.isArray((payload as { skills?: unknown[] }).skills) ? ((payload as { skills: Array<{ id?: string }> }).skills) : [];
+        const hasTaskDelegate = skills.some((skill) => skill.id === "task.delegate");
         const hasEvidence = skills.some((skill) => skill.id === "evidence.monitor");
         const hasOptimizer = skills.some((skill) => skill.id === "squad.optimize");
         const hasMoat = skills.some((skill) => skill.id === "moat.stress");
@@ -1682,7 +1684,8 @@ app.post("/api/live-evidence", async (req, res) => {
         const hasSubmissionCloseout = skills.some((skill) => skill.id === "submission.closeout");
         const hasSubmissionRunway = skills.some((skill) => skill.id === "submission.runway");
         const hasDeployRecovery = skills.some((skill) => skill.id === "deploy.recover");
-        return hasEvidence &&
+        return hasTaskDelegate &&
+          hasEvidence &&
           hasOptimizer &&
           hasMoat &&
           hasBattlecard &&
@@ -1703,12 +1706,12 @@ app.post("/api/live-evidence", async (req, res) => {
           ? {
               status: "passed",
               score: 100,
-              evidence: `Agent Card exposes ${skills.length} skills including winner.packet, submission.runway, judge.rehearsal, submission.closeout, win.gap.radar, demo.concierge, prize.strategy, competitive.battlecard, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
+              evidence: `Agent Card exposes ${skills.length} skills including task.delegate, winner.packet, submission.runway, judge.rehearsal, submission.closeout, win.gap.radar, demo.concierge, prize.strategy, competitive.battlecard, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
             }
           : {
               status: "watch",
               score: 72,
-              evidence: `Agent Card exposes ${skills.length} skills; expected winner packet, submission runway, judge rehearsal, submission closeout, win gap radar, demo concierge, prize strategy, battlecard, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
+              evidence: `Agent Card exposes ${skills.length} skills; expected task delegate, winner packet, submission runway, judge rehearsal, submission closeout, win gap radar, demo concierge, prize strategy, battlecard, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
             };
       }
     }),
@@ -1757,6 +1760,7 @@ app.post("/api/live-evidence", async (req, res) => {
           data?.demoReceiptEndpoint &&
           data?.acceptanceMatrixEndpoint &&
           data?.releaseDriftEndpoint &&
+          data?.taskBoardEndpoint &&
           data?.pilotEconomicsEndpoint &&
           data?.demoConciergeEndpoint &&
           data?.judgeCommandEndpoint &&
@@ -1771,9 +1775,9 @@ app.post("/api/live-evidence", async (req, res) => {
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
+                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but task board/winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -1808,6 +1812,7 @@ async function buildReleaseDriftForTarget(input: {
   const targetProbeHeaders = input.forwardedHeaders && currentBaseUrl === targetBaseUrl ? input.forwardedHeaders : undefined;
   const expectedSkillIds = agentCard(currentBaseUrl).skills.map((skill) => skill.id);
   const requiredSkillIds = [
+    "task.delegate",
     "evidence.monitor",
     "demo.receipt",
     "acceptance.matrix",
@@ -1905,6 +1910,7 @@ async function buildReleaseDriftForTarget(input: {
       evaluate: (payload) => {
         const data = (payload as { result?: { artifacts?: Array<{ parts?: Array<{ data?: Record<string, unknown> }> }> } }).result?.artifacts?.[0]?.parts?.[0]?.data;
         return data?.releaseDriftEndpoint &&
+          data?.taskBoardEndpoint &&
           data?.acceptanceMatrixEndpoint &&
           data?.demoReceiptEndpoint &&
           data?.pilotEconomicsEndpoint &&
@@ -1921,9 +1927,9 @@ async function buildReleaseDriftForTarget(input: {
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, and deployRecoveryEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but task board/winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -3002,6 +3008,31 @@ app.post("/api/win-gap-radar", async (req, res) => {
       acceptance,
       prizeStrategy,
       submissionLaunch
+    })
+  );
+});
+
+app.post("/api/task-board", (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "選択したAIへA2A仕事票を渡し、受入条件と証拠URLで検収する。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+
+  res.json(
+    buildAgentTaskBoard({
+      baseUrl: publicBaseUrl(req),
+      recommendation,
+      strategy,
+      mission,
+      opsDrill,
+      squadContract
     })
   );
 });
@@ -4377,6 +4408,14 @@ app.post("/a2a", async (req, res) => {
     squadContract,
     proof
   });
+  const taskBoard = buildAgentTaskBoard({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    squadContract
+  });
   const submissionLaunch = buildSubmissionLaunchGate({
     mvpAudit,
     dossier,
@@ -4768,6 +4807,18 @@ app.post("/a2a", async (req, res) => {
                   })),
                   receipt: autonomyLedger.receipt.digest
                 },
+                taskBoard: {
+                  id: taskBoard.id,
+                  taskScore: taskBoard.taskScore,
+                  readiness: taskBoard.readiness,
+                  workOrders: taskBoard.workOrders.map((order) => ({
+                    id: order.id,
+                    agentId: order.agentId,
+                    status: order.status,
+                    proofUrl: order.proofUrl
+                  })),
+                  receipt: taskBoard.receipt.digest
+                },
                 submissionLaunch: {
                   id: submissionLaunch.id,
                   launchScore: submissionLaunch.launchScore,
@@ -5103,6 +5154,7 @@ app.post("/a2a", async (req, res) => {
                 mvpAuditEndpoint: `${publicBaseUrl(req)}/api/mvp-audit`,
                 judgeBriefEndpoint: `${publicBaseUrl(req)}/api/judge-brief`,
                 autonomyLedgerEndpoint: `${publicBaseUrl(req)}/api/autonomy-ledger`,
+                taskBoardEndpoint: `${publicBaseUrl(req)}/api/task-board`,
                 submissionLaunchEndpoint: `${publicBaseUrl(req)}/api/submission-launch`,
                 submissionCloseoutEndpoint: `${publicBaseUrl(req)}/api/submission-closeout`,
                 securityReviewEndpoint: `${publicBaseUrl(req)}/api/security-review`,

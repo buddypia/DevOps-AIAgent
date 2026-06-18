@@ -34,6 +34,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Project Briefを入力すると、必要能力を抽出し、AIエージェント市場から候補を推薦する
 - 各エージェントを価格、能力値、MCP成熟度、A2Aスキルで比較できる
 - Contract Deskで、選択したAIの成果物、受入条件、SLA、検証コマンドを発行する
+- Agent Task Boardで、選択したAIごとのA2A仕事票、受入条件、証拠URL、検証キューを発行する
 - Winning Strategyで競合分析、SWOT、審査5項目、MVP proof、次に雇うべきAIを表示する
 - Market Intel Boardで、Gemini Enterprise、Google ADK、A2A、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較、差別化仮説、審査回答を表示する
 - Moat Stress Testで、ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsからの反論を先に受け、証拠付き回答と録画順を表示する
@@ -53,6 +54,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Judge Demo Receiptで、審査導線、競合反論、編成判断、公開証拠、外部提出URL状態をsha256 digest付き検収票にする
 - Judge Acceptance Matrixで、必須技術、審査5項目、競合/SWOT、公開証拠、提出物をaccepted/watch/blockedの受入表にする
 - Autonomy Ledgerで、市場探索、判断、契約、A2A委任、検証、運用、提出を検収可能なAI自律性台帳として見せる
+- Agent Task Boardで、`task.delegate` を目的、検収条件、proof URL付きのA2A `message/send` payloadとして見せる
 - Security Sentinel Reviewで、Secret Manager、IP allowlist、Zod入力制限、A2A信頼境界、CIを審査員向け安全性証拠にする
 - Impact Caseで、対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性・体験価値の証拠にする
 - Pilot Economicsで、導入費用、回収日数、価格レーン、買い手の反論を投資判断の証拠にする
@@ -194,6 +196,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/acceptance-matrix 
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/autonomy-ledger \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/task-board \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/security-review \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
@@ -269,4 +274,5 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - Judge Rehearsal API: `POST /api/judge-rehearsal`
 - Winner Proof Packet API: `POST /api/winner-packet`
 - Final Submission Runway API: `POST /api/submission-runway`
+- Agent Task Board API: `POST /api/task-board`
 - Required tag: `findy_hackathon`

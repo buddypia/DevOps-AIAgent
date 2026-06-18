@@ -51,6 +51,7 @@ const allowlist = {
 };
 
 const requiredSkillIds = [
+  "task.delegate",
   "evidence.monitor",
   "demo.receipt",
   "acceptance.matrix",

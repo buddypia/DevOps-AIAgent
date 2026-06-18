@@ -301,6 +301,7 @@
 ## Contract Surface
 
 - `POST /api/contracts`: 選択済みAIの契約、受入条件、SLA、検証runbook、A2A payloadを返す
+- `POST /api/task-board`: 選択済みAIへA2A `message/send` 形式の仕事票、受入条件、proof URL、検証キューを返す
 - Contract score: 予算、審査スコア、verification、ops readiness、契約リスクから算出する
 - Acceptance runbook: GitHub Actions、Judge Proof、Ops Drill、Pitch Directorを検収条件へ接続する
 - A2A payload: `contract.issue` skillとして価格、risk、acceptanceCriteriaを返す
@@ -343,6 +344,7 @@
 - `POST /api/deploy-recovery`: release driftとgcloud認証失敗をCloud Run復旧計画へ変換する
 - `POST /api/demo-receipt`: 審査デモのstamp、外部URL状態、sha256 digestを検収票として返す
 - `POST /api/acceptance-matrix`: 必須技術、審査5項目、公開証拠、提出物を受入表として返す
+- `POST /api/task-board`: `task.delegate` の委任先、目的、検収条件、A2A payload、receiptを返す
 - Release gate: Cloud Run SREが公開継続かrollbackかを判断する
 - Rebuy loop: A2A Market BrokerがObservability Oracle / Test Forge / Security Sentinelの買い足しを推薦する
 - Runbook: healthz、ops drill、Cloud Run describe、Cloud Logging、traffic updateコマンドを提示する
@@ -354,6 +356,7 @@
 - UI: `Run judge proof` ボタンでoverall proof score、7カテゴリスコア、live links、proof runbook、sha256 receiptを表示する
 - A2A skill: `judge.proof` としてAgent Cardにも公開する
 - Contract proof: `contract.issue` skillとして、AIの購入が成果物と検収条件に接続されていることを示す
+- Task delegation proof: `task.delegate` skillとして、選んだAIへの仕事票、受入条件、proof URL、sha256 receiptをA2A payloadにも含める
 - CI proof: `.github/workflows/ci.yml` が `npm run typecheck`、`npm test`、`npm run build`、`make q.check-architecture` を公開repo上で実行し、Proof APIが最新main runを取り込む
 - Pitch proof: `pitch.director` skillとして、審査員に見せる順番と提出動画の残作業をA2A payloadにも含める
 - Judge drill: `judge.drill` skillとして、審査員の反論、競合Cross-exam deck、60秒回答パス、証拠リンクをA2A payloadにも含める
@@ -381,6 +384,7 @@
 - Deploy recovery proof: `deploy.recover` skillとして、gcloud認証、Cloud Build、公開再検証の復旧計画をA2A payloadにも含める
 - Demo receipt proof: `demo.receipt` skillとして、審査導線、競合反論、編成判断、公開証拠、外部提出URL状態、sha256 digestをA2A payloadにも含める
 - Acceptance matrix proof: `acceptance.matrix` skillとして、必須技術、審査5項目、公開証拠、提出物の受入状態をA2A payloadにも含める
+- Task board proof: `task.delegate` skillとして、agent work orders、execution order、verification queue、receipt digestをA2A payloadにも含める
 - Moat stress proof: `moat.stress` skillとして、競合別の想定反論、反証、見せる証拠、録画順をA2A payloadにも含める
 - Competitive battlecard proof: `competitive.battlecard` skillとして、競合別の短い回答、公式ソース、SWOT receipts、top risksをA2A payloadにも含める
 
@@ -415,6 +419,7 @@
 - Demo receipt: `/api/demo-receipt`
 - Acceptance matrix: `/api/acceptance-matrix`
 - Autonomy ledger: `/api/autonomy-ledger`
+- Agent task board: `/api/task-board`
 - Submission launch: `/api/submission-launch`
 - Submission closeout: `/api/submission-closeout`
 - Security review: `/api/security-review`
@@ -435,7 +440,7 @@
 
 ## Judging Angle
 
-- AIエージェントが価値の中心: 市場探索、購入判断、競合反論の証拠選択、予算内の編成最適化、A2A委任、ライブ証拠監視、release drift検知、deploy recovery、審査デモreceipt、受入表、Judge Command Center、自律ミッション、運用ドリル、Gemini分析が体験の中心
+- AIエージェントが価値の中心: 市場探索、購入判断、競合反論の証拠選択、予算内の編成最適化、A2A委任仕事票、ライブ証拠監視、release drift検知、deploy recovery、審査デモreceipt、受入表、Judge Command Center、自律ミッション、運用ドリル、Gemini分析が体験の中心
 - 課題アプローチ: AIを作るだけでなく、必要なAI能力を発見・調達・運用する問題を扱う
 - ユーザビリティ: 数値・価格・改善量・競合/SWOTに加え、Judge Command Center、Judge Tour、Squad Optimizer、User Pilot Labで審査員と実利用者の最初の導線まで意思決定できる
 - 実用性: 開発現場のエージェント選定、DevOps改善、公開後の異常検知とrollback判断に加え、Deploy Recovery、Impact Case、Pilot Economics、Judge Command Centerで時間短縮、提出信頼度、回収日数、価格レーン、審査説明順を説明可能
