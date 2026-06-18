@@ -285,7 +285,7 @@ function buildIntegrityLock(input: {
       readiness === "integrity-sealed"
         ? "Receipt digest, proof routes, A2A surface, competitive rebuttal, and external submission URLs replay cleanly."
         : readiness === "integrity-external-watch"
-          ? "Code-side demo proof replays cleanly; the only honest watch is the external submission URL gap."
+          ? "Receipt integrity checks replay cleanly; external submission URL gaps remain visible and receipt watch stamps are not overclaimed."
           : "Receipt integrity has a broken proof route or digest coverage gap; fix this before recording.",
     replayCommand: `curl -s -X POST ${absoluteUrl(input.baseUrl, "/api/demo-receipt")} -H 'Content-Type: application/json' --data '${replayBody}' | jq '.integrityLock'`,
     checks
