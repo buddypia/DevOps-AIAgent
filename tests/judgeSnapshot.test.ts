@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine";
 import { buildCompetitiveBattlecard } from "../src/competitiveBattlecard";
-import { buildJudgeSnapshot } from "../src/judgeSnapshot";
+import { buildJudgeSnapshot, renderJudgeSnapshotHtml } from "../src/judgeSnapshot";
 import { DEFAULT_PROJECT_BRIEF } from "../src/market";
 import { buildMarketIntelReport } from "../src/marketIntel";
 import { buildMissionRun } from "../src/mission";
@@ -73,6 +73,10 @@ describe("judge snapshot", () => {
     expect(snapshot.readiness).toBe("first-click-ready");
     expect(snapshot.links.find((link) => link.id === "judge-snapshot")).toMatchObject({
       method: "GET",
+      url: `${baseUrl}/judge-snapshot`
+    });
+    expect(snapshot.links.find((link) => link.id === "judge-snapshot-json")).toMatchObject({
+      method: "GET",
       url: `${baseUrl}/api/judge-snapshot`
     });
     expect(snapshot.criteriaDuel.rows).toHaveLength(5);
@@ -90,10 +94,33 @@ describe("judge snapshot", () => {
       skill: "judge.snapshot",
       directOpen: true,
       endpoints: {
-        judgeSnapshot: `${baseUrl}/api/judge-snapshot`,
+        judgeSnapshot: `${baseUrl}/judge-snapshot`,
+        judgeSnapshotJson: `${baseUrl}/api/judge-snapshot`,
         competitiveBattlecard: `${baseUrl}/api/competitive-battlecard`
       }
     });
+  });
+
+  test("renders a human-readable HTML page without leaking raw HTML from evidence", () => {
+    const { proof, battlecard } = buildArtifacts();
+    const snapshot = buildJudgeSnapshot({
+      baseUrl,
+      projectBrief: DEFAULT_PROJECT_BRIEF,
+      selectedAgentIds,
+      proof,
+      battlecard,
+      agentCardSkillIds: ["competitive.battlecard", "judge.snapshot", "release.drift"],
+      generatedAt: "2026-06-18T00:00:00.000Z"
+    });
+    snapshot.proofItems[0].evidence = "<script>alert('proof')</script>";
+
+    const html = renderJudgeSnapshotHtml(snapshot);
+
+    expect(html).toContain("<!doctype html>");
+    expect(html).toContain("Public Judge Snapshot");
+    expect(html).toContain(`${baseUrl}/judge-snapshot`);
+    expect(html).toContain("&lt;script&gt;alert(&#39;proof&#39;)&lt;/script&gt;");
+    expect(html).not.toContain("<script>alert('proof')</script>");
   });
 
   test("surfaces release drift when the public Agent Card lacks the GET proof signal", () => {

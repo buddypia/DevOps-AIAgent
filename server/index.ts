@@ -23,7 +23,7 @@ import { buildImpactCase } from "../src/impact.js";
 import { buildJudgeBrief } from "../src/judgeBrief.js";
 import { buildJudgeCommandCenter } from "../src/judgeCommandCenter.js";
 import { buildJudgeDrill } from "../src/judgeDrill.js";
-import { buildJudgeSnapshot } from "../src/judgeSnapshot.js";
+import { buildJudgeSnapshot, renderJudgeSnapshotHtml } from "../src/judgeSnapshot.js";
 import { buildJudgeRehearsalRoom } from "../src/judgeRehearsal.js";
 import { buildJudgeTour } from "../src/judgeTour.js";
 import { buildLiveEvidenceRun, type LiveEvidenceStatus } from "../src/liveEvidence.js";
@@ -991,7 +991,7 @@ app.post("/api/competitive-battlecard", async (req, res) => {
   );
 });
 
-app.get("/api/judge-snapshot", async (req, res) => {
+async function buildJudgeSnapshotForRequest(req: express.Request) {
   const baseUrl = publicBaseUrl(req);
   const selectedAgentIds = ["market-broker", "gemini-strategist", "cloud-run-sre"];
   const projectBrief = DEFAULT_PROJECT_BRIEF;
@@ -1016,8 +1016,7 @@ app.get("/api/judge-snapshot", async (req, res) => {
   const targetUrlValue = typeof req.query.targetUrl === "string" ? req.query.targetUrl : undefined;
   const targetUrl = targetUrlValue ? z.string().url().safeParse(targetUrlValue) : undefined;
   if (targetUrl && !targetUrl.success) {
-    res.status(400).json({ error: "invalid_request", issues: targetUrl.error.issues });
-    return;
+    return { error: { error: "invalid_request", issues: targetUrl.error.issues } };
   }
   const releaseDrift = liveReleaseDrift
     ? await buildReleaseDriftForTarget({
@@ -1029,8 +1028,8 @@ app.get("/api/judge-snapshot", async (req, res) => {
       })
     : undefined;
 
-  res.json(
-    buildJudgeSnapshot({
+  return {
+    snapshot: buildJudgeSnapshot({
       baseUrl,
       projectBrief,
       selectedAgentIds,
@@ -1039,7 +1038,25 @@ app.get("/api/judge-snapshot", async (req, res) => {
       agentCardSkillIds: agentCard(baseUrl).skills.map((skill) => skill.id),
       releaseDrift
     })
-  );
+  };
+}
+
+app.get("/api/judge-snapshot", async (req, res) => {
+  const result = await buildJudgeSnapshotForRequest(req);
+  if ("error" in result) {
+    res.status(400).json(result.error);
+    return;
+  }
+  res.json(result.snapshot);
+});
+
+app.get("/judge-snapshot", async (req, res) => {
+  const result = await buildJudgeSnapshotForRequest(req);
+  if ("error" in result) {
+    res.status(400).json(result.error);
+    return;
+  }
+  res.type("html").send(renderJudgeSnapshotHtml(result.snapshot));
 });
 
 app.post("/api/mission", (req, res) => {
@@ -2128,6 +2145,7 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
           data?.moatStressEndpoint &&
           data?.competitiveBattlecardEndpoint &&
           data?.judgeSnapshotEndpoint &&
+          data?.judgeSnapshotPageEndpoint &&
           data?.demoReceiptEndpoint &&
           data?.acceptanceMatrixEndpoint &&
           data?.releaseDriftEndpoint &&
@@ -2148,7 +2166,7 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes observabilityOracleEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, judgeSnapshotEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
+                "A2A artifact exposes observabilityOracleEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
             }
           : { status: "watch", score: 72, evidence: "A2A artifact returned, but observability oracle/external evidence/task board/winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
@@ -2439,12 +2457,13 @@ async function buildReleaseDriftForTarget(input: {
           data?.submissionCloseoutEndpoint &&
           data?.competitiveBattlecardEndpoint &&
           data?.judgeSnapshotEndpoint &&
+          data?.judgeSnapshotPageEndpoint &&
           data?.observabilityOracleEndpoint &&
           data?.deployRecoveryEndpoint
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, judgeSnapshotEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
             }
           : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but observability oracle/external evidence/task board/winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
@@ -5957,6 +5976,7 @@ app.post("/a2a", async (req, res) => {
                 moatStressEndpoint: `${publicBaseUrl(req)}/api/moat-stress`,
                 competitiveBattlecardEndpoint: `${publicBaseUrl(req)}/api/competitive-battlecard`,
                 judgeSnapshotEndpoint: `${publicBaseUrl(req)}/api/judge-snapshot`,
+                judgeSnapshotPageEndpoint: `${publicBaseUrl(req)}/judge-snapshot`,
                 demoConciergeEndpoint: `${publicBaseUrl(req)}/api/demo-concierge`,
                 prizeStrategyEndpoint: `${publicBaseUrl(req)}/api/prize-strategy`,
                 judgeRehearsalEndpoint: `${publicBaseUrl(req)}/api/judge-rehearsal`,
