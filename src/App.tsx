@@ -37,6 +37,7 @@ import type { CompetitiveBattlecard } from "./competitiveBattlecard";
 import type { SquadContract } from "./contracts";
 import type { DeployRecoveryPlan } from "./deployRecovery";
 import type { JudgeDemoReceipt } from "./demoReceipt";
+import type { DemoConcierge } from "./demoConcierge";
 import type { DemoRunway } from "./demoRunway";
 import type { FinalistSimulation } from "./finalist";
 import type { ImpactCase } from "./impact";
@@ -321,6 +322,145 @@ function JudgeCommandCenterPanel({
           <Trophy size={28} />
           <strong>Build command centerで、最初に押す証拠、90秒導線、残ブロッカーを1画面にまとめます。</strong>
           <p>機能一覧を説明するのではなく、審査員が最初に見る順番を固定します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function DemoConciergePanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [concierge, setConcierge] = useState<DemoConcierge | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildConcierge() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/demo-concierge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setConcierge((await response.json()) as DemoConcierge);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="demo-concierge">
+      <div className="concierge-heading">
+        <div>
+          <span className="eyebrow">Demo concierge</span>
+          <h2>
+            <Radar size={20} />
+            First click, no wandering
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildConcierge} disabled={loading} title="最初の1クリック導線を生成">
+          <Play size={17} />
+          {loading ? "Guiding" : "Build concierge"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Demo concierge request failed: {error}</p>}
+
+      {concierge ? (
+        <div className="concierge-body">
+          <div className="concierge-summary">
+            <div>
+              <span className={cx("risk-chip", concierge.readiness === "guided" ? "low" : concierge.readiness === "external-watch" ? "medium" : "high")}>
+                {concierge.readiness}
+              </span>
+              <h3>{concierge.headline}</h3>
+              <p>{concierge.hardTruth}</p>
+              <strong>{concierge.singleNextClick}</strong>
+            </div>
+            <div className="concierge-score">
+              <strong>{concierge.conciergeScore}</strong>
+              <span>concierge score</span>
+            </div>
+          </div>
+
+          <div className="concierge-lanes">
+            {concierge.lanes.map((lane) => (
+              <article key={lane.id}>
+                <div>
+                  <span>{lane.persona}</span>
+                  <strong>+{lane.scoreLift}</strong>
+                </div>
+                <h3>{lane.entryQuestion}</h3>
+                <p>{lane.valueMoment}</p>
+                <b>{lane.firstClick}</b>
+                <ol>
+                  {lane.steps.map((step) => (
+                    <li key={step.id} className={step.status}>
+                      <strong>{step.timeRange}</strong>
+                      <span>{step.screen}</span>
+                      <small>{step.successSignal}</small>
+                    </li>
+                  ))}
+                </ol>
+              </article>
+            ))}
+          </div>
+
+          <div className="concierge-grid">
+            <section>
+              <h3>
+                <BadgeCheck size={15} />
+                Success criteria
+              </h3>
+              {concierge.successCriteria.map((item) => (
+                <article key={item.id} className={item.status}>
+                  <div>
+                    <strong>{item.label}</strong>
+                    <span>{item.status}</span>
+                  </div>
+                  <p>{item.proof}</p>
+                </article>
+              ))}
+            </section>
+            <section>
+              <h3>
+                <Lightbulb size={15} />
+                Friction cuts
+              </h3>
+              {concierge.frictionCuts.map((item) => (
+                <article key={item.id}>
+                  <strong>{item.after}</strong>
+                  <p>{item.before}</p>
+                  <small>{item.proof}</small>
+                </article>
+              ))}
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(concierge.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="concierge-empty">
+          <Radar size={28} />
+          <strong>Build conciergeで、審査員・買い手・提出者の最初の1クリック、話す台詞、証拠URLを固定します。</strong>
+          <p>機能一覧を見せる前に、誰が来ても迷わない入口を作ります。</p>
         </div>
       )}
     </section>
@@ -5583,6 +5723,7 @@ export default function App() {
       </section>
 
       <JudgeCommandCenterPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <DemoConciergePanel recommendation={recommendation} projectBrief={projectBrief} />
       <PrizeStrategyPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeTourPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SquadOptimizerPanel recommendation={recommendation} projectBrief={projectBrief} />

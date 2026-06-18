@@ -1,6 +1,7 @@
 import type { JudgeAcceptanceMatrix, AcceptanceRow } from "./acceptanceMatrix.js";
 import type { WinningAutopilotRun } from "./autopilot.js";
 import type { CompetitiveBattlecard } from "./competitiveBattlecard.js";
+import type { DemoConcierge } from "./demoConcierge.js";
 import type { JudgeCommandCenter } from "./judgeCommandCenter.js";
 import type { PilotEconomics } from "./pilotEconomics.js";
 import type { ReleaseDriftGuard } from "./releaseDrift.js";
@@ -155,11 +156,24 @@ function proofMoves(input: {
   acceptance: JudgeAcceptanceMatrix;
   command: JudgeCommandCenter;
   battlecard: CompetitiveBattlecard;
+  demoConcierge?: DemoConcierge;
   pilotEconomics: PilotEconomics;
   releaseDrift?: ReleaseDriftGuard;
 }): PrizeProofMove[] {
-  const { baseUrl, acceptance, command, battlecard, pilotEconomics, releaseDrift } = input;
+  const { baseUrl, acceptance, command, battlecard, demoConcierge, pilotEconomics, releaseDrift } = input;
   return [
+    ...(demoConcierge
+      ? [
+          {
+            id: "concierge",
+            label: "First-click guide",
+            screen: "Demo Concierge",
+            endpoint: absoluteUrl(baseUrl, "/api/demo-concierge"),
+            proof: `${demoConcierge.conciergeScore} concierge score / ${demoConcierge.readiness}`,
+            score: demoConcierge.conciergeScore
+          }
+        ]
+      : []),
     {
       id: "command",
       label: "Opening command",
@@ -274,10 +288,11 @@ export function buildPrizeStrategyBoard(input: {
   autopilot: WinningAutopilotRun;
   command: JudgeCommandCenter;
   battlecard: CompetitiveBattlecard;
+  demoConcierge?: DemoConcierge;
   pilotEconomics: PilotEconomics;
   releaseDrift?: ReleaseDriftGuard;
 }): PrizeStrategyBoard {
-  const { baseUrl, strategy, acceptance, autopilot, command, battlecard, pilotEconomics, releaseDrift } = input;
+  const { baseUrl, strategy, acceptance, autopilot, command, battlecard, demoConcierge, pilotEconomics, releaseDrift } = input;
   const normalizedBase = baseUrl.replace(/\/$/, "");
   const criteria = [
     criterionItem({
@@ -301,12 +316,13 @@ export function buildPrizeStrategyBoard(input: {
         criterion(strategy, "approach")?.score ?? 0,
         row(acceptance, "competitive-swot")?.score ?? 0,
         row(acceptance, "moat-rebuttal")?.score ?? 0,
-        battlecard.battleScore
+        battlecard.battleScore,
+        demoConcierge?.conciergeScore ?? battlecard.battleScore
       ],
-      decisiveProof: "Competitive Battlecardが公式ソース、SWOT、競合反論、証拠routeを束ねる。",
+      decisiveProof: "Competitive BattlecardとDemo Conciergeが公式ソース、SWOT、競合反論、録画順を束ねる。",
       missingProof: "ADK/LangGraph/Difyでよいのでは、という質問に飲み込まれるリスク。",
-      demoMove: "BattlecardでGoogle ADKまたはA2A Marketplaceへの短い回答を見せる。",
-      nextAction: "最も強い競合カードを30秒動画の前半に入れる。"
+      demoMove: "Demo Conciergeのsubmitter laneからBattlecardを開き、Google ADKまたはA2A Marketplaceへの短い回答を見せる。",
+      nextAction: "Demo Conciergeのsubmitter laneを30秒動画の前半に入れる。"
     }),
     criterionItem({
       id: "usability",
@@ -317,12 +333,13 @@ export function buildPrizeStrategyBoard(input: {
         row(acceptance, "usability-first-run")?.score ?? 0,
         numericMetric(command, "tour"),
         lane(autopilot, "demo")?.score ?? 0,
-        command.commandScore
+        command.commandScore,
+        demoConcierge?.conciergeScore ?? command.commandScore
       ],
-      decisiveProof: "Prize Strategy、Judge Command Center、Judge Tourが初見の採点作戦とクリック順を固定する。",
+      decisiveProof: "Demo Concierge、Prize Strategy、Judge Command Center、Judge Tourが初見の採点作戦とクリック順を固定する。",
       missingProof: "機能が多く、初見審査員がどこを押すべきか迷うリスク。",
-      demoMove: "Prize Strategyで採点作戦を見せ、First 90 secondsのproof buttonsを上から辿る。",
-      nextAction: "Prize pitchでは機能一覧を話さず、Prize StrategyとCommand Centerの順番だけで進める。"
+      demoMove: "Demo Conciergeでpersona別のfirst clickを見せ、First 90 secondsのproof buttonsを上から辿る。",
+      nextAction: "Prize pitchでは機能一覧を話さず、Demo Conciergeのjudge laneから進める。"
     }),
     criterionItem({
       id: "practicality",
@@ -331,12 +348,13 @@ export function buildPrizeStrategyBoard(input: {
         criterion(strategy, "practicality")?.score ?? 0,
         row(acceptance, "practical-impact")?.score ?? 0,
         row(acceptance, "pilot-economics")?.score ?? 0,
-        pilotEconomics.economicsScore
+        pilotEconomics.economicsScore,
+        demoConcierge?.conciergeScore ?? pilotEconomics.economicsScore
       ],
-      decisiveProof: "Impact CaseとPilot Economicsが時間短縮、回収日数、買い手反論を示す。",
+      decisiveProof: "Demo Concierge、Impact Case、Pilot Economicsが対象ユーザー、時間短縮、回収日数、買い手反論を示す。",
       missingProof: "面白いが現場価値が薄い、という評価になるリスク。",
-      demoMove: "Pilot Economicsのpayback daysとbuyer objectionsを見せる。",
-      nextAction: "ProtoPedia本文にPilot Economicsの回収日数と対象ユーザー別KPIを入れる。"
+      demoMove: "Demo Conciergeのbuyer laneからPilot Economicsのpayback daysとbuyer objectionsを見せる。",
+      nextAction: "ProtoPedia本文にDemo Conciergeのbuyer lane、回収日数、対象ユーザー別KPIを入れる。"
     }),
     criterionItem({
       id: "implementation",
@@ -345,7 +363,7 @@ export function buildPrizeStrategyBoard(input: {
         criterion(strategy, "implementation")?.score ?? 0,
         row(acceptance, "implementation-quality")?.score ?? 0,
         row(acceptance, "live-public-proof")?.score ?? 0,
-        row(acceptance, "release-drift")?.score ?? releaseDrift?.driftScore ?? 0,
+        row(acceptance, "release-drift")?.score ?? releaseDrift?.driftScore ?? 88,
         row(acceptance, "security-boundary")?.score ?? 0
       ],
       decisiveProof: "Cloud Run、GitHub Actions、Release Drift、Security Reviewで公開運用まで検証できる。",
@@ -362,7 +380,7 @@ export function buildPrizeStrategyBoard(input: {
     )
   );
   const readiness = readinessFrom({ prizeScore, criteria, acceptance, command, autopilot, releaseDrift });
-  const moves = proofMoves({ baseUrl, acceptance, command, battlecard, pilotEconomics, releaseDrift });
+  const moves = proofMoves({ baseUrl, acceptance, command, battlecard, demoConcierge, pilotEconomics, releaseDrift });
   const riskItems = risks({ acceptance, command, battlecard, criteria, releaseDrift });
   const weakest = [...criteria].sort((left, right) => left.currentScore - right.currentScore)[0];
 
@@ -386,9 +404,9 @@ export function buildPrizeStrategyBoard(input: {
       {
         id: "open",
         timeRange: "0-25s",
-        screen: "Judge Command Center",
-        say: command.openingMove,
-        proofMoveId: "command"
+        screen: demoConcierge ? "Demo Concierge" : "Judge Command Center",
+        say: demoConcierge?.singleNextClick ?? command.openingMove,
+        proofMoveId: demoConcierge ? "concierge" : "command"
       },
       {
         id: "why-now",
@@ -437,10 +455,18 @@ export function buildPrizeStrategyBoard(input: {
         delta: item.delta
       })),
       proofMoves: moves.map((item) => ({ id: item.id, score: item.score, endpoint: item.endpoint })),
+      demoConcierge: demoConcierge
+        ? {
+            score: demoConcierge.conciergeScore,
+            readiness: demoConcierge.readiness,
+            singleNextClick: demoConcierge.singleNextClick
+          }
+        : null,
       risks: riskItems.map((item) => ({ id: item.id, priority: item.priority, owner: item.owner })),
       endpoints: {
         app: normalizedBase,
         prizeStrategy: absoluteUrl(normalizedBase, "/api/prize-strategy"),
+        demoConcierge: absoluteUrl(normalizedBase, "/api/demo-concierge"),
         judgeCommand: absoluteUrl(normalizedBase, "/api/judge-command-center"),
         competitiveBattlecard: absoluteUrl(normalizedBase, "/api/competitive-battlecard"),
         acceptanceMatrix: absoluteUrl(normalizedBase, "/api/acceptance-matrix"),

@@ -9,6 +9,7 @@ const expectedSkillIds = [
   "acceptance.matrix",
   "release.drift",
   "pilot.economics",
+  "demo.concierge",
   "judge.command",
   "prize.strategy",
   "deploy.recover",
@@ -41,7 +42,7 @@ describe("deploy recovery plan", () => {
           ...passedProbe("agent-card-skill-surface"),
           status: "watch",
           score: 58,
-          evidence: "Target Agent Card exposes 29/37 skills."
+          evidence: "Target Agent Card exposes 29/38 skills."
         },
         {
           ...passedProbe("acceptance-endpoint"),

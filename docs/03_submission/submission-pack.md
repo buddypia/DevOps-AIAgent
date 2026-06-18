@@ -40,6 +40,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - MVP Auditで、必須技術、審査5項目、DevOps証拠、提出3点をpass/watch/failで監査し、外部未発行URLを合格扱いにしない
 - Judge Briefで、競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページにまとめる
 - Judge Command Centerで、Judge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
+- Demo Conciergeで、審査員、買い手、提出者ごとの最初の1クリック、台詞、証拠URL、成功条件を固定する
 - Judge Tourで、Judge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
 - User Pilot Labで、開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証する
 - Squad Optimizerで、予算内のAI編成を総当たりし、現行維持、交換、追加予算ギャップを判断する
@@ -80,6 +81,7 @@ React UI
   -> MVP Audit hard gates
   -> Judge Brief one-page judge readout
   -> Judge Command Center first 90 seconds cockpit
+  -> Demo Concierge persona first-click lanes
   -> Judge Tour 90-second judge walkthrough
   -> User Pilot Lab first-run usability paths
   -> Squad Optimizer budget-aware squad search
@@ -112,20 +114,21 @@ React UI
 
 | Time | Shot |
 | --- | --- |
-| 0-4s | Judge Command Centerで、最初に押す証拠、MVP受入状態、公開revision drift、残ブロッカーを1画面で見せる |
-| 4-7s | Judge Tourで90秒導線、5つのjudge claims、外部URL不足を見せる |
-| 7-10s | Squad Optimizerで140予算内の最適編成、+22のUX追加ギャップ、swap planを見せる |
-| 10-12s | Moat Stress Testで「既存ツールでよくない？」への反論と見せる証拠を競合別に出す |
-| 12-15s | Live Evidence Monitorで公開Cloud Run、Agent Card、A2A、Optimizer、CIの5 probesを見せる |
-| 15-17s | Release Drift Guardで提出URLが最新skill surfaceか、古いrevisionならdeploy-driftかを見せる |
-| 17-18s | Competitive Battlecardで競合別の短い回答、公式ソース、SWOT receiptsを見せる |
-| 18-19s | Deploy Recoveryでgcloud認証、Cloud Build、公開再検証コマンドを見せる |
-| 19-21s | Judge Demo Receiptでstamp、外部URLwatch、sha256 digestを控える |
-| 21-23s | Judge Acceptance Matrixで必須技術、審査5項目、公開証拠、提出物のaccepted/watchを見せる |
-| 23-25s | Security Sentinel Review、Impact Case、Pilot Economics、Submission Launch Gate、Judge Proofで安全境界、実用性KPI、payback、外部URL、Gemini/Cloud Run/A2A/CI/DevOpsの証拠束を見せる |
-| 25-27s | Submission DossierでProtoPedia本文、提出リンク、録画順、最終チェックを見せる |
-| 27-28s | Marketplace、Winning Strategy、Mission、Opsで必要能力、SWOT、A2A委任、運用判断を見せる |
-| 28-30s | Cloud Run URL、GitHub Actions、Agent Card、構成図で締める |
+| 0-4s | Demo Conciergeで、審査員・買い手・提出者の最初の1クリックを固定し、機能一覧ではなく証拠順から始める |
+| 4-8s | Judge Command Centerで、最初に押す証拠、MVP受入状態、公開revision drift、残ブロッカーを1画面で見せる |
+| 8-11s | Judge Tourで90秒導線、5つのjudge claims、外部URL不足を見せる |
+| 11-14s | Squad Optimizerで140予算内の最適編成、+22のUX追加ギャップ、swap planを見せる |
+| 14-16s | Moat Stress Testで「既存ツールでよくない？」への反論と見せる証拠を競合別に出す |
+| 16-19s | Live Evidence Monitorで公開Cloud Run、Agent Card、A2A、Optimizer、CIの5 probesを見せる |
+| 19-21s | Release Drift Guardで提出URLが最新skill surfaceか、古いrevisionならdeploy-driftかを見せる |
+| 21-23s | Competitive Battlecardで競合別の短い回答、公式ソース、SWOT receiptsを見せる |
+| 23-24s | Deploy Recoveryでgcloud認証、Cloud Build、公開再検証コマンドを見せる |
+| 24-25s | Judge Demo Receiptでstamp、外部URLwatch、sha256 digestを控える |
+| 25-26s | Judge Acceptance Matrixで必須技術、審査5項目、公開証拠、提出物のaccepted/watchを見せる |
+| 26-27s | Security Sentinel Review、Impact Case、Pilot Economics、Submission Launch Gate、Judge Proofで安全境界、実用性KPI、payback、外部URL、Gemini/Cloud Run/A2A/CI/DevOpsの証拠束を見せる |
+| 27-28s | Submission DossierでProtoPedia本文、提出リンク、録画順、最終チェックを見せる |
+| 28-29s | Marketplace、Winning Strategy、Mission、Opsで必要能力、SWOT、A2A委任、運用判断を見せる |
+| 29-30s | Cloud Run URL、GitHub Actions、Agent Card、構成図で締める |
 
 ## Verification Runbook
 

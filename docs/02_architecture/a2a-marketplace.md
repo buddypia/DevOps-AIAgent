@@ -136,11 +136,18 @@
 - Blockers: 公開Cloud Runのrevision drift、受入表blocked、外部提出URLwatchをowner付きの次アクションへ変換する
 - A2A payload: `judge.command` skillとしてcommand score、readiness、metrics、proof buttons、blockersを返す
 
+## Demo Concierge Surface
+
+- `POST /api/demo-concierge`: 審査員、買い手、提出者の最初の1クリック、話す台詞、証拠URL、成功条件を固定する
+- Persona lanes: 初見審査員、Platform/SRE buyer、ハッカソン提出者ごとにentry question、first click、value moment、score lift、step endpointを返す
+- Friction cuts: 機能過多、実用性説明、競合差別化の迷いを、どの証拠順で減らすかを返す
+- A2A payload: `demo.concierge` skillとしてconcierge score、readiness、single next click、persona lanes、success criteriaを返す
+
 ## Prize Strategy Surface
 
 - `POST /api/prize-strategy`: 審査5項目のtarget score、現在スコア、足りない証拠、最終ピッチ順を優勝作戦へ束ねる
 - Criteria board: AI中心性、課題アプローチ、ユーザビリティ、実用性、実装力をtarget 92点のgapとして評価する
-- Proof moves: Judge Command Center、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economicsを最終ピッチで開く順番へ変換する
+- Proof moves: Demo Concierge、Judge Command Center、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economicsを最終ピッチで開く順番へ変換する
 - Risks: 外部提出URL、公開revision、弱い採点軸、command blockerをowner付きの次アクションにする
 - A2A payload: `prize.strategy` skillとしてprize score、readiness、criteria gaps、proof moves、risksを返す
 
@@ -276,6 +283,7 @@
 - `POST /api/competitive-battlecard`: 公式ソース、SWOT、競合反論、証拠routeを審査回答カードとして評価する
 - `POST /api/mvp-audit`: MVPハードゲート、審査lane、提出blockerを評価する
 - `POST /api/judge-command-center`: 初回審査用の証拠ボタン、90秒timeline、残ブロッカーを評価する
+- `POST /api/demo-concierge`: persona別のfirst click、台詞、証拠URL、成功条件を返す
 - `POST /api/prize-strategy`: 審査5項目の優勝作戦、proof moves、final pitch orderを返す
 - `POST /api/pitch`: 30秒動画のshot list、voiceover、lower thirds、recording checklist、提出残リスクを返す
 - `POST /api/judge-drill`: 審査5項目と主要競合への厳しめ質問、回答、60秒回答パス、証拠リンク、デモ画面を返す
@@ -320,6 +328,7 @@
 - Security review proof: `security.review` skillとして、Secret/IP/input/A2A/CIの安全境界をA2A payloadにも含める
 - Impact proof: `impact.case` skillとして、実用性の定量指標、ユーザー別KPI、導入計画をA2A payloadにも含める
 - Pilot economics proof: `pilot.economics` skillとして、導入費用、回収日数、価格レーン、買い手の反論をA2A payloadにも含める
+- Demo concierge proof: `demo.concierge` skillとして、審査員/買い手/提出者のfirst click、証拠URL、成功条件、friction cutsをA2A payloadにも含める
 - Judge command proof: `judge.command` skillとして、最初の90秒で押す証拠、Competitive Battlecard、公開revision drift、MVP受入状態、導入採算、残ブロッカーをA2A payloadにも含める
 - Judge tour proof: `judge.tour` skillとして、審査員が開く順番、反論、証拠リンク、外部URLギャップをA2A payloadにも含める
 - User pilot proof: `user.pilot` skillとして、開発リード、Platform/SRE、提出者のfirst-run usabilityをA2A payloadにも含める

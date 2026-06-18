@@ -23,9 +23,7 @@ import { buildOpsDrill } from "../src/ops";
 import { buildPilotEconomics } from "../src/pilotEconomics";
 import { buildPitchRun } from "../src/pitch";
 import { buildJudgeProof, type CiProof } from "../src/proof";
-import { buildPrizeStrategyBoard } from "../src/prizeStrategy";
 import { buildProtoPediaPublisher } from "../src/publisher";
-import { buildReleaseDriftGuard, type ReleaseDriftProbe } from "../src/releaseDrift";
 import { buildSecurityReview } from "../src/security";
 import { SUBMISSION_PROOF } from "../src/submission";
 import { buildSubmissionLaunchGate } from "../src/submissionLaunch";
@@ -50,37 +48,13 @@ const allowlist = {
   rakutenMobileCidrCount: 65
 };
 
-const requiredSkillIds = [
-  "evidence.monitor",
-  "demo.receipt",
-  "acceptance.matrix",
-  "release.drift",
-  "pilot.economics",
-  "demo.concierge",
-  "judge.command",
-  "prize.strategy",
-  "deploy.recover",
-  "competitive.battlecard",
-  "win.autopilot"
-];
-
-const passedProbe = (id: string): ReleaseDriftProbe => ({
-  id,
-  label: id,
-  status: "passed",
-  score: 100,
-  url: `${SUBMISSION_PROOF.deployedUrl}/${id}`,
-  evidence: `${id} passed`,
-  required: true
-});
-
 function fixture() {
   const baseUrl = SUBMISSION_PROOF.deployedUrl;
   const selectedAgentIds = ["market-broker", "gemini-strategist", "cloud-run-sre"];
   const recommendation = recommendSquad(DEFAULT_PROJECT_BRIEF, selectedAgentIds, 140);
   const strategy = buildWinningStrategy(recommendation);
   const marketIntel = buildMarketIntelReport({ baseUrl, recommendation, strategy });
-  const mission = buildMissionRun(recommendation, strategy, "審査5項目の優勝作戦を検証する。");
+  const mission = buildMissionRun(recommendation, strategy, "審査員の最初の1クリックを固定する。");
   const opsDrill = buildOpsDrill(recommendation, strategy);
   const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
   const pitch = buildPitchRun({ baseUrl, recommendation, strategy, mission, opsDrill });
@@ -183,12 +157,7 @@ function fixture() {
     opsDrill,
     securityReview
   });
-  const submissionLaunch = buildSubmissionLaunchGate({
-    mvpAudit,
-    dossier,
-    proof,
-    publisher
-  });
+  const submissionLaunch = buildSubmissionLaunchGate({ mvpAudit, dossier, proof, publisher });
   const judgeTour = buildJudgeTour({
     baseUrl,
     recommendation,
@@ -203,33 +172,17 @@ function fixture() {
   });
   const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
   const battlecard = buildCompetitiveBattlecard({ baseUrl, strategy, marketIntel, moatStress });
-  const squadOptimizer = buildSquadOptimizer({
-    projectBrief: DEFAULT_PROJECT_BRIEF,
-    selectedAgentIds,
-    budget: 140,
-    maxSquadSize: 4
-  });
   const demoReceipt = buildJudgeDemoReceipt({
     baseUrl,
     recommendation,
     strategy,
     moatStress,
-    squadOptimizer
-  });
-  const releaseDrift = buildReleaseDriftGuard({
-    currentBaseUrl: baseUrl,
-    targetBaseUrl: baseUrl,
-    expectedSkillIds: requiredSkillIds,
-    observedSkillIds: requiredSkillIds,
-    requiredSkillIds,
-    generatedAt: "2026-06-18T00:00:00.000Z",
-    probes: [
-      passedProbe("target-health"),
-      passedProbe("agent-card-skill-surface"),
-      passedProbe("acceptance-endpoint"),
-      passedProbe("a2a-artifact"),
-      passedProbe("ci-main")
-    ]
+    squadOptimizer: buildSquadOptimizer({
+      projectBrief: DEFAULT_PROJECT_BRIEF,
+      selectedAgentIds,
+      budget: 140,
+      maxSquadSize: 4
+    })
   });
   const acceptance = buildJudgeAcceptanceMatrix({
     baseUrl,
@@ -242,8 +195,7 @@ function fixture() {
     impactCase,
     pilotEconomics,
     securityReview,
-    demoReceipt,
-    releaseDrift
+    demoReceipt
   });
   const command = buildJudgeCommandCenter({
     baseUrl,
@@ -251,10 +203,10 @@ function fixture() {
     autopilot,
     competitiveBattlecard: battlecard,
     judgeTour,
-    pilotEconomics,
-    releaseDrift
+    pilotEconomics
   });
-  const demoConcierge = buildDemoConcierge({
+
+  return buildDemoConcierge({
     baseUrl,
     strategy,
     acceptance,
@@ -263,50 +215,29 @@ function fixture() {
     userPilot,
     pilotEconomics
   });
-
-  return buildPrizeStrategyBoard({
-    baseUrl,
-    strategy,
-    acceptance,
-    autopilot,
-    command,
-    battlecard,
-    demoConcierge,
-    pilotEconomics,
-    releaseDrift
-  });
 }
 
-describe("prize strategy board", () => {
-  test("turns judge evidence into a five-criterion winning plan", () => {
-    const board = fixture();
+describe("demo concierge", () => {
+  test("turns first-run complexity into persona-specific first clicks", () => {
+    const concierge = fixture();
 
-    expect(board.prizeScore).toBeGreaterThanOrEqual(88);
-    expect(board.readiness).toBe("finalist-track");
-    expect(board.criteria.map((criterion) => criterion.id)).toEqual([
-      "agent-centrality",
-      "approach",
-      "usability",
-      "practicality",
-      "implementation"
+    expect(concierge.conciergeScore).toBeGreaterThanOrEqual(87);
+    expect(concierge.readiness).toBe("external-watch");
+    expect(concierge.lanes.map((lane) => lane.id)).toEqual(["judge", "buyer", "submitter"]);
+    expect(concierge.lanes.every((lane) => lane.steps.length >= 2)).toBe(true);
+    expect(concierge.lanes.find((lane) => lane.id === "buyer")?.steps[0]?.endpoint).toBe(`${SUBMISSION_PROOF.deployedUrl}/api/pilot-economics`);
+    expect(concierge.successCriteria.map((item) => item.id)).toEqual([
+      "single-next-click",
+      "three-persona-lanes",
+      "business-value-proof",
+      "competitive-answer-proof"
     ]);
-    expect(board.criteria.every((criterion) => criterion.targetScore === 92)).toBe(true);
-    expect(board.criteria.find((criterion) => criterion.id === "usability")?.status).toBe("finalist-track");
-    expect(board.proofMoves.map((move) => move.id)).toEqual(["concierge", "command", "battlecard", "truth-table", "public-release", "buyer-value"]);
-    expect(board.pitchOrder[0]).toMatchObject({ screen: "Demo Concierge", proofMoveId: "concierge" });
-    expect(board.criteria.find((criterion) => criterion.id === "usability")?.decisiveProof).toContain("Demo Concierge");
-    expect(board.pitchOrder).toHaveLength(5);
-    expect(board.risks.map((risk) => risk.id)).toEqual(expect.arrayContaining(["submission-assets", "demo-receipt"]));
-    expect(board.a2aPayload).toMatchObject({
+    expect(concierge.frictionCuts.map((item) => item.id)).toEqual(["feature-overload", "business-proof-gap", "competitor-drift"]);
+    expect(concierge.a2aPayload).toMatchObject({
       method: "message/send",
-      skill: "prize.strategy",
-      demoConcierge: {
-        readiness: expect.any(String)
-      },
+      skill: "demo.concierge",
       endpoints: {
-        demoConcierge: `${SUBMISSION_PROOF.deployedUrl}/api/demo-concierge`,
-        prizeStrategy: `${SUBMISSION_PROOF.deployedUrl}/api/prize-strategy`,
-        competitiveBattlecard: `${SUBMISSION_PROOF.deployedUrl}/api/competitive-battlecard`
+        demoConcierge: `${SUBMISSION_PROOF.deployedUrl}/api/demo-concierge`
       }
     });
   });
