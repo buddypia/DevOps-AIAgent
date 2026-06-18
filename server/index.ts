@@ -2924,15 +2924,18 @@ app.get("/.well-known/agent-card.json", (req, res) => {
   res.json(agentCard(publicBaseUrl(req)));
 });
 
-app.post("/a2a", (req, res) => {
+app.post("/a2a", async (req, res) => {
   const id = typeof req.body?.id === "undefined" ? randomUUID() : req.body.id;
   const method = String(req.body?.method || "message/send");
   const text =
     req.body?.params?.message?.parts?.find((part: { text?: string }) => typeof part.text === "string")?.text ||
     req.body?.params?.text ||
     "DevOps x AI Agent marketplace request";
+  const baseUrl = publicBaseUrl(req);
+  const isReleaseDriftGuardProbe = id === "release-drift-guard";
   const recommendation = recommendSquad(String(text), ["market-broker", "gemini-strategist", "cloud-run-sre"], 140);
   const strategy = buildWinningStrategy(recommendation);
+  const ci = isReleaseDriftGuardProbe ? ciUnavailable("A2A release-drift probe skips live CI to avoid recursive proof calls") : await fetchCiProof();
   const mission = buildMissionRun(recommendation, strategy, String(text));
   const opsDrill = buildOpsDrill(recommendation, strategy);
   const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
@@ -2987,7 +2990,7 @@ app.post("/a2a", (req, res) => {
     mission,
     opsDrill,
     gemini: localGeminiRecommendation(recommendation, "A2A synchronous artifact uses /api/proof for live Gemini evidence"),
-    ci: ciUnavailable("A2A synchronous artifact uses /api/proof for live CI evidence")
+    ci
   });
   const winAutopilot = buildWinningAutopilot({
     baseUrl: publicBaseUrl(req),
@@ -3119,6 +3122,15 @@ app.post("/a2a", (req, res) => {
     demoRunway,
     submissionLaunch
   });
+  const releaseDrift = isReleaseDriftGuardProbe
+    ? undefined
+    : await buildReleaseDriftForTarget({
+        currentBaseUrl: baseUrl,
+        targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
+        projectBrief: String(text),
+        selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+        forwardedHeaders: selfProbeHeaders(req)
+      });
   const acceptance = buildJudgeAcceptanceMatrix({
     baseUrl: publicBaseUrl(req),
     strategy,
@@ -3130,7 +3142,8 @@ app.post("/a2a", (req, res) => {
     impactCase,
     pilotEconomics,
     securityReview,
-    demoReceipt
+    demoReceipt,
+    releaseDrift
   });
   const judgeCommand = buildJudgeCommandCenter({
     baseUrl: publicBaseUrl(req),
@@ -3138,7 +3151,8 @@ app.post("/a2a", (req, res) => {
     autopilot: winAutopilot,
     competitiveBattlecard,
     judgeTour,
-    pilotEconomics
+    pilotEconomics,
+    releaseDrift
   });
   const prizeStrategy = buildPrizeStrategyBoard({
     baseUrl: publicBaseUrl(req),
@@ -3147,7 +3161,8 @@ app.post("/a2a", (req, res) => {
     autopilot: winAutopilot,
     command: judgeCommand,
     battlecard: competitiveBattlecard,
-    pilotEconomics
+    pilotEconomics,
+    releaseDrift
   });
 
   res.json({
@@ -3222,6 +3237,8 @@ app.post("/a2a", (req, res) => {
                   id: prizeStrategy.id,
                   prizeScore: prizeStrategy.prizeScore,
                   readiness: prizeStrategy.readiness,
+                  proofMode: isReleaseDriftGuardProbe ? "endpoint-surface" : "live-release-drift",
+                  liveProofEndpoint: `${publicBaseUrl(req)}/api/prize-strategy`,
                   criteria: prizeStrategy.criteria.map((criterion) => ({
                     id: criterion.id,
                     score: criterion.currentScore,
