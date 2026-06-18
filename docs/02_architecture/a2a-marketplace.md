@@ -151,6 +151,14 @@
 - Capture checklist: 動画録画のchapterとcloseout receipt確認を同じレスポンスに含める
 - A2A payload: `judge.rehearsal` skillとしてrehearsal score、readiness、next run、endpoint群を返す
 
+## Winner Proof Packet Surface
+
+- `POST /api/winner-packet`: 審査5項目ごとの主張、証拠URL、競合/SWOT反論、録画cue、提出copyを1枚のpacketへ束ねる
+- Criteria cards: AI中心性、課題アプローチ、ユーザビリティ、実用性、実装力をscore/status/proof URL付きで返す
+- Objection answers: Judge Rehearsalのquestion deckとCompetitive Battlecardのtop risksを、質疑で開く証拠URLへ変換する
+- Submission copy: ProtoPedia本文や動画説明へ貼るone-line、winner thesis、proof order、missing external URLを返す
+- A2A payload: `winner.packet` skillとしてpacket score、readiness、criteria proof URLs、endpoint群を返す
+
 ## Prize Strategy Surface
 
 - `POST /api/prize-strategy`: 審査5項目のtarget score、現在スコア、足りない証拠、最終ピッチ順を優勝作戦へ束ねる
@@ -308,6 +316,7 @@
 - `POST /api/judge-command-center`: 初回審査用の証拠ボタン、90秒timeline、残ブロッカーを評価する
 - `POST /api/demo-concierge`: persona別のfirst click、台詞、証拠URL、成功条件を返す
 - `POST /api/judge-rehearsal`: 90秒segments、想定質問、scorecard、録画チェックを返す
+- `POST /api/winner-packet`: 審査5項目の証拠URL、反論回答、録画cue、提出copyを返す
 - `POST /api/prize-strategy`: 審査5項目の優勝作戦、proof moves、final pitch orderを返す
 - `POST /api/pitch`: 30秒動画のshot list、voiceover、lower thirds、recording checklist、提出残リスクを返す
 - `POST /api/judge-drill`: 審査5項目と主要競合への厳しめ質問、回答、60秒回答パス、証拠リンク、デモ画面を返す
@@ -387,6 +396,7 @@
 - Judge brief: `/api/judge-brief`
 - Judge command center: `/api/judge-command-center`
 - Judge rehearsal: `/api/judge-rehearsal`
+- Winner proof packet: `/api/winner-packet`
 - Judge tour: `/api/judge-tour`
 - User pilot: `/api/user-pilot`
 - Squad optimizer: `/api/squad-optimizer`

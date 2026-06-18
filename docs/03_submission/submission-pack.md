@@ -42,6 +42,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Judge Command Centerで、Judge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
 - Demo Conciergeで、審査員、買い手、提出者ごとの最初の1クリック、台詞、証拠URL、成功条件を固定する
 - Judge Rehearsal Roomで、90秒segments、想定質問、scorecard、録画チェックを固定する
+- Winner Proof Packetで、審査5項目ごとの主張、証拠URL、競合/SWOT反論、録画cue、提出copyを1枚に束ねる
 - Judge Tourで、Judge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
 - User Pilot Labで、開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証する
 - Squad Optimizerで、予算内のAI編成を総当たりし、現行維持、交換、追加予算ギャップを判断する
@@ -210,6 +211,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/submission-closeou
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/judge-rehearsal \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"protopediaUrl":"https://protopedia.net/prototype/999999","videoUrl":"https://youtu.be/demo1234567"}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/winner-packet \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"protopediaUrl":"https://protopedia.net/prototype/999999","videoUrl":"https://youtu.be/demo1234567"}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mission \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
@@ -259,4 +263,5 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - System architecture diagram: `public/assets/a2a-marketplace-architecture.svg`
 - Architecture Pack API: `POST /api/architecture-pack`
 - Judge Rehearsal API: `POST /api/judge-rehearsal`
+- Winner Proof Packet API: `POST /api/winner-packet`
 - Required tag: `findy_hackathon`

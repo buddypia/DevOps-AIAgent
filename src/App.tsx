@@ -70,6 +70,7 @@ import type { SwotQuadrant, WinningStrategy } from "./strategy";
 import type { CapabilityKey, GeminiRecommendation, MarketAgent, Recommendation } from "./types";
 import type { UserPilotLab } from "./userPilot";
 import type { WinGapRadar } from "./winGapRadar";
+import type { WinnerProofPacket } from "./winnerPacket";
 import "./styles.css";
 
 const STAGE_LABELS: Record<string, string> = {
@@ -632,6 +633,175 @@ function JudgeRehearsalPanel({
           <Play size={28} />
           <strong>Build rehearsalで、最初の90秒に開く画面、話す台詞、想定質問、録画チェックを1つにまとめます。</strong>
           <p>審査員に機能一覧を浴びせず、価値、差別化、実用性、提出状態の順に見せます。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function WinnerPacketPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [packet, setPacket] = useState<WinnerProofPacket | null>(null);
+  const [protopediaUrl, setProtopediaUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildPacket() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/winner-packet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+          skipReleaseDrift: true,
+          protopediaUrl,
+          videoUrl
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setPacket((await response.json()) as WinnerProofPacket);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="winner-packet">
+      <div className="winner-heading">
+        <div>
+          <span className="eyebrow">Winner proof packet</span>
+          <h2>
+            <Trophy size={20} />
+            Five criteria, one proof path
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildPacket} disabled={loading} title="審査5項目の勝ち証拠を束ねる">
+          <BadgeCheck size={17} />
+          {loading ? "Packing" : "Build packet"}
+        </button>
+      </div>
+
+      <div className="winner-inputs">
+        <label>
+          <span>ProtoPedia work URL</span>
+          <input value={protopediaUrl} onChange={(event) => setProtopediaUrl(event.target.value)} placeholder="https://protopedia.net/prototype/..." />
+        </label>
+        <label>
+          <span>Video URL</span>
+          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://drive.google.com/..." />
+        </label>
+      </div>
+
+      {error && <p className="error-text">Winner packet request failed: {error}</p>}
+
+      {packet ? (
+        <div className="winner-body">
+          <div className="winner-summary">
+            <div>
+              <span className={cx("risk-chip", packet.readiness === "winner-packet-ready" ? "low" : packet.readiness === "external-gap-packet" ? "medium" : "high")}>
+                {packet.readiness}
+              </span>
+              <h3>{packet.headline}</h3>
+              <p>{packet.hardTruth}</p>
+              <strong>Next: {packet.nextAction}</strong>
+            </div>
+            <div className="winner-score">
+              <strong>{packet.packetScore}</strong>
+              <span>packet score</span>
+            </div>
+          </div>
+
+          <div className="winner-criteria">
+            {packet.criteria.map((criterion) => (
+              <article key={criterion.id} className={criterion.status}>
+                <div>
+                  <span>{criterion.status}</span>
+                  <strong>
+                    {criterion.score}/{criterion.target}
+                  </strong>
+                </div>
+                <h3>{criterion.label}</h3>
+                <p>{criterion.judgeLine}</p>
+                <b>{criterion.show}</b>
+                <small>{criterion.recordingCue}</small>
+                <a href={criterion.proofUrl} target="_blank" rel="noreferrer">
+                  Open proof <ExternalLink size={13} />
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <div className="winner-grid">
+            <section>
+              <h3>
+                <Crosshair size={15} />
+                Objection answers
+              </h3>
+              {packet.judgeQuestions.map((question) => (
+                <article key={question.id} className={question.status}>
+                  <strong>{question.question}</strong>
+                  <p>{question.answer}</p>
+                  <a href={question.proofUrl} target="_blank" rel="noreferrer">
+                    Proof <ExternalLink size={13} />
+                  </a>
+                </article>
+              ))}
+            </section>
+            <section>
+              <h3>
+                <Film size={15} />
+                Recording order
+              </h3>
+              {packet.recordingOrder.map((item) => (
+                <article key={item.id} className={item.status}>
+                  <div>
+                    <strong>{item.timeRange}</strong>
+                    <span>{item.status}</span>
+                  </div>
+                  <p>{item.screen}</p>
+                  <a href={item.proofUrl} target="_blank" rel="noreferrer">
+                    Open <ExternalLink size={13} />
+                  </a>
+                </article>
+              ))}
+            </section>
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Submission copy
+              </h3>
+              <article>
+                <strong>{packet.submissionCopy.oneLine}</strong>
+                <p>{packet.submissionCopy.winnerThesis}</p>
+                <small>Missing: {packet.submissionCopy.missingExternal.join(", ") || "none"}</small>
+              </article>
+              <pre>{JSON.stringify(packet.submissionCopy.proofOrder, null, 2)}</pre>
+            </section>
+            <section>
+              <h3>
+                <Terminal size={15} />
+                A2A payload
+              </h3>
+              <pre>{JSON.stringify(packet.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="winner-empty">
+          <Trophy size={28} />
+          <strong>Build packetで、審査5項目ごとの主張、証拠URL、反論回答、録画cueを1つにまとめます。</strong>
+          <p>競合/SWOT、初回UX、実用価値、実装証拠をバラバラに見せず、勝ち筋として提出に貼れる形へ圧縮します。</p>
         </div>
       )}
     </section>
@@ -6225,6 +6395,7 @@ export default function App() {
       <JudgeCommandCenterPanel recommendation={recommendation} projectBrief={projectBrief} />
       <DemoConciergePanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeRehearsalPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <WinnerPacketPanel recommendation={recommendation} projectBrief={projectBrief} />
       <PrizeStrategyPanel recommendation={recommendation} projectBrief={projectBrief} />
       <WinGapRadarPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeTourPanel recommendation={recommendation} projectBrief={projectBrief} />
