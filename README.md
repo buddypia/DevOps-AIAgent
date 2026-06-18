@@ -160,11 +160,11 @@
 
 ## Prize Strategy Board
 
-`Prize Strategy Board` は、MVPが足りるかではなく、ハッカソン優勝に必要な採点作戦を固定するパネルです。審査5項目ごとにtarget score、現在スコア、足りない証拠、demo move、次アクションを返し、Demo Concierge、Judge Route Lock、Judge Command Center、Competitive Battlecard、Objection Replay、Acceptance Matrix、Release Drift Guard、Observability Oracle、Pilot Economicsを最終ピッチ順へ束ねます。
+`Prize Strategy Board` は、MVPが足りるかではなく、ハッカソン優勝に必要な採点作戦を固定するパネルです。審査5項目ごとにtarget score、現在スコア、足りない証拠、demo move、次アクションを返し、Demo Concierge、Judge Route Lock、Prize Usability Lock、Judge Command Center、Competitive Battlecard、Objection Replay、Acceptance Matrix、Release Drift Guard、Observability Oracle、Pilot Economicsを最終ピッチ順へ束ねます。Prize Usability Lockは外部URL watchをUsability不足として二重減点せず、first click、90秒route、proof URL、Focus path、persona lanes、opening command、外部gap honestyを分けて検収します。
 
 - API: `POST /api/prize-strategy`
 - App UI: `Build prize strategy`
-- Output: prize score、readiness、5 criteria score gaps、proof moves、final pitch order、risks、A2A `prize.strategy` payload
+- Output: prize score、criteria、Prize Usability Lock、proof moves、pitch order、risks、A2A `prize.strategy` payload
 
 ## Judge Tour
 

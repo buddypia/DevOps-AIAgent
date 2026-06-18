@@ -11,6 +11,8 @@ import type { JudgeCriterion, WinningStrategy } from "./strategy.js";
 export type PrizeReadiness = "winner-ready" | "finalist-track" | "needs-proof";
 export type PrizeCriterionStatus = "winner-ready" | "finalist-track" | "needs-proof";
 export type PrizeActionPriority = "now" | "next";
+export type PrizeUsabilityLockStatus = "sealed" | "watch" | "missing";
+export type PrizeUsabilityLockReadiness = "usability-locked" | "usability-external-watch" | "needs-usability-proof";
 
 export type PrizeCriterion = {
   id: string;
@@ -51,6 +53,28 @@ export type PrizeRisk = {
   proof: string;
 };
 
+export type PrizeUsabilityLockCheck = {
+  id: string;
+  label: string;
+  status: PrizeUsabilityLockStatus;
+  score: number;
+  proof: string;
+  evidenceUrl: string;
+};
+
+export type PrizeUsabilityLock = {
+  id: string;
+  lockScore: number;
+  internalScore: number;
+  readiness: PrizeUsabilityLockReadiness;
+  sealedCount: number;
+  watchCount: number;
+  missingCount: number;
+  operatorLine: string;
+  oneMinutePath: string[];
+  checks: PrizeUsabilityLockCheck[];
+};
+
 export type PrizeStrategyBoard = {
   id: string;
   prizeScore: number;
@@ -62,6 +86,7 @@ export type PrizeStrategyBoard = {
   proofMoves: PrizeProofMove[];
   pitchOrder: PrizePitchStep[];
   risks: PrizeRisk[];
+  usabilityLock?: PrizeUsabilityLock;
   judgeClose: string;
   a2aPayload: Record<string, unknown>;
 };
@@ -102,6 +127,19 @@ function statusFor(score: number, target: number): PrizeCriterionStatus {
   if (score >= target) return "winner-ready";
   if (score >= target - 8) return "finalist-track";
   return "needs-proof";
+}
+
+function usabilityLockScore(status: PrizeUsabilityLockStatus) {
+  if (status === "sealed") return 100;
+  if (status === "watch") return 88;
+  return 20;
+}
+
+function usabilityLockCheck(input: Omit<PrizeUsabilityLockCheck, "score"> & { score?: number }): PrizeUsabilityLockCheck {
+  return {
+    ...input,
+    score: Math.round(clamp(input.score ?? usabilityLockScore(input.status)))
+  };
 }
 
 function criterionItem(input: {
@@ -158,11 +196,12 @@ function proofMoves(input: {
   command: JudgeCommandCenter;
   battlecard: CompetitiveBattlecard;
   demoConcierge?: DemoConcierge;
+  usabilityLock?: PrizeUsabilityLock;
   pilotEconomics: PilotEconomics;
   observabilityOracle?: ObservabilityOracle;
   releaseDrift?: ReleaseDriftGuard;
 }): PrizeProofMove[] {
-  const { baseUrl, acceptance, command, battlecard, demoConcierge, pilotEconomics, observabilityOracle, releaseDrift } = input;
+  const { baseUrl, acceptance, command, battlecard, demoConcierge, usabilityLock, pilotEconomics, observabilityOracle, releaseDrift } = input;
   const oracleScore = observabilityOracle ? observabilityProofScore(observabilityOracle) : undefined;
   return [
     ...(demoConcierge
@@ -182,7 +221,19 @@ function proofMoves(input: {
             endpoint: absoluteUrl(baseUrl, "/api/demo-concierge"),
             proof: `${demoConcierge.routeLock.lockScore} route lock / ${demoConcierge.routeLock.readiness}`,
             score: demoConcierge.routeLock.lockScore
-          }
+          },
+          ...(usabilityLock
+            ? [
+                {
+                  id: "usability-lock",
+                  label: "Prize usability lock",
+                  screen: "Prize Strategy Board",
+                  endpoint: absoluteUrl(baseUrl, "/api/prize-strategy"),
+                  proof: `${usabilityLock.internalScore} internal usability / ${usabilityLock.readiness}`,
+                  score: usabilityLock.internalScore
+                }
+              ]
+            : [])
         ]
       : []),
     {
@@ -312,6 +363,120 @@ function risks(input: {
   ];
 }
 
+function buildUsabilityLock(input: {
+  baseUrl: string;
+  acceptance: JudgeAcceptanceMatrix;
+  command: JudgeCommandCenter;
+  demoConcierge?: DemoConcierge;
+}): PrizeUsabilityLock | undefined {
+  if (!input.demoConcierge) return undefined;
+
+  const normalizedBase = input.baseUrl.replace(/\/$/, "");
+  const { demoConcierge, acceptance, command } = input;
+  const externalWatchCount = acceptance.rows.filter((item) => item.area === "submission" && item.status !== "accepted").length;
+  const routeBlocked = demoConcierge.routeLock.lockedSteps.some((step) => step.status === "blocked");
+  const checks = [
+    usabilityLockCheck({
+      id: "single-first-click",
+      label: "Single first click",
+      status: demoConcierge.singleNextClick.length >= 20 ? "sealed" : "watch",
+      proof: demoConcierge.singleNextClick,
+      evidenceUrl: absoluteUrl(normalizedBase, "/api/demo-concierge")
+    }),
+    usabilityLockCheck({
+      id: "route-lock",
+      label: "90-second route lock",
+      status:
+        routeBlocked || demoConcierge.routeLock.lockScore < 88
+          ? "missing"
+          : demoConcierge.routeLock.lockScore >= 92
+            ? "sealed"
+            : "watch",
+      proof: `${demoConcierge.routeLock.lockScore} route lock / ${demoConcierge.routeLock.lockedSteps.length} proof steps.`,
+      evidenceUrl: absoluteUrl(normalizedBase, "/api/demo-concierge")
+    }),
+    usabilityLockCheck({
+      id: "proof-url-coverage",
+      label: "Proof URL coverage",
+      status: demoConcierge.routeLock.proofLinkScore >= 100 ? "sealed" : demoConcierge.routeLock.proofLinkScore >= 88 ? "watch" : "missing",
+      proof: `${demoConcierge.routeLock.proofLinkScore} proof-link score.`,
+      evidenceUrl: absoluteUrl(normalizedBase, "/api/demo-concierge")
+    }),
+    usabilityLockCheck({
+      id: "focus-path",
+      label: "First-run focus path",
+      status:
+        demoConcierge.focusLock.blockedCount > 0
+          ? "missing"
+          : demoConcierge.focusLock.oneMinutePath.length >= 4 && demoConcierge.focusLock.focusScore >= 92
+            ? "sealed"
+            : "watch",
+      proof: `${demoConcierge.focusLock.focusScore} focus score; ${demoConcierge.focusLock.oneMinutePath.join(" -> ")}.`,
+      evidenceUrl: absoluteUrl(normalizedBase, "/api/demo-concierge")
+    }),
+    usabilityLockCheck({
+      id: "persona-lanes",
+      label: "Persona lane coverage",
+      status:
+        demoConcierge.lanes.length >= 3 && demoConcierge.lanes.every((lane) => lane.steps.length >= 2)
+          ? "sealed"
+          : demoConcierge.lanes.length >= 2
+            ? "watch"
+            : "missing",
+      proof: demoConcierge.lanes.map((lane) => `${lane.persona}:${lane.firstClick}`).join(" / "),
+      evidenceUrl: absoluteUrl(normalizedBase, "/api/demo-concierge")
+    }),
+    usabilityLockCheck({
+      id: "opening-command",
+      label: "Opening command ready",
+      status: command.commandScore >= 88 && command.openingMove.length >= 20 ? "sealed" : command.commandScore >= 80 ? "watch" : "missing",
+      proof: `${command.commandScore} command score; ${command.openingMove}`,
+      evidenceUrl: absoluteUrl(normalizedBase, "/api/judge-command-center")
+    }),
+    usabilityLockCheck({
+      id: "external-gap-honesty",
+      label: "External gap honesty",
+      status: acceptance.verdict === "not-accepted" ? "missing" : externalWatchCount > 0 ? "watch" : "sealed",
+      proof:
+        externalWatchCount > 0
+          ? `${externalWatchCount} submission rows remain visible as watch.`
+          : "No external submission watch rows remain.",
+      evidenceUrl: absoluteUrl(normalizedBase, "/api/acceptance-matrix")
+    })
+  ];
+  const nonExternalChecks = checks.filter((check) => check.id !== "external-gap-honesty");
+  const sealedCount = checks.filter((check) => check.status === "sealed").length;
+  const watchCount = checks.filter((check) => check.status === "watch").length;
+  const missingCount = checks.filter((check) => check.status === "missing").length;
+  const internalScore = Math.round(clamp(average(nonExternalChecks.map((check) => check.score))));
+  const lockScore = Math.round(clamp(average(checks.map((check) => check.score))));
+  const nonExternalSealed = nonExternalChecks.every((check) => check.status === "sealed");
+  const readiness: PrizeUsabilityLockReadiness =
+    missingCount > 0 || !nonExternalSealed
+      ? "needs-usability-proof"
+      : externalWatchCount > 0
+        ? "usability-external-watch"
+        : "usability-locked";
+
+  return {
+    id: `prize-usability-lock-${lockScore}-${readiness}`,
+    lockScore,
+    internalScore,
+    readiness,
+    sealedCount,
+    watchCount,
+    missingCount,
+    operatorLine:
+      readiness === "usability-locked"
+        ? "First-click route, focus path, proof URLs, and submission truth are locked for the prize pitch."
+        : readiness === "usability-external-watch"
+          ? "First-run usability is internally locked; only external submission URL watch rows remain visible."
+          : "The first-run path still needs a route, focus, or proof-link fix before it can carry the prize pitch.",
+    oneMinutePath: demoConcierge.focusLock.oneMinutePath,
+    checks
+  };
+}
+
 export function buildPrizeStrategyBoard(input: {
   baseUrl: string;
   strategy: WinningStrategy;
@@ -328,6 +493,7 @@ export function buildPrizeStrategyBoard(input: {
   const normalizedBase = baseUrl.replace(/\/$/, "");
   const oracleScore = observabilityOracle ? observabilityProofScore(observabilityOracle) : undefined;
   const routeLock = demoConcierge?.routeLock;
+  const usabilityLock = buildUsabilityLock({ baseUrl: normalizedBase, acceptance, command, demoConcierge });
   const criteria = [
     criterionItem({
       id: "agent-centrality",
@@ -368,24 +534,26 @@ export function buildPrizeStrategyBoard(input: {
         routeLock?.lockScore ?? row(acceptance, "usability-first-run")?.score ?? 0,
         routeLock?.routeStepScore ?? row(acceptance, "usability-first-run")?.score ?? 0,
         routeLock?.proofLinkScore ?? row(acceptance, "usability-first-run")?.score ?? 0,
+        demoConcierge?.focusLock.focusScore ?? command.commandScore,
+        usabilityLock?.internalScore ?? demoConcierge?.conciergeScore ?? command.commandScore,
+        usabilityLock?.lockScore ?? demoConcierge?.conciergeScore ?? command.commandScore,
         numericMetric(command, "tour"),
         lane(autopilot, "demo")?.score ?? 0,
-        command.commandScore,
-        demoConcierge?.conciergeScore ?? command.commandScore
+        command.commandScore
       ],
       decisiveProof:
-        routeLock === undefined
+        usabilityLock === undefined
           ? "Demo Concierge、Prize Strategy、Judge Command Center、Judge Tourが初見の採点作戦とクリック順を固定する。"
-          : "Demo ConciergeのJudge Route Lockが、最初の90秒、proof URL、ひと息台詞、捨てる導線まで固定する。",
+          : "Prize Usability Lockが、Judge Route Lock、最初の90秒、proof URL、Focus path、persona別first click、外部URL watchの正直表示まで固定する。",
       missingProof: "機能が多く、初見審査員がどこを押すべきか迷うリスク。",
       demoMove:
-        routeLock === undefined
+        usabilityLock === undefined
           ? "Demo Conciergeでpersona別のfirst clickを見せ、First 90 secondsのproof buttonsを上から辿る。"
-          : "Demo ConciergeのJudge Route Lockで、0-90秒のlocked stepsだけを上から辿る。",
+          : "Prize Usability Lockを見せてから、Demo ConciergeのJudge Route LockとFocus pathだけを辿る。",
       nextAction:
-        routeLock === undefined
+        usabilityLock === undefined
           ? "Prize pitchでは機能一覧を話さず、Demo Conciergeのjudge laneから進める。"
-          : "Prize pitchでは機能一覧を話さず、Judge Route Lockのlocked stepsだけを録画する。"
+          : "Prize pitchでは機能一覧を話さず、Usability Lockのsealed checksだけを録画する。"
     }),
     criterionItem({
       id: "practicality",
@@ -449,7 +617,7 @@ export function buildPrizeStrategyBoard(input: {
     )
   );
   const readiness = readinessFrom({ prizeScore, criteria, acceptance, command, autopilot, releaseDrift });
-  const moves = proofMoves({ baseUrl, acceptance, command, battlecard, demoConcierge, pilotEconomics, observabilityOracle, releaseDrift });
+  const moves = proofMoves({ baseUrl, acceptance, command, battlecard, demoConcierge, usabilityLock, pilotEconomics, observabilityOracle, releaseDrift });
   const riskItems = risks({ acceptance, command, battlecard, criteria, releaseDrift });
   const weakest = [...criteria].sort((left, right) => left.currentScore - right.currentScore)[0];
 
@@ -507,6 +675,7 @@ export function buildPrizeStrategyBoard(input: {
       }
     ],
     risks: riskItems,
+    usabilityLock,
     judgeClose:
       weakest && weakest.delta > 0
         ? `${weakest.label} is the next scoring lever: ${weakest.nextAction}`
@@ -524,6 +693,14 @@ export function buildPrizeStrategyBoard(input: {
         delta: item.delta
       })),
       proofMoves: moves.map((item) => ({ id: item.id, score: item.score, endpoint: item.endpoint })),
+      usabilityLock: usabilityLock
+        ? {
+            lockScore: usabilityLock.lockScore,
+            internalScore: usabilityLock.internalScore,
+            readiness: usabilityLock.readiness,
+            checks: usabilityLock.checks.map((check) => ({ id: check.id, status: check.status, score: check.score, evidenceUrl: check.evidenceUrl }))
+          }
+        : null,
       competitiveBattlecard: {
         score: battlecard.battleScore,
         readiness: battlecard.readiness,

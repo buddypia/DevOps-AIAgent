@@ -1315,6 +1315,48 @@ function PrizeStrategyPanel({
             ))}
           </div>
 
+          {board.usabilityLock ? (
+            <div className="prize-usability-lock">
+              <section>
+                <div>
+                  <span
+                    className={cx(
+                      "risk-chip",
+                      board.usabilityLock.readiness === "usability-locked"
+                        ? "low"
+                        : board.usabilityLock.readiness === "usability-external-watch"
+                          ? "medium"
+                          : "high"
+                    )}
+                  >
+                    {board.usabilityLock.readiness}
+                  </span>
+                  <strong>{board.usabilityLock.internalScore}</strong>
+                </div>
+                <h3>Prize Usability Lock</h3>
+                <p>{board.usabilityLock.operatorLine}</p>
+                <small>
+                  sealed {board.usabilityLock.sealedCount} / watch {board.usabilityLock.watchCount} / missing {board.usabilityLock.missingCount} /
+                  lock {board.usabilityLock.lockScore}
+                </small>
+              </section>
+              <div>
+                {board.usabilityLock.checks.map((check) => (
+                  <article key={check.id} className={check.status}>
+                    <div>
+                      <strong>{check.label}</strong>
+                      <span>{check.status}</span>
+                    </div>
+                    <p>{check.proof}</p>
+                    <a href={check.evidenceUrl} target="_blank" rel="noreferrer">
+                      Evidence <ExternalLink size={13} />
+                    </a>
+                  </article>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           <div className="prize-grid">
             <section>
               <h3>

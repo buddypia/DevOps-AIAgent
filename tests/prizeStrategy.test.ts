@@ -332,10 +332,26 @@ describe("prize strategy board", () => {
       "implementation"
     ]);
     expect(board.criteria.every((criterion) => criterion.targetScore === 92)).toBe(true);
-    expect(board.criteria.find((criterion) => criterion.id === "usability")?.status).toBe("finalist-track");
+    expect(board.criteria.find((criterion) => criterion.id === "usability")).toMatchObject({
+      status: "winner-ready",
+      decisiveProof: expect.stringContaining("Prize Usability Lock")
+    });
+    expect(board.usabilityLock).toMatchObject({
+      readiness: "usability-external-watch",
+      internalScore: 100,
+      sealedCount: 6,
+      watchCount: 1,
+      missingCount: 0,
+      checks: expect.arrayContaining([
+        expect.objectContaining({ id: "route-lock", status: "sealed" }),
+        expect.objectContaining({ id: "focus-path", status: "sealed" }),
+        expect.objectContaining({ id: "external-gap-honesty", status: "watch" })
+      ])
+    });
     expect(board.proofMoves.map((move) => move.id)).toEqual([
       "concierge",
       "route-lock",
+      "usability-lock",
       "command",
       "battlecard",
       "objection-replay",
@@ -358,6 +374,12 @@ describe("prize strategy board", () => {
       score: expect.any(Number)
     });
     expect(board.proofMoves.find((move) => move.id === "route-lock")?.score).toBeGreaterThanOrEqual(92);
+    expect(board.proofMoves.find((move) => move.id === "usability-lock")).toMatchObject({
+      screen: "Prize Strategy Board",
+      endpoint: `${SUBMISSION_PROOF.deployedUrl}/api/prize-strategy`,
+      proof: expect.stringContaining("internal usability"),
+      score: 100
+    });
     expect(board.proofMoves.find((move) => move.id === "operations-value")).toMatchObject({
       screen: "Observability Oracle",
       endpoint: `${SUBMISSION_PROOF.deployedUrl}/api/observability-oracle`,
@@ -379,6 +401,13 @@ describe("prize strategy board", () => {
     expect(board.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "prize.strategy",
+      usabilityLock: {
+        readiness: "usability-external-watch",
+        internalScore: 100,
+        checks: expect.arrayContaining([
+          expect.objectContaining({ id: "external-gap-honesty", status: "watch" })
+        ])
+      },
       competitiveBattlecard: {
         objectionReplay: {
           readiness: "replay-ready",

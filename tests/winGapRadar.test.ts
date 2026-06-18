@@ -356,11 +356,12 @@ describe("win gap radar", () => {
     });
     expect(radar.lanes.find((lane) => lane.id === "approach-moat")?.score).toBeGreaterThanOrEqual(90);
     expect(radar.lanes.find((lane) => lane.id === "usability-first-run")).toMatchObject({
+      status: "banked",
       proofUrl: `${SUBMISSION_PROOF.deployedUrl}/api/demo-concierge`,
       demoCue: "Demo Concierge -> Judge Route Lock -> Locked proof steps",
       mvpEvidence: expect.stringContaining("route lock")
     });
-    expect(radar.lanes.find((lane) => lane.id === "usability-first-run")?.score).toBeGreaterThanOrEqual(88);
+    expect(radar.lanes.find((lane) => lane.id === "usability-first-run")?.score).toBeGreaterThanOrEqual(90);
     expect(radar.lanes.find((lane) => lane.id === "practical-value")).toMatchObject({
       proofUrl: `${SUBMISSION_PROOF.deployedUrl}/api/observability-oracle`,
       demoCue: "Demo Concierge buyer lane -> Observability Oracle -> Pilot Economics",
