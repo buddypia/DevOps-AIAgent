@@ -233,7 +233,7 @@
 
 ## Release Drift Surface
 
-- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Feature Freeze Lock tag、Acceptance Matrix、A2A artifactを返しているかを検査する
+- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Feature Freeze Lock tag、Winner Release Lock tag、Finalist Release Drift tag、Acceptance Matrix、A2A artifactを返しているかを検査する
 - Drift probes: target health、Agent Card skill surface、Acceptance Matrix endpoint、A2A artifact endpoints、latest main CIを同時に評価する
 - Verdict: 最新なら `release-current`、公開URLが古いなら `deploy-drift`、health/CIが落ちたら `release-blocked`
 - Runbook: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Acceptance Matrix、A2A artifactの再確認コマンドを返す
@@ -243,7 +243,7 @@
 
 - `POST /api/deploy-recovery`: Release Drift Guardの結果と直近gcloudエラーを、再デプロイ復旧計画に変換する
 - Checks: target health、skill surface、Cloud Build auth、A2A artifact、latest main CIをready/watch/blockedで返す
-- Commands: `gcloud auth login`、Cloud Build submit、Agent Card skill count、required signal tags、`/api/deploy-recovery`、A2A `deployRecoveryEndpoint` の再検証コマンドを返す
+- Commands: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Recording Lock / Feature Freeze Lock / Winner Release Lock / Finalist Release Drift のrequired signal tags、`/api/deploy-recovery`、A2A `deployRecoveryEndpoint` の再検証コマンドを返す
 - A2A payload: `deploy.recover` skillとしてrecovery score、readiness、blocking commands、blockersを返す
 
 ## Demo Receipt Surface
@@ -389,7 +389,7 @@
 - CI proof: `.github/workflows/ci.yml` が `npm run typecheck`、`npm test`、`npm run build`、`make q.check-architecture` を公開repo上で実行し、Proof APIが最新main runを取り込む
 - Pitch proof: `pitch.director` skillとして、審査員に見せる順番と提出動画の残作業をA2A payloadにも含める
 - Judge drill: `judge.drill` skillとして、審査員の反論、競合Cross-exam deck、60秒回答パス、証拠リンクをA2A payloadにも含める
-- Finalist proof: `finalist.simulate` skillとして、最終候補スコア、judge consensus、Release Drift、Finalist Internal Lock、外部URL status、残ギャップをA2A payloadにも含める
+- Finalist proof: `finalist.simulate` skillとして、最終候補スコア、judge consensus、Release Drift、Finalist Internal Lock、外部URL status、残ギャップをA2A payloadにも含め、Agent Cardの `release-drift` tagをRelease Drift Guardの必須signalにする
 - Publisher proof: `submission.publish` skillとして、ProtoPedia貼り付け本文、Publication Policy Lock、メディアURL、未完了外部作業をA2A payloadにも含める
 - Dossier proof: `submission.dossier` skillとして、提出コピー欄、録画順、提出フォームhandoff packet、構成図パケット、提出リンク、MarkdownドシエをA2A payloadにも含める
 - Closeout proof: `submission.closeout` skillとして、外部提出の残作業、copy tray、Publication Policy Lock、video run、Video Proof Lock、Submission Dry Run Lock、Submission Asset Lock、submit packetをA2A payloadにも含める

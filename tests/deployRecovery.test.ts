@@ -25,6 +25,13 @@ const expectedSkillIds = [
   "win.autopilot"
 ];
 
+const requiredAgentCardSignals = [
+  "judge.rehearsal:tag:recording-lock",
+  "win.gap.radar:tag:feature-freeze-lock",
+  "winner.packet:tag:winner-release-lock",
+  "finalist.simulate:tag:release-drift"
+];
+
 const passedProbe = (id: string): ReleaseDriftProbe => ({
   id,
   label: id,
@@ -95,6 +102,8 @@ describe("deploy recovery plan", () => {
       expectedSkillIds,
       observedSkillIds: expectedSkillIds,
       requiredSkillIds: expectedSkillIds,
+      requiredAgentCardSignals,
+      observedAgentCardSignals: requiredAgentCardSignals,
       generatedAt: "2026-06-18T00:00:00.000Z",
       probes: [
         passedProbe("target-health"),
@@ -123,8 +132,12 @@ describe("deploy recovery plan", () => {
       expectedSkillIds,
       observedSkillIds: expectedSkillIds,
       requiredSkillIds: expectedSkillIds,
-      requiredAgentCardSignals: ["judge.rehearsal:tag:recording-lock", "win.gap.radar:tag:feature-freeze-lock"],
-      observedAgentCardSignals: ["judge.rehearsal:tag:recording-lock"],
+      requiredAgentCardSignals,
+      observedAgentCardSignals: [
+        "judge.rehearsal:tag:recording-lock",
+        "win.gap.radar:tag:feature-freeze-lock",
+        "finalist.simulate:tag:release-drift"
+      ],
       generatedAt: "2026-06-18T00:00:00.000Z",
       probes: [
         passedProbe("target-health"),
@@ -132,7 +145,7 @@ describe("deploy recovery plan", () => {
           ...passedProbe("agent-card-skill-surface"),
           status: "watch",
           score: 58,
-          evidence: "Agent Card exposes all skills but misses win.gap.radar:tag:feature-freeze-lock."
+          evidence: "Agent Card exposes all skills but misses winner.packet:tag:winner-release-lock."
         },
         passedProbe("acceptance-endpoint"),
         passedProbe("a2a-artifact"),
@@ -148,7 +161,7 @@ describe("deploy recovery plan", () => {
     expect(plan.readiness).toBe("redeploy-required");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")).toMatchObject({
       status: "blocked",
-      evidence: expect.stringContaining("win.gap.radar:tag:feature-freeze-lock")
+      evidence: expect.stringContaining("winner.packet:tag:winner-release-lock")
     });
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")).toMatchObject({
       blocking: true,
@@ -156,11 +169,11 @@ describe("deploy recovery plan", () => {
     });
     expect(plan.steps.find((step) => step.id === "skill-surface")?.status).toBe("blocked");
     expect(plan.blockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["agent-card-signals", "agent-card-skill-surface"]));
-    expect(plan.judgeScript.join("\n")).toContain("win.gap.radar:tag:feature-freeze-lock");
+    expect(plan.judgeScript.join("\n")).toContain("winner.packet:tag:winner-release-lock");
     expect(plan.a2aPayload).toMatchObject({
       skill: "deploy.recover",
       releaseDrift: {
-        missingAgentCardSignals: ["win.gap.radar:tag:feature-freeze-lock"]
+        missingAgentCardSignals: ["winner.packet:tag:winner-release-lock"]
       }
     });
   });
