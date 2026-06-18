@@ -84,6 +84,15 @@ function absoluteUrl(baseUrl: string, path: string) {
   return `${baseUrl.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+function escapeHtml(value: unknown) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function statusFromScore(score: number): WinnerPacketStatus {
   if (score >= 86) return "ready";
   if (score >= 74) return "watch";
@@ -349,6 +358,7 @@ export function buildWinnerProofPacket(input: {
         proofUrl: criterion.proofUrl
       })),
       endpoints: {
+        winnerPacketPage: absoluteUrl(base, "/winner-packet"),
         winnerPacket: absoluteUrl(base, "/api/winner-packet"),
         judgeRehearsal: absoluteUrl(base, "/api/judge-rehearsal"),
         competitiveBattlecard: absoluteUrl(base, "/api/competitive-battlecard"),
@@ -358,4 +368,199 @@ export function buildWinnerProofPacket(input: {
       }
     }
   };
+}
+
+function tone(status: string) {
+  if (["winner-packet-ready", "ready", "release-current"].includes(status)) return "good";
+  if (["needs-proof", "blocked", "release-blocked"].includes(status)) return "bad";
+  return "watch";
+}
+
+export function renderWinnerProofPacketHtml(packet: WinnerProofPacket) {
+  const criteria = packet.criteria
+    .map(
+      (criterion) => `
+        <article class="criterion ${tone(criterion.status)}">
+          <div><strong>${escapeHtml(criterion.label)}</strong><span>${escapeHtml(criterion.status)} / ${escapeHtml(criterion.score)}→${escapeHtml(criterion.target)}</span></div>
+          <p>${escapeHtml(criterion.judgeLine)}</p>
+          <dl>
+            <dt>Show</dt><dd>${escapeHtml(criterion.show)}</dd>
+            <dt>Objection</dt><dd>${escapeHtml(criterion.objection)}</dd>
+            <dt>Answer</dt><dd>${escapeHtml(criterion.answer)}</dd>
+            <dt>Cue</dt><dd>${escapeHtml(criterion.recordingCue)}</dd>
+          </dl>
+          <a href="${escapeHtml(criterion.proofUrl)}">Open proof</a>
+        </article>`
+    )
+    .join("");
+  const questions = packet.judgeQuestions
+    .map(
+      (question) => `
+        <article class="question ${tone(question.status)}">
+          <div><strong>${escapeHtml(question.question)}</strong><span>${escapeHtml(question.status)}</span></div>
+          <p>${escapeHtml(question.answer)}</p>
+          <a href="${escapeHtml(question.proofUrl)}">Open proof</a>
+        </article>`
+    )
+    .join("");
+  const recording = packet.recordingOrder
+    .map(
+      (step) => `
+        <tr>
+          <td><strong>${escapeHtml(step.timeRange)}</strong><span>${escapeHtml(step.status)}</span></td>
+          <td>${escapeHtml(step.screen)}</td>
+          <td><a href="${escapeHtml(step.proofUrl)}">Open proof</a></td>
+        </tr>`
+    )
+    .join("");
+  const proofOrder = packet.submissionCopy.proofOrder.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+  const missingExternal =
+    packet.submissionCopy.missingExternal.length === 0
+      ? "<li>Missing external URLs: none</li>"
+      : packet.submissionCopy.missingExternal.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+  const endpointEntries =
+    typeof packet.a2aPayload.endpoints === "object" && packet.a2aPayload.endpoints
+      ? Object.entries(packet.a2aPayload.endpoints as Record<string, unknown>).filter((entry): entry is [string, string] => typeof entry[1] === "string")
+      : [];
+  const endpoints =
+    endpointEntries.length === 0
+      ? "<li>A2A endpoints: none</li>"
+      : endpointEntries.map(([label, url]) => `<li><strong>${escapeHtml(label)}</strong>: <a href="${escapeHtml(url)}">${escapeHtml(url)}</a></li>`).join("");
+
+  return `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Winner Proof Packet</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #17201d;
+        --muted: #5f6965;
+        --line: #dce5df;
+        --paper: #fbfcfa;
+        --panel: #ffffff;
+        --green: #13715d;
+        --mint: #e6f4ed;
+        --amber: #8a620d;
+        --amber-bg: #fff4d4;
+        --coral: #b24735;
+        --blue: #245c99;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+      a { color: inherit; }
+      header, main, footer { width: min(1160px, calc(100% - 32px)); margin: 0 auto; }
+      header { padding: 40px 0 20px; }
+      .eyebrow { color: var(--green); font-size: 0.78rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0; }
+      h1 { margin: 8px 0 10px; font-size: clamp(2rem, 5vw, 4.45rem); line-height: 1; letter-spacing: 0; max-width: 980px; }
+      header p { color: var(--muted); max-width: 860px; }
+      .metric-grid, .criteria-grid, .question-grid {
+        display: grid;
+        gap: 12px;
+      }
+      .metric-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 22px; }
+      .metric, .section, .criterion, .question {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 1px 0 rgba(23, 32, 29, 0.03);
+      }
+      .metric { padding: 14px; min-width: 0; }
+      .metric span { display: block; color: var(--muted); font-size: 0.75rem; font-weight: 800; }
+      .metric strong { display: block; margin-top: 4px; font-size: 1.35rem; line-height: 1.05; overflow-wrap: anywhere; }
+      .good { background: var(--mint); border-color: #b9dfd1; }
+      .watch { background: var(--amber-bg); border-color: #ecd58c; }
+      .bad { background: #ffe4de; border-color: #efb2a6; }
+      .section { padding: 18px; margin: 14px 0; }
+      .section h2 { margin: 0 0 12px; font-size: 1.05rem; }
+      .criteria-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .question-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .criterion, .question { padding: 12px; }
+      .criterion div, .question div { display: flex; gap: 10px; justify-content: space-between; align-items: center; }
+      .criterion span, .question span { color: var(--blue); font-size: 0.72rem; font-weight: 900; }
+      .criterion p, .question p { margin: 8px 0; }
+      dl { display: grid; grid-template-columns: minmax(80px, auto) 1fr; gap: 6px 10px; margin: 10px 0; }
+      dt { color: var(--muted); font-size: 0.76rem; font-weight: 900; }
+      dd { margin: 0; overflow-wrap: anywhere; }
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      th, td { padding: 12px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+      th { color: var(--muted); font-size: 0.75rem; }
+      td span { display: block; color: var(--muted); font-size: 0.76rem; margin-top: 3px; }
+      ul { margin: 0; padding-left: 22px; color: var(--muted); }
+      li + li { margin-top: 8px; }
+      footer { color: var(--muted); font-size: 0.84rem; padding: 10px 0 36px; }
+      @media (max-width: 860px) {
+        header { padding-top: 28px; }
+        .metric-grid, .criteria-grid, .question-grid { grid-template-columns: 1fr; }
+        table, thead, tbody, tr, th, td { display: block; }
+        thead { display: none; }
+        tr { border-top: 1px solid var(--line); padding: 8px 0; }
+        td { border-bottom: 0; padding: 8px 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="eyebrow">Winner Proof Packet</div>
+      <h1>${escapeHtml(packet.headline)}</h1>
+      <p>${escapeHtml(packet.hardTruth)}</p>
+      <div class="metric-grid">
+        <div class="metric ${tone(packet.readiness)}"><span>Readiness</span><strong>${escapeHtml(packet.readiness)}</strong></div>
+        <div class="metric ${tone(packet.releaseLock.readiness)}"><span>Release Lock</span><strong>${escapeHtml(packet.releaseLock.readiness)}</strong></div>
+        <div class="metric good"><span>Packet Score</span><strong>${escapeHtml(packet.packetScore)}</strong></div>
+        <div class="metric ${packet.submissionCopy.missingExternal.length > 0 ? "watch" : "good"}"><span>External Gaps</span><strong>${escapeHtml(packet.submissionCopy.missingExternal.length)}</strong></div>
+      </div>
+    </header>
+    <main>
+      <section class="section">
+        <h2>Next Action</h2>
+        <p>${escapeHtml(packet.nextAction)}</p>
+      </section>
+      <section class="section">
+        <h2>Five Criteria Proof Cards</h2>
+        <div class="criteria-grid">${criteria}</div>
+      </section>
+      <section class="section">
+        <h2>Objection Answers</h2>
+        <div class="question-grid">${questions}</div>
+      </section>
+      <section class="section">
+        <h2>Recording Order</h2>
+        <table>
+          <thead><tr><th>Time</th><th>Screen</th><th>Proof</th></tr></thead>
+          <tbody>${recording}</tbody>
+        </table>
+      </section>
+      <section class="section">
+        <h2>Winner Release Lock</h2>
+        <p>${escapeHtml(packet.releaseLock.proof)}</p>
+        <p>${escapeHtml(packet.releaseLock.nextAction)}</p>
+        <a href="${escapeHtml(packet.releaseLock.evidenceUrl)}">Open release proof</a>
+      </section>
+      <section class="section">
+        <h2>Submission Copy</h2>
+        <p><strong>${escapeHtml(packet.submissionCopy.oneLine)}</strong></p>
+        <p>${escapeHtml(packet.submissionCopy.winnerThesis)}</p>
+        <ul>${proofOrder}</ul>
+      </section>
+      <section class="section">
+        <h2>Missing External</h2>
+        <ul>${missingExternal}</ul>
+      </section>
+      <section class="section">
+        <h2>A2A Endpoints</h2>
+        <ul>${endpoints}</ul>
+      </section>
+    </main>
+    <footer>${escapeHtml(packet.id)}</footer>
+  </body>
+</html>`;
 }

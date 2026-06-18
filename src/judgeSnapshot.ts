@@ -119,6 +119,7 @@ export function buildJudgeSnapshot(input: {
   const pilotEconomicsUrl = endpoint(baseUrl, "/api/pilot-economics");
   const releaseDriftUrl = endpoint(baseUrl, "/api/release-drift");
   const winnerPacketUrl = endpoint(baseUrl, "/api/winner-packet");
+  const winnerPacketPageUrl = endpoint(baseUrl, "/winner-packet");
   const judgeCommandUrl = endpoint(baseUrl, "/api/judge-command-center");
   const acceptanceMatrixUrl = endpoint(baseUrl, "/api/acceptance-matrix");
   const competitiveSwotUrl = endpoint(baseUrl, "/competitive-swot");
@@ -272,6 +273,13 @@ export function buildJudgeSnapshot(input: {
         purpose: "ProtoPedia本文、構成図、タグ、提出URLの作業面を読む。"
       },
       {
+        id: "winner-packet",
+        label: "Winner Proof Packet",
+        method: "GET",
+        url: winnerPacketPageUrl,
+        purpose: "審査5項目の主張、証拠URL、反論回答、録画cueを1枚で読む。"
+      },
+      {
         id: "app",
         label: "Cloud Run App",
         method: "GET",
@@ -332,7 +340,7 @@ export function buildJudgeSnapshot(input: {
     judgeScript: [
       "最初に /api/judge-snapshot をGETで開き、directOpen と readiness を見せる。",
       `Judge Proof score ${input.proof.overallScore} と Criteria Duel score ${input.battlecard.criteriaDuel.duelScore} を1画面で確認する。`,
-      "そこから Competitive SWOT、Autonomy Snapshot、MVP Readiness、Pilot Value、Recording Script、Submission AssetsのGET証拠へ移動する。",
+      "そこから Competitive SWOT、Autonomy Snapshot、MVP Readiness、Pilot Value、Recording Script、Submission Assets、Winner Proof PacketのGET証拠へ移動する。",
       `Agent Card exposes ${input.agentCardSkillIds.length} skills; judge.snapshot:get-proof が公開revisionに載っているかをRelease Driftで確認する。`,
       `深掘りはPOST APIをcurlで再実行する: ${postApis.map((api) => api.label).join(" / ")}。`,
       releaseVerdict === "not-run"
@@ -369,6 +377,7 @@ export function buildJudgeSnapshot(input: {
         pilotEconomics: pilotEconomicsUrl,
         releaseDrift: releaseDriftUrl,
         winnerPacket: winnerPacketUrl,
+        winnerPacketPage: winnerPacketPageUrl,
         judgeCommand: judgeCommandUrl,
         acceptanceMatrix: acceptanceMatrixUrl,
         agentCard: input.proof.links.agentCard

@@ -86,7 +86,8 @@ describe("judge snapshot", () => {
         `${baseUrl}/mvp-readiness`,
         `${baseUrl}/pilot-value`,
         `${baseUrl}/recording-script`,
-        `${baseUrl}/submission-assets`
+        `${baseUrl}/submission-assets`,
+        `${baseUrl}/winner-packet`
       ])
     );
     expect(snapshot.criteriaDuel.rows).toHaveLength(5);
@@ -122,6 +123,7 @@ describe("judge snapshot", () => {
         recordingScript: `${baseUrl}/recording-script`,
         recordingScriptJson: `${baseUrl}/api/recording-script`,
         submissionAssetsPage: `${baseUrl}/submission-assets`,
+        winnerPacketPage: `${baseUrl}/winner-packet`,
         competitiveBattlecard: `${baseUrl}/api/competitive-battlecard`
       }
     });
@@ -148,6 +150,8 @@ describe("judge snapshot", () => {
     expect(html).toContain(`${baseUrl}/autonomy-snapshot`);
     expect(html).toContain(`${baseUrl}/pilot-value`);
     expect(html).toContain("Recording Script");
+    expect(html).toContain("Winner Proof Packet");
+    expect(html).toContain(`${baseUrl}/winner-packet`);
     expect(html).toContain("&lt;script&gt;alert(&#39;proof&#39;)&lt;/script&gt;");
     expect(html).not.toContain("<script>alert('proof')</script>");
   });

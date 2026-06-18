@@ -7,7 +7,7 @@ import type { PrizeStrategyBoard } from "../src/prizeStrategy";
 import { buildReleaseDriftGuard, type ReleaseDriftProbe } from "../src/releaseDrift";
 import type { SubmissionCloseoutWorkbench } from "../src/submissionCloseout";
 import { SUBMISSION_PROOF } from "../src/submission";
-import { buildWinnerProofPacket } from "../src/winnerPacket";
+import { buildWinnerProofPacket, renderWinnerProofPacketHtml } from "../src/winnerPacket";
 
 const baseUrl = SUBMISSION_PROOF.deployedUrl;
 
@@ -148,11 +148,29 @@ describe("winner proof packet", () => {
         verdict: "release-current"
       },
       endpoints: {
+        winnerPacketPage: `${baseUrl}/winner-packet`,
         winnerPacket: `${baseUrl}/api/winner-packet`,
         judgeRehearsal: `${baseUrl}/api/judge-rehearsal`,
         releaseDrift: `${baseUrl}/api/release-drift`
       }
     });
+  });
+
+  test("renders a direct-open HTML packet without leaking raw evidence HTML", () => {
+    const packet = fixture();
+    packet.criteria[0].answer = "<script>alert('winner')</script>";
+
+    const html = renderWinnerProofPacketHtml(packet);
+
+    expect(html).toContain("<!doctype html>");
+    expect(html).toContain("Winner Proof Packet");
+    expect(html).toContain("Five Criteria Proof Cards");
+    expect(html).toContain("Objection Answers");
+    expect(html).toContain("Recording Order");
+    expect(html).toContain("Winner Release Lock");
+    expect(html).toContain(`${baseUrl}/winner-packet`);
+    expect(html).toContain("&lt;script&gt;alert(&#39;winner&#39;)&lt;/script&gt;");
+    expect(html).not.toContain("<script>alert('winner')</script>");
   });
 
   test("becomes winner-packet-ready once external closeout is ready", () => {

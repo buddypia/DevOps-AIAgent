@@ -36,6 +36,7 @@ const requiredAgentCardSignals = [
   "judge.rehearsal:tag:recording-lock",
   "win.gap.radar:tag:feature-freeze-lock",
   "winner.packet:tag:winner-release-lock",
+  "winner.packet:tag:get-proof",
   "finalist.simulate:tag:release-drift",
   "competitive.battlecard:tag:criteria-duel",
   "competitive.snapshot:tag:get-proof",
@@ -187,6 +188,7 @@ describe("deploy recovery plan", () => {
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("recording.script:tag:get-proof");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("pilot.value.snapshot:tag:get-proof");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("competitive.snapshot:tag:get-proof");
+    expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("winner.packet:tag:get-proof");
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")).toMatchObject({
       blocking: true,
       copyGroup: "verify"
@@ -206,6 +208,7 @@ describe("deploy recovery plan", () => {
     expect(plan.judgeScript.join("\n")).toContain("/api/autonomy-snapshot");
     expect(plan.judgeScript.join("\n")).toContain("recording.script:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("pilot.value.snapshot:tag:get-proof");
+    expect(plan.judgeScript.join("\n")).toContain("winner.packet:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("/api/recording-script");
     expect(plan.judgeScript.join("\n")).toContain("/api/pilot-value");
     expect(plan.a2aPayload).toMatchObject({
@@ -218,7 +221,8 @@ describe("deploy recovery plan", () => {
           "judge.snapshot:tag:get-proof",
           "mvp.snapshot:tag:get-proof",
           "pilot.value.snapshot:tag:get-proof",
-          "recording.script:tag:get-proof"
+          "recording.script:tag:get-proof",
+          "winner.packet:tag:get-proof"
         ]
       }
     });

@@ -52,7 +52,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Live Evidence Monitorで、Cloud Run、Agent Card、A2A、Squad Optimizer、GitHub Actions CIを公開環境からライブ検証する
 - Observability Oracleで、Live Evidence、Ops Drill、Pilot Economicsをつなぎ、運用観測を継続/復旧判断、買い手価値、次のAI雇用へ変換し、Acceptance Matrix / Prize Strategy / Win Gap Radarの実用性証拠に接続する
 - External Evidence Verifierで、公開GitHub、Cloud Run、ProtoPedia作品URL、動画URLが審査員から開けるかを検証する
-- Release Drift Guardで、公開Cloud Runが最新Agent Card、Winner Release Lock / Finalist Release Drift / Criteria Duel のsignal tags、Acceptance Matrix、A2A artifactを返しているかを検査する
+- Release Drift Guardで、公開Cloud Runが最新Agent Card、Winner Release Lock / Winner GET Proof / Finalist Release Drift / Criteria Duel のsignal tags、Acceptance Matrix、A2A artifactを返しているかを検査する
 - Deploy Recoveryで、release drift、gcloud認証、Cloud Build、required Agent Card signal tags、公開再検証を復旧コマンドに変換する
 - Judge Demo Receiptで、審査導線、競合反論、編成判断、公開証拠、外部提出URL状態をReceipt Integrity Lockとsha256 digest付き検収票にする
 - Judge Acceptance Matrixで、必須技術、審査5項目、競合/SWOT、公開証拠、提出物をaccepted/watch/blockedの受入表にする
@@ -229,6 +229,7 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/submission-closeou
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/judge-rehearsal \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"protopediaUrl":"https://protopedia.net/prototype/999999","videoUrl":"https://youtu.be/demo1234567"}'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/api/winner-packet | jq '{readiness, packetScore, page:.a2aPayload.endpoints.winnerPacketPage}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/winner-packet \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"protopediaUrl":"https://protopedia.net/prototype/999999","videoUrl":"https://youtu.be/demo1234567"}'
@@ -284,7 +285,7 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - ProtoPedia Quality Lock: run `POST /api/publisher` or `POST /api/submission-closeout` and confirm `qualityLock` / `protopediaQualityLock` is `copy-locked` before publishing the work page
 - Publication Policy Lock: run `POST /api/publisher` or `POST /api/submission-closeout` and confirm `policyLock` / `protopediaPolicyLock` is `prototype-copy-locked`; after publishing the video URL it should become `publication-ready`
 - Video Proof Lock: run `POST /api/submission-closeout` and use the `videoProofLock` checks before publishing the video URL
-- Public Judge Snapshot: open `GET /judge-snapshot` first; it should link directly to Competitive SWOT、Autonomy Snapshot、MVP Readiness、Pilot Value、Recording Script、Submission Assets without requiring POST APIs
+- Public Judge Snapshot: open `GET /judge-snapshot` first; it should link directly to Competitive SWOT、Autonomy Snapshot、MVP Readiness、Pilot Value、Recording Script、Submission Assets、Winner Proof Packet without requiring POST APIs
 - Recording Script page: open `GET /recording-script` before recording and use the chapter order, lower thirds, proof URLs, and publish steps as the teleprompter
 - Submission Dry Run Lock: run `POST /api/submission-closeout` and confirm `dryRunLock.readiness` is `submit-dry-run-ready` before recording; after publishing ProtoPedia/video URLs it should become `submit-dry-run-sealed`
 - System architecture diagram: `public/assets/a2a-marketplace-architecture.svg`
@@ -296,7 +297,8 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - Judge Rehearsal API: `POST /api/judge-rehearsal`
 - Final Pitch Defense Lock: run `POST /api/judge-rehearsal` and confirm `defenseLock` is not `needs-defense-proof` before recording final Q&A
 - Judge Recording Lock: run `POST /api/judge-rehearsal` and confirm `recordingLock.readiness` is `recording-external-watch` before recording; after real ProtoPedia/video URLs exist it should become `recording-ready`
-- Winner Proof Packet API: `POST /api/winner-packet`
+- Winner Proof Packet Page: `GET /winner-packet`
+- Winner Proof Packet JSON/API: `GET /api/winner-packet` and `POST /api/winner-packet`
 - Final Submission Runway API: `POST /api/submission-runway`
 - Autonomy Snapshot Page: `GET /autonomy-snapshot`
 - Agent Task Board API: `POST /api/task-board`

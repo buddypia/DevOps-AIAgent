@@ -37,6 +37,7 @@ const requiredAgentCardSignals = [
   "judge.rehearsal:tag:recording-lock",
   "win.gap.radar:tag:feature-freeze-lock",
   "winner.packet:tag:winner-release-lock",
+  "winner.packet:tag:get-proof",
   "finalist.simulate:tag:release-drift",
   "competitive.battlecard:tag:criteria-duel",
   "competitive.snapshot:tag:get-proof",
@@ -174,9 +175,10 @@ describe("release drift guard", () => {
       "judge.snapshot:tag:get-proof",
       "mvp.snapshot:tag:get-proof",
       "pilot.value.snapshot:tag:get-proof",
-      "recording.script:tag:get-proof"
+      "recording.script:tag:get-proof",
+      "winner.packet:tag:get-proof"
     ]);
-    expect(guard.summary).toContain("0 required skills and 7 required Agent Card signals");
+    expect(guard.summary).toContain("0 required skills and 8 required Agent Card signals");
     expect(guard.runbook.join("\n")).toContain('or .id=="autonomy.snapshot" or .id=="recording.script"');
     expect(guard.runbook.join("\n")).toContain("/api/mvp-readiness");
     expect(guard.runbook.join("\n")).toContain("/api/autonomy-snapshot");
@@ -192,7 +194,8 @@ describe("release drift guard", () => {
         "judge.snapshot:tag:get-proof",
         "mvp.snapshot:tag:get-proof",
         "pilot.value.snapshot:tag:get-proof",
-        "recording.script:tag:get-proof"
+        "recording.script:tag:get-proof",
+        "winner.packet:tag:get-proof"
       ]
     });
   });
