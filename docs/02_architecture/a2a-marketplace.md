@@ -245,12 +245,12 @@
 
 ## Demo Receipt Surface
 
-- `POST /api/demo-receipt`: Judge Tour、Moat Stress Test、Squad Optimizer、Live Evidence Monitor、Submission Launch Gateを審査デモreceiptへ束ねる
+- `POST /api/demo-receipt`: Judge Tour、Moat Stress Test、Squad Optimizer、Live Evidence Monitor、Submission Launch Gateを審査デモreceiptへ束ね、Judge Route Lockで90秒導線、競合/SWOT、編成判断、runtime/A2A、外部URL routeを検収する
 - Stamps: 審査導線、競合反論、編成判断、公開証拠、A2A surface、外部提出URLをsealed/watch/missingで固定する
 - Digest: stamp statuses、選択agent、外部URL、verdict、integrity check idsからsha256 digestを作り、録画後の照合に使う
 - Receipt Integrity Lock: digest replay、stamp coverage、runtime proof、A2A surface、competitive proof、external gap honestyをsealed/watch/missingで検査する
 - External truth: ProtoPedia作品URLと動画URLは未入力ならwatchとして残し、提出完了扱いにしない
-- A2A payload: `demo.receipt` skillとしてreceipt score、verdict、integrity lock、digest、next actions、endpointを返す
+- A2A payload: `demo.receipt` skillとしてreceipt score、verdict、route lock、integrity lock、digest、next actions、endpointを返す
 
 ## Acceptance Matrix Surface
 
@@ -406,7 +406,7 @@
 - External evidence proof: `external.evidence` skillとして、公開GitHub、Cloud Run、ProtoPedia、動画URLの到達性と残アクションをA2A payloadにも含める
 - Release drift proof: `release.drift` skillとして、公開Cloud Runが最新Agent Card/Acceptance Matrix/A2A artifactを返すかをA2A payloadにも含める
 - Deploy recovery proof: `deploy.recover` skillとして、gcloud認証、Cloud Build、公開再検証の復旧計画をA2A payloadにも含める
-- Demo receipt proof: `demo.receipt` skillとして、審査導線、競合反論、編成判断、公開証拠、外部提出URL状態、sha256 digestをA2A payloadにも含める
+- Demo receipt proof: `demo.receipt` skillとして、審査導線、競合反論、編成判断、公開証拠、外部提出URL状態、Judge Route Lock、sha256 digestをA2A payloadにも含める
 - Acceptance matrix proof: `acceptance.matrix` skillとして、必須技術、審査5項目、公開証拠、提出物の受入状態をA2A payloadにも含める
 - Task board proof: `task.delegate` skillとして、agent work orders、execution order、verification queue、receipt digestをA2A payloadにも含める
 - Moat stress proof: `moat.stress` skillとして、競合別の想定反論、反証、見せる証拠、録画順をA2A payloadにも含める

@@ -290,8 +290,8 @@ function agentCard(baseUrl: string) {
       {
         id: "demo.receipt",
         name: "Seal the judge demo receipt",
-        description: "審査導線、競合反論、編成判断、公開証拠、外部提出URLを1枚のsha256 receiptとして封印し、Receipt Integrity Lockで再検証する。",
-        tags: ["demo", "receipt", "submission", "judge-proof", "sha256", "integrity"]
+        description: "審査導線、競合反論、編成判断、公開証拠、外部提出URLを1枚のsha256 receiptとして封印し、Judge Route LockとReceipt Integrity Lockで再検証する。",
+        tags: ["demo", "receipt", "submission", "judge-proof", "sha256", "integrity", "route-lock"]
       },
       {
         id: "autonomy.ledger",

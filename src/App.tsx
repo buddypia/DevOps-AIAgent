@@ -3688,6 +3688,45 @@ function DemoReceiptPanel({
             ))}
           </div>
 
+          <div className="receipt-route-lock">
+            <div className="route-summary">
+              <div>
+                <span
+                  className={cx(
+                    "risk-chip",
+                    receipt.routeLock.readiness === "route-sealed" ? "low" : receipt.routeLock.readiness === "route-external-watch" ? "medium" : "high"
+                  )}
+                >
+                  {receipt.routeLock.readiness}
+                </span>
+                <h3>Judge Route Lock</h3>
+                <p>{receipt.routeLock.judgeLine}</p>
+                <small>
+                  sealed {receipt.routeLock.sealedCount} / watch {receipt.routeLock.watchCount} / missing {receipt.routeLock.missingCount} / internal{" "}
+                  {receipt.routeLock.internalScore}
+                </small>
+              </div>
+              <div className="route-score">
+                <strong>{receipt.routeLock.routeScore}</strong>
+                <span>route score</span>
+              </div>
+            </div>
+            <div className="route-checks">
+              {receipt.routeLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.proof}</p>
+                  <a href={check.url} target="_blank" rel="noreferrer">
+                    Evidence <ExternalLink size={13} />
+                  </a>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="receipt-integrity-lock">
             <div className="integrity-summary">
               <div>

@@ -1,13 +1,14 @@
 import { createHash } from "node:crypto";
 import type { MoatStressTest } from "./moatStress.js";
 import type { SquadOptimizerRun } from "./squadOptimizer.js";
-import { hasSubmissionUrl, SUBMISSION_PROOF } from "./submission.js";
+import { hasSubmissionUrl, SUBMISSION_PROOF, validProtoPediaUrl, validVideoUrl } from "./submission.js";
 import type { WinningStrategy } from "./strategy.js";
 import type { Recommendation } from "./types.js";
 
 export type DemoReceiptVerdict = "sealed" | "needs-proof" | "needs-external-submit";
 export type DemoReceiptStampStatus = "sealed" | "watch" | "missing";
 export type DemoReceiptIntegrityReadiness = "integrity-sealed" | "integrity-external-watch" | "needs-integrity-fix";
+export type DemoReceiptRouteReadiness = "route-sealed" | "route-external-watch" | "needs-route-proof";
 
 export type DemoReceiptStamp = {
   id: string;
@@ -31,6 +32,7 @@ export type DemoReceiptDigestPayload = {
   receiptScore: number;
   verdict: DemoReceiptVerdict;
   stampStatuses: Array<{ id: string; status: DemoReceiptStampStatus; score: number }>;
+  routeCheckIds: string[];
   integrityCheckIds: string[];
   externalUrls: {
     protopediaUrl: string;
@@ -68,6 +70,27 @@ export type DemoReceiptIntegrityLock = {
   checks: DemoReceiptIntegrityCheck[];
 };
 
+export type DemoReceiptRouteCheck = {
+  id: string;
+  label: string;
+  status: DemoReceiptStampStatus;
+  score: number;
+  proof: string;
+  url: string;
+};
+
+export type DemoReceiptRouteLock = {
+  id: string;
+  routeScore: number;
+  internalScore: number;
+  readiness: DemoReceiptRouteReadiness;
+  sealedCount: number;
+  watchCount: number;
+  missingCount: number;
+  judgeLine: string;
+  checks: DemoReceiptRouteCheck[];
+};
+
 export type JudgeDemoReceipt = {
   id: string;
   generatedAt: string;
@@ -79,11 +102,13 @@ export type JudgeDemoReceipt = {
   recordingOrder: string[];
   actions: DemoReceiptAction[];
   digest: DemoReceiptDigest;
+  routeLock: DemoReceiptRouteLock;
   integrityLock: DemoReceiptIntegrityLock;
   a2aPayload: Record<string, unknown>;
 };
 
 const REQUIRED_STAMP_IDS = ["judge-route", "competitive-moat", "squad-choice", "runtime-proof", "a2a-surface", "external-submit"] as const;
+const ROUTE_CHECK_IDS = ["first-click-route", "market-swot-route", "competitive-rebuttal", "squad-decision", "runtime-a2a", "external-submit"] as const;
 const INTEGRITY_CHECK_IDS = [
   "digest-replay",
   "stamp-coverage",
@@ -136,7 +161,8 @@ function absoluteUrl(baseUrl: string, path: string) {
 }
 
 function externalStatus(protopediaUrl: string, videoUrl: string): DemoReceiptStampStatus {
-  return hasSubmissionUrl(protopediaUrl) && hasSubmissionUrl(videoUrl) ? "sealed" : "watch";
+  if (!protopediaUrl && !videoUrl) return "watch";
+  return validProtoPediaUrl(protopediaUrl) && validVideoUrl(videoUrl) ? "sealed" : "missing";
 }
 
 function stamp(input: Omit<DemoReceiptStamp, "score"> & { score?: number }): DemoReceiptStamp {
@@ -151,6 +177,19 @@ function integrityCheck(input: Omit<DemoReceiptIntegrityCheck, "score"> & { scor
     ...input,
     score: Math.round(clamp(input.score ?? statusScore(input.status)))
   };
+}
+
+function routeCheck(input: Omit<DemoReceiptRouteCheck, "score"> & { score?: number }): DemoReceiptRouteCheck {
+  return {
+    ...input,
+    score: Math.round(clamp(input.score ?? statusScore(input.status)))
+  };
+}
+
+function sameIds(left: string[], right: string[]) {
+  const a = [...left].sort();
+  const b = [...right].sort();
+  return a.length === b.length && a.every((id, index) => id === b[index]);
 }
 
 function verdictFrom(stamps: DemoReceiptStamp[], score: number): DemoReceiptVerdict {
@@ -171,6 +210,106 @@ function actionsFrom(stamps: DemoReceiptStamp[]): DemoReceiptAction[] {
           : `${stampItem.label} を再実行し、score ${stampItem.score} のwatch状態をsealedへ上げる`,
       proof: stampItem.proof
     }));
+}
+
+function buildRouteLock(input: {
+  baseUrl: string;
+  strategy: WinningStrategy;
+  moatStress: MoatStressTest;
+  squadOptimizer: SquadOptimizerRun;
+  selectedAgentIds: string[];
+  external: DemoReceiptStampStatus;
+}): DemoReceiptRouteLock {
+  const base = input.baseUrl.replace(/\/$/, "");
+  const swotCount =
+    input.strategy.swot.strengths.length +
+    input.strategy.swot.weaknesses.length +
+    input.strategy.swot.opportunities.length +
+    input.strategy.swot.threats.length;
+  const currentMatchesRecommended = sameIds(input.squadOptimizer.current.agentIds, input.squadOptimizer.recommended.agentIds);
+  const checks = [
+    routeCheck({
+      id: "first-click-route",
+      label: "90-second first-click route",
+      status: input.strategy.judgeCriteria.length === 5 && input.strategy.judgeScore >= 82 ? "sealed" : input.strategy.judgeScore >= 74 ? "watch" : "missing",
+      proof: `${input.strategy.judgeCriteria.length} criteria / judge score ${input.strategy.judgeScore}; Judge Tour covers the first 90 seconds.`,
+      url: absoluteUrl(base, "/api/judge-tour")
+    }),
+    routeCheck({
+      id: "market-swot-route",
+      label: "Market and SWOT route",
+      status: input.strategy.competitors.length >= 6 && swotCount >= 8 ? "sealed" : input.strategy.competitors.length >= 4 ? "watch" : "missing",
+      proof: `${input.strategy.competitors.length} competitors / ${swotCount} SWOT items.`,
+      url: absoluteUrl(base, "/api/market-intel")
+    }),
+    routeCheck({
+      id: "competitive-rebuttal",
+      label: "Competitive rebuttal route",
+      status: input.moatStress.verdict === "defensible" ? "sealed" : input.moatStress.verdict === "needs-proof" ? "watch" : "missing",
+      proof: `${input.moatStress.scenarios.length} objections / ${input.moatStress.verdict} / ${input.moatStress.stressScore} stress score.`,
+      url: absoluteUrl(base, "/api/moat-stress")
+    }),
+    routeCheck({
+      id: "squad-decision",
+      label: "Squad decision route",
+      status:
+        currentMatchesRecommended && input.squadOptimizer.current.coverageScore >= 80
+          ? "sealed"
+          : input.squadOptimizer.optimizerScore >= 76
+            ? "watch"
+            : "missing",
+      proof: `${input.squadOptimizer.readiness}; current ${input.squadOptimizer.current.agentIds.join(", ")} / recommended ${input.squadOptimizer.recommended.agentIds.join(", ")} / budget gap ${input.squadOptimizer.budgetGap}.`,
+      url: absoluteUrl(base, "/api/squad-optimizer")
+    }),
+    routeCheck({
+      id: "runtime-a2a",
+      label: "Runtime and A2A route",
+      status:
+        hasSubmissionUrl(SUBMISSION_PROOF.deployedUrl) && hasSubmissionUrl(SUBMISSION_PROOF.ciWorkflowUrl) && input.selectedAgentIds.includes("market-broker")
+          ? "sealed"
+          : "missing",
+      proof: `Cloud Run ${SUBMISSION_PROOF.deployedUrl || "missing"} / CI ${SUBMISSION_PROOF.ciWorkflowUrl || "missing"} / market broker ${input.selectedAgentIds.includes("market-broker") ? "selected" : "missing"}.`,
+      url: absoluteUrl(base, "/api/live-evidence")
+    }),
+    routeCheck({
+      id: "external-submit",
+      label: "External submission route",
+      status: input.external,
+      proof:
+        input.external === "sealed"
+          ? "ProtoPedia and YouTube/Vimeo URLs are valid."
+          : input.external === "watch"
+            ? "External URLs are intentionally left as watch until published."
+            : "External URLs are present but not valid for final submission.",
+      url: absoluteUrl(base, "/api/submission-launch")
+    })
+  ];
+  const internalChecks = checks.filter((check) => check.id !== "external-submit");
+  const routeScore = Math.round(clamp(average(checks.map((check) => check.score))));
+  const internalScore = Math.round(clamp(average(internalChecks.map((check) => check.score))));
+  const sealedCount = checks.filter((check) => check.status === "sealed").length;
+  const watchCount = checks.filter((check) => check.status === "watch").length;
+  const missingCount = checks.filter((check) => check.status === "missing").length;
+  const internalSealed = internalChecks.every((check) => check.status === "sealed");
+  const readiness: DemoReceiptRouteReadiness =
+    !internalSealed || missingCount > 0 ? "needs-route-proof" : input.external === "sealed" ? "route-sealed" : "route-external-watch";
+
+  return {
+    id: `judge-route-lock-${routeScore}-${readiness}`,
+    routeScore,
+    internalScore,
+    readiness,
+    sealedCount,
+    watchCount,
+    missingCount,
+    judgeLine:
+      readiness === "route-sealed"
+        ? "Judge route, competitive rebuttal, squad decision, runtime proof, A2A surface, and external URLs replay cleanly."
+        : readiness === "route-external-watch"
+          ? "Internal judge route proof is sealed; only externally published ProtoPedia/video URLs remain watch."
+          : "Judge route still has an internal proof gap; fix it before recording.",
+    checks
+  };
 }
 
 function buildIntegrityLock(input: {
@@ -205,12 +344,13 @@ function buildIntegrityLock(input: {
       label: "Digest replay",
       status:
         /^[a-f0-9]{64}$/.test(input.receiptDigest.digest) &&
+        input.receiptDigest.payload.routeCheckIds.join(",") === ROUTE_CHECK_IDS.join(",") &&
         input.receiptDigest.payload.integrityCheckIds.join(",") === INTEGRITY_CHECK_IDS.join(",") &&
         stampStatusesMatchDigest
           ? "sealed"
           : "missing",
-      proof: `Digest covers ${input.receiptDigest.payload.stampStatuses.length} stamp statuses and ${input.receiptDigest.payload.integrityCheckIds.length} integrity checks.`,
-      digestField: "digest.payload.stampStatuses + digest.payload.integrityCheckIds",
+      proof: `Digest covers ${input.receiptDigest.payload.stampStatuses.length} stamp statuses, ${input.receiptDigest.payload.routeCheckIds.length} route checks, and ${input.receiptDigest.payload.integrityCheckIds.length} integrity checks.`,
+      digestField: "digest.payload.stampStatuses + digest.payload.routeCheckIds + digest.payload.integrityCheckIds",
       url: absoluteUrl(input.baseUrl, "/api/demo-receipt")
     }),
     integrityCheck({
@@ -307,13 +447,24 @@ export function buildJudgeDemoReceipt(input: {
   const videoUrl = input.videoUrl?.trim() ?? SUBMISSION_PROOF.videoUrl;
   const external = externalStatus(protopediaUrl, videoUrl);
   const selectedAgentIds = input.recommendation.selected.map((agent) => agent.id);
+  const routeLock = buildRouteLock({
+    baseUrl: base,
+    strategy: input.strategy,
+    moatStress: input.moatStress,
+    squadOptimizer: input.squadOptimizer,
+    selectedAgentIds,
+    external
+  });
+  const routeCheckById = new Map(routeLock.checks.map((item) => [item.id, item]));
+  const judgeRoute = routeCheckById.get("first-click-route");
+  const squadDecision = routeCheckById.get("squad-decision");
   const stamps: DemoReceiptStamp[] = [
     stamp({
       id: "judge-route",
       label: "Judge Tour route",
-      status: statusFromScore(input.strategy.judgeScore),
-      score: input.strategy.judgeScore,
-      proof: `Judge score ${input.strategy.judgeScore}; ${input.strategy.judgeCriteria.length} criteria covered.`,
+      status: judgeRoute?.status ?? statusFromScore(input.strategy.judgeScore),
+      score: judgeRoute?.score ?? input.strategy.judgeScore,
+      proof: `${routeLock.readiness}; ${judgeRoute?.proof ?? `Judge score ${input.strategy.judgeScore}; ${input.strategy.judgeCriteria.length} criteria covered.`}`,
       url: absoluteUrl(base, "/api/judge-tour")
     }),
     stamp({
@@ -327,9 +478,9 @@ export function buildJudgeDemoReceipt(input: {
     stamp({
       id: "squad-choice",
       label: "Squad decision",
-      status: input.squadOptimizer.readiness === "optimized" || input.squadOptimizer.readiness === "worth-swapping" ? "sealed" : "watch",
-      score: input.squadOptimizer.optimizerScore,
-      proof: `${input.squadOptimizer.readiness}; budget gap ${input.squadOptimizer.budgetGap}.`,
+      status: squadDecision?.status ?? (input.squadOptimizer.readiness === "optimized" || input.squadOptimizer.readiness === "worth-swapping" ? "sealed" : "watch"),
+      score: squadDecision?.score ?? input.squadOptimizer.optimizerScore,
+      proof: squadDecision?.proof ?? `${input.squadOptimizer.readiness}; budget gap ${input.squadOptimizer.budgetGap}.`,
       url: absoluteUrl(base, "/api/squad-optimizer")
     }),
     stamp({
@@ -355,7 +506,9 @@ export function buildJudgeDemoReceipt(input: {
       proof:
         external === "sealed"
           ? "ProtoPedia作品URLと動画URLが入力されています。"
-          : "ProtoPedia作品URLまたは動画URLが未入力です。",
+          : external === "watch"
+            ? "ProtoPedia作品URLまたは動画URLが未入力です。"
+            : "ProtoPedia作品URLまたは動画URLが提出可能な形式ではありません。",
       url: absoluteUrl(base, "/api/submission-launch")
     })
   ];
@@ -369,6 +522,7 @@ export function buildJudgeDemoReceipt(input: {
     receiptScore,
     verdict,
     stampStatuses: stamps.map((item) => ({ id: item.id, status: item.status, score: item.score })),
+    routeCheckIds: [...ROUTE_CHECK_IDS],
     integrityCheckIds: [...INTEGRITY_CHECK_IDS],
     externalUrls: {
       protopediaUrl,
@@ -414,6 +568,7 @@ export function buildJudgeDemoReceipt(input: {
     ],
     actions,
     digest: receiptDigest,
+    routeLock,
     integrityLock,
     a2aPayload: {
       method: "message/send",
@@ -421,6 +576,12 @@ export function buildJudgeDemoReceipt(input: {
       receiptScore,
       verdict,
       digest: receiptDigest.digest,
+      routeLock: {
+        readiness: routeLock.readiness,
+        routeScore: routeLock.routeScore,
+        internalScore: routeLock.internalScore,
+        checks: routeLock.checks.map((item) => ({ id: item.id, status: item.status, score: item.score, url: item.url }))
+      },
       integrityLock: {
         readiness: integrityLock.readiness,
         integrityScore: integrityLock.integrityScore,

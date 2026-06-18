@@ -232,11 +232,11 @@
 
 ## Judge Demo Receipt
 
-`Judge Demo Receipt` は、審査動画で実行した主張を1枚の検収票に固定します。Judge Tour、Moat Stress Test、Squad Optimizer、Live Evidence Monitor、Submission Launch Gateをstamp化し、ProtoPedia作品URLと動画URLが未入力ならwatchとして残します。Receipt Integrity Lockでdigest coverage、stamp coverage、公開証拠route、A2A Agent Card、競合反論、外部URL watchの正直さを検査し、動画後の質疑でも「何を見せ、何が未完了か」を同じ証拠で再確認できます。
+`Judge Demo Receipt` は、審査動画で実行した主張を1枚の検収票に固定します。Judge Tour、Moat Stress Test、Squad Optimizer、Live Evidence Monitor、Submission Launch Gateをstamp化し、ProtoPedia作品URLと動画URLが未入力ならwatchとして残します。Judge Route Lockで90秒導線、競合/SWOT、編成判断、runtime/A2A、外部URLの各routeを検収し、Receipt Integrity Lockでdigest coverage、stamp coverage、公開証拠route、A2A Agent Card、競合反論、外部URL watchの正直さを検査します。動画後の質疑でも「何を見せ、何が未完了か」を同じ証拠で再確認できます。
 
 - API: `POST /api/demo-receipt`
 - App UI: `Seal receipt`
-- Output: receipt score、stamps、Receipt Integrity Lock、recording order、next actions、sha256 digest、A2A `demo.receipt` payload
+- Output: receipt score、stamps、Judge Route Lock、Receipt Integrity Lock、recording order、next actions、sha256 digest、A2A `demo.receipt` payload
 
 ## Judge Acceptance Matrix
 
