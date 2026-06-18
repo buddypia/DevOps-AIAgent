@@ -596,7 +596,7 @@ function JudgeRehearsalPanel({
         </label>
         <label>
           <span>Video URL</span>
-          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://drive.google.com/..." />
+          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://vimeo.com/..." />
         </label>
       </div>
 
@@ -809,7 +809,7 @@ function WinnerPacketPanel({
         </label>
         <label>
           <span>Video URL</span>
-          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://drive.google.com/..." />
+          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://vimeo.com/..." />
         </label>
       </div>
 
@@ -978,7 +978,7 @@ function SubmissionRunwayPanel({
         </label>
         <label>
           <span>Video URL</span>
-          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://drive.google.com/..." />
+          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://vimeo.com/..." />
         </label>
       </div>
 
@@ -1138,7 +1138,7 @@ function ExternalEvidencePanel({
         </label>
         <label>
           <span>Video URL</span>
-          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://drive.google.com/..." />
+          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://vimeo.com/..." />
         </label>
       </div>
 
@@ -2045,7 +2045,7 @@ function JudgeTourPanel({
         </label>
         <label>
           <span>Video URL</span>
-          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://drive.google.com/..." />
+          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://vimeo.com/..." />
         </label>
       </div>
 
@@ -5668,7 +5668,7 @@ function SubmissionCloseoutPanel({
         </label>
         <label>
           <span>Video URL</span>
-          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://drive.google.com/..." />
+          <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://vimeo.com/..." />
         </label>
       </div>
 
@@ -5787,6 +5787,41 @@ function SubmissionCloseoutPanel({
             </section>
             <div>
               {workbench.protopediaQualityLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.acceptance}</p>
+                  <small>{check.proof}</small>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="closeout-quality-lock">
+            <section>
+              <div>
+                <span
+                  className={cx(
+                    "risk-chip",
+                    workbench.protopediaPolicyLock.readiness === "publication-ready"
+                      ? "low"
+                      : workbench.protopediaPolicyLock.readiness === "prototype-copy-locked"
+                        ? "medium"
+                        : "high"
+                  )}
+                >
+                  {workbench.protopediaPolicyLock.readiness}
+                </span>
+                <strong>{workbench.protopediaPolicyLock.policyScore}</strong>
+              </div>
+              <h3>ProtoPedia Policy Lock</h3>
+              <p>{workbench.protopediaPolicyLock.headline}</p>
+              <small>{workbench.protopediaPolicyLock.operatorLine}</small>
+            </section>
+            <div>
+              {workbench.protopediaPolicyLock.checks.map((check) => (
                 <article key={check.id} className={check.status}>
                   <div>
                     <strong>{check.label}</strong>
@@ -7334,6 +7369,41 @@ function SubmissionPublisher({
             </section>
             <div>
               {publisher.qualityLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.acceptance}</p>
+                  <small>{check.proof}</small>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="publisher-quality-lock">
+            <section>
+              <div>
+                <span
+                  className={cx(
+                    "risk-chip",
+                    publisher.policyLock.readiness === "publication-ready"
+                      ? "low"
+                      : publisher.policyLock.readiness === "prototype-copy-locked"
+                        ? "medium"
+                        : "high"
+                  )}
+                >
+                  {publisher.policyLock.readiness}
+                </span>
+                <strong>{publisher.policyLock.policyScore}</strong>
+              </div>
+              <h3>ProtoPedia Policy Lock</h3>
+              <p>{publisher.policyLock.headline}</p>
+              <small>{publisher.policyLock.sourceUrls.join(" -> ")}</small>
+            </section>
+            <div>
+              {publisher.policyLock.checks.map((check) => (
                 <article key={check.id} className={check.status}>
                   <div>
                     <strong>{check.label}</strong>

@@ -159,6 +159,15 @@ describe("submission closeout workbench", () => {
       ])
     });
     expect(closeout.protopediaQualityLock.qualityScore).toBeGreaterThanOrEqual(90);
+    expect(closeout.protopediaPolicyLock).toMatchObject({
+      readiness: "prototype-copy-locked",
+      policyScore: 95,
+      checks: expect.arrayContaining([
+        expect.objectContaining({ id: "original-prototype", status: "ready" }),
+        expect.objectContaining({ id: "not-promo-only", status: "ready" }),
+        expect.objectContaining({ id: "embeddable-media", status: "watch" })
+      ])
+    });
     expect(closeout.videoProofLock).toMatchObject({
       readiness: "recording-locked",
       targetDurationSeconds: 30,
@@ -207,6 +216,11 @@ describe("submission closeout workbench", () => {
         readiness: "copy-locked",
         checks: expect.arrayContaining([expect.objectContaining({ id: "external-url-closure", status: "watch" })])
       },
+      protopediaPolicyLock: {
+        readiness: "prototype-copy-locked",
+        sourceUrls: expect.arrayContaining(["https://protopedia.gitbook.io/helpcenter/info/2025.09.05"]),
+        checks: expect.arrayContaining([expect.objectContaining({ id: "embeddable-media", status: "watch" })])
+      },
       videoProofLock: {
         readiness: "recording-locked",
         checks: expect.arrayContaining([
@@ -243,6 +257,8 @@ describe("submission closeout workbench", () => {
     expect(closeout.workItems.every((item) => item.status === "ready")).toBe(true);
     expect(closeout.protopediaQualityLock.readiness).toBe("submit-page-ready");
     expect(closeout.protopediaQualityLock.checks.find((check) => check.id === "external-url-closure")?.status).toBe("ready");
+    expect(closeout.protopediaPolicyLock.readiness).toBe("publication-ready");
+    expect(closeout.protopediaPolicyLock.checks.every((check) => check.status === "ready")).toBe(true);
     expect(closeout.videoProofLock.readiness).toBe("video-url-ready");
     expect(closeout.videoProofLock.checks.find((check) => check.id === "publish-url")?.status).toBe("ready");
     expect(closeout.dryRunLock.readiness).toBe("submit-dry-run-sealed");
@@ -268,6 +284,8 @@ describe("submission closeout workbench", () => {
     expect(closeout.workItems.find((item) => item.id === "publish-protopedia")?.status).toBe("blocked");
     expect(closeout.videoProofLock.readiness).toBe("blocked-video-url");
     expect(closeout.videoProofLock.checks.find((check) => check.id === "publish-url")?.status).toBe("blocked");
+    expect(closeout.protopediaPolicyLock.readiness).toBe("prototype-copy-locked");
+    expect(closeout.protopediaPolicyLock.checks.find((check) => check.id === "embeddable-media")?.status).toBe("watch");
     expect(closeout.dryRunLock.readiness).toBe("needs-dry-run-fix");
     expect(closeout.assetLock.readiness).toBe("needs-asset-fix");
     expect(closeout.assetLock.checks.find((check) => check.id === "external-url-slots")?.status).toBe("blocked");

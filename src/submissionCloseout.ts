@@ -1,7 +1,7 @@
 import type { DemoRunway } from "./demoRunway.js";
 import type { SubmissionDossier } from "./dossier.js";
 import type { JudgeProof } from "./proof.js";
-import type { ProtoPediaPublisher, ProtoPediaQualityLock, PublisherStatus } from "./publisher.js";
+import type { ProtoPediaPolicyLock, ProtoPediaPublisher, ProtoPediaQualityLock, PublisherStatus } from "./publisher.js";
 import type { LaunchItemStatus, SubmissionLaunchGate } from "./submissionLaunch.js";
 
 export type CloseoutReadiness = "ready-to-submit" | "needs-closeout" | "invalid-evidence";
@@ -121,6 +121,7 @@ export type SubmissionCloseoutWorkbench = {
   copyFields: CloseoutCopyField[];
   videoSteps: CloseoutVideoStep[];
   protopediaQualityLock: ProtoPediaQualityLock;
+  protopediaPolicyLock: ProtoPediaPolicyLock;
   videoProofLock: CloseoutVideoProofLock;
   dryRunLock: CloseoutDryRunLock;
   assetLock: CloseoutAssetLock;
@@ -199,6 +200,10 @@ function assetLockCheckScore(item: CloseoutAssetLockCheck) {
   if (item.status === "ready") return 100;
   if (item.status === "watch") return 88;
   return 20;
+}
+
+function policyCheckScore(status: PublisherStatus) {
+  return status === "ready" ? 100 : 72;
 }
 
 function videoLockReadiness(input: { videoStatus: CloseoutStatus; checks: CloseoutVideoLockCheck[] }): CloseoutVideoLockReadiness {
@@ -338,6 +343,44 @@ function buildCloseoutQualityLock(input: { publisher: ProtoPediaPublisher; launc
         : input.publisher.qualityLock.headline,
     checks,
     externalUrlState
+  };
+}
+
+function buildCloseoutPolicyLock(input: { publisher: ProtoPediaPublisher; launchGate: SubmissionLaunchGate }): ProtoPediaPolicyLock {
+  const video = input.launchGate.urlStatuses.find((status) => status.id === "video-url");
+  const mediaStatus: PublisherStatus = video?.status === "ready" ? "ready" : "watch";
+  const mediaProof =
+    mediaStatus === "ready"
+      ? "Video URL is valid in Submission Launch Gate."
+      : video?.status === "invalid"
+        ? "Video URL is malformed; publish a YouTube/Vimeo URL before ProtoPedia finalization."
+        : "Video URL is still missing; keep the ProtoPedia media slot as watch.";
+  const checks = input.publisher.policyLock.checks.map((check) =>
+    check.id === "embeddable-media"
+      ? {
+          ...check,
+          status: mediaStatus,
+          proof: mediaProof
+        }
+      : check
+  );
+  const nonMediaReady = checks.filter((check) => check.id !== "embeddable-media").every((check) => check.status === "ready");
+  const readiness: ProtoPediaPolicyLock["readiness"] =
+    checks.every((check) => check.status === "ready") ? "publication-ready" : nonMediaReady ? "prototype-copy-locked" : "needs-prototype-repair";
+  const policyScore = Math.round(clamp(average(checks.map((check) => policyCheckScore(check.status)))));
+
+  return {
+    ...input.publisher.policyLock,
+    id: `protopedia-policy-lock-${policyScore}-${readiness}`,
+    policyScore,
+    readiness,
+    headline:
+      readiness === "publication-ready"
+        ? "ProtoPediaの作品性、本文、安全なMarkdown、動画メディアまで公開方針に沿っています。"
+        : readiness === "prototype-copy-locked"
+          ? "作品性と本文はProtoPedia方針に沿っています。残りは動画URLの公開だけです。"
+          : input.publisher.policyLock.headline,
+    checks
   };
 }
 
@@ -603,6 +646,7 @@ export function buildSubmissionCloseoutWorkbench(input: {
   const architectureReady = input.dossier.handoffPacket.architecturePack.diagramUrl.length > 0;
   const receiptReady = Boolean(input.proof.receipt.digest);
   const protopediaQualityLock = buildCloseoutQualityLock({ publisher: input.publisher, launchGate: input.launchGate });
+  const protopediaPolicyLock = buildCloseoutPolicyLock({ publisher: input.publisher, launchGate: input.launchGate });
   const workItems: CloseoutWorkItem[] = [
     item({
       id: "paste-protopedia-fields",
@@ -718,6 +762,7 @@ export function buildSubmissionCloseoutWorkbench(input: {
         input.dossier.dossierScore,
         input.publisher.publishScore,
         protopediaQualityLock.qualityScore,
+        protopediaPolicyLock.policyScore,
         input.demoRunway.demoScore,
         input.proof.overallScore,
         dryRunLock.lockScore,
@@ -749,6 +794,7 @@ export function buildSubmissionCloseoutWorkbench(input: {
     copyFields,
     videoSteps,
     protopediaQualityLock,
+    protopediaPolicyLock,
     videoProofLock,
     dryRunLock,
     assetLock,
@@ -784,6 +830,12 @@ export function buildSubmissionCloseoutWorkbench(input: {
         qualityScore: protopediaQualityLock.qualityScore,
         readiness: protopediaQualityLock.readiness,
         checks: protopediaQualityLock.checks.map((check) => ({ id: check.id, status: check.status }))
+      },
+      protopediaPolicyLock: {
+        policyScore: protopediaPolicyLock.policyScore,
+        readiness: protopediaPolicyLock.readiness,
+        sourceUrls: protopediaPolicyLock.sourceUrls,
+        checks: protopediaPolicyLock.checks.map((check) => ({ id: check.id, status: check.status, sourceUrl: check.sourceUrl }))
       },
       videoProofLock: {
         lockScore: videoProofLock.lockScore,

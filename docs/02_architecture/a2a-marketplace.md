@@ -224,7 +224,7 @@
 ## External Evidence Surface
 
 - `POST /api/external-evidence`: 公開GitHub、Cloud Run、ProtoPedia作品URL、動画URLが審査員から開けるかをライブプローブする
-- Safe URL policy: 任意URLを無制限にfetchせず、GitHub、Cloud Run、ProtoPedia、YouTube/Vimeo/Google Driveだけを許可する
+- Safe URL policy: 任意URLを無制限にfetchせず、GitHub、Cloud Run、ProtoPedia、YouTube/Vimeoを最終提出URLとして検証し、Google Driveはbackup watch扱いに留める
 - Runbook: 提出直前に同じ4 URLを再検証できるcurlを返す
 - A2A payload: `external.evidence` skillとしてexternal proof score、finalUrlsReady、probe statuses、next actionsを返す
 
@@ -281,12 +281,13 @@
 
 - `POST /api/submission-closeout`: Submission Dossier、Publisher、Demo Runway、Judge Proof、Launch Gateを束ね、外部提出作業を順番付きのworkbenchに変換する
 - Work items: ProtoPedia貼付、構成図添付、30秒動画、ProtoPedia公開、Launch Gate封印、Findy提出、receipt確認をready/watch/blockedで返す
-- Copy/video trays: ProtoPediaに貼るcopy fields、ProtoPedia Quality Lock、30秒動画のchapter、Video Proof Lockを同じレスポンスで返す
+- Copy/video trays: ProtoPediaに貼るcopy fields、ProtoPedia Quality Lock、Publication Policy Lock、30秒動画のchapter、Video Proof Lockを同じレスポンスで返す
 - ProtoPedia Quality Lock: 本文が課題/対象ユーザー/特徴、Cloud Run/Gemini/A2A/GitHub Actions、審査5項目、競合/SWOT、30秒デモ導線、公開証拠、外部URL状態を満たすかをscore/readiness付きで返す
+- Publication Policy Lock: ProtoPedia Helpcenterの投稿内容案内とMarkdown案内に沿って、作品性、オリジナル実装証拠、宣伝化リスク、技術説明だけに見えないこと、Markdown安全性、埋め込み動画枠をscore/readiness付きで返す
 - Video Proof Lock: 動画URLが未発行でも、公開Cloud Run開始、30秒導線、Judge Proof receipt、競合反論、提出handoff、YouTube/Vimeo URLの受入条件をscore/readiness付きで返す
 - Submission Dry Run Lock: 外部URL未発行でも、copy fields、構成図、録画順、ProtoPedia本文lock、Judge Proof receipt、提出パケットhandoffが揃っているかをready/watch/blockedで固定し、URLだけが残る状態を `submit-dry-run-ready` として返す
 - Submission Asset Lock: copy tray、構成図、動画字幕、receipt、Findy最終フォーム項目をready/watch/blockedで固定し、ProtoPedia/動画URLだけを外部watchとして残す
-- A2A payload: `submission.closeout` skillとしてcloseout score、readiness、next action、work items、ProtoPedia Quality Lock、Video Proof Lock、Submission Dry Run Lock、Submission Asset Lock、URL status、endpoint群を返す
+- A2A payload: `submission.closeout` skillとしてcloseout score、readiness、next action、work items、ProtoPedia Quality Lock、Publication Policy Lock、Video Proof Lock、Submission Dry Run Lock、Submission Asset Lock、URL status、endpoint群を返す
 
 ## Architecture Pack Surface
 
@@ -386,9 +387,9 @@
 - Pitch proof: `pitch.director` skillとして、審査員に見せる順番と提出動画の残作業をA2A payloadにも含める
 - Judge drill: `judge.drill` skillとして、審査員の反論、競合Cross-exam deck、60秒回答パス、証拠リンクをA2A payloadにも含める
 - Finalist proof: `finalist.simulate` skillとして、最終候補スコア、judge consensus、Finalist Internal Lock、外部URL status、残ギャップをA2A payloadにも含める
-- Publisher proof: `submission.publish` skillとして、ProtoPedia貼り付け本文、メディアURL、未完了外部作業をA2A payloadにも含める
+- Publisher proof: `submission.publish` skillとして、ProtoPedia貼り付け本文、Publication Policy Lock、メディアURL、未完了外部作業をA2A payloadにも含める
 - Dossier proof: `submission.dossier` skillとして、提出コピー欄、録画順、提出フォームhandoff packet、構成図パケット、提出リンク、MarkdownドシエをA2A payloadにも含める
-- Closeout proof: `submission.closeout` skillとして、外部提出の残作業、copy tray、video run、Video Proof Lock、Submission Dry Run Lock、Submission Asset Lock、submit packetをA2A payloadにも含める
+- Closeout proof: `submission.closeout` skillとして、外部提出の残作業、copy tray、Publication Policy Lock、video run、Video Proof Lock、Submission Dry Run Lock、Submission Asset Lock、submit packetをA2A payloadにも含める
 - Architecture proof: `submission.package` skillとして、システム構成図、Mermaid、必須技術対応表、ProtoPedia checklistをA2A payloadにも含める
 - Demo runway proof: `demo.runway` skillとして、30秒デモ順、証拠リンク、録画キュー、外部残リスクをA2A payloadにも含める
 - Win autopilot proof: `win.autopilot` skillとして、win score、12 lane scorecards、残ブロッカー、証拠デッキ、live evidence score、receipt digest、moat verdict、squad readinessをA2A payloadにも含める
@@ -450,6 +451,7 @@
 - Submission launch: `/api/submission-launch`
 - Submission closeout: `/api/submission-closeout`
 - ProtoPedia quality lock: `/api/publisher` and `/api/submission-closeout`
+- Publication policy lock: `/api/publisher` and `/api/submission-closeout`
 - Security review: `/api/security-review`
 - Impact case: `/api/impact-case`
 - Pilot economics: `/api/pilot-economics`

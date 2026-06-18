@@ -66,7 +66,7 @@ function actionFromProbe(probe: ExternalEvidenceProbe): ExternalEvidenceAction {
       probe.id === "protopedia-url"
         ? "ProtoPedia作品URLを公開し、findy_hackathonタグと構成図を確認してから再検証する。"
         : probe.id === "video-url"
-          ? "YouTube/Vimeo/Google Driveの公開動画URLを発行し、審査員が開ける状態で再検証する。"
+          ? "YouTubeまたはVimeoの公開動画URLを発行し、審査員が開ける状態で再検証する。Google Driveはbackup watch扱いに留める。"
           : `${probe.label}を公開URLで再検証し、提出フォームに貼れる状態へ戻す。`,
     proof: probe.evidence
   };

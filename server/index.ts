@@ -314,8 +314,8 @@ function agentCard(baseUrl: string) {
       {
         id: "submission.publish",
         name: "Prepare paste-ready ProtoPedia publication",
-        description: "ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージとして返す。",
-        tags: ["protopedia", "publishing", "video", "submission", "findy_hackathon"]
+        description: "ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップ、作品性のPublication Policy Lockを提出直前パッケージとして返す。",
+        tags: ["protopedia", "publishing", "publication-policy-lock", "video", "submission", "findy_hackathon"]
       },
       {
         id: "demo.runway",
@@ -350,8 +350,8 @@ function agentCard(baseUrl: string) {
       {
         id: "submission.closeout",
         name: "Close out external submission work",
-        description: "ProtoPedia貼付、構成図、30秒動画、外部URL、最終提出フォームを順番付きの作業台に束ね、Submission Dry Run LockとSubmission Asset Lockで検収する。",
-        tags: ["submission", "closeout", "protopedia", "video", "launch-gate", "dry-run-lock", "asset-lock"]
+        description: "ProtoPedia貼付、構成図、30秒動画、外部URL、最終提出フォームを順番付きの作業台に束ね、Policy/Dry Run/Asset Lockで検収する。",
+        tags: ["submission", "closeout", "protopedia", "publication-policy-lock", "video", "launch-gate", "dry-run-lock", "asset-lock"]
       },
       {
         id: "submission.runway",
@@ -803,7 +803,7 @@ async function externalUrlProbe(input: {
       score: driveWatch ? 72 : 100,
       url,
       evidence: driveWatch
-        ? `Google Drive returned HTTP ${response.status}; confirm sharing is Anyone with the link before final submit.`
+        ? `Google Drive returned HTTP ${response.status}; keep this as backup only because Submission Launch Gate seals YouTube/Vimeo URLs.`
         : `Public fetch returned HTTP ${response.status}.`,
       latencyMs,
       required: input.required
@@ -2212,7 +2212,7 @@ app.post("/api/external-evidence", async (req, res) => {
       url: parsed.data.videoUrl ?? "",
       required: true,
       missingEvidence: "Demo video URL is still missing.",
-      invalidEvidence: "Video URL must be YouTube, Vimeo, or Google Drive over https."
+      invalidEvidence: "Video URL must be YouTube or Vimeo over https for final submit."
     })
   ]);
 

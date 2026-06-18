@@ -290,7 +290,7 @@ export function buildFinalSubmissionRunway(input: {
         done: videoReady,
         now,
         owner: "Submission owner",
-        action: "YouTube/Vimeo/Google Driveへ動画を公開し、動画URLをLaunch Gateへ入力する。",
+        action: "YouTubeまたはVimeoへ動画を公開し、動画URLをLaunch Gateへ入力する。",
         acceptance: input.launchGate.urlStatuses.find((status) => status.id === "video-url")?.proof ?? "Video URL pending",
         proofUrl: absoluteUrl(base, "/api/submission-launch"),
         blocked: invalidLaunch

@@ -34,6 +34,7 @@ export type PublisherStep = {
 };
 
 export type ProtoPediaQualityLockReadiness = "submit-page-ready" | "copy-locked" | "needs-copy-repair";
+export type ProtoPediaPolicyLockReadiness = "publication-ready" | "prototype-copy-locked" | "needs-prototype-repair";
 
 export type ProtoPediaQualityLockCheck = {
   id: string;
@@ -55,6 +56,32 @@ export type ProtoPediaQualityLock = {
   externalUrlState: PublisherStatus;
 };
 
+export type ProtoPediaPolicyLockCheck = {
+  id:
+    | "original-prototype"
+    | "built-by-team"
+    | "not-info-only"
+    | "not-promo-only"
+    | "markdown-safe"
+    | "embeddable-media";
+  label: string;
+  status: PublisherStatus;
+  proof: string;
+  acceptance: string;
+  sourceUrl: string;
+};
+
+export type ProtoPediaPolicyLock = {
+  id: string;
+  policyScore: number;
+  readiness: ProtoPediaPolicyLockReadiness;
+  headline: string;
+  operatorLine: string;
+  sourceUrls: string[];
+  checks: ProtoPediaPolicyLockCheck[];
+  pasteOrder: string[];
+};
+
 export type ProtoPediaPublisher = {
   id: string;
   publishScore: number;
@@ -62,12 +89,19 @@ export type ProtoPediaPublisher = {
   summary: string;
   pasteFields: PublisherField[];
   qualityLock: ProtoPediaQualityLock;
+  policyLock: ProtoPediaPolicyLock;
   assets: PublisherAsset[];
   finalChecklist: PublisherStep[];
   missingExternal: PublisherStep[];
   recordingScript: string;
   a2aPayload: Record<string, unknown>;
 };
+
+const PROTOPEDIA_POLICY_SOURCE_URLS = [
+  "https://protopedia.gitbook.io/helpcenter/info/2025.09.05",
+  "https://protopedia.gitbook.io/helpcenter/markdown",
+  "https://protopedia.gitbook.io/helpcenter/faq"
+] as const;
 
 function clamp(value: number, min = 0, max = 100) {
   return Math.max(min, Math.min(max, value));
@@ -113,6 +147,10 @@ function asset(id: string, label: string, url: string, proof: string): Publisher
 
 function includesAll(value: string, terms: string[]) {
   return terms.every((term) => value.toLowerCase().includes(term.toLowerCase()));
+}
+
+function includesAny(value: string, terms: string[]) {
+  return terms.some((term) => value.toLowerCase().includes(term.toLowerCase()));
 }
 
 function bulletCount(value: string) {
@@ -241,6 +279,99 @@ function buildQualityLock(input: {
   };
 }
 
+function buildPolicyLock(input: {
+  pasteFields: PublisherField[];
+  assets: PublisherAsset[];
+  finalChecklist: PublisherStep[];
+}): ProtoPediaPolicyLock {
+  const { pasteFields, assets, finalChecklist } = input;
+  const fieldValue = (id: string) => pasteFields.find((field) => field.id === id)?.value ?? "";
+  const assetStatus = (id: string) => assets.find((assetItem) => assetItem.id === id)?.status ?? "watch";
+  const checklistStatus = (id: string) => finalChecklist.find((item) => item.id === id)?.status ?? "watch";
+  const combinedCopy = pasteFields.map((fieldItem) => fieldItem.value).join("\n");
+  const forbiddenHtml = ["<script", "javascript:", "<iframe"].some((term) => combinedCopy.toLowerCase().includes(term));
+  const promoSignals = ["広告掲載", "有償広告", "営業目的", "販売促進だけ", "事例紹介のみ"];
+  const prototypeSignal =
+    includesAll(combinedCopy, ["Cloud Run", "Gemini", "A2A"]) &&
+    includesAny(`${fieldValue("one-liner")}\n${fieldValue("features")}`, ["ワークベンチ", "AI能力", "プロトタイプ"]);
+  const checks: ProtoPediaPolicyLockCheck[] = [
+    {
+      id: "original-prototype",
+      label: "Original prototype is the center",
+      status: prototypeSignal ? "ready" : "watch",
+      proof: prototypeSignal ? "Copy names the built A2A/Cloud Run/Gemini workbench." : "Prototype-centered wording is weak.",
+      acceptance: "ProtoPedia本文の主語が、作ったプロトタイプ/創作物そのものになっている。",
+      sourceUrl: PROTOPEDIA_POLICY_SOURCE_URLS[0]
+    },
+    {
+      id: "built-by-team",
+      label: "Built evidence is public",
+      status: assetStatus("github") === "ready" && assetStatus("cloud-run") === "ready" && assetStatus("architecture") === "ready" ? "ready" : "watch",
+      proof: `${assetStatus("github")} GitHub / ${assetStatus("cloud-run")} Cloud Run / ${assetStatus("architecture")} architecture`,
+      acceptance: "自分たちが作った実装、公開デモ、構成図を作品ページから確認できる。",
+      sourceUrl: PROTOPEDIA_POLICY_SOURCE_URLS[2]
+    },
+    {
+      id: "not-info-only",
+      label: "Not only a technical explanation",
+      status: bulletCount(fieldValue("features")) >= 4 && bulletCount(fieldValue("demo-flow")) >= 5 && fieldValue("problem").length >= 80 ? "ready" : "watch",
+      proof: `${bulletCount(fieldValue("features"))} feature bullets / ${bulletCount(fieldValue("demo-flow"))} demo bullets / ${fieldValue("problem").length} problem chars`,
+      acceptance: "技術解説だけでなく、課題、対象ユーザー、触れる機能、デモ順が読める。",
+      sourceUrl: PROTOPEDIA_POLICY_SOURCE_URLS[0]
+    },
+    {
+      id: "not-promo-only",
+      label: "Not a sales or promotion post",
+      status: includesAny(combinedCopy, promoSignals) ? "watch" : "ready",
+      proof: includesAny(combinedCopy, promoSignals) ? "Promotion-like wording found." : "No sales/ad-only policy signals found in generated copy.",
+      acceptance: "成果アピールや広告ではなく、作品の目的、構成、操作体験を中心に記述する。",
+      sourceUrl: PROTOPEDIA_POLICY_SOURCE_URLS[0]
+    },
+    {
+      id: "markdown-safe",
+      label: "Markdown and embed safe",
+      status: forbiddenHtml ? "watch" : "ready",
+      proof: forbiddenHtml ? "Generated copy contains risky script/embed HTML." : "Generated copy avoids script/iframe/javascript markup.",
+      acceptance: "Markdownに貼っても危険なスクリプトや表示崩れを持ち込まない。",
+      sourceUrl: PROTOPEDIA_POLICY_SOURCE_URLS[1]
+    },
+    {
+      id: "embeddable-media",
+      label: "Video media slot is ready",
+      status: checklistStatus("record-video"),
+      proof:
+        checklistStatus("record-video") === "ready"
+          ? "Published video URL is ready for the ProtoPedia media field."
+          : "Record and publish the YouTube/Vimeo demo URL before final publication.",
+      acceptance: "作品ページでプロトタイプの動きが伝わる動画または埋め込み可能なメディアを添える。",
+      sourceUrl: PROTOPEDIA_POLICY_SOURCE_URLS[1]
+    }
+  ];
+  const nonMediaReady = checks.filter((check) => check.id !== "embeddable-media").every((check) => check.status === "ready");
+  const readiness: ProtoPediaPolicyLockReadiness =
+    checks.every((check) => check.status === "ready") ? "publication-ready" : nonMediaReady ? "prototype-copy-locked" : "needs-prototype-repair";
+  const policyScore = Math.round(clamp(average(checks.map((check) => lockPoints(check.status)))));
+
+  return {
+    id: `protopedia-policy-lock-${policyScore}-${readiness}`,
+    policyScore,
+    readiness,
+    headline:
+      readiness === "publication-ready"
+        ? "ProtoPediaの作品性、本文、安全なMarkdown、動画メディアまで公開方針に沿っています。"
+        : readiness === "prototype-copy-locked"
+          ? "作品性と本文はProtoPedia方針に沿っています。残りは動画URLの公開だけです。"
+          : "ProtoPedia本文が作品ページではなく説明・宣伝に見えるリスクがあります。貼付前に直します。",
+    operatorLine:
+      readiness === "needs-prototype-repair"
+        ? "Rewrite the copy so the built prototype, user story, and working demo lead the page."
+        : "Keep the prototype first, then use proof links as supporting evidence.",
+    sourceUrls: [...PROTOPEDIA_POLICY_SOURCE_URLS],
+    checks,
+    pasteOrder: ["title", "one-liner", "problem", "features", "technology", "demo-flow", "judge-proof", "video-url"]
+  };
+}
+
 export function buildProtoPediaPublisher(input: {
   baseUrl: string;
   recommendation: Recommendation;
@@ -351,6 +482,7 @@ export function buildProtoPediaPublisher(input: {
   ];
   const missingExternal = finalChecklist.filter((item) => item.status === "watch");
   const qualityLock = buildQualityLock({ pasteFields, assets, finalChecklist, strategy, pitch, finalist, topCompetitor });
+  const policyLock = buildPolicyLock({ pasteFields, assets, finalChecklist });
   const publishScore = Math.round(
     clamp(
       average([
@@ -358,6 +490,7 @@ export function buildProtoPediaPublisher(input: {
         average(assets.map((item) => readyPoints(item.status))),
         average(finalChecklist.map((item) => readyPoints(item.status))),
         qualityLock.qualityScore,
+        policyLock.policyScore,
         finalist.finalistScore,
         pitch.readinessScore
       ])
@@ -375,6 +508,7 @@ export function buildProtoPediaPublisher(input: {
         : "本文、構成図、公開URL、CI証跡は揃っています。残りはProtoPedia作品URLと動画URLの外部登録です。",
     pasteFields,
     qualityLock,
+    policyLock,
     assets,
     finalChecklist,
     missingExternal,
@@ -389,6 +523,12 @@ export function buildProtoPediaPublisher(input: {
         qualityScore: qualityLock.qualityScore,
         readiness: qualityLock.readiness,
         checks: qualityLock.checks.map((check) => ({ id: check.id, status: check.status }))
+      },
+      policyLock: {
+        policyScore: policyLock.policyScore,
+        readiness: policyLock.readiness,
+        sourceUrls: policyLock.sourceUrls,
+        checks: policyLock.checks.map((check) => ({ id: check.id, status: check.status, sourceUrl: check.sourceUrl }))
       },
       pasteFields: pasteFields.map((item) => ({ id: item.id, label: item.label, status: item.status })),
       assets: assets.map((item) => ({ id: item.id, status: item.status, url: item.url ?? null })),

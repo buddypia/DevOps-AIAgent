@@ -61,6 +61,22 @@ describe("protopedia publisher", () => {
       status: "watch",
       acceptance: expect.stringContaining("提出完了扱いにしない")
     });
+    expect(publisher.policyLock).toMatchObject({
+      readiness: "prototype-copy-locked",
+      policyScore: 95,
+      checks: expect.arrayContaining([
+        expect.objectContaining({ id: "original-prototype", status: "ready" }),
+        expect.objectContaining({ id: "not-info-only", status: "ready" }),
+        expect.objectContaining({ id: "not-promo-only", status: "ready" }),
+        expect.objectContaining({ id: "embeddable-media", status: "watch" })
+      ])
+    });
+    expect(publisher.policyLock.sourceUrls).toEqual(
+      expect.arrayContaining([
+        "https://protopedia.gitbook.io/helpcenter/info/2025.09.05",
+        "https://protopedia.gitbook.io/helpcenter/markdown"
+      ])
+    );
     expect(publisher.assets.find((item) => item.id === "cloud-run")?.status).toBe("ready");
     expect(publisher.assets.find((item) => item.id === "protopedia")?.status).toBe("watch");
     expect(publisher.missingExternal.map((item) => item.id)).toEqual(expect.arrayContaining(["record-video", "publish-protopedia"]));
@@ -71,6 +87,10 @@ describe("protopedia publisher", () => {
       qualityLock: {
         readiness: "copy-locked",
         checks: expect.arrayContaining([expect.objectContaining({ id: "external-url-closure", status: "watch" })])
+      },
+      policyLock: {
+        readiness: "prototype-copy-locked",
+        checks: expect.arrayContaining([expect.objectContaining({ id: "embeddable-media", status: "watch" })])
       }
     });
   });
