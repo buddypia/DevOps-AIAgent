@@ -412,6 +412,7 @@ type GitHubWorkflowRunsResponse = {
 };
 
 const ciRunsApiUrl = "https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/ci.yml/runs?branch=main&per_page=1";
+const ciBadgeUrl = "https://github.com/buddypia/DevOps-AIAgent/actions/workflows/ci.yml/badge.svg?branch=main";
 
 function ciUnavailable(reason: string, status: CiProof["status"] = "watch"): CiProof {
   return {
@@ -430,6 +431,13 @@ function ciStatus(status: string, conclusion: string | null): CiProof["status"] 
   return conclusion === "success" ? "passed" : "missing";
 }
 
+function ciStatusFromBadge(svg: string): CiProof["status"] {
+  const normalized = svg.toLowerCase();
+  if (normalized.includes("passing") || normalized.includes("success")) return "passed";
+  if (normalized.includes("failing") || normalized.includes("failure") || normalized.includes("cancelled")) return "missing";
+  return "watch";
+}
+
 function geminiSecretConfigured() {
   return Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY);
 }
@@ -444,7 +452,7 @@ async function fetchCiProof(): Promise<CiProof> {
       signal: AbortSignal.timeout(3000)
     });
 
-    if (!response.ok) return ciUnavailable(`GitHub API HTTP ${response.status}`);
+    if (!response.ok) return fetchCiBadgeProof(`GitHub API HTTP ${response.status}`);
 
     const payload = (await response.json()) as GitHubWorkflowRunsResponse;
     const run = payload.workflow_runs?.[0];
@@ -466,7 +474,39 @@ async function fetchCiProof(): Promise<CiProof> {
           : `Latest main CI run ${run.id} is ${run.status}/${conclusion}: ${run.display_title ?? run.name ?? "CI"}.`
     };
   } catch (error) {
-    return ciUnavailable(error instanceof Error ? error.message : "request failed");
+    return fetchCiBadgeProof(error instanceof Error ? error.message : "request failed");
+  }
+}
+
+async function fetchCiBadgeProof(apiReason: string): Promise<CiProof> {
+  try {
+    const response = await fetch(ciBadgeUrl, {
+      headers: {
+        Accept: "image/svg+xml",
+        "User-Agent": "a2a-agent-marketplace"
+      },
+      signal: AbortSignal.timeout(3000)
+    });
+    if (!response.ok) return ciUnavailable(`${apiReason}; badge HTTP ${response.status}`);
+
+    const svg = await response.text();
+    const status = ciStatusFromBadge(svg);
+    if (status === "watch") return ciUnavailable(`${apiReason}; workflow badge is not conclusive`);
+
+    return {
+      status,
+      conclusion: status === "passed" ? "badge-passing" : "badge-failing",
+      url: SUBMISSION_PROOF.ciWorkflowUrl,
+      workflowUrl: SUBMISSION_PROOF.ciWorkflowUrl,
+      branch: "main",
+      checkedAt: new Date().toISOString(),
+      evidence:
+        status === "passed"
+          ? `GitHub API fallback used because ${apiReason}; public workflow badge reports passing.`
+          : `GitHub API fallback used because ${apiReason}; public workflow badge does not report passing.`
+    };
+  } catch (error) {
+    return ciUnavailable(`${apiReason}; badge fallback failed: ${error instanceof Error ? error.message : "request failed"}`);
   }
 }
 
