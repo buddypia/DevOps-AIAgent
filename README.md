@@ -18,7 +18,7 @@
 - Strategy: ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsとの差分をアプリ内で比較し、SWOT、審査5項目、提出準備、次に雇うべきAIを算出
 - Market Intel: Gemini Enterprise、ADK、A2A、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較とSource Freshness Lockで、差別化仮説、審査回答、ソース到達性を生成
 - Moat Stress Test: ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsからの反論を想定し、証拠付き回答と録画順を返す
-- Competitive Battlecard: 公式ソース、SWOT、競合反論、証拠routeを競合別の審査回答カードに束ね、Objection Replayで最弱競合への30秒回答順を固定する
+- Competitive Battlecard: 公式ソース、SWOT、競合反論、証拠routeを競合別の審査回答カードに束ね、Objection ReplayとCompetitive Proof Lockで最弱競合への30秒回答順と証拠完全性を固定する
 - Win Gap Radar: 競合/SWOT、MVP監査、最終候補判定、Prize Strategyを横断し、優勝に必要なMVP gapをfeature betsとcut listへ変換する
 - MVP Audit: 必須技術、審査5項目、DevOps証拠、提出3点をハードゲートで判定し、外部未発行URLをwatchとして残す
 - Judge Brief: 競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページに圧縮
@@ -88,11 +88,11 @@
 
 ## Competitive Battlecard
 
-`Competitive Battlecard` は、Market Intel、Moat Stress Test、SWOTを審査員の質疑でそのまま使える競合別カードに圧縮します。各カードは、相手が勝つ領域、こちらが勝つ領域、短い回答、公式ソース、SWOT根拠、録画で開く証拠routeを持ちます。さらにObjection Replayで、最弱競合への質問、source ledger、SWOT receipt、Live Evidence proof routeを30秒の順番へ固定します。
+`Competitive Battlecard` は、Market Intel、Moat Stress Test、SWOTを審査員の質疑でそのまま使える競合別カードに圧縮します。各カードは、相手が勝つ領域、こちらが勝つ領域、短い回答、公式ソース、SWOT根拠、録画で開く証拠routeを持ちます。さらにObjection Replayで、最弱競合への質問、source ledger、SWOT receipt、Live Evidence proof routeを30秒の順番へ固定し、Competitive Proof Lockで6競合、公式ソース、SWOTリンク、反論receipt、replay、live source lockの完全性を検収します。
 
 - API: `POST /api/competitive-battlecard`
 - App UI: `Build battlecard`
-- Output: battle score、readiness、competitor cards、Objection Replay、top risks、SWOT receipts、objection receipts、judge script、A2A `competitive.battlecard` payload
+- Output: battle score、readiness、competitor cards、Objection Replay、Competitive Proof Lock、top risks、SWOT receipts、objection receipts、judge script、A2A `competitive.battlecard` payload
 
 ## Win Gap Radar
 

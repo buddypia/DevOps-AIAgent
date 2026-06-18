@@ -6957,6 +6957,122 @@ h1 {
   overflow-wrap: anywhere;
 }
 
+.battle-proof-lock {
+  display: grid;
+  gap: 1px;
+  background: #d1d6cf;
+}
+
+.battle-proof-summary {
+  display: grid;
+  grid-template-columns: minmax(380px, 1fr) minmax(210px, 0.25fr);
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  background: #fffdf9;
+}
+
+.battle-proof-summary h3 {
+  margin-top: 10px;
+  color: #242936;
+  font-size: 1.22rem;
+  line-height: 1.24;
+}
+
+.battle-proof-summary p,
+.battle-proof-summary small {
+  display: block;
+  margin-top: 8px;
+  color: #3e4651;
+  line-height: 1.46;
+  overflow-wrap: anywhere;
+}
+
+.battle-proof-score {
+  min-height: 116px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  border-radius: 8px;
+  color: #fbfbf6;
+  background: #242936;
+}
+
+.battle-proof-score strong {
+  font-size: 3.2rem;
+  line-height: 0.96;
+}
+
+.battle-proof-score span {
+  color: rgba(251, 251, 246, 0.76);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.battle-proof-checks {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(190px, 1fr));
+  gap: 1px;
+  background: #d1d6cf;
+}
+
+.battle-proof-checks article {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 13px;
+  border-top: 5px solid var(--green);
+  background: #fffdf9;
+}
+
+.battle-proof-checks article.watch {
+  border-top-color: var(--amber);
+  background: #fff9e9;
+}
+
+.battle-proof-checks article.missing {
+  border-top-color: var(--rose);
+  background: #fff1f3;
+}
+
+.battle-proof-checks article > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.battle-proof-checks span {
+  color: #355c7d;
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.battle-proof-checks p {
+  color: #3e4651;
+  line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+
+.battle-proof-checks strong {
+  overflow-wrap: anywhere;
+}
+
+.battle-proof-checks a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  color: #1b3f55;
+  font-weight: 850;
+  text-decoration: none;
+}
+
 .battle-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(290px, 1fr));
@@ -12380,6 +12496,7 @@ pre {
   }
 
   .battle-replay,
+  .battle-proof-checks,
   .battle-cards,
   .battle-grid {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
@@ -12670,6 +12787,8 @@ pre {
     .moat-grid,
     .battle-summary,
     .battle-replay,
+    .battle-proof-summary,
+    .battle-proof-checks,
     .battle-cards,
     .battle-grid,
     .receipt-inputs,

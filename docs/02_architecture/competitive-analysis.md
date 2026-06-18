@@ -12,6 +12,10 @@ Agent-To-Agent Marketplaceは、エージェントフレームワークやノー
 
 `POST /api/market-intel` は、Source Ledgerとして公式/一次ソースのreview日、fresh/watch、審査で使う一言、紐づく競合を返す。2026-06-18時点で、Gemini Enterprise Agent Platform、Google ADK、A2A toolkit、Cloud Marketplace A2A agent requirements、LangGraph、CrewAI、Dify、AgentOps、Cloud Runを確認対象にし、競合比較が古い印象にならないようにする。
 
+## Competitive Proof Lock
+
+`POST /api/competitive-battlecard` は、Market IntelのSource Freshness Lockを再実行し、競合カバレッジ、公式ソース、SWOT mapping、反論receipt、Objection Replay、live source lockを `sealed` / `watch` / `missing` で検収する。審査員に「競合分析やSWOTは本当にやったのか」と聞かれたら、Competitive Proof Lockのscore、checks、coverageを見せて、資料ではなく公開APIで再検証できる状態にする。
+
 ## Win Gap Radar
 
 `POST /api/win-gap-radar` は、競合分析/SWOT/MVP Audit/Finalist/Acceptance/Prize Strategyを横断し、優勝に必要なMVP gapをfeature betsへ変換する。現時点ではProtoPedia作品URLと動画URLが外部gapなので、`submission-closeout` を `close-now` として扱い、submit-readyとは呼ばない。

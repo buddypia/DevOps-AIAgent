@@ -3353,6 +3353,40 @@ function CompetitiveBattlecardPanel({
             </div>
           </div>
 
+          <div className="battle-proof-lock">
+            <div className="battle-proof-summary">
+              <div>
+                <span className={cx("risk-chip", battlecard.proofLock.readiness === "proof-locked" ? "low" : battlecard.proofLock.readiness === "proof-watch" ? "medium" : "high")}>
+                  {battlecard.proofLock.readiness}
+                </span>
+                <h3>Competitive Proof Lock</h3>
+                <p>{battlecard.proofLock.judgeLine}</p>
+                <small>
+                  {battlecard.proofLock.coverage.competitorCount} competitors / {battlecard.proofLock.coverage.sourceUrlCount} sources /{" "}
+                  {battlecard.proofLock.coverage.swotLinkCount} SWOT links / {battlecard.proofLock.coverage.liveSourceReadiness}
+                </small>
+              </div>
+              <div className="battle-proof-score">
+                <strong>{battlecard.proofLock.proofScore}</strong>
+                <span>proof score</span>
+              </div>
+            </div>
+            <div className="battle-proof-checks">
+              {battlecard.proofLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.proof}</p>
+                  <a href={check.evidenceUrl} target="_blank" rel="noreferrer">
+                    Evidence <ExternalLink size={13} />
+                  </a>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="battle-cards">
             {battlecard.cards.map((card) => (
               <article key={card.id} className={card.status}>

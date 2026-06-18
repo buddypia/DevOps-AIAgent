@@ -187,8 +187,8 @@ function agentCard(baseUrl: string) {
       {
         id: "competitive.battlecard",
         name: "Build competitor battlecards",
-        description: "公式ソース、SWOT、競合反論、見せる証拠を競合別の審査回答カードに束ねる。",
-        tags: ["competitive-analysis", "battlecard", "swot", "judge-qa", "proof"]
+        description: "公式ソース、SWOT、競合反論、見せる証拠を競合別の審査回答カードに束ね、Competitive Proof Lockで検収する。",
+        tags: ["competitive-analysis", "battlecard", "swot", "judge-qa", "proof", "proof-lock"]
       },
       {
         id: "mvp.audit",
@@ -929,7 +929,7 @@ app.post("/api/moat-stress", (req, res) => {
   );
 });
 
-app.post("/api/competitive-battlecard", (req, res) => {
+app.post("/api/competitive-battlecard", async (req, res) => {
   const parsed = RecommendSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
@@ -938,11 +938,16 @@ app.post("/api/competitive-battlecard", (req, res) => {
 
   const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
   const strategy = buildWinningStrategy(recommendation);
-  const marketIntel = buildMarketIntelReport({
+  const marketIntelBase = buildMarketIntelReport({
     baseUrl: publicBaseUrl(req),
     recommendation,
     strategy
   });
+  const sourceProofLock = await probeMarketIntelSources({
+    sourceLedger: marketIntelBase.sourceLedger,
+    timeoutMs: 6000
+  });
+  const marketIntel = attachSourceProofLock(marketIntelBase, sourceProofLock);
   const moatStress = buildMoatStressTest({
     baseUrl: publicBaseUrl(req),
     recommendation,

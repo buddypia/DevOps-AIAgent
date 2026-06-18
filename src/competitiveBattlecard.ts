@@ -4,6 +4,8 @@ import type { SwotItem, SwotQuadrant, WinningStrategy } from "./strategy.js";
 
 export type BattlecardReadiness = "judge-ready" | "needs-proof" | "exposed";
 export type BattlecardStatus = "lead" | "parity" | "risk";
+export type CompetitiveProofLockStatus = "sealed" | "watch" | "missing";
+export type CompetitiveProofLockReadiness = "proof-locked" | "proof-watch" | "needs-counterproof";
 
 export type BattlecardSwotLink = {
   quadrant: SwotQuadrant;
@@ -75,6 +77,33 @@ export type CompetitiveObjectionReplay = {
   steps: CompetitiveObjectionReplayStep[];
 };
 
+export type CompetitiveProofLockCheck = {
+  id: string;
+  label: string;
+  status: CompetitiveProofLockStatus;
+  score: number;
+  proof: string;
+  evidenceUrl: string;
+};
+
+export type CompetitiveProofLock = {
+  id: string;
+  proofScore: number;
+  readiness: CompetitiveProofLockReadiness;
+  sealedCount: number;
+  watchCount: number;
+  missingCount: number;
+  judgeLine: string;
+  coverage: {
+    competitorCount: number;
+    sourceUrlCount: number;
+    swotLinkCount: number;
+    proofRouteCount: number;
+    liveSourceReadiness: string;
+  };
+  checks: CompetitiveProofLockCheck[];
+};
+
 export type CompetitiveBattlecard = {
   id: string;
   battleScore: number;
@@ -87,6 +116,7 @@ export type CompetitiveBattlecard = {
   swotReceipts: Array<BattlecardSwotLink & { detail: string }>;
   objectionReceipts: CompetitiveObjectionReceipt[];
   objectionReplay: CompetitiveObjectionReplay;
+  proofLock: CompetitiveProofLock;
   judgeScript: string[];
   a2aPayload: Record<string, unknown>;
 };
@@ -104,6 +134,19 @@ function battleStatus(score: number): BattlecardStatus {
   if (score >= 86) return "lead";
   if (score >= 74) return "parity";
   return "risk";
+}
+
+function proofLockScore(status: CompetitiveProofLockStatus) {
+  if (status === "sealed") return 100;
+  if (status === "watch") return 72;
+  return 30;
+}
+
+function proofLockCheck(input: Omit<CompetitiveProofLockCheck, "score"> & { score?: number }): CompetitiveProofLockCheck {
+  return {
+    ...input,
+    score: Math.round(clamp(input.score ?? proofLockScore(input.status)))
+  };
 }
 
 function readinessFor(score: number, scenarios: MoatStressScenario[]): BattlecardReadiness {
@@ -244,6 +287,12 @@ function replayReadiness(input: { score: number; steps: CompetitiveObjectionRepl
   return "replay-watch";
 }
 
+function sourceLockStatus(readiness: string): CompetitiveProofLockStatus {
+  if (readiness === "source-lock-live") return "sealed";
+  if (readiness === "source-lock-blocked") return "missing";
+  return "watch";
+}
+
 function buildObjectionReplay(input: {
   baseUrl: string;
   battleScore: number;
@@ -312,6 +361,113 @@ function buildObjectionReplay(input: {
   };
 }
 
+function buildProofLock(input: {
+  baseUrl: string;
+  strategy: WinningStrategy;
+  marketIntel: MarketIntelReport;
+  cards: CompetitiveBattlecardCard[];
+  swotReceipts: Array<BattlecardSwotLink & { detail: string }>;
+  objectionReceipts: CompetitiveObjectionReceipt[];
+  objectionReplay: CompetitiveObjectionReplay;
+}): CompetitiveProofLock {
+  const normalizedBase = input.baseUrl.replace(/\/$/, "");
+  const requiredCompetitorIds = input.strategy.competitors.map((competitor) => competitor.id);
+  const cardIds = new Set(input.cards.map((card) => card.id));
+  const competitorCoverage = requiredCompetitorIds.filter((id) => cardIds.has(id)).length;
+  const highThreatCards = input.cards.filter((card) => card.threatLevel === "high");
+  const sourceUrlCount = input.cards.reduce((sum, card) => sum + card.sourceUrls.length, 0);
+  const swotLinkCount = input.cards.reduce((sum, card) => sum + card.swotLinks.length, 0);
+  const proofRouteCount = input.cards.filter((card) => card.proofRoute.length >= 30).length;
+  const swotQuadrants = new Set(input.swotReceipts.map((receipt) => receipt.quadrant));
+  const liveSourceReadiness = input.marketIntel.sourceProofLock.readiness;
+  const checks = [
+    proofLockCheck({
+      id: "competitor-coverage",
+      label: "Competitor coverage",
+      status: competitorCoverage === requiredCompetitorIds.length && input.cards.length === requiredCompetitorIds.length ? "sealed" : "missing",
+      proof: `${competitorCoverage}/${requiredCompetitorIds.length} competitors have judge-ready cards.`,
+      evidenceUrl: `${normalizedBase}/api/competitive-battlecard`
+    }),
+    proofLockCheck({
+      id: "official-source-coverage",
+      label: "Official source coverage",
+      status:
+        input.cards.every((card) => card.sourceUrls.length >= 1) && highThreatCards.every((card) => card.sourceUrls.length >= 2)
+          ? "sealed"
+          : input.cards.some((card) => card.sourceUrls.length === 0)
+            ? "missing"
+            : "watch",
+      proof: `${sourceUrlCount} official/primary source links; high-threat competitors carry ${highThreatCards.map((card) => `${card.id}:${card.sourceUrls.length}`).join(", ")}.`,
+      evidenceUrl: `${normalizedBase}/api/market-intel`
+    }),
+    proofLockCheck({
+      id: "swot-mapping",
+      label: "SWOT mapping",
+      status: input.cards.every((card) => card.swotLinks.length >= 3) && swotQuadrants.size === 4 ? "sealed" : swotQuadrants.size >= 3 ? "watch" : "missing",
+      proof: `${swotLinkCount} card-level SWOT links and ${swotQuadrants.size}/4 global SWOT quadrants are visible.`,
+      evidenceUrl: `${normalizedBase}/api/competitive-battlecard`
+    }),
+    proofLockCheck({
+      id: "objection-receipts",
+      label: "Objection receipts",
+      status:
+        input.objectionReceipts.length === input.cards.length &&
+        input.objectionReceipts.every((receipt) => receipt.acceptance.includes("公式ソース") && receipt.proofRoute.length >= 30)
+          ? "sealed"
+          : "watch",
+      proof: `${input.objectionReceipts.length}/${input.cards.length} objections connect source, SWOT, proof route, and ProtoPedia copy.`,
+      evidenceUrl: `${normalizedBase}/api/competitive-battlecard`
+    }),
+    proofLockCheck({
+      id: "objection-replay",
+      label: "Objection replay",
+      status:
+        input.objectionReplay.readiness === "replay-ready" && input.objectionReplay.steps.every((step) => step.status === "ready")
+          ? "sealed"
+          : input.objectionReplay.steps.some((step) => step.status === "blocked")
+            ? "missing"
+            : "watch",
+      proof: `${input.objectionReplay.readiness}; ${input.objectionReplay.steps.length} replay steps from objection to public proof.`,
+      evidenceUrl: `${normalizedBase}/api/competitive-battlecard`
+    }),
+    proofLockCheck({
+      id: "live-source-lock",
+      label: "Live source lock",
+      status: sourceLockStatus(liveSourceReadiness),
+      proof: `${liveSourceReadiness}; ${input.marketIntel.sourceProofLock.passedCount} passed / ${input.marketIntel.sourceProofLock.watchCount} watch / ${input.marketIntel.sourceProofLock.failedCount} failed / ${input.marketIntel.sourceProofLock.uncheckedCount} unchecked.`,
+      evidenceUrl: `${normalizedBase}/api/market-intel`
+    })
+  ];
+  const proofScore = Math.round(clamp(average(checks.map((check) => check.score))));
+  const sealedCount = checks.filter((check) => check.status === "sealed").length;
+  const watchCount = checks.filter((check) => check.status === "watch").length;
+  const missingCount = checks.filter((check) => check.status === "missing").length;
+  const readiness: CompetitiveProofLockReadiness = missingCount > 0 ? "needs-counterproof" : watchCount > 0 ? "proof-watch" : "proof-locked";
+
+  return {
+    id: `competitive-proof-lock-${proofScore}-${readiness}`,
+    proofScore,
+    readiness,
+    sealedCount,
+    watchCount,
+    missingCount,
+    judgeLine:
+      readiness === "proof-locked"
+        ? "All competitors, official sources, SWOT links, objection receipts, replay steps, and live source probes are locked for judge Q&A."
+        : readiness === "proof-watch"
+          ? "Competitive structure is ready, but at least one live source or replay proof still needs final refresh before recording."
+          : "A competitor, source, SWOT link, or proof route is missing; do not claim battlecard readiness yet.",
+    coverage: {
+      competitorCount: input.cards.length,
+      sourceUrlCount,
+      swotLinkCount,
+      proofRouteCount,
+      liveSourceReadiness
+    },
+    checks
+  };
+}
+
 export function buildCompetitiveBattlecard(input: {
   baseUrl: string;
   strategy: WinningStrategy;
@@ -334,6 +490,15 @@ export function buildCompetitiveBattlecard(input: {
   const swotReceipts = buildSwotReceipts(input.strategy);
   const objectionReceipts = buildObjectionReceipts(cards);
   const objectionReplay = buildObjectionReplay({ baseUrl: normalizedBase, battleScore, cards, objectionReceipts });
+  const proofLock = buildProofLock({
+    baseUrl: normalizedBase,
+    strategy: input.strategy,
+    marketIntel: input.marketIntel,
+    cards,
+    swotReceipts,
+    objectionReceipts,
+    objectionReplay
+  });
 
   return {
     id: `competitive-battlecard-${battleScore}-${readiness}`,
@@ -353,9 +518,11 @@ export function buildCompetitiveBattlecard(input: {
     swotReceipts,
     objectionReceipts,
     objectionReplay,
+    proofLock,
     judgeScript: [
       "まず競合の強みを認める: 作る基盤、workflow、observabilityは既存ツールが強い。",
       `Objection Replayで${objectionReplay.weakestCompetitor}への質問を、source、SWOT、proof routeの30秒順に固定する。`,
+      `Competitive Proof Lockで${proofLock.coverage.competitorCount}競合、${proofLock.coverage.sourceUrlCount}公式ソース、${proofLock.coverage.swotLinkCount} SWOTリンクを確認する。`,
       "次にずらす: このプロダクトはAI能力を選び、雇い、A2A委任し、DevOps証拠で検収する市場体験です。",
       "Battlecardで最も強い競合質問を1つ開き、source、SWOT、proof routeを同時に見せる。",
       "最後にLive EvidenceとRelease Driftで、公開Cloud Runが本当にその能力を返すかを確認する。"
@@ -392,6 +559,12 @@ export function buildCompetitiveBattlecard(input: {
         sourceCount: objectionReplay.sourceCount,
         swotSignalCount: objectionReplay.swotSignalCount,
         steps: objectionReplay.steps.map((step) => ({ id: step.id, status: step.status, proofUrl: step.proofUrl }))
+      },
+      proofLock: {
+        proofScore: proofLock.proofScore,
+        readiness: proofLock.readiness,
+        coverage: proofLock.coverage,
+        checks: proofLock.checks.map((check) => ({ id: check.id, status: check.status, score: check.score, evidenceUrl: check.evidenceUrl }))
       },
       endpoints: {
         app: normalizedBase,

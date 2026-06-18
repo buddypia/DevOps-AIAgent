@@ -112,8 +112,9 @@
 - Cards: 競合ごとに「審査員の質問」「短い回答」「相手が勝つ領域」「こちらが勝つ領域」「見せる証拠route」を返す
 - Source/SWOT receipts: 公式ソースURLとSWOT項目を同じカードに載せ、競合分析が主張だけで終わらないようにする
 - Objection Replay: 最弱競合への質問、source ledger、SWOT receipt、Live Evidence proof routeを0-30秒のready/watch/blocked stepsに固定する
+- Competitive Proof Lock: 競合カバレッジ、公式ソース、SWOT mapping、反論receipt、Objection Replay、live source lockをsealed/watch/missingで検収する
 - Judge script: 質疑で話す順番を「相手の強みを認める → 調達体験へずらす → 証拠を開く」に固定する
-- A2A payload: `competitive.battlecard` skillとしてbattle score、readiness、card verdicts、top risksを返す
+- A2A payload: `competitive.battlecard` skillとしてbattle score、readiness、card verdicts、top risks、proof lockを返す
 
 ## MVP Audit Surface
 

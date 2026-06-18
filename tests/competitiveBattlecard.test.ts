@@ -49,6 +49,28 @@ describe("competitive battlecard", () => {
     expect(battlecard.objectionReplay.replayScore).toBeGreaterThanOrEqual(90);
     expect(battlecard.objectionReplay.steps.map((step) => step.id)).toEqual(["objection", "source-ledger", "swot-receipt", "proof-route"]);
     expect(battlecard.objectionReplay.steps.every((step) => step.status === "ready")).toBe(true);
+    expect(battlecard.proofLock).toMatchObject({
+      readiness: "proof-watch",
+      proofScore: 95,
+      sealedCount: 5,
+      watchCount: 1,
+      missingCount: 0,
+      coverage: {
+        competitorCount: 6,
+        sourceUrlCount: 11,
+        swotLinkCount: 20,
+        proofRouteCount: 6,
+        liveSourceReadiness: "source-lock-declared"
+      }
+    });
+    expect(battlecard.proofLock.checks.map((check) => `${check.id}:${check.status}`)).toEqual([
+      "competitor-coverage:sealed",
+      "official-source-coverage:sealed",
+      "swot-mapping:sealed",
+      "objection-receipts:sealed",
+      "objection-replay:sealed",
+      "live-source-lock:watch"
+    ]);
     expect(battlecard.objectionReceipts[0]).toMatchObject({
       proofRoute: expect.any(String),
       acceptance: expect.stringContaining("公式ソース"),
@@ -76,6 +98,16 @@ describe("competitive battlecard", () => {
           expect.objectContaining({
             id: "proof-route",
             proofUrl: `${baseUrl}/api/live-evidence`
+          })
+        ])
+      },
+      proofLock: {
+        proofScore: 95,
+        readiness: "proof-watch",
+        checks: expect.arrayContaining([
+          expect.objectContaining({
+            id: "live-source-lock",
+            status: "watch"
           })
         ])
       },
