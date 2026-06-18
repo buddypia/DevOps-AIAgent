@@ -78,6 +78,7 @@ function actionFromProbe(probe: ReleaseDriftProbe): ReleaseDriftAction {
     probe.id === "recording-script-endpoint" ||
     probe.id === "pilot-value-endpoint" ||
     probe.id === "objection-arena-endpoint" ||
+    probe.id === "first-click-smoke-endpoint" ||
     probe.id === "a2a-artifact";
   return {
     id: probe.id,
@@ -163,6 +164,7 @@ export function buildReleaseDriftGuard(input: {
       `curl -s ${targetBaseUrl}/api/recording-script | jq '{readiness, chapters: .summary.chapterCount, videoLock: .summary.videoLockReadiness}'`,
       `curl -s ${targetBaseUrl}/api/pilot-value | jq '{readiness, payback: .summary.paybackDays, firstValue: .summary.timeToValueSeconds}'`,
       `curl -s ${targetBaseUrl}/api/objection-arena | jq '{readiness, arenaScore, answered: .lock.answeredCount, blocked: .lock.blockedCount}'`,
+      `curl -s ${targetBaseUrl}/api/first-click-smoke | jq '{readiness, smokeScore, passedCount, missingCount}'`,
       `curl -s -X POST ${targetBaseUrl}/api/acceptance-matrix -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}' | jq '{verdict, acceptanceScore, rows: (.rows | length)}'`,
       `curl -s -X POST ${targetBaseUrl}/a2a -H 'Content-Type: application/json' --data '{"method":"message/send","params":{"text":"A2A Cloud Run Gemini DevOps"}}' | jq '.result.artifacts[0].parts[0].data.releaseDriftEndpoint'`
     ],
@@ -189,7 +191,8 @@ export function buildReleaseDriftGuard(input: {
         targetAutonomySnapshot: `${targetBaseUrl}/api/autonomy-snapshot`,
         targetRecordingScript: `${targetBaseUrl}/api/recording-script`,
         targetPilotValue: `${targetBaseUrl}/api/pilot-value`,
-        targetObjectionArena: `${targetBaseUrl}/api/objection-arena`
+        targetObjectionArena: `${targetBaseUrl}/api/objection-arena`,
+        targetFirstClickSmoke: `${targetBaseUrl}/api/first-click-smoke`
       }
     }
   };

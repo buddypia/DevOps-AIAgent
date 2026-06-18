@@ -23,6 +23,15 @@ import { buildSubmissionAssetsPage, renderSubmissionAssetsHtml } from "../src/su
 import { buildExternalEvidenceRun, type ExternalEvidenceProbe } from "../src/externalEvidence.js";
 import { buildFinalistSimulation } from "../src/finalist.js";
 import { buildFirstClickProof, FIRST_CLICK_REQUIRED_SIGNAL, FIRST_CLICK_ROUTE_LOCK_TAG, FIRST_CLICK_SKILL_ID } from "../src/firstClick.js";
+import {
+  buildFirstClickSmokeLock,
+  FIRST_CLICK_SMOKE_LOCK_TAG,
+  FIRST_CLICK_SMOKE_REQUIRED_SIGNAL,
+  FIRST_CLICK_SMOKE_SENTINELS,
+  FIRST_CLICK_SMOKE_SKILL_ID,
+  renderFirstClickSmokeHtml,
+  type FirstClickSmokeProbe
+} from "../src/firstClickSmoke.js";
 import { buildImpactCase } from "../src/impact.js";
 import { buildJudgeBrief } from "../src/judgeBrief.js";
 import { buildJudgeCommandCenter } from "../src/judgeCommandCenter.js";
@@ -96,6 +105,9 @@ const SquadOptimizerSchema = RecommendSchema.extend({
 });
 const LiveEvidenceSchema = SquadOptimizerSchema;
 const ReleaseDriftSchema = RecommendSchema.extend({
+  targetUrl: z.string().url().optional()
+});
+const FirstClickSmokeSchema = z.object({
   targetUrl: z.string().url().optional()
 });
 const DeployRecoverySchema = ReleaseDriftSchema.extend({
@@ -222,8 +234,14 @@ function agentCard(baseUrl: string) {
       {
         id: FIRST_CLICK_SKILL_ID,
         name: "Route the judge first click",
-        description: "トップ画面直下から8本のGET証拠ページへ迷わず到達できる初回審査導線を固定する。",
+        description: "トップ画面直下から9本のGET証拠ページへ迷わず到達できる初回審査導線を固定する。",
         tags: ["first-click", FIRST_CLICK_ROUTE_LOCK_TAG, "get-proof", "judge-snapshot", "winner-packet", "objection-arena", "mvp-readiness"]
+      },
+      {
+        id: FIRST_CLICK_SMOKE_SKILL_ID,
+        name: "Smoke-test first-click proof pages",
+        description: "First-ClickのGET証拠ページがSPA fallbackではなく固有の審査証拠HTMLを返しているかをsentinelで検収する。",
+        tags: ["first-click", FIRST_CLICK_SMOKE_LOCK_TAG, "smoke-test", "get-proof", "release-drift"]
       },
       {
         id: "mvp.audit",
@@ -774,6 +792,63 @@ async function liveJsonProbe(input: {
       evidence: error instanceof Error ? error.message : "probe failed",
       latencyMs: Date.now() - startedAt,
       required: input.required
+    };
+  }
+}
+
+async function liveFirstClickHtmlProbe(input: {
+  sentinel: (typeof FIRST_CLICK_SMOKE_SENTINELS)[number];
+  targetBaseUrl: string;
+  init?: RequestInit;
+  timeoutMs?: number;
+}): Promise<FirstClickSmokeProbe> {
+  const url = `${input.targetBaseUrl.replace(/\/$/, "")}${input.sentinel.href}`;
+  const startedAt = Date.now();
+  try {
+    const response = await fetch(url, {
+      ...input.init,
+      signal: AbortSignal.timeout(input.timeoutMs ?? 30000)
+    });
+    const latencyMs = Date.now() - startedAt;
+    const contentType = response.headers.get("content-type") ?? "";
+    const text = await response.text();
+    if (!response.ok) {
+      return {
+        ...input.sentinel,
+        url,
+        status: "missing",
+        score: 24,
+        evidence: `HTTP ${response.status}`,
+        latencyMs
+      };
+    }
+    if (!text.includes(input.sentinel.sentinel)) {
+      return {
+        ...input.sentinel,
+        url,
+        status: "missing",
+        score: 24,
+        evidence: `HTTP ${response.status} ${contentType || "unknown content-type"}, but missing sentinel ${input.sentinel.sentinel}.`,
+        latencyMs
+      };
+    }
+    const html = contentType.includes("text/html");
+    return {
+      ...input.sentinel,
+      url,
+      status: html ? "passed" : "watch",
+      score: html ? 100 : 82,
+      evidence: `${input.sentinel.sentinel} found in ${contentType || "unknown content-type"}.`,
+      latencyMs
+    };
+  } catch (error) {
+    return {
+      ...input.sentinel,
+      url,
+      status: "missing",
+      score: 24,
+      evidence: error instanceof Error ? error.message : "HTML smoke probe failed",
+      latencyMs: Date.now() - startedAt
     };
   }
 }
@@ -2790,6 +2865,7 @@ async function buildReleaseDriftForTarget(input: {
     "competitive.snapshot:tag:get-proof",
     "judge.snapshot:tag:get-proof",
     FIRST_CLICK_REQUIRED_SIGNAL,
+    FIRST_CLICK_SMOKE_REQUIRED_SIGNAL,
     "mvp.snapshot:tag:get-proof",
     "autonomy.snapshot:tag:get-proof",
     "recording.script:tag:get-proof",
@@ -2823,6 +2899,7 @@ async function buildReleaseDriftForTarget(input: {
     "competitive.snapshot",
     "judge.snapshot",
     FIRST_CLICK_SKILL_ID,
+    FIRST_CLICK_SMOKE_SKILL_ID,
     "win.autopilot"
   ];
   let observedSkillIds: string[] = [];
@@ -2837,6 +2914,7 @@ async function buildReleaseDriftForTarget(input: {
     recordingScriptProbe,
     pilotValueProbe,
     objectionArenaProbe,
+    firstClickSmokeProbe,
     a2aProbe,
     ci
   ] = await Promise.all([
@@ -2873,6 +2951,7 @@ async function buildReleaseDriftForTarget(input: {
         const competitiveSnapshot = skills.find((skill) => skill.id === "competitive.snapshot");
         const judgeSnapshot = skills.find((skill) => skill.id === "judge.snapshot");
         const firstClick = skills.find((skill) => skill.id === FIRST_CLICK_SKILL_ID);
+        const firstClickSmoke = skills.find((skill) => skill.id === FIRST_CLICK_SMOKE_SKILL_ID);
         const mvpSnapshot = skills.find((skill) => skill.id === "mvp.snapshot");
         const autonomySnapshot = skills.find((skill) => skill.id === "autonomy.snapshot");
         const recordingScript = skills.find((skill) => skill.id === "recording.script");
@@ -2888,6 +2967,7 @@ async function buildReleaseDriftForTarget(input: {
           ...(competitiveSnapshot?.tags?.includes("get-proof") ? ["competitive.snapshot:tag:get-proof"] : []),
           ...(judgeSnapshot?.tags?.includes("get-proof") ? ["judge.snapshot:tag:get-proof"] : []),
           ...(firstClick?.tags?.includes(FIRST_CLICK_ROUTE_LOCK_TAG) ? [FIRST_CLICK_REQUIRED_SIGNAL] : []),
+          ...(firstClickSmoke?.tags?.includes(FIRST_CLICK_SMOKE_LOCK_TAG) ? [FIRST_CLICK_SMOKE_REQUIRED_SIGNAL] : []),
           ...(mvpSnapshot?.tags?.includes("get-proof") ? ["mvp.snapshot:tag:get-proof"] : []),
           ...(autonomySnapshot?.tags?.includes("get-proof") ? ["autonomy.snapshot:tag:get-proof"] : []),
           ...(recordingScript?.tags?.includes("get-proof") ? ["recording.script:tag:get-proof"] : []),
@@ -3003,6 +3083,24 @@ async function buildReleaseDriftForTarget(input: {
       }
     }),
     liveJsonProbe({
+      id: "first-click-smoke-endpoint",
+      label: "Target First-Click Smoke endpoint",
+      url: `${targetBaseUrl}/api/first-click-smoke`,
+      required: true,
+      timeoutMs: 45000,
+      init: targetProbeHeaders ? { headers: targetProbeHeaders } : undefined,
+      evaluate: (payload) => {
+        const body = payload as { readiness?: string; a2aPayload?: { skill?: string }; probes?: unknown[]; missingCount?: number };
+        return body.a2aPayload?.skill === FIRST_CLICK_SMOKE_SKILL_ID && typeof body.readiness === "string" && Array.isArray(body.probes)
+          ? {
+              status: body.missingCount === 0 ? "passed" : "watch",
+              score: body.missingCount === 0 ? 100 : 58,
+              evidence: `First-Click Smoke returned ${body.readiness}; ${body.probes.length} sentinel probes; missing ${body.missingCount ?? "unknown"}.`
+            }
+          : { status: "missing", score: 24, evidence: "First-Click Smoke endpoint did not return the current judge.first-click-smoke JSON payload." };
+      }
+    }),
+    liveJsonProbe({
       id: "a2a-artifact",
       label: "Target A2A artifact endpoints",
       url: `${targetBaseUrl}/a2a`,
@@ -3043,6 +3141,8 @@ async function buildReleaseDriftForTarget(input: {
           data?.judgeSnapshotEndpoint &&
           data?.judgeSnapshotPageEndpoint &&
           data?.firstClickProof &&
+          data?.firstClickSmokeEndpoint &&
+          data?.firstClickSmokePageEndpoint &&
           data?.objectionArenaEndpoint &&
           data?.objectionArenaPageEndpoint &&
           data?.mvpReadinessSnapshotEndpoint &&
@@ -3053,9 +3153,9 @@ async function buildReleaseDriftForTarget(input: {
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, objectionArenaEndpoint, objectionArenaPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, firstClickProof, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, objectionArenaEndpoint, objectionArenaPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, firstClickProof, firstClickSmokeEndpoint, firstClickSmokePageEndpoint, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but autonomy snapshot/observability oracle/external evidence/task board/winner packet/objection arena/submission runway/submission assets/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/first-click proof/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but autonomy snapshot/observability oracle/external evidence/task board/winner packet/objection arena/submission runway/submission assets/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/first-click proof/first-click smoke/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -3079,7 +3179,19 @@ async function buildReleaseDriftForTarget(input: {
     requiredSkillIds,
     requiredAgentCardSignals,
     observedAgentCardSignals,
-    probes: [healthProbe, cardProbe, acceptanceProbe, mvpReadinessProbe, autonomySnapshotProbe, recordingScriptProbe, pilotValueProbe, objectionArenaProbe, a2aProbe, ciProbe]
+    probes: [
+      healthProbe,
+      cardProbe,
+      acceptanceProbe,
+      mvpReadinessProbe,
+      autonomySnapshotProbe,
+      recordingScriptProbe,
+      pilotValueProbe,
+      objectionArenaProbe,
+      firstClickSmokeProbe,
+      a2aProbe,
+      ciProbe
+    ]
   });
 }
 
@@ -5068,6 +5180,62 @@ app.post("/api/objection-arena", async (req, res) => {
   res.json(await buildObjectionArenaForRequest(req, parsed.data));
 });
 
+function firstClickSmokeQueryInput(req: express.Request) {
+  const parsed = FirstClickSmokeSchema.safeParse({
+    ...(typeof req.query.targetUrl === "string" ? { targetUrl: req.query.targetUrl } : {})
+  });
+  if (!parsed.success) {
+    return { error: { error: "invalid_request", issues: parsed.error.issues } };
+  }
+  return { input: parsed.data };
+}
+
+async function buildFirstClickSmokeForRequest(req: express.Request, input: z.infer<typeof FirstClickSmokeSchema>) {
+  const currentBaseUrl = publicBaseUrl(req).replace(/\/$/, "");
+  const targetBaseUrl = (input.targetUrl || currentBaseUrl).replace(/\/$/, "");
+  const probeHeaders = currentBaseUrl === targetBaseUrl ? selfProbeHeaders(req) : undefined;
+  const probes = await Promise.all(
+    FIRST_CLICK_SMOKE_SENTINELS.map((sentinel) =>
+      liveFirstClickHtmlProbe({
+        sentinel,
+        targetBaseUrl,
+        init: probeHeaders ? { headers: probeHeaders } : undefined,
+        timeoutMs: 30000
+      })
+    )
+  );
+
+  return buildFirstClickSmokeLock({ targetBaseUrl, probes });
+}
+
+app.get("/api/first-click-smoke", async (req, res) => {
+  const result = firstClickSmokeQueryInput(req);
+  if ("error" in result) {
+    res.status(400).json(result.error);
+    return;
+  }
+  res.json(await buildFirstClickSmokeForRequest(req, result.input));
+});
+
+app.get("/first-click-smoke", async (req, res) => {
+  const result = firstClickSmokeQueryInput(req);
+  if ("error" in result) {
+    res.status(400).json(result.error);
+    return;
+  }
+  res.type("html").send(renderFirstClickSmokeHtml(await buildFirstClickSmokeForRequest(req, result.input)));
+});
+
+app.post("/api/first-click-smoke", async (req, res) => {
+  const parsed = FirstClickSmokeSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  res.json(await buildFirstClickSmokeForRequest(req, parsed.data));
+});
+
 app.post("/api/submission-runway", async (req, res) => {
   const parsed = CommandCenterSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -6690,6 +6858,8 @@ app.post("/a2a", async (req, res) => {
                 judgeSnapshotEndpoint: `${publicBaseUrl(req)}/api/judge-snapshot`,
                 judgeSnapshotPageEndpoint: `${publicBaseUrl(req)}/judge-snapshot`,
                 firstClickProof: buildFirstClickProof(publicBaseUrl(req)),
+                firstClickSmokeEndpoint: `${publicBaseUrl(req)}/api/first-click-smoke`,
+                firstClickSmokePageEndpoint: `${publicBaseUrl(req)}/first-click-smoke`,
                 mvpReadinessSnapshotEndpoint: `${publicBaseUrl(req)}/mvp-readiness`,
                 mvpReadinessSnapshotJsonEndpoint: `${publicBaseUrl(req)}/api/mvp-readiness`,
                 autonomySnapshotEndpoint: `${publicBaseUrl(req)}/autonomy-snapshot`,

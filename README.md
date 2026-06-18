@@ -23,6 +23,7 @@
 - MVP Audit: 必須技術、審査5項目、DevOps証拠、提出3点をハードゲートで判定し、外部未発行URLをwatchとして残す
 - Judge Brief: 競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページに圧縮
 - Judge First-Click Strip: Cloud Runのトップ画面直下からJudge Snapshot、Winner Packet、Objection Arena、Competitive SWOT、MVP Readiness、Autonomy、Pilot Value、Recording、Submission AssetsへPOSTなしで移動できる入口を固定し、Agent Card/A2A/Release Driftでも `judge.first-click` として検収する
+- First-Click Smoke Lock: First-Clickの9本のGET証拠ページがSPA fallbackではなく固有の審査HTMLを返すかをsentinelで検収する
 - Judge Command Center: Judge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
 - Demo Concierge: 審査員、買い手、提出者ごとの最初の1クリック、台詞、証拠URL、成功条件を固定し、Judge Route LockとFirst-Run Focus Lockで0-90秒の一本道に圧縮する
 - Judge Rehearsal Room: 90秒の開く画面、話す台詞、想定質問、録画チェックを1つのrun roomに束ねる
@@ -202,6 +203,15 @@
 - Deep API: `POST /api/objection-arena`
 - Output: arena score、readiness、answered/blocked count、judge objection lanes、proof URLs、A2A `judge.objection-arena` payload
 
+## First-Click Smoke Lock
+
+`First-Click Smoke Lock` は、Cloud Runが新しいGET証拠ページを返しているかを、HTTP 200だけでなくページ固有のsentinel文字列で検収します。SPA fallbackで `/objection-arena` や `/winner-packet` が200を返しても、`Objection Arena` や `Winner Proof Packet` の見出しがなければ `smoke-failed` として止めます。これにより、審査員が最初に開く9本の証拠リンクが本当に証拠HTMLを返していることを録画前に確認できます。
+
+- Page: `GET /first-click-smoke`
+- JSON: `GET /api/first-click-smoke`
+- Deep API: `POST /api/first-click-smoke`
+- Output: smoke score、readiness、passed/missing count、sentinel probes、runbook、A2A `judge.first-click-smoke` payload
+
 ## Final Submission Runway
 
 `Final Submission Runway` は、Winner Proof PacketとSubmission Closeoutを、2026/7/10 23:59 JSTの提出締切から逆算した実行計画へ変換します。動画録画、ProtoPedia貼付、構成図添付、Launch Gate、最終フォーム提出を、due date、owner、acceptance、proof URL付きのworkback planとして返します。
@@ -277,7 +287,7 @@
 
 ## Release Drift Guard
 
-`Release Drift Guard` は、提出用Cloud Run URLが最新mainの機能を本当に返しているかを検査します。公開healthが通っていても、Agent Cardのskill数、`judge.command`、`deploy.recover`、`acceptance.matrix`、`mvp.snapshot`、`autonomy.snapshot`、`recording.script`、`pilot.value.snapshot`、`demo.receipt`、`release.drift`、`pilot.economics`、`judge.rehearsal` の `recording-lock` tag、`win.gap.radar` の `feature-freeze-lock` tag、`winner.packet` の `winner-release-lock` / `get-proof` tag、`judge.objection-arena` の `objection-lock` tag、`judge.first-click` の `first-click-route-lock` tag、`finalist.simulate` の `release-drift` tag、`competitive.battlecard` の `criteria-duel` tag、`competitive.snapshot` / `judge.snapshot` / `mvp.snapshot` / `autonomy.snapshot` / `recording.script` / `pilot.value.snapshot` の `get-proof` tag、A2A artifact、Acceptance Matrix endpoint、MVP Readiness endpoint、Autonomy Snapshot endpoint、Recording Script endpoint、Pilot Value endpoint、Objection Arena endpointが古ければ `deploy-drift` として止めます。
+`Release Drift Guard` は、提出用Cloud Run URLが最新mainの機能を本当に返しているかを検査します。公開healthが通っていても、Agent Cardのskill数、`judge.command`、`deploy.recover`、`acceptance.matrix`、`mvp.snapshot`、`autonomy.snapshot`、`recording.script`、`pilot.value.snapshot`、`demo.receipt`、`release.drift`、`pilot.economics`、`judge.rehearsal` の `recording-lock` tag、`win.gap.radar` の `feature-freeze-lock` tag、`winner.packet` の `winner-release-lock` / `get-proof` tag、`judge.objection-arena` の `objection-lock` tag、`judge.first-click` の `first-click-route-lock` tag、`judge.first-click-smoke` の `first-click-smoke-lock` tag、`finalist.simulate` の `release-drift` tag、`competitive.battlecard` の `criteria-duel` tag、`competitive.snapshot` / `judge.snapshot` / `mvp.snapshot` / `autonomy.snapshot` / `recording.script` / `pilot.value.snapshot` の `get-proof` tag、A2A artifact、Acceptance Matrix endpoint、MVP Readiness endpoint、Autonomy Snapshot endpoint、Recording Script endpoint、Pilot Value endpoint、Objection Arena endpoint、First-Click Smoke endpointが古ければ `deploy-drift` として止めます。
 
 - API: `POST /api/release-drift`
 - App UI: `Check release drift`
