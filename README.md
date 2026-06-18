@@ -45,14 +45,14 @@
 - Impact Case: 対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性・体験価値の証拠に変換
 - Pilot Economics: 時間短縮、導入費用、回収日数、価格レーン、買い手の反論を投資判断の証拠に変換
 - Submission Launch Gate: ProtoPedia作品URLとYouTube/Vimeo動画URLを入力し、提出3点、必須タグ、本文、構成図、ストーリー、CI、証拠receiptを最終判定
-- Submission Closeout Workbench: ProtoPedia貼付、構成図、30秒動画、Video Proof Lock、外部URL、最終提出フォームを順番付きの作業台に束ねる
+- Submission Closeout Workbench: ProtoPedia貼付、ProtoPedia Quality Lock、構成図、30秒動画、Video Proof Lock、外部URL、最終提出フォームを順番付きの作業台に束ねる
 - Autonomy: Mission Controlが審査で弱い項目を検出し、A2A委任、検証runbook、ProtoPedia提出パックを生成
 - Operate: Ops DrillがCloud Run公開デモの稼働シグナルを読み、継続・ロールバック・追加雇用を判断
 - Proof: Judge ProofがGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1クリックで証拠束にする
 - Pitch: Pitch Directorが30秒動画の録画順、字幕、証拠リンク、提出残リスクを生成する
 - Judge Drill: 審査5項目と主要競合への厳しい質問、短い回答、60秒回答パス、証拠リンク、次アクションを生成する
 - Finalist: 審査員5役の模擬判定で、最終候補スコア、落選理由、残ギャップ、次の一手を生成する
-- Publisher: ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
+- Publisher: ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにし、審査5項目・競合/SWOT・必須技術・外部URL状態をProtoPedia Quality Lockで検収する
 - Demo Runway: Judge Proof、Finalist、Publisher、Marketplace、Strategy、Competitive Battlecard、Mission、Opsを30秒の審査員導線に束ね、競合反論リールを録画キューへ落とす
 - Win Autopilot: 競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を一括で走らせ、勝てる状態と残アクションを返す
 - Submission Dossier: ProtoPedia本文、競合反論レシート、実用性・買い手価値レシート、動画録画順、提出リンク、最終チェック、Markdownを1つに束ねる
@@ -272,11 +272,11 @@
 
 ## Submission Closeout Workbench
 
-`Submission Closeout Workbench` は、Win Gap Radarが `close-now` とした外部提出作業を実際の順番へ落とします。Submission Dossier、Submission Publisher、Demo Runway、Judge Proof、Submission Launch Gateを束ね、ProtoPedia貼付、構成図添付、30秒動画、Video Proof Lock、作品URL、最終提出フォーム、receipt確認を `ready` / `watch` / `blocked` の作業項目として返します。動画URLが未発行でも、公開Cloud Run開始、30秒導線、Judge Proof receipt、競合反論、提出handoffの録画受入条件を先に固定します。
+`Submission Closeout Workbench` は、Win Gap Radarが `close-now` とした外部提出作業を実際の順番へ落とします。Submission Dossier、Submission Publisher、Demo Runway、Judge Proof、Submission Launch Gateを束ね、ProtoPedia貼付、ProtoPedia Quality Lock、構成図添付、30秒動画、Video Proof Lock、作品URL、最終提出フォーム、receipt確認を `ready` / `watch` / `blocked` の作業項目として返します。動画URLが未発行でも、公開Cloud Run開始、30秒導線、Judge Proof receipt、競合反論、提出handoffの録画受入条件を先に固定します。
 
 - API: `POST /api/submission-closeout`
 - App UI: `Build closeout`
-- Output: closeout score、readiness、next action、work items、copy tray、video run、Video Proof Lock、submit packet、A2A `submission.closeout` payload
+- Output: closeout score、readiness、next action、work items、copy tray、ProtoPedia Quality Lock、video run、Video Proof Lock、submit packet、A2A `submission.closeout` payload
 
 ## Security Sentinel Review
 
@@ -387,15 +387,15 @@
 
 ## Submission Publisher
 
-`Submission Publisher` は、ProtoPedia登録の最後の作業を迷わず進めるための提出直前パッケージです。Mission、Pitch、Finalistの証跡から、作品タイトル、概要、課題、対象ユーザー、特徴、技術構成、タグ、動画説明、構成図、公開URL、残ギャップを貼り付け可能な形に変換します。
+`Submission Publisher` は、ProtoPedia登録の最後の作業を迷わず進めるための提出直前パッケージです。Mission、Pitch、Finalistの証跡から、作品タイトル、概要、課題、対象ユーザー、特徴、技術構成、タグ、動画説明、構成図、公開URL、残ギャップを貼り付け可能な形に変換し、ProtoPedia Quality Lockで本文が審査5項目、競合/SWOT、必須技術、30秒デモ導線、公開証拠、外部URL状態を満たすかを検収します。
 
 - API: `POST /api/publisher`
 - App UI: `Build publisher`
-- Output: publish score、paste fields、assets、final checklist、recording script、A2A `submission.publish` payload
+- Output: publish score、paste fields、ProtoPedia Quality Lock、assets、final checklist、recording script、A2A `submission.publish` payload
 
 ## Submission Dossier
 
-`Submission Dossier` は外部提出直前の作業束です。Submission Publisher、Win Autopilot、Demo Runway、Competitive Battlecard、Impact Case、Pilot Economics、Judge Proofをまとめ、ProtoPediaに貼る本文、競合反論レシート、実用性・買い手価値レシート、提出リンク、30秒録画順、構成図パケット、最終チェック、Markdownドシエを返します。
+`Submission Dossier` は外部提出直前の作業束です。Submission Publisher、Win Autopilot、Demo Runway、Competitive Battlecard、Impact Case、Pilot Economics、Judge Proofをまとめ、ProtoPediaに貼る本文、ProtoPedia Quality Lock、競合反論レシート、実用性・買い手価値レシート、提出リンク、30秒録画順、構成図パケット、最終チェック、Markdownドシエを返します。
 
 - API: `POST /api/dossier`
 - App UI: `Run submission dossier`

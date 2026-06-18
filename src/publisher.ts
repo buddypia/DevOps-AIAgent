@@ -33,12 +33,35 @@ export type PublisherStep = {
   proof: string;
 };
 
+export type ProtoPediaQualityLockReadiness = "submit-page-ready" | "copy-locked" | "needs-copy-repair";
+
+export type ProtoPediaQualityLockCheck = {
+  id: string;
+  label: string;
+  status: PublisherStatus;
+  proof: string;
+  acceptance: string;
+  sourceFieldIds: string[];
+};
+
+export type ProtoPediaQualityLock = {
+  id: string;
+  qualityScore: number;
+  readiness: ProtoPediaQualityLockReadiness;
+  headline: string;
+  checks: ProtoPediaQualityLockCheck[];
+  pasteOrder: string[];
+  requiredTag: string;
+  externalUrlState: PublisherStatus;
+};
+
 export type ProtoPediaPublisher = {
   id: string;
   publishScore: number;
   readiness: PublisherReadiness;
   summary: string;
   pasteFields: PublisherField[];
+  qualityLock: ProtoPediaQualityLock;
   assets: PublisherAsset[];
   finalChecklist: PublisherStep[];
   missingExternal: PublisherStep[];
@@ -57,6 +80,10 @@ function average(values: number[]) {
 
 function readyPoints(status: PublisherStatus) {
   return status === "ready" ? 100 : 58;
+}
+
+function lockPoints(status: PublisherStatus) {
+  return status === "ready" ? 100 : 72;
 }
 
 function statusFromUrl(value: string): PublisherStatus {
@@ -81,6 +108,136 @@ function asset(id: string, label: string, url: string, proof: string): Publisher
     status,
     url: status === "ready" ? url : undefined,
     proof
+  };
+}
+
+function includesAll(value: string, terms: string[]) {
+  return terms.every((term) => value.toLowerCase().includes(term.toLowerCase()));
+}
+
+function bulletCount(value: string) {
+  return value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("-")).length;
+}
+
+function buildQualityLock(input: {
+  pasteFields: PublisherField[];
+  assets: PublisherAsset[];
+  finalChecklist: PublisherStep[];
+  strategy: WinningStrategy;
+  pitch: PitchRun;
+  finalist: FinalistSimulation;
+  topCompetitor: string;
+}): ProtoPediaQualityLock {
+  const { pasteFields, assets, finalChecklist, strategy, pitch, finalist, topCompetitor } = input;
+  const fieldValue = (id: string) => pasteFields.find((field) => field.id === id)?.value ?? "";
+  const publicAssetReady = ["github", "cloud-run", "ci", "architecture", "story"].every(
+    (id) => assets.find((asset) => asset.id === id)?.status === "ready"
+  );
+  const externalUrlState: PublisherStatus = finalChecklist.every((item) => item.status === "ready") ? "ready" : "watch";
+  const swotReady = Object.values(strategy.swot).every((items) => items.length > 0);
+  const checks: ProtoPediaQualityLockCheck[] = [
+    {
+      id: "story-triad",
+      label: "Problem, users, features are paste-ready",
+      status:
+        fieldValue("problem").length >= 80 &&
+        fieldValue("users").length >= 24 &&
+        bulletCount(fieldValue("features")) >= 4
+          ? "ready"
+          : "watch",
+      proof: `${fieldValue("problem").length} problem chars / ${bulletCount(fieldValue("features"))} feature bullets`,
+      acceptance: "課題、対象ユーザー、特徴が別欄に貼れる粒度で揃っている。",
+      sourceFieldIds: ["problem", "users", "features"]
+    },
+    {
+      id: "required-tech",
+      label: "Required Cloud Run and Google AI story",
+      status: includesAll(fieldValue("technology"), ["Cloud Run", "Gemini", "A2A", "GitHub Actions"]) ? "ready" : "watch",
+      proof: "Cloud Run / Gemini / A2A / GitHub Actions in technology field",
+      acceptance: "必須技術とDevOps証跡が技術構成欄で読める。",
+      sourceFieldIds: ["technology"]
+    },
+    {
+      id: "judge-criteria",
+      label: "Five judging criteria are answered",
+      status: strategy.judgeCriteria.length >= 5 && finalist.finalistScore >= 75 && fieldValue("judge-proof").length >= 120 ? "ready" : "watch",
+      proof: `${strategy.judgeCriteria.length} criteria / finalist ${finalist.finalistScore}`,
+      acceptance: "AI中心性、課題アプローチ、ユーザビリティ、実用性、実装力の説明が審査向け証拠に接続している。",
+      sourceFieldIds: ["judge-proof"]
+    },
+    {
+      id: "competitive-swot",
+      label: "Competitive and SWOT proof is explicit",
+      status: fieldValue("problem").includes(topCompetitor) && strategy.competitors.length >= 3 && swotReady ? "ready" : "watch",
+      proof: `${strategy.competitors.length} competitors / SWOT ${swotReady ? "ready" : "missing"}`,
+      acceptance: "既存ツールとの差分とSWOTが本文から読み取れる。",
+      sourceFieldIds: ["problem", "judge-proof"]
+    },
+    {
+      id: "demo-route",
+      label: "30-second demo route is attached",
+      status: pitch.totalSeconds === 30 && bulletCount(fieldValue("demo-flow")) >= 5 ? "ready" : "watch",
+      proof: `${pitch.totalSeconds}s / ${bulletCount(fieldValue("demo-flow"))} demo bullets`,
+      acceptance: "動画欄または説明欄に30秒の画面順と話す内容を貼れる。",
+      sourceFieldIds: ["demo-flow"]
+    },
+    {
+      id: "public-assets",
+      label: "Public proof assets are ready",
+      status: publicAssetReady && fieldValue("tags").includes("findy_hackathon") ? "ready" : "watch",
+      proof: `${assets.filter((assetItem) => assetItem.status === "ready").length}/${assets.length} assets / tag ${fieldValue("tags")}`,
+      acceptance: "GitHub、Cloud Run、CI、構成図、提出ストーリー、必須タグを確認できる。",
+      sourceFieldIds: ["tags"]
+    },
+    {
+      id: "external-url-closure",
+      label: "External URL closure remains visible",
+      status: externalUrlState,
+      proof:
+        externalUrlState === "ready"
+          ? "ProtoPedia and video URLs are ready."
+          : finalChecklist
+              .filter((item) => item.status !== "ready")
+              .map((item) => item.label)
+              .join(" / "),
+      acceptance: "ProtoPedia作品URLと動画URLは未発行ならwatchとして残し、提出完了扱いにしない。",
+      sourceFieldIds: []
+    }
+  ];
+  const nonExternalReady = checks.filter((check) => check.id !== "external-url-closure").every((check) => check.status === "ready");
+  const readiness: ProtoPediaQualityLockReadiness =
+    nonExternalReady && externalUrlState === "ready" ? "submit-page-ready" : nonExternalReady ? "copy-locked" : "needs-copy-repair";
+  const checkAverage = average(checks.map((check) => lockPoints(check.status)));
+  const qualityScore = Math.round(
+    clamp(
+      average([
+        checkAverage,
+        checkAverage,
+        checkAverage,
+        pitch.readinessScore,
+        strategy.judgeScore,
+        strategy.moatScore
+      ])
+    )
+  );
+
+  return {
+    id: `protopedia-quality-lock-${qualityScore}-${readiness}`,
+    qualityScore,
+    readiness,
+    headline:
+      readiness === "submit-page-ready"
+        ? "ProtoPedia本文、証拠、外部URLまで提出ページとしてロック済みです。"
+        : readiness === "copy-locked"
+          ? "ProtoPedia本文は審査観点までロック済みです。残りは外部URLの貼付です。"
+          : "ProtoPedia本文の審査観点に不足があります。貼付前にcopy fieldsを補強します。",
+    checks,
+    pasteOrder: ["title", "one-liner", "problem", "users", "features", "technology", "demo-flow", "judge-proof", "tags"],
+    requiredTag: "findy_hackathon",
+    externalUrlState
   };
 }
 
@@ -193,12 +350,14 @@ export function buildProtoPediaPublisher(input: {
     }
   ];
   const missingExternal = finalChecklist.filter((item) => item.status === "watch");
+  const qualityLock = buildQualityLock({ pasteFields, assets, finalChecklist, strategy, pitch, finalist, topCompetitor });
   const publishScore = Math.round(
     clamp(
       average([
         average(pasteFields.map((item) => readyPoints(item.status))),
         average(assets.map((item) => readyPoints(item.status))),
         average(finalChecklist.map((item) => readyPoints(item.status))),
+        qualityLock.qualityScore,
         finalist.finalistScore,
         pitch.readinessScore
       ])
@@ -215,6 +374,7 @@ export function buildProtoPediaPublisher(input: {
         ? "ProtoPedia登録に必要な本文、URL、動画、構成図が揃っています。"
         : "本文、構成図、公開URL、CI証跡は揃っています。残りはProtoPedia作品URLと動画URLの外部登録です。",
     pasteFields,
+    qualityLock,
     assets,
     finalChecklist,
     missingExternal,
@@ -225,6 +385,11 @@ export function buildProtoPediaPublisher(input: {
       publishScore,
       readiness,
       selectedAgents: recommendation.selected.map((agent) => agent.id),
+      qualityLock: {
+        qualityScore: qualityLock.qualityScore,
+        readiness: qualityLock.readiness,
+        checks: qualityLock.checks.map((check) => ({ id: check.id, status: check.status }))
+      },
       pasteFields: pasteFields.map((item) => ({ id: item.id, label: item.label, status: item.status })),
       assets: assets.map((item) => ({ id: item.id, status: item.status, url: item.url ?? null })),
       missingExternal: missingExternal.map((item) => ({ id: item.id, action: item.action })),

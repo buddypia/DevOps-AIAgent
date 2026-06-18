@@ -1,7 +1,7 @@
 import type { DemoRunway } from "./demoRunway.js";
 import type { SubmissionDossier } from "./dossier.js";
 import type { JudgeProof } from "./proof.js";
-import type { ProtoPediaPublisher, PublisherStatus } from "./publisher.js";
+import type { ProtoPediaPublisher, ProtoPediaQualityLock, PublisherStatus } from "./publisher.js";
 import type { LaunchItemStatus, SubmissionLaunchGate } from "./submissionLaunch.js";
 
 export type CloseoutReadiness = "ready-to-submit" | "needs-closeout" | "invalid-evidence";
@@ -76,6 +76,7 @@ export type SubmissionCloseoutWorkbench = {
   urlStatuses: SubmissionLaunchGate["urlStatuses"];
   copyFields: CloseoutCopyField[];
   videoSteps: CloseoutVideoStep[];
+  protopediaQualityLock: ProtoPediaQualityLock;
   videoProofLock: CloseoutVideoProofLock;
   submitPacket: SubmissionLaunchGate["submitPacket"];
   proofScript: string[];
@@ -247,6 +248,41 @@ function buildVideoProofLock(input: {
   };
 }
 
+function buildCloseoutQualityLock(input: { publisher: ProtoPediaPublisher; launchGate: SubmissionLaunchGate }): ProtoPediaQualityLock {
+  const externalUrlState: PublisherStatus = input.launchGate.readiness === "submit-ready" ? "ready" : "watch";
+  const launchProof =
+    externalUrlState === "ready"
+      ? "ProtoPedia and video URLs are ready in Submission Launch Gate."
+      : `${input.launchGate.urlStatuses.filter((status) => status.status !== "ready").length} launch URL items still need closure.`;
+  const checks = input.publisher.qualityLock.checks.map((check) =>
+    check.id === "external-url-closure"
+      ? {
+          ...check,
+          status: externalUrlState,
+          proof: launchProof
+        }
+      : check
+  );
+  const nonExternalReady = checks.filter((check) => check.id !== "external-url-closure").every((check) => check.status === "ready");
+  const readiness: ProtoPediaQualityLock["readiness"] =
+    nonExternalReady && externalUrlState === "ready" ? "submit-page-ready" : nonExternalReady ? "copy-locked" : "needs-copy-repair";
+  const qualityScore =
+    externalUrlState === "ready" ? Math.round(clamp(average([input.publisher.qualityLock.qualityScore, 100]))) : input.publisher.qualityLock.qualityScore;
+
+  return {
+    ...input.publisher.qualityLock,
+    id: `protopedia-quality-lock-${qualityScore}-${readiness}`,
+    qualityScore,
+    readiness,
+    headline:
+      readiness === "submit-page-ready"
+        ? "ProtoPedia本文、証拠、外部URLまで提出ページとしてロック済みです。"
+        : input.publisher.qualityLock.headline,
+    checks,
+    externalUrlState
+  };
+}
+
 export function buildSubmissionCloseoutWorkbench(input: {
   baseUrl: string;
   publisher: ProtoPediaPublisher;
@@ -265,6 +301,7 @@ export function buildSubmissionCloseoutWorkbench(input: {
   const copyReady = input.dossier.copyBlocks.every((block) => block.status === "ready");
   const architectureReady = input.dossier.handoffPacket.architecturePack.diagramUrl.length > 0;
   const receiptReady = Boolean(input.proof.receipt.digest);
+  const protopediaQualityLock = buildCloseoutQualityLock({ publisher: input.publisher, launchGate: input.launchGate });
   const workItems: CloseoutWorkItem[] = [
     item({
       id: "paste-protopedia-fields",
@@ -334,6 +371,7 @@ export function buildSubmissionCloseoutWorkbench(input: {
         input.launchGate.launchScore,
         input.dossier.dossierScore,
         input.publisher.publishScore,
+        protopediaQualityLock.qualityScore,
         input.demoRunway.demoScore,
         input.proof.overallScore,
         average(workItems.map(workScore))
@@ -386,10 +424,12 @@ export function buildSubmissionCloseoutWorkbench(input: {
     urlStatuses: input.launchGate.urlStatuses,
     copyFields,
     videoSteps,
+    protopediaQualityLock,
     videoProofLock,
     submitPacket: input.launchGate.submitPacket,
     proofScript: [
       "Submission Closeout Workbenchで残作業をnow/watch/readyに分ける。",
+      `ProtoPedia Quality Lockで${protopediaQualityLock.qualityScore}点の本文受入条件を固定する。`,
       `Video Proof Lockで${videoProofLock.lockScore}点の録画受入条件を固定する。`,
       "Copy fieldsをProtoPediaへ貼り、構成図を添付する。",
       "Video chaptersの順番で30秒動画を録画し、動画URLを入力する。",
@@ -412,6 +452,11 @@ export function buildSubmissionCloseoutWorkbench(input: {
         status: entry.status,
         priority: entry.priority
       })),
+      protopediaQualityLock: {
+        qualityScore: protopediaQualityLock.qualityScore,
+        readiness: protopediaQualityLock.readiness,
+        checks: protopediaQualityLock.checks.map((check) => ({ id: check.id, status: check.status }))
+      },
       videoProofLock: {
         lockScore: videoProofLock.lockScore,
         readiness: videoProofLock.readiness,

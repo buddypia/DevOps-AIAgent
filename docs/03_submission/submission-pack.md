@@ -67,11 +67,11 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Pitch Directorで、30秒動画の録画順、読み上げ台詞、字幕、証拠リンク、提出残リスクを生成する
 - Judge Drillで、審査5項目と主要競合への厳しい質問、回答、60秒回答パス、証拠リンク、デモで開く画面を生成する
 - Finalist Simulatorで、審査員5役の最終候補判定、落選理由、残ギャップ、次の一手を生成する
-- Submission Publisherで、ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
+- Submission Publisherで、ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにし、ProtoPedia Quality Lockで審査5項目、競合/SWOT、必須技術、公開証拠を検収する
 - Demo Runwayで、Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線に束ねる
 - Win Autopilotで、競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を一括判定し、win scoreと残アクションを返す
-- Submission Dossierで、ProtoPedia本文、競合反論レシート、実用性・買い手価値レシート、動画録画順、提出リンク、最終チェック、Markdownを1つに束ねる
-- Submission Closeoutで、ProtoPedia貼付、構成図、30秒動画、Video Proof Lock、外部URL、最終提出フォームを順番付きの作業台にする
+- Submission Dossierで、ProtoPedia本文、ProtoPedia Quality Lock、競合反論レシート、実用性・買い手価値レシート、動画録画順、提出リンク、最終チェック、Markdownを1つに束ねる
+- Submission Closeoutで、ProtoPedia貼付、ProtoPedia Quality Lock、構成図、30秒動画、Video Proof Lock、外部URL、最終提出フォームを順番付きの作業台にする
 - Architecture Packで、システム構成図、Mermaid、Cloud Run/Gemini/A2A/CIの対応表、ProtoPedia貼り付け手順を提出証拠にする
 - Gemini 3.5 Flashで勝ち筋、残リスク、30秒ピッチを生成する
 - Cloud RunでUI、API、Agent Card、A2A endpointを単一サービスとして公開する
@@ -278,6 +278,7 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - Deployed URL: <https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app>
 - ProtoPedia work URL: needs final URL
 - Video URL: needs YouTube or Vimeo URL
+- ProtoPedia Quality Lock: run `POST /api/publisher` or `POST /api/submission-closeout` and confirm `qualityLock` / `protopediaQualityLock` is `copy-locked` before publishing the work page
 - Video Proof Lock: run `POST /api/submission-closeout` and use the `videoProofLock` checks before publishing the video URL
 - System architecture diagram: `public/assets/a2a-marketplace-architecture.svg`
 - Architecture Pack API: `POST /api/architecture-pack`

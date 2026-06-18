@@ -4,7 +4,7 @@ import type { FinalistSimulation } from "./finalist.js";
 import type { MissionRun } from "./mission.js";
 import type { PitchRun } from "./pitch.js";
 import type { JudgeProof } from "./proof.js";
-import type { ProtoPediaPublisher, PublisherStatus } from "./publisher.js";
+import type { ProtoPediaPublisher, ProtoPediaQualityLock, PublisherStatus } from "./publisher.js";
 import { SUBMISSION_PROOF } from "./submission.js";
 import type { WinningAutopilotRun } from "./autopilot.js";
 import { buildArchitecturePack, type ArchitecturePack } from "./architecturePack.js";
@@ -81,6 +81,7 @@ export type DossierBuyerValueReceipt = {
 export type DossierHandoffPacket = {
   submitFields: DossierHandoffField[];
   protopediaFields: DossierHandoffField[];
+  qualityLock: ProtoPediaQualityLock;
   videoChapters: DossierVideoChapter[];
   competitiveReceipts: DossierCompetitiveReceipt[];
   buyerValueReceipts: DossierBuyerValueReceipt[];
@@ -384,6 +385,7 @@ export function buildSubmissionDossier(input: {
   const handoffPacket: DossierHandoffPacket = {
     submitFields,
     protopediaFields,
+    qualityLock: publisher.qualityLock,
     videoChapters,
     competitiveReceipts,
     buyerValueReceipts,
@@ -399,6 +401,7 @@ export function buildSubmissionDossier(input: {
         proof.overallScore,
         finalist.finalistScore,
         demoRunway.demoScore,
+        publisher.qualityLock.qualityScore,
         average(links.map((item) => statusPoints(item.status))),
         average(finalChecks.map((item) => statusPoints(item.status)))
       ])
@@ -418,6 +421,15 @@ export function buildSubmissionDossier(input: {
     markdownSection("特徴", pasteField("features")?.value ?? ""),
     "",
     markdownSection("技術構成", pasteField("technology")?.value ?? ""),
+    "",
+    markdownSection(
+      "ProtoPedia品質ロック",
+      [
+        `${publisher.qualityLock.qualityScore} quality / ${publisher.qualityLock.readiness}`,
+        publisher.qualityLock.headline,
+        ...publisher.qualityLock.checks.map((check) => `- ${check.label}: ${check.status} / ${check.acceptance}`)
+      ].join("\n")
+    ),
     "",
     markdownSection("審査向け証拠", markdownList(judgeEvidence)),
     "",
@@ -489,6 +501,11 @@ export function buildSubmissionDossier(input: {
       handoffPacket: {
         submitFields: submitFields.map((item) => ({ id: item.id, target: item.target, status: item.status })),
         protopediaFields: protopediaFields.map((item) => ({ id: item.id, target: item.target, status: item.status })),
+        qualityLock: {
+          qualityScore: publisher.qualityLock.qualityScore,
+          readiness: publisher.qualityLock.readiness,
+          checks: publisher.qualityLock.checks.map((item) => ({ id: item.id, status: item.status }))
+        },
         videoChapters: videoChapters.map((item) => ({ id: item.id, timeRange: item.timeRange, screen: item.screen, status: item.status })),
         competitiveReceipts: competitiveReceipts.map((item) => ({
           id: item.id,

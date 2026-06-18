@@ -5288,6 +5288,32 @@ function SubmissionCloseoutPanel({
             </div>
           </div>
 
+          <div className="closeout-quality-lock">
+            <section>
+              <div>
+                <span className={cx("risk-chip", workbench.protopediaQualityLock.readiness === "submit-page-ready" ? "low" : workbench.protopediaQualityLock.readiness === "copy-locked" ? "medium" : "high")}>
+                  {workbench.protopediaQualityLock.readiness}
+                </span>
+                <strong>{workbench.protopediaQualityLock.qualityScore}</strong>
+              </div>
+              <h3>ProtoPedia Quality Lock</h3>
+              <p>{workbench.protopediaQualityLock.headline}</p>
+              <small>Required tag: {workbench.protopediaQualityLock.requiredTag}</small>
+            </section>
+            <div>
+              {workbench.protopediaQualityLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.acceptance}</p>
+                  <small>{check.proof}</small>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="closeout-video-lock">
             <section>
               <div>
@@ -5602,6 +5628,32 @@ function SubmissionDossierPanel({
             <div className="dossier-score">
               <strong>{dossier.dossierScore}</strong>
               <span>dossier score</span>
+            </div>
+          </div>
+
+          <div className="dossier-quality-lock">
+            <section>
+              <div>
+                <span className={cx("risk-chip", dossier.handoffPacket.qualityLock.readiness === "submit-page-ready" ? "low" : dossier.handoffPacket.qualityLock.readiness === "copy-locked" ? "medium" : "high")}>
+                  {dossier.handoffPacket.qualityLock.readiness}
+                </span>
+                <strong>{dossier.handoffPacket.qualityLock.qualityScore}</strong>
+              </div>
+              <h3>ProtoPedia Quality Lock</h3>
+              <p>{dossier.handoffPacket.qualityLock.headline}</p>
+              <small>{dossier.handoffPacket.qualityLock.pasteOrder.join(" -> ")}</small>
+            </section>
+            <div>
+              {dossier.handoffPacket.qualityLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.acceptance}</p>
+                  <small>{check.proof}</small>
+                </article>
+              ))}
             </div>
           </div>
 
@@ -6642,6 +6694,32 @@ function SubmissionPublisher({
             <div className="publisher-score">
               <strong>{publisher.publishScore}</strong>
               <span>publish score</span>
+            </div>
+          </div>
+
+          <div className="publisher-quality-lock">
+            <section>
+              <div>
+                <span className={cx("risk-chip", publisher.qualityLock.readiness === "submit-page-ready" ? "low" : publisher.qualityLock.readiness === "copy-locked" ? "medium" : "high")}>
+                  {publisher.qualityLock.readiness}
+                </span>
+                <strong>{publisher.qualityLock.qualityScore}</strong>
+              </div>
+              <h3>ProtoPedia Quality Lock</h3>
+              <p>{publisher.qualityLock.headline}</p>
+              <small>{publisher.qualityLock.pasteOrder.join(" -> ")}</small>
+            </section>
+            <div>
+              {publisher.qualityLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.acceptance}</p>
+                  <small>{check.proof}</small>
+                </article>
+              ))}
             </div>
           </div>
 

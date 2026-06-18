@@ -10448,6 +10448,163 @@ h1 {
   text-transform: uppercase;
 }
 
+.publisher-quality-lock,
+.dossier-quality-lock,
+.closeout-quality-lock {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.72fr) minmax(420px, 1fr);
+  gap: 1px;
+  background: #cbd8c4;
+}
+
+.dossier-quality-lock {
+  background: #d7d2c8;
+}
+
+.closeout-quality-lock {
+  background: #d8d0bf;
+}
+
+.publisher-quality-lock > section,
+.publisher-quality-lock > div,
+.dossier-quality-lock > section,
+.dossier-quality-lock > div,
+.closeout-quality-lock > section,
+.closeout-quality-lock > div {
+  min-width: 0;
+  padding: 14px;
+  background: #fbfff9;
+}
+
+.dossier-quality-lock > section,
+.dossier-quality-lock > div {
+  background: #fffdf9;
+}
+
+.closeout-quality-lock > section,
+.closeout-quality-lock > div {
+  background: #fffdf9;
+}
+
+.publisher-quality-lock > section,
+.dossier-quality-lock > section,
+.closeout-quality-lock > section {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.publisher-quality-lock > section > div,
+.dossier-quality-lock > section > div,
+.closeout-quality-lock > section > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.publisher-quality-lock > section strong,
+.dossier-quality-lock > section strong,
+.closeout-quality-lock > section strong {
+  color: #24402b;
+  font-size: 2.6rem;
+  line-height: 0.95;
+}
+
+.publisher-quality-lock h3,
+.dossier-quality-lock h3,
+.closeout-quality-lock h3 {
+  font-size: 1.06rem;
+  line-height: 1.2;
+}
+
+.publisher-quality-lock > section p,
+.publisher-quality-lock > section small,
+.dossier-quality-lock > section p,
+.dossier-quality-lock > section small,
+.closeout-quality-lock > section p,
+.closeout-quality-lock > section small {
+  color: #414b3f;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.publisher-quality-lock > div,
+.dossier-quality-lock > div,
+.closeout-quality-lock > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.publisher-quality-lock article,
+.dossier-quality-lock article,
+.closeout-quality-lock article {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid #cbd8c4;
+  border-left: 4px solid var(--teal);
+  border-radius: 8px;
+  background: #f2f8ec;
+}
+
+.dossier-quality-lock article,
+.closeout-quality-lock article {
+  border-color: #d7d2c8;
+  background: #f7f8f2;
+}
+
+.publisher-quality-lock article.watch,
+.dossier-quality-lock article.watch,
+.closeout-quality-lock article.watch {
+  border-left-color: var(--amber);
+  background: #fff8e6;
+}
+
+.publisher-quality-lock article > div,
+.dossier-quality-lock article > div,
+.closeout-quality-lock article > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.publisher-quality-lock article *,
+.dossier-quality-lock article *,
+.closeout-quality-lock article * {
+  min-width: 0;
+}
+
+.publisher-quality-lock article span,
+.dossier-quality-lock article span,
+.closeout-quality-lock article span {
+  color: var(--teal);
+  font-size: 0.7rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.publisher-quality-lock article.watch span,
+.dossier-quality-lock article.watch span,
+.closeout-quality-lock article.watch span {
+  color: #8a5b17;
+}
+
+.publisher-quality-lock article p,
+.publisher-quality-lock article small,
+.dossier-quality-lock article p,
+.dossier-quality-lock article small,
+.closeout-quality-lock article p,
+.closeout-quality-lock article small {
+  color: #414b3f;
+  line-height: 1.38;
+  overflow-wrap: anywhere;
+}
+
 .publisher-fields {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -11687,6 +11844,12 @@ pre {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
   }
 
+  .publisher-quality-lock > div,
+  .dossier-quality-lock > div,
+  .closeout-quality-lock > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .dossier-handoff,
   .dossier-copy {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
@@ -11792,6 +11955,7 @@ pre {
   .gap-grid,
   .closeout-inputs,
   .closeout-summary,
+  .closeout-quality-lock,
   .closeout-video-lock,
   .closeout-grid,
     .workbench,
@@ -11874,6 +12038,7 @@ pre {
     .autopilot-lanes,
     .autopilot-grid,
     .dossier-summary,
+    .dossier-quality-lock,
     .dossier-handoff,
     .dossier-copy,
     .dossier-grid,
@@ -11894,6 +12059,7 @@ pre {
     .finalist-panels,
     .finalist-grid,
     .publisher-summary,
+    .publisher-quality-lock,
     .publisher-fields,
     .publisher-grid,
     .mission-summary,
@@ -11910,6 +12076,12 @@ pre {
   }
 
   .concierge-route-lock > div {
+    grid-template-columns: 1fr;
+  }
+
+  .publisher-quality-lock > div,
+  .dossier-quality-lock > div,
+  .closeout-quality-lock > div {
     grid-template-columns: 1fr;
   }
 

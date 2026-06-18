@@ -273,9 +273,10 @@
 
 - `POST /api/submission-closeout`: Submission Dossier、Publisher、Demo Runway、Judge Proof、Launch Gateを束ね、外部提出作業を順番付きのworkbenchに変換する
 - Work items: ProtoPedia貼付、構成図添付、30秒動画、ProtoPedia公開、Launch Gate封印、Findy提出、receipt確認をready/watch/blockedで返す
-- Copy/video trays: ProtoPediaに貼るcopy fields、30秒動画のchapter、Video Proof Lockを同じレスポンスで返す
+- Copy/video trays: ProtoPediaに貼るcopy fields、ProtoPedia Quality Lock、30秒動画のchapter、Video Proof Lockを同じレスポンスで返す
+- ProtoPedia Quality Lock: 本文が課題/対象ユーザー/特徴、Cloud Run/Gemini/A2A/GitHub Actions、審査5項目、競合/SWOT、30秒デモ導線、公開証拠、外部URL状態を満たすかをscore/readiness付きで返す
 - Video Proof Lock: 動画URLが未発行でも、公開Cloud Run開始、30秒導線、Judge Proof receipt、競合反論、提出handoff、YouTube/Vimeo URLの受入条件をscore/readiness付きで返す
-- A2A payload: `submission.closeout` skillとしてcloseout score、readiness、next action、work items、Video Proof Lock、URL status、endpoint群を返す
+- A2A payload: `submission.closeout` skillとしてcloseout score、readiness、next action、work items、ProtoPedia Quality Lock、Video Proof Lock、URL status、endpoint群を返す
 
 ## Architecture Pack Surface
 
@@ -435,6 +436,7 @@
 - Agent task board: `/api/task-board`
 - Submission launch: `/api/submission-launch`
 - Submission closeout: `/api/submission-closeout`
+- ProtoPedia quality lock: `/api/publisher` and `/api/submission-closeout`
 - Security review: `/api/security-review`
 - Impact case: `/api/impact-case`
 - Pilot economics: `/api/pilot-economics`

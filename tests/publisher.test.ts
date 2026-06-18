@@ -38,13 +38,40 @@ describe("protopedia publisher", () => {
       expect.arrayContaining(["title", "one-liner", "problem", "features", "technology", "demo-flow", "judge-proof", "tags"])
     );
     expect(publisher.pasteFields.find((item) => item.id === "tags")?.value).toContain("findy_hackathon");
+    expect(publisher.qualityLock).toMatchObject({
+      readiness: "copy-locked",
+      requiredTag: "findy_hackathon",
+      externalUrlState: "watch"
+    });
+    expect(publisher.qualityLock.qualityScore).toBeGreaterThanOrEqual(90);
+    expect(publisher.qualityLock.checks.map((check) => check.id)).toEqual([
+      "story-triad",
+      "required-tech",
+      "judge-criteria",
+      "competitive-swot",
+      "demo-route",
+      "public-assets",
+      "external-url-closure"
+    ]);
+    expect(publisher.qualityLock.checks.find((check) => check.id === "required-tech")).toMatchObject({
+      status: "ready",
+      sourceFieldIds: ["technology"]
+    });
+    expect(publisher.qualityLock.checks.find((check) => check.id === "external-url-closure")).toMatchObject({
+      status: "watch",
+      acceptance: expect.stringContaining("提出完了扱いにしない")
+    });
     expect(publisher.assets.find((item) => item.id === "cloud-run")?.status).toBe("ready");
     expect(publisher.assets.find((item) => item.id === "protopedia")?.status).toBe("watch");
     expect(publisher.missingExternal.map((item) => item.id)).toEqual(expect.arrayContaining(["record-video", "publish-protopedia"]));
     expect(publisher.recordingScript).toContain("AI能力");
     expect(publisher.a2aPayload).toMatchObject({
       method: "message/send",
-      skill: "submission.publish"
+      skill: "submission.publish",
+      qualityLock: {
+        readiness: "copy-locked",
+        checks: expect.arrayContaining([expect.objectContaining({ id: "external-url-closure", status: "watch" })])
+      }
     });
   });
 });

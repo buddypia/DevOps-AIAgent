@@ -5420,6 +5420,14 @@ app.post("/a2a", async (req, res) => {
                     status: item.status,
                     priority: item.priority
                   })),
+                  protopediaQualityLock: {
+                    qualityScore: submissionCloseout.protopediaQualityLock.qualityScore,
+                    readiness: submissionCloseout.protopediaQualityLock.readiness,
+                    checks: submissionCloseout.protopediaQualityLock.checks.map((check) => ({
+                      id: check.id,
+                      status: check.status
+                    }))
+                  },
                   videoProofLock: {
                     lockScore: submissionCloseout.videoProofLock.lockScore,
                     readiness: submissionCloseout.videoProofLock.readiness,
@@ -5669,6 +5677,14 @@ app.post("/a2a", async (req, res) => {
                   id: publisher.id,
                   publishScore: publisher.publishScore,
                   readiness: publisher.readiness,
+                  qualityLock: {
+                    qualityScore: publisher.qualityLock.qualityScore,
+                    readiness: publisher.qualityLock.readiness,
+                    checks: publisher.qualityLock.checks.map((check) => ({
+                      id: check.id,
+                      status: check.status
+                    }))
+                  },
                   pasteFields: publisher.pasteFields.map((field) => field.id),
                   missingExternal: publisher.missingExternal.map((item) => item.id)
                 },
@@ -5710,6 +5726,14 @@ app.post("/a2a", async (req, res) => {
                   missingLinks: dossier.links.filter((link) => link.status === "watch").map((link) => link.id),
                   handoffPacket: {
                     submitFields: dossier.handoffPacket.submitFields.map((field) => ({ id: field.id, status: field.status })),
+                    qualityLock: {
+                      qualityScore: dossier.handoffPacket.qualityLock.qualityScore,
+                      readiness: dossier.handoffPacket.qualityLock.readiness,
+                      checks: dossier.handoffPacket.qualityLock.checks.map((check) => ({
+                        id: check.id,
+                        status: check.status
+                      }))
+                    },
                     videoChapters: dossier.handoffPacket.videoChapters.map((chapter) => ({
                       id: chapter.id,
                       timeRange: chapter.timeRange,

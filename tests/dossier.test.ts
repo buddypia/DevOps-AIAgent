@@ -140,6 +140,16 @@ describe("submission dossier", () => {
       status: "ready"
     });
     expect(dossier.handoffPacket.protopediaFields.map((field) => field.id)).toEqual(expect.arrayContaining(["problem", "features", "technology", "tags"]));
+    expect(dossier.handoffPacket.qualityLock).toMatchObject({
+      readiness: "copy-locked",
+      requiredTag: "findy_hackathon",
+      checks: expect.arrayContaining([
+        expect.objectContaining({ id: "judge-criteria", status: "ready" }),
+        expect.objectContaining({ id: "competitive-swot", status: "ready" }),
+        expect.objectContaining({ id: "external-url-closure", status: "watch" })
+      ])
+    });
+    expect(dossier.handoffPacket.qualityLock.qualityScore).toBeGreaterThanOrEqual(90);
     expect(dossier.handoffPacket.videoChapters.length).toBeGreaterThanOrEqual(8);
     expect(dossier.handoffPacket.competitiveReceipts.find((receipt) => receipt.id === "google-adk")).toMatchObject({
       competitor: expect.stringContaining("ADK"),
@@ -163,6 +173,8 @@ describe("submission dossier", () => {
     );
     expect(dossier.handoffPacket.missingOnly.map((item) => item.id)).toEqual(expect.arrayContaining(["protopedia-url", "video-url"]));
     expect(dossier.markdown).toContain("30秒動画録画順");
+    expect(dossier.markdown).toContain("ProtoPedia品質ロック");
+    expect(dossier.markdown).toContain("copy-locked");
     expect(dossier.markdown).toContain("競合反論レシート");
     expect(dossier.markdown).toContain("Google ADK");
     expect(dossier.markdown).toContain("実用性・買い手価値レシート");
@@ -177,6 +189,10 @@ describe("submission dossier", () => {
       readiness: "needs-external-urls",
       handoffPacket: {
         submitFields: expect.arrayContaining([expect.objectContaining({ id: "github-url", status: "ready" })]),
+        qualityLock: {
+          readiness: "copy-locked",
+          checks: expect.arrayContaining([expect.objectContaining({ id: "external-url-closure", status: "watch" })])
+        },
         videoChapters: expect.arrayContaining([expect.objectContaining({ id: "proof-first" })]),
         competitiveReceipts: expect.arrayContaining([expect.objectContaining({ id: "google-adk" })]),
         buyerValueReceipts: expect.arrayContaining([expect.objectContaining({ id: "pilot-economics" })]),

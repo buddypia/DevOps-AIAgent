@@ -150,6 +150,15 @@ describe("submission closeout workbench", () => {
     });
     expect(closeout.copyFields.length).toBeGreaterThanOrEqual(8);
     expect(closeout.videoSteps.length).toBeGreaterThanOrEqual(7);
+    expect(closeout.protopediaQualityLock).toMatchObject({
+      readiness: "copy-locked",
+      requiredTag: "findy_hackathon",
+      checks: expect.arrayContaining([
+        expect.objectContaining({ id: "story-triad", status: "ready" }),
+        expect.objectContaining({ id: "external-url-closure", status: "watch" })
+      ])
+    });
+    expect(closeout.protopediaQualityLock.qualityScore).toBeGreaterThanOrEqual(90);
     expect(closeout.videoProofLock).toMatchObject({
       readiness: "recording-locked",
       targetDurationSeconds: 30,
@@ -168,6 +177,10 @@ describe("submission closeout workbench", () => {
       method: "message/send",
       skill: "submission.closeout",
       readiness: "needs-closeout",
+      protopediaQualityLock: {
+        readiness: "copy-locked",
+        checks: expect.arrayContaining([expect.objectContaining({ id: "external-url-closure", status: "watch" })])
+      },
       videoProofLock: {
         readiness: "recording-locked",
         checks: expect.arrayContaining([
@@ -190,6 +203,8 @@ describe("submission closeout workbench", () => {
 
     expect(closeout.readiness).toBe("ready-to-submit");
     expect(closeout.workItems.every((item) => item.status === "ready")).toBe(true);
+    expect(closeout.protopediaQualityLock.readiness).toBe("submit-page-ready");
+    expect(closeout.protopediaQualityLock.checks.find((check) => check.id === "external-url-closure")?.status).toBe("ready");
     expect(closeout.videoProofLock.readiness).toBe("video-url-ready");
     expect(closeout.videoProofLock.checks.find((check) => check.id === "publish-url")?.status).toBe("ready");
     expect(closeout.submitPacket).toMatchObject({
