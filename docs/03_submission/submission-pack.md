@@ -42,7 +42,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Judge Briefで、競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページにまとめる
 - Judge Command Centerで、Judge Tour、Competitive Battlecard、Objection Replay、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
 - Demo Conciergeで、審査員、買い手、提出者ごとの最初の1クリック、台詞、証拠URL、成功条件を固定し、Judge Route Lockで0-90秒のlocked stepsに圧縮する
-- Judge Rehearsal Roomで、90秒segments、想定質問、scorecard、録画チェックを固定する
+- Judge Rehearsal Roomで、Final Pitch Defense Lock、90秒segments、想定質問、scorecard、録画チェックを固定する
 - Winner Proof Packetで、審査5項目ごとの主張、証拠URL、競合/SWOT反論、録画cue、提出copyを1枚に束ねる
 - Final Submission Runwayで、2026/7/10 23:59 JSTから逆算し、動画、ProtoPedia、構成図、最終フォームを検収順にする
 - Judge Tourで、Judge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
@@ -283,6 +283,7 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - System architecture diagram: `public/assets/a2a-marketplace-architecture.svg`
 - Architecture Pack API: `POST /api/architecture-pack`
 - Judge Rehearsal API: `POST /api/judge-rehearsal`
+- Final Pitch Defense Lock: run `POST /api/judge-rehearsal` and confirm `defenseLock` is not `needs-defense-proof` before recording final Q&A
 - Winner Proof Packet API: `POST /api/winner-packet`
 - Final Submission Runway API: `POST /api/submission-runway`
 - Agent Task Board API: `POST /api/task-board`

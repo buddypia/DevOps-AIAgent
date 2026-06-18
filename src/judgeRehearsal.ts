@@ -1,12 +1,14 @@
 import type { JudgeAcceptanceMatrix } from "./acceptanceMatrix.js";
 import type { DemoConcierge } from "./demoConcierge.js";
 import type { JudgeCommandCenter } from "./judgeCommandCenter.js";
+import type { JudgeDrill } from "./judgeDrill.js";
 import type { JudgeTour } from "./judgeTour.js";
 import type { PrizeStrategyBoard } from "./prizeStrategy.js";
 import type { SubmissionCloseoutWorkbench } from "./submissionCloseout.js";
 
 export type JudgeRehearsalReadiness = "rehearsal-ready" | "external-gap-rehearsal" | "needs-rehearsal-fix";
 export type JudgeRehearsalStatus = "ready" | "watch" | "blocked";
+export type FinalPitchDefenseReadiness = "defense-ready" | "external-gap-defense" | "needs-defense-proof";
 
 export type JudgeRehearsalSegment = {
   id: string;
@@ -45,6 +47,26 @@ export type JudgeRehearsalCapture = {
   status: JudgeRehearsalStatus;
 };
 
+export type FinalPitchDefenseCheck = {
+  id: string;
+  label: string;
+  status: JudgeRehearsalStatus;
+  proof: string;
+  proofUrl: string;
+  acceptance: string;
+};
+
+export type FinalPitchDefenseLock = {
+  id: string;
+  defenseScore: number;
+  readiness: FinalPitchDefenseReadiness;
+  headline: string;
+  hardQuestion: string;
+  answerPath: string[];
+  checks: FinalPitchDefenseCheck[];
+  closingMove: string;
+};
+
 export type JudgeRehearsalRoom = {
   id: string;
   rehearsalScore: number;
@@ -57,6 +79,7 @@ export type JudgeRehearsalRoom = {
   questionDeck: JudgeRehearsalQuestion[];
   scorecard: JudgeRehearsalScorecard[];
   captureChecklist: JudgeRehearsalCapture[];
+  defenseLock: FinalPitchDefenseLock;
   a2aPayload: Record<string, unknown>;
 };
 
@@ -90,6 +113,12 @@ function statusFromPublisher(status: "ready" | "watch"): JudgeRehearsalStatus {
   return status === "ready" ? "ready" : "watch";
 }
 
+function statusScore(status: JudgeRehearsalStatus) {
+  if (status === "ready") return 100;
+  if (status === "watch") return 76;
+  return 42;
+}
+
 function readinessFrom(input: {
   rehearsalScore: number;
   acceptance: JudgeAcceptanceMatrix;
@@ -109,6 +138,125 @@ function shortText(value: string, fallback: string) {
   return trimmed.length > 0 ? trimmed : fallback;
 }
 
+function defenseStatus(score: number): JudgeRehearsalStatus {
+  if (score >= 88) return "ready";
+  if (score >= 72) return "watch";
+  return "blocked";
+}
+
+function buildDefenseLock(input: {
+  baseUrl: string;
+  rehearsalScore: number;
+  command: JudgeCommandCenter;
+  prize: PrizeStrategyBoard;
+  closeout: SubmissionCloseoutWorkbench;
+  segments: JudgeRehearsalSegment[];
+  questionDeck: JudgeRehearsalQuestion[];
+  scorecard: JudgeRehearsalScorecard[];
+  captureChecklist: JudgeRehearsalCapture[];
+  judgeDrill?: JudgeDrill;
+}): FinalPitchDefenseLock {
+  const { baseUrl, rehearsalScore, command, prize, closeout, segments, questionDeck, scorecard, captureChecklist, judgeDrill } = input;
+  const agentCentrality = scorecard.find((item) => item.id === "agent-centrality");
+  const approach = scorecard.find((item) => item.id === "approach");
+  const practicality = scorecard.find((item) => item.id === "practicality");
+  const implementation = scorecard.find((item) => item.id === "implementation");
+  const objectionReplay = prize.proofMoves.find((move) => move.id === "objection-replay");
+  const buyerValue = prize.proofMoves.find((move) => move.id === "buyer-value") ?? prize.proofMoves.find((move) => move.id === "operations-value");
+  const publicRelease = prize.proofMoves.find((move) => move.id === "public-release");
+  const blockedRecording = [...segments, ...captureChecklist].some((item) => item.status === "blocked");
+  const allExternalReady = closeout.urlStatuses.every((item) => item.status === "ready");
+  const malformedExternal = closeout.readiness === "invalid-evidence";
+  const timeboxReady = (judgeDrill?.timeboxedAnswer.length ?? 0) >= 4;
+  const highRiskObjections = judgeDrill?.objections.filter((objection) => objection.risk === "high").length ?? 0;
+
+  const checks: FinalPitchDefenseCheck[] = [
+    {
+      id: "ai-necessity-defense",
+      label: "AI necessity answer",
+      status: agentCentrality?.status ?? statusFromReadiness(command.readiness),
+      proof: agentCentrality
+        ? `${agentCentrality.currentScore}/${agentCentrality.targetScore}: ${agentCentrality.rehearse}`
+        : `${command.commandScore} command score / ${command.readiness}`,
+      proofUrl: absoluteUrl(baseUrl, "/.well-known/agent-card.json"),
+      acceptance: "単なるダッシュボードではなく、Agent CardとA2A payloadで判断、委任、検収の連鎖を示せる。"
+    },
+    {
+      id: "competitor-cross-exam",
+      label: "Competitor cross-exam",
+      status: objectionReplay ? defenseStatus(Math.min(objectionReplay.score, approach?.currentScore ?? objectionReplay.score)) : "watch",
+      proof: objectionReplay ? `${objectionReplay.score} objection replay / ${objectionReplay.proof}` : "Objection Replay proof move is not present.",
+      proofUrl: objectionReplay?.endpoint ?? absoluteUrl(baseUrl, "/api/competitive-battlecard"),
+      acceptance: "ADK、LangGraph、Dify等への反論を、相手の強み、SWOT、公開proof routeの順で30秒以内に返せる。"
+    },
+    {
+      id: "buyer-value-defense",
+      label: "Buyer value answer",
+      status: buyerValue ? defenseStatus(Math.min(buyerValue.score, practicality?.currentScore ?? buyerValue.score)) : "watch",
+      proof: buyerValue ? `${buyerValue.score} buyer proof / ${buyerValue.proof}` : "Buyer value proof move is not present.",
+      proofUrl: buyerValue?.endpoint ?? absoluteUrl(baseUrl, "/api/pilot-economics"),
+      acceptance: "面白いだけではなく、Pilot EconomicsやObservabilityの回収日数、買い手反論、導入価値に戻せる。"
+    },
+    {
+      id: "public-implementation-proof",
+      label: "Public implementation proof",
+      status: publicRelease ? defenseStatus(Math.min(publicRelease.score, implementation?.currentScore ?? publicRelease.score)) : "watch",
+      proof: publicRelease ? `${publicRelease.score} public proof / ${publicRelease.proof}` : "Public release proof move is not present.",
+      proofUrl: publicRelease?.endpoint ?? absoluteUrl(baseUrl, "/api/release-drift"),
+      acceptance: "Cloud Run、GitHub Actions、Release Drift、A2A artifactを最終質疑中に開き、最新公開実装であることを示せる。"
+    },
+    {
+      id: "honest-submission-gap",
+      label: "Honest submission gap",
+      status: malformedExternal ? "blocked" : allExternalReady ? "ready" : "watch",
+      proof: closeout.urlStatuses.map((item) => `${item.id}:${item.status}`).join(" / "),
+      proofUrl: absoluteUrl(baseUrl, "/api/submission-closeout"),
+      acceptance: "ProtoPedia作品URLや動画URLが未発行ならsubmit-readyと言わず、残ギャップとして正直に説明できる。"
+    },
+    {
+      id: "sixty-second-answer-path",
+      label: "60s answer path",
+      status: timeboxReady && highRiskObjections === 0 && !blockedRecording ? "ready" : timeboxReady ? "watch" : "blocked",
+      proof: timeboxReady
+        ? `${judgeDrill?.timeboxedAnswer.length} timeboxes / ${highRiskObjections} high-risk objections`
+        : `${questionDeck.length} rehearsal questions / Judge Drill timebox missing`,
+      proofUrl: absoluteUrl(baseUrl, "/api/judge-drill"),
+      acceptance: "どの厳しい質問でも、0-60秒の順番、開く画面、締めの採点軸を固定して答えられる。"
+    }
+  ];
+
+  const blockedCount = checks.filter((check) => check.status === "blocked").length;
+  const defenseScore = Math.round(clamp(average([rehearsalScore, prize.prizeScore, ...checks.map((check) => statusScore(check.status))])));
+  const readiness: FinalPitchDefenseReadiness =
+    blockedCount > 0
+      ? "needs-defense-proof"
+      : !allExternalReady || closeout.readiness !== "ready-to-submit" || defenseScore < 92
+        ? "external-gap-defense"
+        : "defense-ready";
+  const answerPath =
+    judgeDrill?.timeboxedAnswer.map((step) => `${step.timeRange}: ${step.move} (${step.proof})`) ??
+    segments.slice(0, 4).map((segment) => `${segment.timeRange}: ${segment.screen} - ${segment.say}`);
+
+  return {
+    id: `final-pitch-defense-${defenseScore}-${readiness}`,
+    defenseScore,
+    readiness,
+    headline:
+      readiness === "defense-ready"
+        ? "最終質疑は証拠順に答えられます。"
+        : readiness === "external-gap-defense"
+          ? "質疑の防御線は固まりました。外部提出URLだけをwatchとして残します。"
+          : "最終質疑で崩れるblocked証拠があります。",
+    hardQuestion: judgeDrill?.hardestQuestion ?? questionDeck[0]?.question ?? "最初の質疑で、どの証拠を開いて答えますか？",
+    answerPath,
+    checks,
+    closingMove:
+      readiness === "needs-defense-proof"
+        ? checks.find((check) => check.status === "blocked")?.acceptance ?? "Fix blocked final pitch proof."
+        : "反論を受けたら、Objection Replay、Pilot Economics、Release Drift、Submission Closeoutの順に戻す。"
+  };
+}
+
 export function buildJudgeRehearsalRoom(input: {
   baseUrl: string;
   acceptance: JudgeAcceptanceMatrix;
@@ -117,8 +265,9 @@ export function buildJudgeRehearsalRoom(input: {
   tour: JudgeTour;
   prize: PrizeStrategyBoard;
   closeout: SubmissionCloseoutWorkbench;
+  judgeDrill?: JudgeDrill;
 }): JudgeRehearsalRoom {
-  const { baseUrl, acceptance, command, concierge, tour, prize, closeout } = input;
+  const { baseUrl, acceptance, command, concierge, tour, prize, closeout, judgeDrill } = input;
   const base = baseUrl.replace(/\/$/, "");
   const externalGapCount = closeout.urlStatuses.filter((item) => item.status !== "ready").length;
   const blockedSignals = [
@@ -259,12 +408,25 @@ export function buildJudgeRehearsalRoom(input: {
     }
   ];
 
+  const defenseLock = buildDefenseLock({
+    baseUrl: base,
+    rehearsalScore,
+    command,
+    prize,
+    closeout,
+    segments,
+    questionDeck,
+    scorecard,
+    captureChecklist,
+    judgeDrill
+  });
+
   const readiness = readinessFrom({
     rehearsalScore,
     acceptance,
     command,
     closeout,
-    blockedCount: [...segments, ...questionDeck, ...scorecard, ...captureChecklist].filter((item) => item.status === "blocked").length
+    blockedCount: [...segments, ...questionDeck, ...scorecard, ...captureChecklist, ...defenseLock.checks].filter((item) => item.status === "blocked").length
   });
   const headline =
     readiness === "rehearsal-ready"
@@ -301,16 +463,28 @@ export function buildJudgeRehearsalRoom(input: {
     questionDeck,
     scorecard,
     captureChecklist,
+    defenseLock,
     a2aPayload: {
       method: "message/send",
       skill: "judge.rehearsal",
       readiness,
       rehearsalScore,
       nextRun,
+      defenseLock: {
+        readiness: defenseLock.readiness,
+        defenseScore: defenseLock.defenseScore,
+        hardQuestion: defenseLock.hardQuestion,
+        checks: defenseLock.checks.map((check) => ({
+          id: check.id,
+          status: check.status,
+          proofUrl: check.proofUrl
+        }))
+      },
       endpoints: {
         rehearsal: absoluteUrl(base, "/api/judge-rehearsal"),
         commandCenter: absoluteUrl(base, "/api/judge-command-center"),
         demoConcierge: absoluteUrl(base, "/api/demo-concierge"),
+        judgeDrill: absoluteUrl(base, "/api/judge-drill"),
         submissionCloseout: absoluteUrl(base, "/api/submission-closeout")
       }
     }

@@ -217,8 +217,8 @@ function agentCard(baseUrl: string) {
       {
         id: "judge.rehearsal",
         name: "Rehearse the 90-second judge run",
-        description: "Judge Command、Demo Concierge、Prize Strategy、Closeoutを90秒の台詞、開くURL、想定質問、録画チェックへ束ねる。",
-        tags: ["judge-rehearsal", "demo", "first-run", "usability", "pitch"]
+        description: "Judge Command、Demo Concierge、Prize Strategy、Judge Drill、Closeoutを90秒台本と最終質疑Defense Lockへ束ねる。",
+        tags: ["judge-rehearsal", "demo", "first-run", "usability", "pitch", "qa-defense"]
       },
       {
         id: "winner.packet",
@@ -4018,7 +4018,8 @@ app.post("/api/judge-rehearsal", async (req, res) => {
       concierge: demoConcierge,
       tour: judgeTour,
       prize: prizeStrategy,
-      closeout: submissionCloseout
+      closeout: submissionCloseout,
+      judgeDrill
     })
   );
 });
@@ -4243,7 +4244,8 @@ app.post("/api/winner-packet", async (req, res) => {
     concierge: demoConcierge,
     tour: judgeTour,
     prize: prizeStrategy,
-    closeout: submissionCloseout
+    closeout: submissionCloseout,
+    judgeDrill
   });
 
   res.json(
@@ -4479,7 +4481,8 @@ app.post("/api/submission-runway", async (req, res) => {
     concierge: demoConcierge,
     tour: judgeTour,
     prize: prizeStrategy,
-    closeout: submissionCloseout
+    closeout: submissionCloseout,
+    judgeDrill
   });
   const winnerPacket = buildWinnerProofPacket({
     baseUrl,
@@ -5091,7 +5094,8 @@ app.post("/a2a", async (req, res) => {
     concierge: demoConcierge,
     tour: judgeTour,
     prize: prizeStrategy,
-    closeout: submissionCloseout
+    closeout: submissionCloseout,
+    judgeDrill
   });
   const winnerPacket = buildWinnerProofPacket({
     baseUrl: publicBaseUrl(req),
@@ -5272,7 +5276,17 @@ app.post("/a2a", async (req, res) => {
                     id: question.id,
                     status: question.status,
                     proofUrl: question.proofUrl
-                  }))
+                  })),
+                  defenseLock: {
+                    defenseScore: judgeRehearsal.defenseLock.defenseScore,
+                    readiness: judgeRehearsal.defenseLock.readiness,
+                    hardQuestion: judgeRehearsal.defenseLock.hardQuestion,
+                    checks: judgeRehearsal.defenseLock.checks.map((check) => ({
+                      id: check.id,
+                      status: check.status,
+                      proofUrl: check.proofUrl
+                    }))
+                  }
                 },
                 winnerPacket: {
                   id: winnerPacket.id,

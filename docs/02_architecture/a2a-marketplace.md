@@ -147,11 +147,12 @@
 
 ## Judge Rehearsal Surface
 
-- `POST /api/judge-rehearsal`: Judge Command、Demo Concierge、Judge Tour、Prize Strategy、Submission Closeoutを90秒の実演リハーサルへ束ねる
+- `POST /api/judge-rehearsal`: Judge Command、Demo Concierge、Judge Tour、Prize Strategy、Judge Drill、Submission Closeoutを90秒の実演リハーサルへ束ねる
+- Defense Lock: AI必然性、競合cross-exam、買い手価値、公開実装、外部提出ギャップ、60秒回答パスをready/watch/blockedで固定する
 - Segments: 0-90秒で開く画面、押すボタン、話す台詞、成功signal、proof URLをready/watch/blockedで返す
 - Question deck: 審査員の想定質問、短い回答、開く証拠URLを固定し、質疑で迷う時間を減らす
 - Capture checklist: 動画録画のchapterとcloseout receipt確認を同じレスポンスに含める
-- A2A payload: `judge.rehearsal` skillとしてrehearsal score、readiness、next run、endpoint群を返す
+- A2A payload: `judge.rehearsal` skillとしてrehearsal score、Defense Lock、readiness、next run、endpoint群を返す
 
 ## Winner Proof Packet Surface
 
@@ -335,7 +336,7 @@
 - `POST /api/mvp-audit`: MVPハードゲート、審査lane、提出blockerを評価する
 - `POST /api/judge-command-center`: 初回審査用の証拠ボタン、90秒timeline、残ブロッカーを評価する
 - `POST /api/demo-concierge`: persona別のfirst click、台詞、証拠URL、成功条件を返す
-- `POST /api/judge-rehearsal`: 90秒segments、想定質問、scorecard、録画チェックを返す
+- `POST /api/judge-rehearsal`: Final Pitch Defense Lock、90秒segments、想定質問、scorecard、録画チェックを返す
 - `POST /api/winner-packet`: 審査5項目の証拠URL、反論回答、録画cue、提出copyを返す
 - `POST /api/submission-runway`: 提出締切から逆算した動画、ProtoPedia、構成図、最終フォームの検収順を返す
 - `POST /api/prize-strategy`: 審査5項目の優勝作戦、proof moves、final pitch orderを返す

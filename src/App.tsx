@@ -583,6 +583,50 @@ function JudgeRehearsalPanel({
             </div>
           </div>
 
+          <div className="rehearsal-defense-lock">
+            <div className="defense-lock-copy">
+              <span
+                className={cx(
+                  "risk-chip",
+                  rehearsal.defenseLock.readiness === "defense-ready" ? "low" : rehearsal.defenseLock.readiness === "external-gap-defense" ? "medium" : "high"
+                )}
+              >
+                {rehearsal.defenseLock.readiness}
+              </span>
+              <h3>
+                <ShieldCheck size={16} />
+                Final Pitch Defense Lock
+              </h3>
+              <p>{rehearsal.defenseLock.headline}</p>
+              <strong>{rehearsal.defenseLock.hardQuestion}</strong>
+              <small>{rehearsal.defenseLock.closingMove}</small>
+            </div>
+            <div className="defense-lock-score">
+              <strong>{rehearsal.defenseLock.defenseScore}</strong>
+              <span>defense score</span>
+            </div>
+            <div className="defense-lock-checks">
+              {rehearsal.defenseLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.proof}</p>
+                  <small>{check.acceptance}</small>
+                  <a href={check.proofUrl} target="_blank" rel="noreferrer">
+                    Proof <ExternalLink size={13} />
+                  </a>
+                </article>
+              ))}
+            </div>
+            <div className="defense-answer-path">
+              {rehearsal.defenseLock.answerPath.slice(0, 4).map((step) => (
+                <p key={step}>{step}</p>
+              ))}
+            </div>
+          </div>
+
           <div className="rehearsal-segments">
             {rehearsal.segments.map((segment) => (
               <article key={segment.id} className={segment.status}>

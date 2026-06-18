@@ -250,7 +250,8 @@ function fixture(input: { protopediaUrl?: string; videoUrl?: string } = {}) {
     concierge,
     tour: judgeTour,
     prize,
-    closeout
+    closeout,
+    judgeDrill
   });
 }
 
@@ -272,12 +273,27 @@ describe("judge rehearsal room", () => {
     expect(rehearsal.questionDeck.length).toBeGreaterThanOrEqual(5);
     expect(rehearsal.scorecard).toHaveLength(5);
     expect(rehearsal.captureChecklist.length).toBeGreaterThanOrEqual(6);
+    expect(rehearsal.defenseLock.readiness).toBe("external-gap-defense");
+    expect(rehearsal.defenseLock.defenseScore).toBeGreaterThanOrEqual(88);
+    expect(rehearsal.defenseLock.checks.map((check) => check.id)).toEqual([
+      "ai-necessity-defense",
+      "competitor-cross-exam",
+      "buyer-value-defense",
+      "public-implementation-proof",
+      "honest-submission-gap",
+      "sixty-second-answer-path"
+    ]);
+    expect(rehearsal.defenseLock.checks.find((check) => check.id === "sixty-second-answer-path")?.status).toBe("ready");
     expect(rehearsal.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "judge.rehearsal",
       readiness: "external-gap-rehearsal",
+      defenseLock: {
+        readiness: "external-gap-defense"
+      },
       endpoints: {
         rehearsal: `${SUBMISSION_PROOF.deployedUrl}/api/judge-rehearsal`,
+        judgeDrill: `${SUBMISSION_PROOF.deployedUrl}/api/judge-drill`,
         submissionCloseout: `${SUBMISSION_PROOF.deployedUrl}/api/submission-closeout`
       }
     });
@@ -293,6 +309,7 @@ describe("judge rehearsal room", () => {
       status: "ready"
     });
     expect(rehearsal.captureChecklist.find((item) => item.id === "rehearsal-receipt")?.status).toBe("ready");
+    expect(rehearsal.defenseLock.checks.find((check) => check.id === "honest-submission-gap")?.status).toBe("ready");
   });
 
   test("blocks rehearsal when supplied external evidence is malformed", () => {
@@ -306,5 +323,7 @@ describe("judge rehearsal room", () => {
       status: "blocked"
     });
     expect(rehearsal.questionDeck.find((question) => question.id === "submission-gap")?.status).toBe("blocked");
+    expect(rehearsal.defenseLock.readiness).toBe("needs-defense-proof");
+    expect(rehearsal.defenseLock.checks.find((check) => check.id === "honest-submission-gap")?.status).toBe("blocked");
   });
 });
