@@ -71,7 +71,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Demo Runwayで、Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線に束ねる
 - Win Autopilotで、競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を一括判定し、win scoreと残アクションを返す
 - Submission Dossierで、ProtoPedia本文、競合反論レシート、実用性・買い手価値レシート、動画録画順、提出リンク、最終チェック、Markdownを1つに束ねる
-- Submission Closeoutで、ProtoPedia貼付、構成図、30秒動画、外部URL、最終提出フォームを順番付きの作業台にする
+- Submission Closeoutで、ProtoPedia貼付、構成図、30秒動画、Video Proof Lock、外部URL、最終提出フォームを順番付きの作業台にする
 - Architecture Packで、システム構成図、Mermaid、Cloud Run/Gemini/A2A/CIの対応表、ProtoPedia貼り付け手順を提出証拠にする
 - Gemini 3.5 Flashで勝ち筋、残リスク、30秒ピッチを生成する
 - Cloud RunでUI、API、Agent Card、A2A endpointを単一サービスとして公開する
@@ -278,6 +278,7 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - Deployed URL: <https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app>
 - ProtoPedia work URL: needs final URL
 - Video URL: needs YouTube or Vimeo URL
+- Video Proof Lock: run `POST /api/submission-closeout` and use the `videoProofLock` checks before publishing the video URL
 - System architecture diagram: `public/assets/a2a-marketplace-architecture.svg`
 - Architecture Pack API: `POST /api/architecture-pack`
 - Judge Rehearsal API: `POST /api/judge-rehearsal`

@@ -5288,6 +5288,38 @@ function SubmissionCloseoutPanel({
             </div>
           </div>
 
+          <div className="closeout-video-lock">
+            <section>
+              <div>
+                <span className={cx("risk-chip", workbench.videoProofLock.readiness === "video-url-ready" ? "low" : workbench.videoProofLock.readiness === "blocked-video-url" ? "high" : "medium")}>
+                  {workbench.videoProofLock.readiness}
+                </span>
+                <strong>{workbench.videoProofLock.lockScore}</strong>
+              </div>
+              <h3>Video Proof Lock</h3>
+              <p>{workbench.videoProofLock.voiceoverHook}</p>
+              <small>
+                {workbench.videoProofLock.targetDurationSeconds}s / {workbench.videoProofLock.openingFrame} {"->"} {workbench.videoProofLock.finalFrame}
+              </small>
+              <b>{workbench.videoProofLock.publishTarget}</b>
+            </section>
+            <div>
+              {workbench.videoProofLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.acceptance}</p>
+                  <small>{check.proof}</small>
+                  <a href={check.evidenceUrl} target="_blank" rel="noreferrer">
+                    Evidence <ExternalLink size={13} />
+                  </a>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="closeout-work">
             {workbench.workItems.map((item) => (
               <article key={item.id} className={item.status}>

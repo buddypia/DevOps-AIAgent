@@ -36,6 +36,35 @@ export type CloseoutVideoStep = {
   status: PublisherStatus;
 };
 
+export type CloseoutVideoLockReadiness = "video-url-ready" | "recording-locked" | "needs-recording-proof" | "blocked-video-url";
+
+export type CloseoutVideoLockCheck = {
+  id: string;
+  label: string;
+  status: CloseoutStatus;
+  proof: string;
+  evidenceUrl: string;
+  acceptance: string;
+};
+
+export type CloseoutVideoCaption = {
+  timeRange: string;
+  text: string;
+};
+
+export type CloseoutVideoProofLock = {
+  id: string;
+  lockScore: number;
+  readiness: CloseoutVideoLockReadiness;
+  targetDurationSeconds: number;
+  publishTarget: string;
+  openingFrame: string;
+  finalFrame: string;
+  voiceoverHook: string;
+  checks: CloseoutVideoLockCheck[];
+  captions: CloseoutVideoCaption[];
+};
+
 export type SubmissionCloseoutWorkbench = {
   id: string;
   closeoutScore: number;
@@ -47,6 +76,7 @@ export type SubmissionCloseoutWorkbench = {
   urlStatuses: SubmissionLaunchGate["urlStatuses"];
   copyFields: CloseoutCopyField[];
   videoSteps: CloseoutVideoStep[];
+  videoProofLock: CloseoutVideoProofLock;
   submitPacket: SubmissionLaunchGate["submitPacket"];
   proofScript: string[];
   a2aPayload: Record<string, unknown>;
@@ -104,6 +134,117 @@ function workScore(item: CloseoutWorkItem) {
   if (item.status === "ready") return 100;
   if (item.status === "watch") return 68;
   return 25;
+}
+
+function lockScore(item: CloseoutVideoLockCheck) {
+  if (item.status === "ready") return 100;
+  if (item.status === "watch") return 70;
+  return 20;
+}
+
+function videoLockReadiness(input: { videoStatus: CloseoutStatus; checks: CloseoutVideoLockCheck[] }): CloseoutVideoLockReadiness {
+  if (input.videoStatus === "blocked" || input.checks.some((check) => check.status === "blocked")) return "blocked-video-url";
+  const nonUrlChecks = input.checks.filter((check) => check.id !== "publish-url");
+  const lockReady = nonUrlChecks.every((check) => check.status === "ready");
+  if (input.videoStatus === "ready" && lockReady) return "video-url-ready";
+  if (lockReady) return "recording-locked";
+  return "needs-recording-proof";
+}
+
+function buildVideoProofLock(input: {
+  base: string;
+  demoRunway: DemoRunway;
+  proof: JudgeProof;
+  launchGate: SubmissionLaunchGate;
+  copyFields: CloseoutCopyField[];
+  videoSteps: CloseoutVideoStep[];
+  videoStatus: CloseoutStatus;
+}): CloseoutVideoProofLock {
+  const proofLink = (id: string) => input.demoRunway.proofLinks.find((link) => link.id === id);
+  const readyCopyCount = input.copyFields.filter((field) => field.status === "ready").length;
+  const hasCompetitiveProof =
+    input.demoRunway.competitiveProofReel.length > 0 || input.videoSteps.some((step) => step.screen.includes("Competitive Battlecard"));
+  const appLink = proofLink("app");
+  const battlecardLink = proofLink("battlecard") ?? { url: absoluteUrl(input.base, "/api/competitive-battlecard"), proof: "Competitive Battlecard endpoint" };
+  const checks: CloseoutVideoLockCheck[] = [
+    {
+      id: "public-opening",
+      label: "Open public Cloud Run first",
+      status: appLink ? "ready" : "watch",
+      proof: appLink?.proof ?? "Cloud Run app proof link is not in the runway.",
+      evidenceUrl: appLink?.url ?? absoluteUrl(input.base, "/api/healthz"),
+      acceptance: "0-4sで公開Cloud Run画面またはJudge Proofを開いて、ローカル録画ではないことを見せる。"
+    },
+    {
+      id: "thirty-second-route",
+      label: "Keep the proof reel to 30 seconds",
+      status: input.demoRunway.totalSeconds === 30 && input.videoSteps.length >= 7 ? "ready" : "watch",
+      proof: `${input.demoRunway.totalSeconds}s / ${input.videoSteps.length} chapters`,
+      evidenceUrl: absoluteUrl(input.base, "/api/demo-run"),
+      acceptance: "30秒リール内に7章以上の画面順、台詞、証拠URLがある。"
+    },
+    {
+      id: "judge-proof-receipt",
+      label: "Show judge proof receipt",
+      status: input.proof.overallScore >= 85 && Boolean(input.proof.receipt.digest) ? "ready" : "watch",
+      proof: `${input.proof.overallScore} proof / ${input.proof.receipt.digest || "receipt missing"}`,
+      evidenceUrl: absoluteUrl(input.base, "/api/proof"),
+      acceptance: "動画内または説明欄にJudge Proofのsha256 receiptを残せる。"
+    },
+    {
+      id: "competitive-objection",
+      label: "Answer the strongest competitor objection",
+      status: hasCompetitiveProof ? "ready" : "watch",
+      proof: hasCompetitiveProof
+        ? `${input.demoRunway.competitiveProofReel.length} competitive proof receipts`
+        : "Competitive Battlecardが録画順に入っていません。",
+      evidenceUrl: battlecardLink.url,
+      acceptance: "既存ツールでよくないか、という反論にsource/SWOT/proof routeで答える章を入れる。"
+    },
+    {
+      id: "submission-handoff",
+      label: "End on submission handoff",
+      status: readyCopyCount >= 8 ? "ready" : "watch",
+      proof: `${readyCopyCount}/${input.copyFields.length} ProtoPedia copy fields ready`,
+      evidenceUrl: absoluteUrl(input.base, "/api/dossier"),
+      acceptance: "最後にProtoPedia本文、構成図、GitHub、Cloud Run、タグの提出先を示す。"
+    },
+    {
+      id: "publish-url",
+      label: "Publish YouTube or Vimeo URL",
+      status: input.videoStatus,
+      proof: input.launchGate.urlStatuses.find((status) => status.id === "video-url")?.proof ?? "動画URLが未入力です。",
+      evidenceUrl: absoluteUrl(input.base, "/api/submission-launch"),
+      acceptance: "録画後にYouTubeまたはVimeoのhttps URLをSubmission Launch Gateへ入力する。"
+    }
+  ];
+  const readiness = videoLockReadiness({ videoStatus: input.videoStatus, checks });
+  const lockScoreValue = Math.round(
+    clamp(
+      average([
+        input.demoRunway.demoScore,
+        input.proof.overallScore,
+        average(checks.map(lockScore)),
+        input.demoRunway.totalSeconds === 30 ? 100 : 75
+      ])
+    )
+  );
+
+  return {
+    id: `video-proof-lock-${lockScoreValue}-${readiness}`,
+    lockScore: lockScoreValue,
+    readiness,
+    targetDurationSeconds: input.demoRunway.totalSeconds,
+    publishTarget: "YouTube or Vimeo https URL",
+    openingFrame: input.videoSteps[0]?.screen ?? "Judge Proof",
+    finalFrame: input.videoSteps[input.videoSteps.length - 1]?.screen ?? "Submission links",
+    voiceoverHook: input.videoSteps[0]?.narration ?? "最初に公開証拠を出します。",
+    checks,
+    captions: input.videoSteps.slice(0, 5).map((step) => ({
+      timeRange: step.timeRange,
+      text: `${step.screen}: ${step.narration}`
+    }))
+  };
 }
 
 export function buildSubmissionCloseoutWorkbench(input: {
@@ -214,6 +355,15 @@ export function buildSubmissionCloseoutWorkbench(input: {
     evidenceUrl: chapter.evidenceUrl,
     status: chapter.status
   }));
+  const videoProofLock = buildVideoProofLock({
+    base,
+    demoRunway: input.demoRunway,
+    proof: input.proof,
+    launchGate: input.launchGate,
+    copyFields,
+    videoSteps,
+    videoStatus
+  });
   const nextAction =
     workItems.find((entry) => entry.status === "blocked") ??
     workItems.find((entry) => entry.status === "watch") ??
@@ -236,9 +386,11 @@ export function buildSubmissionCloseoutWorkbench(input: {
     urlStatuses: input.launchGate.urlStatuses,
     copyFields,
     videoSteps,
+    videoProofLock,
     submitPacket: input.launchGate.submitPacket,
     proofScript: [
       "Submission Closeout Workbenchで残作業をnow/watch/readyに分ける。",
+      `Video Proof Lockで${videoProofLock.lockScore}点の録画受入条件を固定する。`,
       "Copy fieldsをProtoPediaへ貼り、構成図を添付する。",
       "Video chaptersの順番で30秒動画を録画し、動画URLを入力する。",
       "ProtoPedia作品URLを入力し、Submission Launch Gateをsubmit-readyにする。",
@@ -260,6 +412,12 @@ export function buildSubmissionCloseoutWorkbench(input: {
         status: entry.status,
         priority: entry.priority
       })),
+      videoProofLock: {
+        lockScore: videoProofLock.lockScore,
+        readiness: videoProofLock.readiness,
+        targetDurationSeconds: videoProofLock.targetDurationSeconds,
+        checks: videoProofLock.checks.map((check) => ({ id: check.id, status: check.status, evidenceUrl: check.evidenceUrl }))
+      },
       urls: input.launchGate.urlStatuses.map((status) => ({
         id: status.id,
         status: status.status,

@@ -3686,6 +3686,8 @@ app.post("/api/submission-closeout", async (req, res) => {
   const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
   const strategy = buildWinningStrategy(recommendation);
   const marketIntel = buildMarketIntelReport({ baseUrl, recommendation, strategy });
+  const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
+  const competitiveBattlecard = buildCompetitiveBattlecard({ baseUrl, strategy, marketIntel, moatStress });
   const mission = buildMissionRun(recommendation, strategy, "ProtoPedia貼付、動画公開、外部URL、最終提出を一画面でcloseoutする。");
   const opsDrill = buildOpsDrill(recommendation, strategy);
   const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
@@ -3718,7 +3720,8 @@ app.post("/api/submission-closeout", async (req, res) => {
     opsDrill,
     pitch,
     finalist,
-    publisher
+    publisher,
+    battlecard: competitiveBattlecard
   });
   const [geminiResult, ciResult] = await Promise.allSettled([
     runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
@@ -4817,6 +4820,18 @@ app.post("/a2a", async (req, res) => {
     pitch,
     finalist
   });
+  const marketIntel = buildMarketIntelReport({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy
+  });
+  const moatStress = buildMoatStressTest({ baseUrl: publicBaseUrl(req), recommendation, strategy, marketIntel });
+  const competitiveBattlecard = buildCompetitiveBattlecard({
+    baseUrl: publicBaseUrl(req),
+    strategy,
+    marketIntel,
+    moatStress
+  });
   const demoRunway = buildDemoRunway({
     baseUrl: publicBaseUrl(req),
     recommendation,
@@ -4825,7 +4840,8 @@ app.post("/a2a", async (req, res) => {
     opsDrill,
     pitch,
     finalist,
-    publisher
+    publisher,
+    battlecard: competitiveBattlecard
   });
   const proof = buildJudgeProof({
     baseUrl: publicBaseUrl(req),
@@ -4859,11 +4875,6 @@ app.post("/a2a", async (req, res) => {
     demoRunway,
     autopilot: winAutopilot,
     proof
-  });
-  const marketIntel = buildMarketIntelReport({
-    baseUrl: publicBaseUrl(req),
-    recommendation,
-    strategy
   });
   const mvpAudit = buildMvpAudit({
     baseUrl: publicBaseUrl(req),
@@ -4999,13 +5010,6 @@ app.post("/a2a", async (req, res) => {
     selectedAgentIds: recommendation.selected.map((agent) => agent.id),
     budget: 140,
     maxSquadSize: 4
-  });
-  const moatStress = buildMoatStressTest({ baseUrl: publicBaseUrl(req), recommendation, strategy, marketIntel });
-  const competitiveBattlecard = buildCompetitiveBattlecard({
-    baseUrl: publicBaseUrl(req),
-    strategy,
-    marketIntel,
-    moatStress
   });
   const demoReceipt = buildJudgeDemoReceipt({
     baseUrl: publicBaseUrl(req),
@@ -5416,6 +5420,15 @@ app.post("/a2a", async (req, res) => {
                     status: item.status,
                     priority: item.priority
                   })),
+                  videoProofLock: {
+                    lockScore: submissionCloseout.videoProofLock.lockScore,
+                    readiness: submissionCloseout.videoProofLock.readiness,
+                    checks: submissionCloseout.videoProofLock.checks.map((check) => ({
+                      id: check.id,
+                      status: check.status,
+                      evidenceUrl: check.evidenceUrl
+                    }))
+                  },
                   urlStatuses: submissionCloseout.urlStatuses.map((item) => ({
                     id: item.id,
                     status: item.status

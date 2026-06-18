@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine";
 import { buildWinningAutopilot } from "../src/autopilot";
+import { buildCompetitiveBattlecard } from "../src/competitiveBattlecard";
 import { buildSubmissionCloseoutWorkbench } from "../src/submissionCloseout";
 import { buildSquadContract } from "../src/contracts";
 import { buildDemoRunway } from "../src/demoRunway";
@@ -10,6 +11,7 @@ import { buildJudgeDrill } from "../src/judgeDrill";
 import { DEFAULT_PROJECT_BRIEF } from "../src/market";
 import { buildMarketIntelReport } from "../src/marketIntel";
 import { buildMissionRun } from "../src/mission";
+import { buildMoatStressTest } from "../src/moatStress";
 import { buildMvpAudit } from "../src/mvpAudit";
 import { buildOpsDrill } from "../src/ops";
 import { buildPitchRun } from "../src/pitch";
@@ -35,6 +37,8 @@ function fixture(input: { protopediaUrl?: string; videoUrl?: string } = {}) {
   const recommendation = recommendSquad(DEFAULT_PROJECT_BRIEF, ["market-broker", "gemini-strategist", "cloud-run-sre"], 140);
   const strategy = buildWinningStrategy(recommendation);
   const marketIntel = buildMarketIntelReport({ baseUrl, recommendation, strategy });
+  const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
+  const battlecard = buildCompetitiveBattlecard({ baseUrl, strategy, marketIntel, moatStress });
   const mission = buildMissionRun(recommendation, strategy, "提出直前の外部作業をcloseoutする。");
   const opsDrill = buildOpsDrill(recommendation, strategy);
   const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
@@ -51,7 +55,7 @@ function fixture(input: { protopediaUrl?: string; videoUrl?: string } = {}) {
     squadContract
   });
   const publisher = buildProtoPediaPublisher({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist });
-  const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher });
+  const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher, battlecard });
   const proof = buildJudgeProof({
     baseUrl,
     recommendation,
@@ -146,10 +150,31 @@ describe("submission closeout workbench", () => {
     });
     expect(closeout.copyFields.length).toBeGreaterThanOrEqual(8);
     expect(closeout.videoSteps.length).toBeGreaterThanOrEqual(7);
+    expect(closeout.videoProofLock).toMatchObject({
+      readiness: "recording-locked",
+      targetDurationSeconds: 30,
+      publishTarget: "YouTube or Vimeo https URL"
+    });
+    expect(closeout.videoProofLock.lockScore).toBeGreaterThanOrEqual(90);
+    expect(closeout.videoProofLock.checks.find((check) => check.id === "competitive-objection")).toMatchObject({
+      status: "ready",
+      evidenceUrl: `${SUBMISSION_PROOF.deployedUrl}/api/competitive-battlecard`
+    });
+    expect(closeout.videoProofLock.checks.find((check) => check.id === "publish-url")).toMatchObject({
+      status: "watch",
+      evidenceUrl: `${SUBMISSION_PROOF.deployedUrl}/api/submission-launch`
+    });
     expect(closeout.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "submission.closeout",
       readiness: "needs-closeout",
+      videoProofLock: {
+        readiness: "recording-locked",
+        checks: expect.arrayContaining([
+          expect.objectContaining({ id: "competitive-objection", status: "ready" }),
+          expect.objectContaining({ id: "publish-url", status: "watch" })
+        ])
+      },
       endpoints: {
         closeout: `${SUBMISSION_PROOF.deployedUrl}/api/submission-closeout`,
         launchGate: `${SUBMISSION_PROOF.deployedUrl}/api/submission-launch`
@@ -165,6 +190,8 @@ describe("submission closeout workbench", () => {
 
     expect(closeout.readiness).toBe("ready-to-submit");
     expect(closeout.workItems.every((item) => item.status === "ready")).toBe(true);
+    expect(closeout.videoProofLock.readiness).toBe("video-url-ready");
+    expect(closeout.videoProofLock.checks.find((check) => check.id === "publish-url")?.status).toBe("ready");
     expect(closeout.submitPacket).toMatchObject({
       protopediaUrl: "https://protopedia.net/prototype/999999",
       videoUrl: "https://youtu.be/demo1234567"
@@ -181,5 +208,7 @@ describe("submission closeout workbench", () => {
     expect(closeout.nextAction.status).toBe("blocked");
     expect(closeout.workItems.find((item) => item.id === "record-video")?.status).toBe("blocked");
     expect(closeout.workItems.find((item) => item.id === "publish-protopedia")?.status).toBe("blocked");
+    expect(closeout.videoProofLock.readiness).toBe("blocked-video-url");
+    expect(closeout.videoProofLock.checks.find((check) => check.id === "publish-url")?.status).toBe("blocked");
   });
 });
