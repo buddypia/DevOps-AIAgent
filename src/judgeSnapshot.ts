@@ -115,6 +115,8 @@ export function buildJudgeSnapshot(input: {
   const judgeSnapshotUrl = endpoint(baseUrl, "/api/judge-snapshot");
   const proofUrl = endpoint(baseUrl, "/api/proof");
   const battlecardUrl = endpoint(baseUrl, "/api/competitive-battlecard");
+  const demoConciergeUrl = endpoint(baseUrl, "/api/demo-concierge");
+  const pilotEconomicsUrl = endpoint(baseUrl, "/api/pilot-economics");
   const releaseDriftUrl = endpoint(baseUrl, "/api/release-drift");
   const winnerPacketUrl = endpoint(baseUrl, "/api/winner-packet");
   const judgeCommandUrl = endpoint(baseUrl, "/api/judge-command-center");
@@ -137,6 +139,22 @@ export function buildJudgeSnapshot(input: {
       url: battlecardUrl,
       purpose: "競合分析、SWOT、Criteria Duel、反論台本を詳細検証する。",
       curl: postCurl(battlecardUrl, input.projectBrief, input.selectedAgentIds)
+    },
+    {
+      id: "demo-concierge",
+      label: "Demo Concierge",
+      method: "POST",
+      url: demoConciergeUrl,
+      purpose: "審査員、買い手、提出者ごとのfirst clickと90秒導線を詳細検証する。",
+      curl: postCurl(demoConciergeUrl, input.projectBrief, input.selectedAgentIds)
+    },
+    {
+      id: "pilot-economics",
+      label: "Pilot Economics",
+      method: "POST",
+      url: pilotEconomicsUrl,
+      purpose: "導入価値、回収日数、買い手反論、実用性の証拠を詳細検証する。",
+      curl: postCurl(pilotEconomicsUrl, input.projectBrief, input.selectedAgentIds)
     },
     {
       id: "release-drift",
@@ -282,6 +300,8 @@ export function buildJudgeSnapshot(input: {
         judgeSnapshotJson: judgeSnapshotUrl,
         judgeProof: proofUrl,
         competitiveBattlecard: battlecardUrl,
+        demoConcierge: demoConciergeUrl,
+        pilotEconomics: pilotEconomicsUrl,
         releaseDrift: releaseDriftUrl,
         winnerPacket: winnerPacketUrl,
         judgeCommand: judgeCommandUrl,
@@ -311,17 +331,32 @@ function renderLinkList(links: JudgeSnapshotLink[]) {
     .join("");
 }
 
+function deepProofAnchor(id: string) {
+  return `deep-proof-${id}`;
+}
+
+function proofTargetFor(url: string, postApis: JudgeSnapshotPostApi[]) {
+  const postApi = postApis.find((api) => api.url === url);
+  if (!postApi) return { href: url, label: "Open proof", detail: "GET proof" };
+  return {
+    href: `#${deepProofAnchor(postApi.id)}`,
+    label: postApi.label,
+    detail: "POST proof: use curl below"
+  };
+}
+
 export function renderJudgeSnapshotHtml(snapshot: JudgeSnapshot) {
   const criteriaRows = snapshot.criteriaDuel.rows
-    .map(
-      (row) => `
+    .map((row) => {
+      const proofTarget = proofTargetFor(row.proofUrl, snapshot.postApis);
+      return `
         <tr>
           <td><strong>${escapeHtml(row.label)}</strong><span>${escapeHtml(row.status)}</span></td>
           <td>${escapeHtml(row.targetCompetitor)}</td>
           <td>${escapeHtml(row.ourCounter)}</td>
-          <td><a href="${escapeHtml(row.proofUrl)}">${escapeHtml(row.sourceCount)} sources</a><small>${escapeHtml(row.swotQuadrant)}</small></td>
-        </tr>`
-    )
+          <td><a href="${escapeHtml(proofTarget.href)}">${escapeHtml(proofTarget.label)}</a><small>${escapeHtml(proofTarget.detail)} / ${escapeHtml(row.sourceCount)} sources / ${escapeHtml(row.swotQuadrant)}</small></td>
+        </tr>`;
+    })
     .join("");
   const proofItems = snapshot.proofItems
     .map(
@@ -336,8 +371,8 @@ export function renderJudgeSnapshotHtml(snapshot: JudgeSnapshot) {
   const postApis = snapshot.postApis
     .map(
       (api) => `
-        <article class="api-row">
-          <div><span>${escapeHtml(api.method)}</span><strong>${escapeHtml(api.label)}</strong><a href="${escapeHtml(api.url)}">endpoint</a></div>
+        <article id="${escapeHtml(deepProofAnchor(api.id))}" class="api-row">
+          <div><span>${escapeHtml(api.method)}</span><strong>${escapeHtml(api.label)}</strong><small>${escapeHtml(api.url)}</small></div>
           <p>${escapeHtml(api.purpose)}</p>
           <code>${escapeHtml(api.curl)}</code>
         </article>`
@@ -411,6 +446,7 @@ export function renderJudgeSnapshotHtml(snapshot: JudgeSnapshot) {
       .proof-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .proof-item { padding: 12px; }
       .proof-item div, .api-row div { display: flex; gap: 10px; justify-content: space-between; align-items: center; }
+      .api-row small { color: var(--muted); overflow-wrap: anywhere; text-align: right; }
       .proof-item span { font-size: 0.75rem; font-weight: 900; }
       .proof-item p, .api-row p { color: var(--muted); margin: 8px 0; }
       .proof-item.good span { color: var(--green); }

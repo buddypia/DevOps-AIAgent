@@ -82,7 +82,12 @@ describe("judge snapshot", () => {
     expect(snapshot.criteriaDuel.rows).toHaveLength(5);
     expect(snapshot.criteriaDuel.rows.map((row) => row.id)).toEqual(["agentCentrality", "approach", "usability", "practicality", "implementation"]);
     expect(snapshot.postApis.map((api) => `${api.method}:${api.url}`)).toEqual(
-      expect.arrayContaining([`POST:${baseUrl}/api/competitive-battlecard`, `POST:${baseUrl}/api/release-drift`])
+      expect.arrayContaining([
+        `POST:${baseUrl}/api/competitive-battlecard`,
+        `POST:${baseUrl}/api/demo-concierge`,
+        `POST:${baseUrl}/api/pilot-economics`,
+        `POST:${baseUrl}/api/release-drift`
+      ])
     );
     expect(snapshot.postApis.find((api) => api.id === "judge-proof")?.curl).toContain("--data");
     expect(snapshot.summary).toMatchObject({
@@ -121,6 +126,32 @@ describe("judge snapshot", () => {
     expect(html).toContain(`${baseUrl}/judge-snapshot`);
     expect(html).toContain("&lt;script&gt;alert(&#39;proof&#39;)&lt;/script&gt;");
     expect(html).not.toContain("<script>alert('proof')</script>");
+  });
+
+  test("keeps POST-only proof endpoints as internal anchors in the HTML page", () => {
+    const { proof, battlecard } = buildArtifacts();
+    const snapshot = buildJudgeSnapshot({
+      baseUrl,
+      projectBrief: DEFAULT_PROJECT_BRIEF,
+      selectedAgentIds,
+      proof,
+      battlecard,
+      agentCardSkillIds: ["competitive.battlecard", "judge.snapshot", "release.drift"],
+      generatedAt: "2026-06-18T00:00:00.000Z"
+    });
+
+    const html = renderJudgeSnapshotHtml(snapshot);
+
+    expect(html).toContain('href="#deep-proof-competitive-battlecard"');
+    expect(html).toContain('href="#deep-proof-demo-concierge"');
+    expect(html).toContain('href="#deep-proof-pilot-economics"');
+    expect(html).toContain('href="#deep-proof-release-drift"');
+    expect(html).not.toContain(`href="${baseUrl}/api/competitive-battlecard"`);
+    expect(html).not.toContain(`href="${baseUrl}/api/demo-concierge"`);
+    expect(html).not.toContain(`href="${baseUrl}/api/pilot-economics"`);
+    expect(html).not.toContain(`href="${baseUrl}/api/release-drift"`);
+    expect(html).toContain(`${baseUrl}/api/competitive-battlecard`);
+    expect(html).toContain("POST proof: use curl below");
   });
 
   test("surfaces release drift when the public Agent Card lacks the GET proof signal", () => {
