@@ -5191,7 +5191,17 @@ app.post("/a2a", async (req, res) => {
                   topRisks: competitiveBattlecard.topRisks.map((risk) => ({
                     id: risk.id,
                     severity: risk.severity
-                  }))
+                  })),
+                  objectionReplay: {
+                    replayScore: competitiveBattlecard.objectionReplay.replayScore,
+                    readiness: competitiveBattlecard.objectionReplay.readiness,
+                    weakestCompetitor: competitiveBattlecard.objectionReplay.weakestCompetitor,
+                    steps: competitiveBattlecard.objectionReplay.steps.map((step) => ({
+                      id: step.id,
+                      status: step.status,
+                      proofUrl: step.proofUrl
+                    }))
+                  }
                 },
                 demoConcierge: {
                   id: demoConcierge.id,

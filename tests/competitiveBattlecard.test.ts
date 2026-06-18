@@ -39,6 +39,16 @@ describe("competitive battlecard", () => {
     );
     expect(battlecard.topRisks.length).toBeGreaterThan(0);
     expect(battlecard.objectionReceipts).toHaveLength(battlecard.cards.length);
+    expect(battlecard.objectionReplay).toMatchObject({
+      readiness: "replay-ready",
+      weakestCompetitor: "Google ADK / Gemini Enterprise",
+      openingObjection: expect.stringContaining("ADK"),
+      sourceCount: 3,
+      swotSignalCount: 4
+    });
+    expect(battlecard.objectionReplay.replayScore).toBeGreaterThanOrEqual(90);
+    expect(battlecard.objectionReplay.steps.map((step) => step.id)).toEqual(["objection", "source-ledger", "swot-receipt", "proof-route"]);
+    expect(battlecard.objectionReplay.steps.every((step) => step.status === "ready")).toBe(true);
     expect(battlecard.objectionReceipts[0]).toMatchObject({
       proofRoute: expect.any(String),
       acceptance: expect.stringContaining("公式ソース"),
@@ -58,6 +68,17 @@ describe("competitive battlecard", () => {
           swot: "threats"
         })
       ]),
+      objectionReplay: {
+        replayScore: expect.any(Number),
+        readiness: "replay-ready",
+        weakestCompetitor: "Google ADK / Gemini Enterprise",
+        steps: expect.arrayContaining([
+          expect.objectContaining({
+            id: "proof-route",
+            proofUrl: `${baseUrl}/api/live-evidence`
+          })
+        ])
+      },
       endpoints: {
         competitiveBattlecard: `${baseUrl}/api/competitive-battlecard`,
         moatStress: `${baseUrl}/api/moat-stress`

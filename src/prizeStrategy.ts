@@ -202,6 +202,14 @@ function proofMoves(input: {
       score: battlecard.battleScore
     },
     {
+      id: "objection-replay",
+      label: "Objection replay",
+      screen: "Competitive Battlecard",
+      endpoint: absoluteUrl(baseUrl, "/api/competitive-battlecard"),
+      proof: `${battlecard.objectionReplay.replayScore} replay / ${battlecard.objectionReplay.weakestCompetitor}`,
+      score: battlecard.objectionReplay.replayScore
+    },
+    {
       id: "truth-table",
       label: "MVP truth table",
       screen: "Acceptance Matrix",
@@ -343,12 +351,13 @@ export function buildPrizeStrategyBoard(input: {
         row(acceptance, "competitive-swot")?.score ?? 0,
         row(acceptance, "moat-rebuttal")?.score ?? 0,
         battlecard.battleScore,
+        battlecard.objectionReplay.replayScore,
         demoConcierge?.conciergeScore ?? battlecard.battleScore
       ],
-      decisiveProof: "Competitive BattlecardとDemo Conciergeが公式ソース、SWOT、競合反論、録画順を束ねる。",
+      decisiveProof: "Competitive BattlecardのObjection Replayが、最弱競合への質問、公式ソース、SWOT、公開proof routeを30秒順に固定する。",
       missingProof: "ADK/LangGraph/Difyでよいのでは、という質問に飲み込まれるリスク。",
-      demoMove: "Demo Conciergeのsubmitter laneからBattlecardを開き、Google ADKまたはA2A Marketplaceへの短い回答を見せる。",
-      nextAction: "Demo Conciergeのsubmitter laneを30秒動画の前半に入れる。"
+      demoMove: "Competitive BattlecardのObjection Replayを開き、最弱競合の質問からsource、SWOT、proof routeの順で辿る。",
+      nextAction: "30秒動画の前半にObjection Replayを入れ、既存ツールとの差分を先に固定する。"
     }),
     criterionItem({
       id: "usability",
@@ -472,8 +481,8 @@ export function buildPrizeStrategyBoard(input: {
         id: "why-now",
         timeRange: "25-55s",
         screen: "Competitive Battlecard",
-        say: battlecard.judgeScript[1] ?? battlecard.headline,
-        proofMoveId: "battlecard"
+        say: battlecard.judgeScript[1] ?? battlecard.objectionReplay.lockedAnswer,
+        proofMoveId: "objection-replay"
       },
       {
         id: "mvp-truth",
@@ -515,6 +524,16 @@ export function buildPrizeStrategyBoard(input: {
         delta: item.delta
       })),
       proofMoves: moves.map((item) => ({ id: item.id, score: item.score, endpoint: item.endpoint })),
+      competitiveBattlecard: {
+        score: battlecard.battleScore,
+        readiness: battlecard.readiness,
+        objectionReplay: {
+          score: battlecard.objectionReplay.replayScore,
+          readiness: battlecard.objectionReplay.readiness,
+          weakestCompetitor: battlecard.objectionReplay.weakestCompetitor,
+          steps: battlecard.objectionReplay.steps.map((step) => ({ id: step.id, status: step.status, proofUrl: step.proofUrl }))
+        }
+      },
       demoConcierge: demoConcierge
         ? {
             score: demoConcierge.conciergeScore,

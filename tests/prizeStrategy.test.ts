@@ -338,11 +338,19 @@ describe("prize strategy board", () => {
       "route-lock",
       "command",
       "battlecard",
+      "objection-replay",
       "truth-table",
       "public-release",
       "operations-value",
       "buyer-value"
     ]);
+    expect(board.proofMoves.find((move) => move.id === "objection-replay")).toMatchObject({
+      screen: "Competitive Battlecard",
+      endpoint: `${SUBMISSION_PROOF.deployedUrl}/api/competitive-battlecard`,
+      proof: expect.stringContaining("replay"),
+      score: expect.any(Number)
+    });
+    expect(board.proofMoves.find((move) => move.id === "objection-replay")?.score).toBeGreaterThanOrEqual(90);
     expect(board.proofMoves.find((move) => move.id === "route-lock")).toMatchObject({
       screen: "Demo Concierge",
       endpoint: `${SUBMISSION_PROOF.deployedUrl}/api/demo-concierge`,
@@ -357,6 +365,11 @@ describe("prize strategy board", () => {
     });
     expect(board.pitchOrder[0]).toMatchObject({ screen: "Demo Concierge", proofMoveId: "concierge" });
     expect(board.criteria.find((criterion) => criterion.id === "usability")?.decisiveProof).toContain("Judge Route Lock");
+    expect(board.criteria.find((criterion) => criterion.id === "approach")?.decisiveProof).toContain("Objection Replay");
+    expect(board.pitchOrder.find((step) => step.id === "why-now")).toMatchObject({
+      screen: "Competitive Battlecard",
+      proofMoveId: "objection-replay"
+    });
     expect(board.pitchOrder.find((step) => step.id === "buyer-value")).toMatchObject({
       screen: "Observability Oracle + Pilot Economics",
       proofMoveId: "operations-value"
@@ -366,6 +379,18 @@ describe("prize strategy board", () => {
     expect(board.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "prize.strategy",
+      competitiveBattlecard: {
+        objectionReplay: {
+          readiness: "replay-ready",
+          weakestCompetitor: "Google ADK / Gemini Enterprise",
+          steps: expect.arrayContaining([
+            expect.objectContaining({
+              id: "proof-route",
+              proofUrl: `${SUBMISSION_PROOF.deployedUrl}/api/live-evidence`
+            })
+          ])
+        }
+      },
       demoConcierge: {
         readiness: expect.any(String),
         routeLock: {

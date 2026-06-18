@@ -3246,6 +3246,33 @@ function CompetitiveBattlecardPanel({
             </div>
           </div>
 
+          <div className="battle-replay">
+            <section>
+              <div>
+                <span className={cx("risk-chip", battlecard.objectionReplay.readiness === "replay-ready" ? "low" : battlecard.objectionReplay.readiness === "replay-watch" ? "medium" : "high")}>
+                  {battlecard.objectionReplay.readiness}
+                </span>
+                <strong>{battlecard.objectionReplay.replayScore}</strong>
+              </div>
+              <h3>Objection Replay</h3>
+              <p>{battlecard.objectionReplay.openingObjection}</p>
+              <b>{battlecard.objectionReplay.lockedAnswer}</b>
+              <small>
+                {battlecard.objectionReplay.sourceCount} sources / {battlecard.objectionReplay.swotSignalCount} SWOT signals
+              </small>
+            </section>
+            <div>
+              {battlecard.objectionReplay.steps.map((step) => (
+                <article key={step.id} className={step.status}>
+                  <span>{step.timeRange}</span>
+                  <strong>{step.screen}</strong>
+                  <p>{step.say}</p>
+                  <small>{step.judgeSignal}</small>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="battle-cards">
             {battlecard.cards.map((card) => (
               <article key={card.id} className={card.status}>

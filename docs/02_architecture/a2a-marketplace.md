@@ -110,6 +110,7 @@
 - `POST /api/competitive-battlecard`: Market Intel、Moat Stress、SWOTを競合別の審査回答カードへ束ねる
 - Cards: 競合ごとに「審査員の質問」「短い回答」「相手が勝つ領域」「こちらが勝つ領域」「見せる証拠route」を返す
 - Source/SWOT receipts: 公式ソースURLとSWOT項目を同じカードに載せ、競合分析が主張だけで終わらないようにする
+- Objection Replay: 最弱競合への質問、source ledger、SWOT receipt、Live Evidence proof routeを0-30秒のready/watch/blocked stepsに固定する
 - Judge script: 質疑で話す順番を「相手の強みを認める → 調達体験へずらす → 証拠を開く」に固定する
 - A2A payload: `competitive.battlecard` skillとしてbattle score、readiness、card verdicts、top risksを返す
 
@@ -171,7 +172,7 @@
 
 - `POST /api/prize-strategy`: 審査5項目のtarget score、現在スコア、足りない証拠、最終ピッチ順を優勝作戦へ束ねる
 - Criteria board: AI中心性、課題アプローチ、ユーザビリティ、実用性、実装力をtarget 92点のgapとして評価する
-- Proof moves: Demo Concierge、Judge Route Lock、Judge Command Center、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economicsを最終ピッチで開く順番へ変換する
+- Proof moves: Demo Concierge、Judge Route Lock、Judge Command Center、Competitive Battlecard、Objection Replay、Acceptance Matrix、Release Drift、Pilot Economicsを最終ピッチで開く順番へ変換する
 - Risks: 外部提出URL、公開revision、弱い採点軸、command blockerをowner付きの次アクションにする
 - A2A payload: `prize.strategy` skillとしてprize score、readiness、criteria gaps、proof moves、risksを返す
 
@@ -179,7 +180,7 @@
 
 - `POST /api/win-gap-radar`: Competitive Battlecard、SWOT、MVP Audit、Finalist、Acceptance Matrix、Prize Strategy、Demo Concierge、Submission Launch Gateを横断し、優勝に必要なMVP gapをfeature betsへ変換する
 - Gap lanes: AI中心性、競合アプローチ、初回UX、実用性、実装証拠、外部提出closeoutをscore/status/priority付きで返す
-- Feature bets: Judge Route Lockなど、いま作るべき機能仮説、受入条件、証拠URLを返し、不要な汎用workflow builderや本番決済はcut listに落とす
+- Feature bets: Judge Route Lock、Objection Replayなど、いま作るべき機能仮説、受入条件、証拠URLを返し、不要な汎用workflow builderや本番決済はcut listに落とす
 - Honest external gate: ProtoPedia作品URLと動画URLが未発行なら、`submission-closeout` を `close-now` とし、submit-ready/finalist-readyとは呼ばない
 - A2A payload: `win.gap.radar` skillとしてradar score、readiness、lane statuses、feature bets、external gapsを返す
 
@@ -396,7 +397,7 @@
 - Acceptance matrix proof: `acceptance.matrix` skillとして、必須技術、審査5項目、公開証拠、提出物の受入状態をA2A payloadにも含める
 - Task board proof: `task.delegate` skillとして、agent work orders、execution order、verification queue、receipt digestをA2A payloadにも含める
 - Moat stress proof: `moat.stress` skillとして、競合別の想定反論、反証、見せる証拠、録画順をA2A payloadにも含める
-- Competitive battlecard proof: `competitive.battlecard` skillとして、競合別の短い回答、公式ソース、SWOT receipts、top risksをA2A payloadにも含める
+- Competitive battlecard proof: `competitive.battlecard` skillとして、競合別の短い回答、公式ソース、SWOT receipts、Objection Replay、top risksをA2A payloadにも含める
 
 ## Submission Surface
 

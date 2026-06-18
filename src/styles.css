@@ -6553,6 +6553,97 @@ h1 {
   text-transform: uppercase;
 }
 
+.battle-replay {
+  display: grid;
+  grid-template-columns: minmax(340px, 0.52fr) minmax(460px, 1fr);
+  gap: 1px;
+  background: #d1d6cf;
+}
+
+.battle-replay > section,
+.battle-replay > div {
+  min-width: 0;
+  padding: 14px;
+  background: #fbfbf6;
+}
+
+.battle-replay > section {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  border-top: 5px solid #355c7d;
+}
+
+.battle-replay > section > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.battle-replay > section strong {
+  color: #355c7d;
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.battle-replay h3 {
+  font-size: 1.16rem;
+}
+
+.battle-replay p,
+.battle-replay b,
+.battle-replay small {
+  color: #3e4651;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.battle-replay b {
+  color: #242936;
+}
+
+.battle-replay > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.battle-replay article {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #d1d6cf;
+  border-left: 4px solid var(--green);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.battle-replay article.watch {
+  border-left-color: var(--amber);
+  background: #fff9e9;
+}
+
+.battle-replay article.blocked {
+  border-left-color: var(--rose);
+  background: #fff1f2;
+}
+
+.battle-replay article span {
+  color: #355c7d;
+  font-size: 0.7rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.battle-replay article strong {
+  font-size: 0.92rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
 .battle-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(290px, 1fr));
@@ -11350,9 +11441,14 @@ pre {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
   }
 
+  .battle-replay,
   .battle-cards,
   .battle-grid {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
+  }
+
+  .battle-replay > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .judge-cross-exam {
@@ -11604,6 +11700,7 @@ pre {
     .moat-scenarios,
     .moat-grid,
     .battle-summary,
+    .battle-replay,
     .battle-cards,
     .battle-grid,
     .receipt-inputs,
@@ -11697,6 +11794,10 @@ pre {
   }
 
   .dossier-handoff section > div {
+    grid-template-columns: 1fr;
+  }
+
+  .battle-replay > div {
     grid-template-columns: 1fr;
   }
 

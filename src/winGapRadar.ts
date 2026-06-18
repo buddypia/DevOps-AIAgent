@@ -239,6 +239,7 @@ export function buildWinGapRadar(input: {
         input.marketIntel.marketScore,
         input.moatStress.stressScore,
         input.battlecard.battleScore,
+        input.battlecard.objectionReplay.replayScore,
         acceptanceRow(input.acceptance, "competitive-swot")?.score ?? 0,
         prizeCriterion(input.prizeStrategy, "approach")?.currentScore ?? 0
       ],
@@ -247,12 +248,12 @@ export function buildWinGapRadar(input: {
           ? `${weakestBattlecard.competitor}: ${weakestBattlecard.judgeQuestion} 代替リスクとしてsource、SWOT、proof routeを先に開く。`
           : weakestMoat?.objection ?? "競合との差分が薄く見える。",
       swotSignal: swotSignal(input.strategy, "threats"),
-      mvpEvidence: acceptanceRow(input.acceptance, "competitive-swot")?.evidence ?? input.battlecard.thesis,
+      mvpEvidence: `${input.battlecard.objectionReplay.replayScore} objection replay / ${input.battlecard.objectionReplay.weakestCompetitor}; ${input.battlecard.objectionReplay.sourceCount} sources; ${input.battlecard.objectionReplay.swotSignalCount} SWOT signals.`,
       judgeImpact: "審査基準2。競合の強みを認めた上で、作る基盤ではなく調達体験へずらす。",
-      featureHypothesis: "競合質問を受けた瞬間に、source、SWOT、proof routeを一行で返す。",
-      nextAction: weakestBattlecard?.proofRoute ?? weakestMoat?.proofToShow ?? "Competitive Battlecardを録画導線へ入れる。",
+      featureHypothesis: "競合質問を受けた瞬間に、source、SWOT、proof routeを30秒リプレイで返す。",
+      nextAction: input.battlecard.objectionReplay.proofRoute ?? weakestBattlecard?.proofRoute ?? weakestMoat?.proofToShow ?? "Competitive Battlecardを録画導線へ入れる。",
       proofUrl: absoluteUrl(base, "/api/competitive-battlecard"),
-      demoCue: "Demo Concierge submitter lane -> Competitive Battlecard"
+      demoCue: "Competitive Battlecard -> Objection Replay -> Live Evidence"
     }),
     lane({
       id: "usability-first-run",
@@ -359,13 +360,13 @@ export function buildWinGapRadar(input: {
     {
       id: "competitor-answer-replay",
       label: "Competitor Answer Replay",
-      priority: input.battlecard.readiness === "judge-ready" ? "later" : "next",
-      status: featureBetStatus(input.battlecard.readiness === "judge-ready" ? "later" : "next", false),
+      priority: input.battlecard.objectionReplay.replayScore >= 90 ? "later" : "next",
+      status: featureBetStatus(input.battlecard.objectionReplay.replayScore >= 90 ? "later" : "next", false),
       why: weakestBattlecard
         ? `${weakestBattlecard.competitor} への回答が最弱の競合圧。`
         : "競合反論を録画で飛ばすと、既存ツールとの差分が薄く見える。",
-      build: "最弱競合カードを選び、source、SWOT、短い回答、proof routeを30秒リールに差し込む。",
-      acceptance: "Competitive Battlecardの最弱カードがleadまたはjudge-readyになり、Demo Conciergeのsubmitter laneに出る。",
+      build: "最弱競合カードを選び、source、SWOT、短い回答、proof routeを30秒Objection Replayに差し込む。",
+      acceptance: "Objection Replayが90点以上で、source、SWOT、proof routeの全stepがwatch以上になる。",
       proofUrl: absoluteUrl(base, "/api/competitive-battlecard")
     },
     {
@@ -457,7 +458,7 @@ export function buildWinGapRadar(input: {
     proofScript: [
       "Demo Conciergeで最初のクリックを固定する。",
       ...(routeLock ? ["Judge Route Lockで0-90秒のlocked stepsと捨てる導線を見せる。"] : []),
-      "Competitive Battlecardで最弱競合への短い回答、source、SWOTを見せる。",
+      "Competitive BattlecardのObjection Replayで最弱競合への短い回答、source、SWOT、proof routeを30秒で見せる。",
       "Win Gap Radarで、MVP不足をfeature betsとcut listへ変換したことを見せる。",
       ...(input.observabilityOracle ? ["Observability Oracleでbuyer SLO、公開運用判断、次のAI買い足しループを見せる。"] : []),
       "Acceptance MatrixとRelease Driftで公開Cloud Runの検収を通す。",

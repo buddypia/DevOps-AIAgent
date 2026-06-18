@@ -349,6 +349,12 @@ describe("win gap radar", () => {
       "submission-closeout"
     ]);
     expect(radar.lanes.find((lane) => lane.id === "approach-moat")?.competitorPressure).toContain("代替");
+    expect(radar.lanes.find((lane) => lane.id === "approach-moat")).toMatchObject({
+      proofUrl: `${SUBMISSION_PROOF.deployedUrl}/api/competitive-battlecard`,
+      demoCue: "Competitive Battlecard -> Objection Replay -> Live Evidence",
+      mvpEvidence: expect.stringContaining("objection replay")
+    });
+    expect(radar.lanes.find((lane) => lane.id === "approach-moat")?.score).toBeGreaterThanOrEqual(90);
     expect(radar.lanes.find((lane) => lane.id === "usability-first-run")).toMatchObject({
       proofUrl: `${SUBMISSION_PROOF.deployedUrl}/api/demo-concierge`,
       demoCue: "Demo Concierge -> Judge Route Lock -> Locked proof steps",
@@ -373,6 +379,11 @@ describe("win gap radar", () => {
       label: "Judge Route Lock",
       proofUrl: `${SUBMISSION_PROOF.deployedUrl}/api/demo-concierge`
     });
+    expect(radar.featureBets.find((bet) => bet.id === "competitor-answer-replay")).toMatchObject({
+      status: "banked",
+      proofUrl: `${SUBMISSION_PROOF.deployedUrl}/api/competitive-battlecard`,
+      acceptance: expect.stringContaining("Objection Replay")
+    });
     expect(radar.cutList.map((item) => item.id)).toEqual(expect.arrayContaining(["full-workflow-builder", "marketplace-payments"]));
     expect(radar.externalGaps.map((gap) => gap.id)).toEqual(expect.arrayContaining(["protopedia", "video"]));
     expect(radar.a2aPayload).toMatchObject({
@@ -387,6 +398,7 @@ describe("win gap radar", () => {
       }
     });
     expect(radar.proofScript).toContain("Judge Route Lockで0-90秒のlocked stepsと捨てる導線を見せる。");
+    expect(radar.proofScript).toContain("Competitive BattlecardのObjection Replayで最弱競合への短い回答、source、SWOT、proof routeを30秒で見せる。");
     expect(radar.proofScript).toContain("Observability Oracleでbuyer SLO、公開運用判断、次のAI買い足しループを見せる。");
   });
 });

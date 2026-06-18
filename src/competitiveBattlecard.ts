@@ -49,6 +49,32 @@ export type CompetitiveObjectionReceipt = {
   acceptance: string;
 };
 
+export type ObjectionReplayReadiness = "replay-ready" | "replay-watch" | "needs-counterproof";
+
+export type CompetitiveObjectionReplayStep = {
+  id: string;
+  timeRange: string;
+  screen: string;
+  say: string;
+  proofUrl: string;
+  judgeSignal: string;
+  status: "ready" | "watch" | "blocked";
+};
+
+export type CompetitiveObjectionReplay = {
+  id: string;
+  replayScore: number;
+  readiness: ObjectionReplayReadiness;
+  weakestCompetitor: string;
+  openingObjection: string;
+  lockedAnswer: string;
+  sourceCount: number;
+  swotSignalCount: number;
+  proofRoute: string;
+  protopediaLine: string;
+  steps: CompetitiveObjectionReplayStep[];
+};
+
 export type CompetitiveBattlecard = {
   id: string;
   battleScore: number;
@@ -60,6 +86,7 @@ export type CompetitiveBattlecard = {
   topRisks: CompetitiveBattlecardRisk[];
   swotReceipts: Array<BattlecardSwotLink & { detail: string }>;
   objectionReceipts: CompetitiveObjectionReceipt[];
+  objectionReplay: CompetitiveObjectionReplay;
   judgeScript: string[];
   a2aPayload: Record<string, unknown>;
 };
@@ -205,6 +232,86 @@ function buildObjectionReceipts(cards: CompetitiveBattlecardCard[]): Competitive
     });
 }
 
+function replayStatusForCard(card: CompetitiveBattlecardCard): CompetitiveObjectionReplayStep["status"] {
+  if (card.status === "lead") return "ready";
+  if (card.status === "parity") return "watch";
+  return "blocked";
+}
+
+function replayReadiness(input: { score: number; steps: CompetitiveObjectionReplayStep[] }): ObjectionReplayReadiness {
+  if (input.steps.some((step) => step.status === "blocked")) return "needs-counterproof";
+  if (input.score >= 90) return "replay-ready";
+  return "replay-watch";
+}
+
+function buildObjectionReplay(input: {
+  baseUrl: string;
+  battleScore: number;
+  cards: CompetitiveBattlecardCard[];
+  objectionReceipts: CompetitiveObjectionReceipt[];
+}): CompetitiveObjectionReplay {
+  const normalizedBase = input.baseUrl.replace(/\/$/, "");
+  const weakest = [...input.cards].sort((left, right) => left.score - right.score)[0];
+  const receipt = input.objectionReceipts.find((item) => item.id === weakest.id) ?? input.objectionReceipts[0];
+  const sourceScore = weakest.sourceUrls.length >= 2 ? 100 : weakest.sourceUrls.length === 1 ? 88 : 50;
+  const swotScore = weakest.swotLinks.length >= 3 ? 100 : weakest.swotLinks.length >= 2 ? 92 : 74;
+  const proofRouteScore = weakest.proofRoute.length >= 30 ? 96 : 80;
+  const cardStatusScore = weakest.status === "lead" ? 100 : weakest.status === "parity" ? 88 : 60;
+  const replayScore = Math.round(clamp(average([input.battleScore, weakest.score, sourceScore, swotScore, proofRouteScore, cardStatusScore])));
+  const steps: CompetitiveObjectionReplayStep[] = [
+    {
+      id: "objection",
+      timeRange: "0-8s",
+      screen: "Competitive Battlecard",
+      say: weakest.judgeQuestion,
+      proofUrl: `${normalizedBase}/api/competitive-battlecard`,
+      judgeSignal: `${weakest.competitor} objection is named before the answer.`,
+      status: replayStatusForCard(weakest)
+    },
+    {
+      id: "source-ledger",
+      timeRange: "8-16s",
+      screen: "Market Intel",
+      say: `${weakest.sourceUrls.length} official sources back the answer.`,
+      proofUrl: `${normalizedBase}/api/market-intel`,
+      judgeSignal: "Official source links are visible before the claim.",
+      status: weakest.sourceUrls.length >= 2 ? "ready" : weakest.sourceUrls.length === 1 ? "watch" : "blocked"
+    },
+    {
+      id: "swot-receipt",
+      timeRange: "16-24s",
+      screen: "Competitive Battlecard",
+      say: `${receipt.swotSignal.quadrant}: ${receipt.swotSignal.title}`,
+      proofUrl: `${normalizedBase}/api/competitive-battlecard`,
+      judgeSignal: `${weakest.swotLinks.length} SWOT signals connect risk to strategy.`,
+      status: weakest.swotLinks.length >= 3 ? "ready" : weakest.swotLinks.length >= 2 ? "watch" : "blocked"
+    },
+    {
+      id: "proof-route",
+      timeRange: "24-30s",
+      screen: "Live Evidence",
+      say: weakest.proofRoute,
+      proofUrl: `${normalizedBase}/api/live-evidence`,
+      judgeSignal: "The answer ends on runnable public proof, not a slide.",
+      status: weakest.proofRoute.length >= 30 ? "ready" : "watch"
+    }
+  ];
+
+  return {
+    id: `objection-replay-${weakest.id}-${replayScore}`,
+    replayScore,
+    readiness: replayReadiness({ score: replayScore, steps }),
+    weakestCompetitor: weakest.competitor,
+    openingObjection: weakest.judgeQuestion,
+    lockedAnswer: weakest.shortAnswer,
+    sourceCount: weakest.sourceUrls.length,
+    swotSignalCount: weakest.swotLinks.length,
+    proofRoute: weakest.proofRoute,
+    protopediaLine: receipt.protopediaLine,
+    steps
+  };
+}
+
 export function buildCompetitiveBattlecard(input: {
   baseUrl: string;
   strategy: WinningStrategy;
@@ -226,6 +333,7 @@ export function buildCompetitiveBattlecard(input: {
   const topRisks = buildTopRisks(cards, input.moatStress);
   const swotReceipts = buildSwotReceipts(input.strategy);
   const objectionReceipts = buildObjectionReceipts(cards);
+  const objectionReplay = buildObjectionReplay({ baseUrl: normalizedBase, battleScore, cards, objectionReceipts });
 
   return {
     id: `competitive-battlecard-${battleScore}-${readiness}`,
@@ -244,8 +352,10 @@ export function buildCompetitiveBattlecard(input: {
     topRisks,
     swotReceipts,
     objectionReceipts,
+    objectionReplay,
     judgeScript: [
       "まず競合の強みを認める: 作る基盤、workflow、observabilityは既存ツールが強い。",
+      `Objection Replayで${objectionReplay.weakestCompetitor}への質問を、source、SWOT、proof routeの30秒順に固定する。`,
       "次にずらす: このプロダクトはAI能力を選び、雇い、A2A委任し、DevOps証拠で検収する市場体験です。",
       "Battlecardで最も強い競合質問を1つ開き、source、SWOT、proof routeを同時に見せる。",
       "最後にLive EvidenceとRelease Driftで、公開Cloud Runが本当にその能力を返すかを確認する。"
@@ -275,6 +385,14 @@ export function buildCompetitiveBattlecard(input: {
         proofRoute: receipt.proofRoute,
         acceptance: receipt.acceptance
       })),
+      objectionReplay: {
+        replayScore: objectionReplay.replayScore,
+        readiness: objectionReplay.readiness,
+        weakestCompetitor: objectionReplay.weakestCompetitor,
+        sourceCount: objectionReplay.sourceCount,
+        swotSignalCount: objectionReplay.swotSignalCount,
+        steps: objectionReplay.steps.map((step) => ({ id: step.id, status: step.status, proofUrl: step.proofUrl }))
+      },
       endpoints: {
         app: normalizedBase,
         competitiveBattlecard: `${normalizedBase}/api/competitive-battlecard`,
