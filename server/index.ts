@@ -1707,9 +1707,11 @@ async function buildReleaseDriftForTarget(input: {
   targetBaseUrl: string;
   projectBrief: string;
   selectedAgentIds: string[];
+  forwardedHeaders?: Record<string, string>;
 }) {
   const currentBaseUrl = input.currentBaseUrl.replace(/\/$/, "");
   const targetBaseUrl = input.targetBaseUrl.replace(/\/$/, "");
+  const targetProbeHeaders = input.forwardedHeaders && currentBaseUrl === targetBaseUrl ? input.forwardedHeaders : undefined;
   const expectedSkillIds = agentCard(currentBaseUrl).skills.map((skill) => skill.id);
   const requiredSkillIds = [
     "evidence.monitor",
@@ -1730,6 +1732,7 @@ async function buildReleaseDriftForTarget(input: {
       label: "Target Cloud Run health",
       url: `${targetBaseUrl}/api/healthz`,
       required: true,
+      init: targetProbeHeaders ? { headers: targetProbeHeaders } : undefined,
       evaluate: (payload) => {
         const body = payload as { ok?: boolean; service?: string };
         return body.ok && body.service === "a2a-agent-marketplace"
@@ -1742,6 +1745,7 @@ async function buildReleaseDriftForTarget(input: {
       label: "Target Agent Card skill surface",
       url: `${targetBaseUrl}/.well-known/agent-card.json`,
       required: true,
+      init: targetProbeHeaders ? { headers: targetProbeHeaders } : undefined,
       evaluate: (payload) => {
         const skills = Array.isArray((payload as { skills?: unknown[] }).skills) ? ((payload as { skills: Array<{ id?: string }> }).skills) : [];
         observedSkillIds = skills.map((skill) => skill.id).filter((id): id is string => Boolean(id));
@@ -1768,7 +1772,7 @@ async function buildReleaseDriftForTarget(input: {
       required: true,
       init: {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { ...(targetProbeHeaders ?? {}), "Content-Type": "application/json" },
         body: JSON.stringify({
           projectBrief: input.projectBrief,
           selectedAgentIds: input.selectedAgentIds,
@@ -1789,7 +1793,7 @@ async function buildReleaseDriftForTarget(input: {
       required: true,
       init: {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { ...(targetProbeHeaders ?? {}), "Content-Type": "application/json" },
         body: JSON.stringify({
           id: "release-drift-guard",
           method: "message/send",
@@ -1851,7 +1855,8 @@ app.post("/api/release-drift", async (req, res) => {
       currentBaseUrl,
       targetBaseUrl,
       projectBrief: parsed.data.projectBrief,
-      selectedAgentIds: parsed.data.selectedAgentIds
+      selectedAgentIds: parsed.data.selectedAgentIds,
+      forwardedHeaders: selfProbeHeaders(req)
     })
   );
 });
@@ -1869,7 +1874,8 @@ app.post("/api/deploy-recovery", async (req, res) => {
     currentBaseUrl,
     targetBaseUrl,
     projectBrief: parsed.data.projectBrief,
-    selectedAgentIds: parsed.data.selectedAgentIds
+    selectedAgentIds: parsed.data.selectedAgentIds,
+    forwardedHeaders: selfProbeHeaders(req)
   });
 
   res.json(
