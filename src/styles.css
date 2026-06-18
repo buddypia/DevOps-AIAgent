@@ -11664,6 +11664,66 @@ h1 {
   text-transform: uppercase;
 }
 
+.finalist-release-card {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(120px, 0.16fr) minmax(260px, 0.8fr) minmax(260px, 0.9fr);
+  gap: 12px;
+  align-items: center;
+  padding: 13px 16px;
+  border-top: 5px solid var(--teal);
+  background: #f4fbf7;
+}
+
+.finalist-release-card.deploy-drift {
+  border-top-color: var(--amber);
+  background: #fff8e6;
+}
+
+.finalist-release-card.release-blocked {
+  border-top-color: var(--rose);
+  background: #fff1f2;
+}
+
+.finalist-release-card > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.finalist-release-card > div:nth-child(2) {
+  justify-items: end;
+}
+
+.finalist-release-card span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.finalist-release-card strong {
+  color: #2f2a1f;
+  font-size: 1rem;
+  line-height: 1.12;
+}
+
+.finalist-release-card > div:nth-child(2) strong {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.finalist-release-card p,
+.finalist-release-card small {
+  min-width: 0;
+  color: #474235;
+  line-height: 1.36;
+  overflow-wrap: anywhere;
+}
+
+.finalist-release-card small {
+  font-weight: 800;
+}
+
 .finalist-panels {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -13723,6 +13783,7 @@ pre {
     .judge-objections,
     .judge-grid,
     .finalist-summary,
+    .finalist-release-card,
     .finalist-panels,
     .finalist-internal-lock,
     .finalist-grid,
@@ -13774,6 +13835,10 @@ pre {
 
   .closeout-video-lock > div {
     grid-template-columns: 1fr;
+  }
+
+  .finalist-release-card > div:nth-child(2) {
+    justify-items: start;
   }
 
   .dossier-competitive > div,

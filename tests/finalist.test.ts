@@ -180,6 +180,11 @@ describe("finalist simulator", () => {
         })
       ])
     });
+    expect(simulation.releaseDrift).toMatchObject({
+      verdict: "deploy-drift",
+      missingAgentCardSignals: ["win.gap.radar:tag:feature-freeze-lock"],
+      nextAction: expect.stringContaining("Cloud Run")
+    });
     expect(simulation.a2aPayload).toMatchObject({
       releaseDrift: {
         verdict: "deploy-drift",

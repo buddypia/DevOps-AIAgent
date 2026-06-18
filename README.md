@@ -51,7 +51,7 @@
 - Proof: Judge ProofがGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1クリックで証拠束にする
 - Pitch: Pitch Directorが30秒動画の録画順、字幕、証拠リンク、提出残リスクを生成する
 - Judge Drill: 審査5項目と主要競合への厳しい質問、短い回答、60秒回答パス、証拠リンク、次アクションを生成する
-- Finalist: 審査員5役の模擬判定で、最終候補スコア、Finalist Internal Lock、落選理由、残ギャップ、次の一手を生成する
+- Finalist: 審査員5役の模擬判定で、最終候補スコア、Release Driftカード、Finalist Internal Lock、落選理由、残ギャップ、次の一手を生成する
 - Publisher: ProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにし、審査5項目・競合/SWOT・必須技術・外部URL状態をProtoPedia Quality Lockで、作品性・宣伝化リスク・Markdown安全性をPublication Policy Lockで検収する
 - Demo Runway: Judge Proof、Finalist、Publisher、Marketplace、Strategy、Competitive Battlecard、Mission、Opsを30秒の審査員導線に束ね、競合反論リールを録画キューへ落とす
 - Win Autopilot: 競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を一括で走らせ、勝てる状態と残アクションを返す

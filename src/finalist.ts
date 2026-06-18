@@ -3,7 +3,7 @@ import type { JudgeDrill, JudgeObjection } from "./judgeDrill.js";
 import type { MissionRun } from "./mission.js";
 import type { OpsDrill } from "./ops.js";
 import type { PitchChecklistItem, PitchRun } from "./pitch.js";
-import type { ReleaseDriftGuard } from "./releaseDrift.js";
+import type { ReleaseDriftGuard, ReleaseDriftVerdict } from "./releaseDrift.js";
 import {
   SUBMISSION_PROOF,
   hasSubmissionUrl,
@@ -72,6 +72,15 @@ export type FinalistInternalLock = {
   checks: FinalistInternalLockCheck[];
 };
 
+export type FinalistReleaseDriftSummary = {
+  verdict: ReleaseDriftVerdict;
+  driftScore: number;
+  targetBaseUrl: string;
+  missingSkills: string[];
+  missingAgentCardSignals: string[];
+  nextAction: string;
+};
+
 export type FinalistSimulation = {
   id: string;
   finalistScore: number;
@@ -83,6 +92,7 @@ export type FinalistSimulation = {
   panels: FinalistPanel[];
   gaps: FinalistGap[];
   internalLock: FinalistInternalLock;
+  releaseDrift: FinalistReleaseDriftSummary | null;
   runbook: string[];
   a2aPayload: Record<string, unknown>;
 };
@@ -513,6 +523,16 @@ export function buildFinalistSimulation(input: {
   const weakestPanel = [...panels].sort((left, right) => left.score - right.score)[0];
   const finalistBand: FinalistBand =
     finalistScore >= 88 && externalGaps.length === 0 && holdCount === 0 ? "finalist-ready" : finalistScore >= 78 && holdCount <= 1 ? "borderline" : "not-mvp";
+  const releaseDriftSummary: FinalistReleaseDriftSummary | null = releaseDrift
+    ? {
+        verdict: releaseDrift.verdict,
+        driftScore: releaseDrift.driftScore,
+        targetBaseUrl: releaseDrift.targetBaseUrl,
+        missingSkills: releaseDrift.missingSkills,
+        missingAgentCardSignals: releaseDrift.missingAgentCardSignals,
+        nextAction: releaseDrift.nextActions[0]?.action ?? (releaseDrift.verdict === "release-current" ? "Public release is current." : "Run Release Drift Guard.")
+      }
+    : null;
   const winningMove =
     externalGaps.length > 0
       ? `${externalGaps[0].label}を埋め、Finalist Internal LockとDemo Runwayの30秒リールにJudge Proofを入れる。`
@@ -537,6 +557,7 @@ export function buildFinalistSimulation(input: {
     panels,
     gaps: externalGaps,
     internalLock,
+    releaseDrift: releaseDriftSummary,
     runbook: [
       `curl -s -X POST ${finalistUrl} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
       `curl -s -X POST ${proofUrl} -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'`,
@@ -586,14 +607,7 @@ export function buildFinalistSimulation(input: {
           evidenceUrl: check.evidenceUrl
         }))
       },
-      releaseDrift: releaseDrift
-        ? {
-            verdict: releaseDrift.verdict,
-            driftScore: releaseDrift.driftScore,
-            missingSkills: releaseDrift.missingSkills,
-            missingAgentCardSignals: releaseDrift.missingAgentCardSignals
-          }
-        : null,
+      releaseDrift: releaseDriftSummary,
       appUrl
     }
   };

@@ -17,7 +17,7 @@
 9. `src/mvpAudit.ts` が必須技術、審査5項目、DevOps証拠、提出3点をハードゲート判定する
 10. `src/mission.ts` が弱点補強、A2A委任、検証runbook、ProtoPedia提出パックを生成する
 11. `src/ops.ts` がCloud Run公開デモのシグナルから継続・ロールバック・追加雇用を判断する
-12. `src/finalist.ts` が審査員5役の模擬判定、Finalist Internal Lock、落選理由、残ギャップ、次の一手を生成する
+12. `src/finalist.ts` が審査員5役の模擬判定、Release Driftカード、Finalist Internal Lock、落選理由、残ギャップ、次の一手を生成する
 13. `src/publisher.ts` がProtoPediaに貼る本文、タグ、URL、動画台本、残ギャップを提出直前パッケージにする
 14. `src/demoRunway.ts` が証拠、最終候補判定、提出本文、AI市場、運用判断を30秒の審査員導線に束ねる
 15. `src/autopilot.ts` が競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizerを含む全証拠を一括判定し、win score、残ブロッカー、証拠デッキを返す

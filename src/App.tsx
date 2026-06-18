@@ -7203,6 +7203,7 @@ function FinalistSimulator({
   const [simulation, setSimulation] = useState<FinalistSimulation | null>(null);
   const [protopediaUrl, setProtopediaUrl] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  const [targetUrl, setTargetUrl] = useState<string>(SUBMISSION_PROOF.deployedUrl);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -7217,7 +7218,8 @@ function FinalistSimulator({
           projectBrief,
           selectedAgentIds: recommendation.selected.map((agent) => agent.id),
           protopediaUrl,
-          videoUrl
+          videoUrl,
+          targetUrl
         })
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -7254,6 +7256,10 @@ function FinalistSimulator({
           <span>Video URL</span>
           <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtu.be/... or https://vimeo.com/..." />
         </label>
+        <label>
+          <span>Target Cloud Run URL</span>
+          <input value={targetUrl} onChange={(event) => setTargetUrl(event.target.value)} placeholder={SUBMISSION_PROOF.deployedUrl} />
+        </label>
       </div>
 
       {error && <p className="error-text">Finalist simulation failed: {error}</p>}
@@ -7274,6 +7280,24 @@ function FinalistSimulator({
               <span>finalist score</span>
             </div>
           </div>
+
+          {simulation.releaseDrift && (
+            <div className={cx("finalist-release-card", simulation.releaseDrift.verdict)}>
+              <div>
+                <span>Public release</span>
+                <strong>{simulation.releaseDrift.verdict}</strong>
+                <small>{simulation.releaseDrift.targetBaseUrl}</small>
+              </div>
+              <div>
+                <strong>{simulation.releaseDrift.driftScore}</strong>
+                <span>drift score</span>
+              </div>
+              <p>{simulation.releaseDrift.nextAction}</p>
+              <small>
+                missing skills {simulation.releaseDrift.missingSkills.length} / missing signals {simulation.releaseDrift.missingAgentCardSignals.join(", ") || "none"}
+              </small>
+            </div>
+          )}
 
           <div className="finalist-panels">
             {simulation.panels.map((panel) => (
