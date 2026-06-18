@@ -235,16 +235,16 @@ describe("judge acceptance matrix", () => {
     const releaseDrift = buildReleaseDriftGuard({
       currentBaseUrl: "http://127.0.0.1:8090",
       targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
-      expectedSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command"],
+      expectedSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command", "deploy.recover"],
       observedSkillIds: ["evidence.monitor"],
-      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command"],
+      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command", "deploy.recover"],
       probes: [
         passedDriftProbe("target-health"),
         {
           ...passedDriftProbe("agent-card-skill-surface"),
           status: "watch",
           score: 58,
-          evidence: "Target Agent Card exposes 29/34 skills."
+          evidence: "Target Agent Card exposes 29/35 skills."
         },
         {
           ...passedDriftProbe("acceptance-endpoint"),

@@ -10,6 +10,7 @@ import { buildWinningAutopilot } from "../src/autopilot.js";
 import { buildAutonomyLedger } from "../src/autonomyLedger.js";
 import { ciStatusFromBadge } from "../src/ciProof.js";
 import { buildSquadContract } from "../src/contracts.js";
+import { buildDeployRecoveryPlan } from "../src/deployRecovery.js";
 import { buildJudgeDemoReceipt } from "../src/demoReceipt.js";
 import { buildDemoRunway } from "../src/demoRunway.js";
 import { buildSubmissionDossier } from "../src/dossier.js";
@@ -76,6 +77,9 @@ const SquadOptimizerSchema = RecommendSchema.extend({
 const LiveEvidenceSchema = SquadOptimizerSchema;
 const ReleaseDriftSchema = RecommendSchema.extend({
   targetUrl: z.string().url().optional()
+});
+const DeployRecoverySchema = ReleaseDriftSchema.extend({
+  lastDeployError: z.string().trim().max(20000).optional()
 });
 const AcceptanceMatrixSchema = RecommendSchema.extend({
   targetUrl: z.string().url().optional(),
@@ -219,6 +223,12 @@ function agentCard(baseUrl: string) {
         name: "Detect Cloud Run release drift",
         description: "公開Cloud Runが最新Agent Card、Acceptance Matrix、A2A artifactを出しているかを検知し、古いrevisionを提出前に止める。",
         tags: ["cloud-run", "release", "drift", "ci", "deployment"]
+      },
+      {
+        id: "deploy.recover",
+        name: "Recover stale Cloud Run deployment",
+        description: "release drift、gcloud認証、Cloud Build、公開再検証を復旧計画へ変換する。",
+        tags: ["cloud-run", "cloud-build", "recovery", "deployment", "runbook"]
       },
       {
         id: "demo.receipt",
@@ -1552,6 +1562,7 @@ app.post("/api/live-evidence", async (req, res) => {
         const hasReleaseDrift = skills.some((skill) => skill.id === "release.drift");
         const hasPilotEconomics = skills.some((skill) => skill.id === "pilot.economics");
         const hasJudgeCommand = skills.some((skill) => skill.id === "judge.command");
+        const hasDeployRecovery = skills.some((skill) => skill.id === "deploy.recover");
         return hasEvidence &&
           hasOptimizer &&
           hasMoat &&
@@ -1560,16 +1571,17 @@ app.post("/api/live-evidence", async (req, res) => {
           hasReleaseDrift &&
           hasPilotEconomics &&
           hasJudgeCommand &&
-          skills.length >= 34
+          hasDeployRecovery &&
+          skills.length >= 35
           ? {
               status: "passed",
               score: 100,
-              evidence: `Agent Card exposes ${skills.length} skills including judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
+              evidence: `Agent Card exposes ${skills.length} skills including deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
             }
           : {
               status: "watch",
               score: 72,
-              evidence: `Agent Card exposes ${skills.length} skills; expected judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
+              evidence: `Agent Card exposes ${skills.length} skills; expected deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
             };
       }
     }),
@@ -1618,14 +1630,15 @@ app.post("/api/live-evidence", async (req, res) => {
           data?.acceptanceMatrixEndpoint &&
           data?.releaseDriftEndpoint &&
           data?.pilotEconomicsEndpoint &&
-          data?.judgeCommandEndpoint
+          data?.judgeCommandEndpoint &&
+          data?.deployRecoveryEndpoint
           ? {
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, pilotEconomicsEndpoint, and judgeCommandEndpoint."
+                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, pilotEconomicsEndpoint, judgeCommandEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -1657,7 +1670,7 @@ async function buildReleaseDriftForTarget(input: {
   const currentBaseUrl = input.currentBaseUrl.replace(/\/$/, "");
   const targetBaseUrl = input.targetBaseUrl.replace(/\/$/, "");
   const expectedSkillIds = agentCard(currentBaseUrl).skills.map((skill) => skill.id);
-  const requiredSkillIds = ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command", "win.autopilot"];
+  const requiredSkillIds = ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command", "deploy.recover", "win.autopilot"];
   let observedSkillIds: string[] = [];
 
   const [healthProbe, cardProbe, acceptanceProbe, a2aProbe, ci] = await Promise.all([
@@ -1734,13 +1747,18 @@ async function buildReleaseDriftForTarget(input: {
       },
       evaluate: (payload) => {
         const data = (payload as { result?: { artifacts?: Array<{ parts?: Array<{ data?: Record<string, unknown> }> }> } }).result?.artifacts?.[0]?.parts?.[0]?.data;
-        return data?.releaseDriftEndpoint && data?.acceptanceMatrixEndpoint && data?.demoReceiptEndpoint && data?.pilotEconomicsEndpoint && data?.judgeCommandEndpoint
+        return data?.releaseDriftEndpoint &&
+          data?.acceptanceMatrixEndpoint &&
+          data?.demoReceiptEndpoint &&
+          data?.pilotEconomicsEndpoint &&
+          data?.judgeCommandEndpoint &&
+          data?.deployRecoveryEndpoint
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, and judgeCommandEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, judgeCommandEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -1782,6 +1800,31 @@ app.post("/api/release-drift", async (req, res) => {
       targetBaseUrl,
       projectBrief: parsed.data.projectBrief,
       selectedAgentIds: parsed.data.selectedAgentIds
+    })
+  );
+});
+
+app.post("/api/deploy-recovery", async (req, res) => {
+  const parsed = DeployRecoverySchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const currentBaseUrl = publicBaseUrl(req);
+  const targetBaseUrl = (parsed.data.targetUrl || SUBMISSION_PROOF.deployedUrl).replace(/\/$/, "");
+  const releaseDrift = await buildReleaseDriftForTarget({
+    currentBaseUrl,
+    targetBaseUrl,
+    projectBrief: parsed.data.projectBrief,
+    selectedAgentIds: parsed.data.selectedAgentIds
+  });
+
+  res.json(
+    buildDeployRecoveryPlan({
+      baseUrl: currentBaseUrl,
+      releaseDrift,
+      lastDeployError: parsed.data.lastDeployError
     })
   );
 });
@@ -3178,6 +3221,7 @@ app.post("/a2a", (req, res) => {
                 impactCaseEndpoint: `${publicBaseUrl(req)}/api/impact-case`,
                 pilotEconomicsEndpoint: `${publicBaseUrl(req)}/api/pilot-economics`,
                 judgeCommandEndpoint: `${publicBaseUrl(req)}/api/judge-command-center`,
+                deployRecoveryEndpoint: `${publicBaseUrl(req)}/api/deploy-recovery`,
                 userPilotEndpoint: `${publicBaseUrl(req)}/api/user-pilot`,
                 squadOptimizerEndpoint: `${publicBaseUrl(req)}/api/squad-optimizer`,
                 liveEvidenceEndpoint: `${publicBaseUrl(req)}/api/live-evidence`,

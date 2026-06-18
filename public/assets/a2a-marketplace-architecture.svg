@@ -69,6 +69,6 @@
     <rect x="96" y="666" width="1248" height="118" rx="14" fill="#172126"/>
     <text x="132" y="716" fill="#fffdf7" font-family="Avenir Next, Arial, sans-serif" font-size="24" font-weight="800">Mission Control + Ops Drill loop</text>
     <text x="132" y="752" fill="#dcefe4" font-family="Avenir Next, Arial, sans-serif" font-size="17">sense competitors -> delegate with A2A -> verify commands -> read Cloud Run signals -> decide rollback or continue</text>
-    <text x="132" y="780" fill="#f2b84b" font-family="Avenir Next, Arial, sans-serif" font-size="15" font-weight="800">Artifacts: judge command / pilot economics / release drift / acceptance matrix / runbook</text>
+    <text x="132" y="780" fill="#f2b84b" font-family="Avenir Next, Arial, sans-serif" font-size="15" font-weight="800">Artifacts: judge command / deploy recovery / release drift / acceptance matrix / runbook</text>
   </g>
 </svg>

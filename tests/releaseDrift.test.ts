@@ -11,6 +11,7 @@ const expectedSkillIds = [
   "release.drift",
   "pilot.economics",
   "judge.command",
+  "deploy.recover",
   "win.autopilot"
 ];
 
@@ -31,7 +32,7 @@ describe("release drift guard", () => {
       targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
       expectedSkillIds,
       observedSkillIds: ["market.discover", "agent.hire", "evidence.monitor", "win.autopilot"],
-      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command"],
+      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command", "deploy.recover"],
       generatedAt: "2026-06-18T00:00:00.000Z",
       probes: [
         passedProbe("target-health"),
@@ -58,7 +59,7 @@ describe("release drift guard", () => {
     });
 
     expect(guard.verdict).toBe("deploy-drift");
-    expect(guard.missingSkills).toEqual(expect.arrayContaining(["demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command"]));
+    expect(guard.missingSkills).toEqual(expect.arrayContaining(["demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command", "deploy.recover"]));
     expect(guard.nextActions.map((action) => action.id)).toEqual(expect.arrayContaining(["agent-card-skill-surface", "acceptance-endpoint"]));
     expect(guard.runbook.join("\n")).toContain("gcloud builds submit");
     expect(guard.a2aPayload).toMatchObject({
@@ -74,7 +75,7 @@ describe("release drift guard", () => {
       targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
       expectedSkillIds,
       observedSkillIds: expectedSkillIds,
-      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command"],
+      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "judge.command", "deploy.recover"],
       probes: [
         passedProbe("target-health"),
         passedProbe("agent-card-skill-surface"),

@@ -2389,6 +2389,282 @@ h1 {
   overflow-wrap: anywhere;
 }
 
+.deploy-recovery {
+  margin-top: 14px;
+  border: 1px solid #272a35;
+  border-radius: 8px;
+  background: #fbfbff;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.recovery-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px;
+  color: #fbfbff;
+  border-bottom: 1px solid #d5d8e2;
+  background: linear-gradient(90deg, #171b2a, #36506d);
+}
+
+.recovery-heading .eyebrow {
+  color: #b7f7d7;
+}
+
+.recovery-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 1.28rem;
+}
+
+.recovery-inputs {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(360px, 1.2fr);
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #d5d8e2;
+  background: #f2f6fb;
+}
+
+.recovery-inputs label {
+  display: grid;
+  gap: 6px;
+  color: #405269;
+  font-size: 0.74rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.recovery-inputs input,
+.recovery-inputs textarea {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid #cbd4df;
+  border-radius: 8px;
+  padding: 10px 11px;
+  color: #172126;
+  background: #fffdf9;
+}
+
+.recovery-inputs textarea {
+  min-height: 76px;
+  resize: vertical;
+}
+
+.recovery-body {
+  display: grid;
+  gap: 1px;
+  background: #d5d8e2;
+}
+
+.recovery-summary {
+  display: grid;
+  grid-template-columns: minmax(380px, 1fr) minmax(210px, 0.25fr);
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  background: #fbfbff;
+}
+
+.recovery-summary h3 {
+  margin-top: 10px;
+  font-size: 1.42rem;
+  line-height: 1.22;
+}
+
+.recovery-summary p,
+.recovery-summary strong,
+.recovery-empty p {
+  display: block;
+  margin-top: 8px;
+  color: #344341;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.recovery-summary strong {
+  color: #174d63;
+}
+
+.recovery-score {
+  min-height: 136px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  border-radius: 8px;
+  color: #fbfbff;
+  background: #174d63;
+}
+
+.recovery-score strong {
+  font-size: 3.8rem;
+  line-height: 0.96;
+}
+
+.recovery-score span {
+  color: rgba(251, 251, 255, 0.74);
+  font-size: 0.76rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.recovery-checks {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  background: #d5d8e2;
+}
+
+.recovery-checks article {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-height: 128px;
+  padding: 13px;
+  border-top: 5px solid var(--green);
+  background: #fbfbff;
+}
+
+.recovery-checks article.watch,
+.recovery-steps article.watch,
+.recovery-blockers article.next,
+.recovery-commands article.deploy,
+.recovery-commands article.verify {
+  border-top-color: var(--amber);
+  border-left-color: var(--amber);
+  background: #fff8e6;
+}
+
+.recovery-checks article.blocked,
+.recovery-steps article.blocked,
+.recovery-blockers article.now,
+.recovery-commands article.blocked,
+.recovery-commands article.auth {
+  border-top-color: var(--rose);
+  border-left-color: var(--rose);
+  background: #fff1f2;
+}
+
+.recovery-checks span,
+.recovery-commands span,
+.recovery-steps span,
+.recovery-blockers span {
+  color: var(--teal);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.recovery-checks strong,
+.recovery-commands strong,
+.recovery-steps strong,
+.recovery-blockers strong {
+  overflow-wrap: anywhere;
+}
+
+.recovery-checks p,
+.recovery-commands p,
+.recovery-steps p,
+.recovery-steps small,
+.recovery-blockers p,
+.recovery-blockers small,
+.recovery-script li {
+  color: #414a4d;
+  line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+
+.recovery-grid {
+  display: grid;
+  grid-template-columns: minmax(390px, 1.2fr) minmax(330px, 0.85fr) minmax(330px, 0.95fr);
+  gap: 1px;
+  background: #d5d8e2;
+}
+
+.recovery-grid > section {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+  background: #fbfbff;
+}
+
+.recovery-grid h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.recovery-commands,
+.recovery-steps,
+.recovery-blockers {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.recovery-commands article,
+.recovery-steps article,
+.recovery-blockers article {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid #d4dddf;
+  border-left: 4px solid var(--green);
+  border-radius: 8px;
+  background: #fffef8;
+}
+
+.recovery-commands article > div,
+.recovery-steps article > div,
+.recovery-blockers article > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.recovery-commands pre,
+.recovery-grid > section > pre {
+  max-width: 100%;
+  max-height: 320px;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.recovery-script {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.recovery-script li {
+  margin-bottom: 8px;
+}
+
+.recovery-empty {
+  min-height: 190px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 22px;
+  text-align: center;
+}
+
 .acceptance-matrix {
   margin-top: 14px;
   border: 1px solid #243032;
@@ -8124,7 +8400,8 @@ pre {
   }
 
   .evidence-probes,
-  .drift-targets {
+  .drift-targets,
+  .recovery-checks {
     grid-template-columns: repeat(3, minmax(220px, 1fr));
   }
 
@@ -8144,7 +8421,8 @@ pre {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
   }
 
-  .evidence-grid {
+  .evidence-grid,
+  .recovery-grid {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
   }
 
@@ -8312,6 +8590,10 @@ pre {
     .receipt-grid,
     .drift-target-row,
     .drift-targets,
+    .recovery-inputs,
+    .recovery-summary,
+    .recovery-checks,
+    .recovery-grid,
     .evidence-summary,
     .evidence-probes,
     .evidence-grid,
@@ -8420,6 +8702,7 @@ pre {
   .contract-heading,
   .strategy-kpis,
   .command-heading,
+  .recovery-heading,
   .tour-heading,
   .pilot-heading,
   .optimizer-heading,
@@ -8449,6 +8732,7 @@ pre {
   }
 
   .contract-heading,
+  .recovery-heading,
   .tour-heading,
   .pilot-heading,
   .optimizer-heading,

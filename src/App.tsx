@@ -34,6 +34,7 @@ import { recommendSquad } from "./agentEngine";
 import type { AutonomyLedger } from "./autonomyLedger";
 import type { WinningAutopilotRun } from "./autopilot";
 import type { SquadContract } from "./contracts";
+import type { DeployRecoveryPlan } from "./deployRecovery";
 import type { JudgeDemoReceipt } from "./demoReceipt";
 import type { DemoRunway } from "./demoRunway";
 import type { FinalistSimulation } from "./finalist";
@@ -1532,6 +1533,183 @@ function ReleaseDriftPanel({
           <Rocket size={28} />
           <strong>Check release driftで、公開Cloud Runが最新Agent Card、Acceptance Matrix、A2A artifactを出しているか確認します。</strong>
           <p>CIが緑でも、提出URLが古いrevisionなら審査員には未実装に見えます。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function DeployRecoveryPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [plan, setPlan] = useState<DeployRecoveryPlan | null>(null);
+  const [targetUrl, setTargetUrl] = useState<string>(SUBMISSION_PROOF.deployedUrl);
+  const [lastDeployError, setLastDeployError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function buildRecoveryPlan() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/deploy-recovery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id),
+          targetUrl,
+          lastDeployError
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setPlan((await response.json()) as DeployRecoveryPlan);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section id="deploy-recovery" className="deploy-recovery">
+      <div className="recovery-heading">
+        <div>
+          <span className="eyebrow">Deploy recovery</span>
+          <h2>
+            <Terminal size={20} />
+            Cloud Run recovery plan
+          </h2>
+        </div>
+        <button className="icon-button" onClick={buildRecoveryPlan} disabled={loading} title="Cloud Run再デプロイ復旧計画を作成">
+          <Rocket size={17} />
+          {loading ? "Planning" : "Plan deploy recovery"}
+        </button>
+      </div>
+
+      <div className="recovery-inputs">
+        <label>
+          Target Cloud Run URL
+          <input value={targetUrl} onChange={(event) => setTargetUrl(event.target.value)} />
+        </label>
+        <label>
+          Last deploy error
+          <textarea
+            value={lastDeployError}
+            onChange={(event) => setLastDeployError(event.target.value)}
+            placeholder="Paste gcloud auth / Cloud Build error output when available"
+          />
+        </label>
+      </div>
+
+      {error && <p className="error-text">Deploy recovery request failed: {error}</p>}
+
+      {plan ? (
+        <div className="recovery-body">
+          <div className="recovery-summary">
+            <div>
+              <span className={cx("risk-chip", plan.readiness === "recovered" ? "low" : plan.readiness === "blocked" ? "high" : "medium")}>
+                {plan.readiness}
+              </span>
+              <h3>{plan.headline}</h3>
+              <p>{plan.hardTruth}</p>
+              <strong>{plan.primaryAction}</strong>
+            </div>
+            <div className="recovery-score">
+              <strong>{plan.recoveryScore}</strong>
+              <span>recovery score</span>
+            </div>
+          </div>
+
+          <div className="recovery-checks">
+            {plan.checks.map((check) => (
+              <article key={check.id} className={check.status}>
+                <span>{check.status}</span>
+                <strong>{check.label}</strong>
+                <p>{check.evidence}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className="recovery-grid">
+            <section>
+              <h3>
+                <Terminal size={15} />
+                Commands
+              </h3>
+              <div className="recovery-commands">
+                {plan.commands.map((command) => (
+                  <article key={command.id} className={command.blocking ? "blocked" : command.copyGroup}>
+                    <div>
+                      <strong>{command.label}</strong>
+                      <span>{command.copyGroup}</span>
+                    </div>
+                    <pre>{command.command}</pre>
+                    <p>{command.why}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <ClipboardCheck size={15} />
+                Recovery steps
+              </h3>
+              <div className="recovery-steps">
+                {plan.steps.map((step) => (
+                  <article key={step.id} className={step.status}>
+                    <div>
+                      <strong>{step.window}</strong>
+                      <span>{step.status}</span>
+                    </div>
+                    <p>{step.owner}: {step.action}</p>
+                    <small>{step.verify}</small>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <AlertTriangle size={15} />
+                Blockers
+              </h3>
+              <div className="recovery-blockers">
+                {plan.blockers.length > 0 ? (
+                  plan.blockers.map((blocker) => (
+                    <article key={blocker.id} className={blocker.priority}>
+                      <div>
+                        <strong>{blocker.owner}</strong>
+                        <span>{blocker.priority}</span>
+                      </div>
+                      <p>{blocker.action}</p>
+                      <small>{blocker.proof}</small>
+                    </article>
+                  ))
+                ) : (
+                  <article className="ready">
+                    <strong>No deploy blockers</strong>
+                    <p>公開URLは最新です。Judge Command Centerへ戻って録画前確認に進めます。</p>
+                  </article>
+                )}
+              </div>
+              <ol className="recovery-script">
+                {plan.judgeScript.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ol>
+              <pre>{JSON.stringify(plan.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="recovery-empty">
+          <Terminal size={28} />
+          <strong>Plan deploy recoveryで、公開Cloud Run driftを再デプロイ手順へ変換します。</strong>
+          <p>gcloud認証エラーを貼ると、コード問題ではなく手動認証が必要な状態として判定します。</p>
         </div>
       )}
     </section>
@@ -4977,6 +5155,7 @@ export default function App() {
       <MoatStressPanel recommendation={recommendation} projectBrief={projectBrief} />
       <LiveEvidencePanel recommendation={recommendation} projectBrief={projectBrief} />
       <ReleaseDriftPanel recommendation={recommendation} projectBrief={projectBrief} />
+      <DeployRecoveryPanel recommendation={recommendation} projectBrief={projectBrief} />
       <DemoReceiptPanel recommendation={recommendation} projectBrief={projectBrief} />
       <UserPilotPanel recommendation={recommendation} projectBrief={projectBrief} />
       <JudgeBriefPanel recommendation={recommendation} projectBrief={projectBrief} />
