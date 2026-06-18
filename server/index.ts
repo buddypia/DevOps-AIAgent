@@ -7,6 +7,7 @@ import { getClientIp, ipAllowlistMiddleware, ipAllowlistSummary } from "./ipAllo
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js";
 import { buildWinningAutopilot } from "../src/autopilot.js";
 import { buildAutonomyLedger } from "../src/autonomyLedger.js";
+import { ciStatusFromBadge } from "../src/ciProof.js";
 import { buildSquadContract } from "../src/contracts.js";
 import { buildDemoRunway } from "../src/demoRunway.js";
 import { buildSubmissionDossier } from "../src/dossier.js";
@@ -429,13 +430,6 @@ function ciUnavailable(reason: string, status: CiProof["status"] = "watch"): CiP
 function ciStatus(status: string, conclusion: string | null): CiProof["status"] {
   if (status !== "completed") return "watch";
   return conclusion === "success" ? "passed" : "missing";
-}
-
-function ciStatusFromBadge(svg: string): CiProof["status"] {
-  const normalized = svg.toLowerCase();
-  if (normalized.includes("passing") || normalized.includes("success")) return "passed";
-  if (normalized.includes("failing") || normalized.includes("failure") || normalized.includes("cancelled")) return "missing";
-  return "watch";
 }
 
 function geminiSecretConfigured() {
