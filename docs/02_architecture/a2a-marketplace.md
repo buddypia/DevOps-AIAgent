@@ -231,7 +231,7 @@
 
 ## Release Drift Surface
 
-- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Acceptance Matrix、A2A artifactを返しているかを検査する
+- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Acceptance Matrix、A2A artifactを返しているかを検査する
 - Drift probes: target health、Agent Card skill surface、Acceptance Matrix endpoint、A2A artifact endpoints、latest main CIを同時に評価する
 - Verdict: 最新なら `release-current`、公開URLが古いなら `deploy-drift`、health/CIが落ちたら `release-blocked`
 - Runbook: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Acceptance Matrix、A2A artifactの再確認コマンドを返す

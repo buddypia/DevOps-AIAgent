@@ -34,6 +34,7 @@ export type ReleaseDriftGuard = {
   expectedSkillCount: number;
   observedSkillCount: number;
   missingSkills: string[];
+  missingAgentCardSignals: string[];
   probes: ReleaseDriftProbe[];
   nextActions: ReleaseDriftAction[];
   runbook: string[];
@@ -59,11 +60,11 @@ function statusScore(status: ReleaseDriftStatus) {
   return 24;
 }
 
-function driftVerdict(probes: ReleaseDriftProbe[], missingSkills: string[]): ReleaseDriftVerdict {
+function driftVerdict(probes: ReleaseDriftProbe[], missingSkills: string[], missingAgentCardSignals: string[]): ReleaseDriftVerdict {
   const health = probes.find((probe) => probe.id === "target-health");
   const ci = probes.find((probe) => probe.id === "ci-main");
   if (health?.status === "missing" || ci?.status === "missing") return "release-blocked";
-  if (missingSkills.length > 0) return "deploy-drift";
+  if (missingSkills.length > 0 || missingAgentCardSignals.length > 0) return "deploy-drift";
   if (probes.some((probe) => probe.required && probe.status !== "passed")) return "deploy-drift";
   return "release-current";
 }
@@ -89,6 +90,8 @@ export function buildReleaseDriftGuard(input: {
   expectedSkillIds: string[];
   observedSkillIds: string[];
   requiredSkillIds: string[];
+  requiredAgentCardSignals?: string[];
+  observedAgentCardSignals?: string[];
   probes: ReleaseDriftProbe[];
   generatedAt?: string;
 }): ReleaseDriftGuard {
@@ -97,7 +100,10 @@ export function buildReleaseDriftGuard(input: {
   const expectedSkillIds = Array.from(new Set(input.expectedSkillIds)).sort();
   const observedSkillIds = Array.from(new Set(input.observedSkillIds)).sort();
   const requiredSkillIds = Array.from(new Set(input.requiredSkillIds)).sort();
+  const requiredAgentCardSignals = Array.from(new Set(input.requiredAgentCardSignals ?? [])).sort();
+  const observedAgentCardSignals = Array.from(new Set(input.observedAgentCardSignals ?? [])).sort();
   const missingSkills = requiredSkillIds.filter((skill) => !observedSkillIds.includes(skill));
+  const missingAgentCardSignals = requiredAgentCardSignals.filter((signal) => !observedAgentCardSignals.includes(signal));
   const probes = input.probes.map((probe) => ({
     ...probe,
     score: Math.round(clamp(probe.score || statusScore(probe.status)))
@@ -106,10 +112,10 @@ export function buildReleaseDriftGuard(input: {
     clamp(
       average(probes.map((probe) => probe.score)) * 0.72 +
         clamp((observedSkillIds.length / Math.max(1, expectedSkillIds.length)) * 100, 0, 100) * 0.18 +
-        clamp(100 - missingSkills.length * 12, 0, 100) * 0.1
+        clamp(100 - missingSkills.length * 12 - missingAgentCardSignals.length * 16, 0, 100) * 0.1
     )
   );
-  const verdict = driftVerdict(probes, missingSkills);
+  const verdict = driftVerdict(probes, missingSkills, missingAgentCardSignals);
   const nextActions = probes.filter((probe) => probe.status !== "passed").map(actionFromProbe);
   const id = `release-drift-${driftScore}-${verdict}`;
 
@@ -122,7 +128,7 @@ export function buildReleaseDriftGuard(input: {
       verdict === "release-current"
         ? `Public Cloud Run is current: ${observedSkillIds.length}/${expectedSkillIds.length} skills visible.`
         : verdict === "deploy-drift"
-          ? `Public Cloud Run is stale: ${missingSkills.length} required skills are not visible on the deployed URL.`
+          ? `Public Cloud Run is stale: ${missingSkills.length} required skills and ${missingAgentCardSignals.length} required Agent Card signals are not visible on the deployed URL.`
           : "Public release is blocked: health or CI evidence is missing.",
     hardTruth:
       verdict === "release-current"
@@ -135,12 +141,14 @@ export function buildReleaseDriftGuard(input: {
     expectedSkillCount: expectedSkillIds.length,
     observedSkillCount: observedSkillIds.length,
     missingSkills,
+    missingAgentCardSignals,
     probes,
     nextActions,
     runbook: [
       "gcloud auth login",
       "gcloud builds submit --config cloudbuild.yaml --substitutions _REGION=asia-northeast1,_SERVICE=a2a-agent-marketplace,_REPOSITORY=cloud-run-source-deploy,_GEMINI_SECRET=gemini-api-key-a2a-marketplace",
       `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills | length'`,
+      `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal") | .tags'`,
       `curl -s -X POST ${targetBaseUrl}/api/acceptance-matrix -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}' | jq '{verdict, acceptanceScore, rows: (.rows | length)}'`,
       `curl -s -X POST ${targetBaseUrl}/a2a -H 'Content-Type: application/json' --data '{"method":"message/send","params":{"text":"A2A Cloud Run Gemini DevOps"}}' | jq '.result.artifacts[0].parts[0].data.releaseDriftEndpoint'`
     ],
@@ -154,6 +162,7 @@ export function buildReleaseDriftGuard(input: {
       expectedSkillCount: expectedSkillIds.length,
       observedSkillCount: observedSkillIds.length,
       missingSkills,
+      missingAgentCardSignals,
       probes: probes.map((probe) => ({ id: probe.id, status: probe.status, score: probe.score, url: probe.url })),
       nextActions: nextActions.map((action) => ({ id: action.id, priority: action.priority, action: action.action })),
       endpoints: {

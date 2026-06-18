@@ -216,7 +216,7 @@
 
 ## Release Drift Guard
 
-`Release Drift Guard` は、提出用Cloud Run URLが最新mainの機能を本当に返しているかを検査します。公開healthが通っていても、Agent Cardのskill数、`judge.command`、`deploy.recover`、`acceptance.matrix`、`demo.receipt`、`release.drift`、`pilot.economics`、A2A artifact、Acceptance Matrix endpointが古ければ `deploy-drift` として止めます。
+`Release Drift Guard` は、提出用Cloud Run URLが最新mainの機能を本当に返しているかを検査します。公開healthが通っていても、Agent Cardのskill数、`judge.command`、`deploy.recover`、`acceptance.matrix`、`demo.receipt`、`release.drift`、`pilot.economics`、`judge.rehearsal` の `recording-lock` tag、A2A artifact、Acceptance Matrix endpointが古ければ `deploy-drift` として止めます。
 
 - API: `POST /api/release-drift`
 - App UI: `Check release drift`

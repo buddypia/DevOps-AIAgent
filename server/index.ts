@@ -2235,6 +2235,7 @@ async function buildReleaseDriftForTarget(input: {
   const targetBaseUrl = input.targetBaseUrl.replace(/\/$/, "");
   const targetProbeHeaders = input.forwardedHeaders && currentBaseUrl === targetBaseUrl ? input.forwardedHeaders : undefined;
   const expectedSkillIds = agentCard(currentBaseUrl).skills.map((skill) => skill.id);
+  const requiredAgentCardSignals = ["judge.rehearsal:tag:recording-lock"];
   const requiredSkillIds = [
     "task.delegate",
     "external.evidence",
@@ -2257,6 +2258,7 @@ async function buildReleaseDriftForTarget(input: {
     "win.autopilot"
   ];
   let observedSkillIds: string[] = [];
+  let observedAgentCardSignals: string[] = [];
 
   const [healthProbe, cardProbe, acceptanceProbe, a2aProbe, ci] = await Promise.all([
     liveJsonProbe({
@@ -2279,21 +2281,26 @@ async function buildReleaseDriftForTarget(input: {
       required: true,
       init: targetProbeHeaders ? { headers: targetProbeHeaders } : undefined,
       evaluate: (payload) => {
-        const skills = Array.isArray((payload as { skills?: unknown[] }).skills) ? ((payload as { skills: Array<{ id?: string }> }).skills) : [];
+        const skills = Array.isArray((payload as { skills?: unknown[] }).skills)
+          ? ((payload as { skills: Array<{ id?: string; tags?: string[] }> }).skills)
+          : [];
         observedSkillIds = skills.map((skill) => skill.id).filter((id): id is string => Boolean(id));
+        const judgeRehearsal = skills.find((skill) => skill.id === "judge.rehearsal");
+        observedAgentCardSignals = judgeRehearsal?.tags?.includes("recording-lock") ? ["judge.rehearsal:tag:recording-lock"] : [];
         const missing = requiredSkillIds.filter((skill) => !observedSkillIds.includes(skill));
+        const missingSignals = requiredAgentCardSignals.filter((signal) => !observedAgentCardSignals.includes(signal));
         const hasExpectedCount = observedSkillIds.length >= expectedSkillIds.length;
-        if (missing.length === 0 && hasExpectedCount) {
+        if (missing.length === 0 && missingSignals.length === 0 && hasExpectedCount) {
           return {
             status: "passed",
             score: 100,
-            evidence: `Target Agent Card exposes ${observedSkillIds.length}/${expectedSkillIds.length} expected skills.`
+            evidence: `Target Agent Card exposes ${observedSkillIds.length}/${expectedSkillIds.length} expected skills and ${observedAgentCardSignals.length}/${requiredAgentCardSignals.length} required signals.`
           };
         }
         return {
-          status: missing.length > 0 ? "watch" : "passed",
-          score: missing.length > 0 ? 58 : 92,
-          evidence: `Target Agent Card exposes ${observedSkillIds.length}/${expectedSkillIds.length} skills; missing ${missing.join(", ") || "none"}.`
+          status: missing.length > 0 || missingSignals.length > 0 ? "watch" : "passed",
+          score: missing.length > 0 || missingSignals.length > 0 ? 58 : 92,
+          evidence: `Target Agent Card exposes ${observedSkillIds.length}/${expectedSkillIds.length} skills; missing skills ${missing.join(", ") || "none"}; missing signals ${missingSignals.join(", ") || "none"}.`
         };
       }
     }),
@@ -2379,6 +2386,8 @@ async function buildReleaseDriftForTarget(input: {
     expectedSkillIds,
     observedSkillIds,
     requiredSkillIds,
+    requiredAgentCardSignals,
+    observedAgentCardSignals,
     probes: [healthProbe, cardProbe, acceptanceProbe, a2aProbe, ciProbe]
   });
 }
