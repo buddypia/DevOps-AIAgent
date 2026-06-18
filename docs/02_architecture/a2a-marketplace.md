@@ -125,11 +125,11 @@
 
 ## Public Judge Snapshot Surface
 
-- `GET /judge-snapshot`: Judge Proof、Competitive Battlecard、Criteria Duel、Agent Card、CI、深掘り用POST curlを、審査員が直接読める初回HTML証拠ページへ束ねる
+- `GET /judge-snapshot`: Judge Proof、Competitive Battlecard、Criteria Duel、Competitive SWOT、Autonomy Snapshot、MVP Readiness、Pilot Value、Recording Script、Submission Assets、Agent Card、CI、深掘り用POST curlを、審査員が直接読める初回HTML証拠ページへ束ねる
 - `GET /api/judge-snapshot`: 同じ証拠をA2A/自動検証用のJSONとして返す
 - Direct-open proof: ProtoPediaや提出本文に貼ったリンクが、POST method errorや生JSONではなくreadiness、proof score、競合/SWOT証拠、運用証拠を返す
 - Live drift option: `/api/judge-snapshot?live=1` の時だけRelease Drift Guardを実行し、通常HTMLは初回表示の安定性を優先する
-- A2A payload: `judge.snapshot` skillとしてdirectOpen、readiness、proof score、Criteria Duel score、endpoint群を返す
+- A2A payload: `judge.snapshot` skillとしてdirectOpen、readiness、proof score、Criteria Duel score、GET証拠endpoint群、POST深掘りendpoint群を返す
 
 ## MVP Audit Surface
 

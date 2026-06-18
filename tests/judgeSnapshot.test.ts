@@ -79,6 +79,16 @@ describe("judge snapshot", () => {
       method: "GET",
       url: `${baseUrl}/api/judge-snapshot`
     });
+    expect(snapshot.links.map((link) => link.url)).toEqual(
+      expect.arrayContaining([
+        `${baseUrl}/competitive-swot`,
+        `${baseUrl}/autonomy-snapshot`,
+        `${baseUrl}/mvp-readiness`,
+        `${baseUrl}/pilot-value`,
+        `${baseUrl}/recording-script`,
+        `${baseUrl}/submission-assets`
+      ])
+    );
     expect(snapshot.criteriaDuel.rows).toHaveLength(5);
     expect(snapshot.criteriaDuel.rows.map((row) => row.id)).toEqual(["agentCentrality", "approach", "usability", "practicality", "implementation"]);
     expect(snapshot.postApis.map((api) => `${api.method}:${api.url}`)).toEqual(
@@ -101,6 +111,17 @@ describe("judge snapshot", () => {
       endpoints: {
         judgeSnapshot: `${baseUrl}/judge-snapshot`,
         judgeSnapshotJson: `${baseUrl}/api/judge-snapshot`,
+        competitiveSwotSnapshot: `${baseUrl}/competitive-swot`,
+        competitiveSwotSnapshotJson: `${baseUrl}/api/competitive-swot`,
+        autonomySnapshot: `${baseUrl}/autonomy-snapshot`,
+        autonomySnapshotJson: `${baseUrl}/api/autonomy-snapshot`,
+        mvpReadiness: `${baseUrl}/mvp-readiness`,
+        mvpReadinessJson: `${baseUrl}/api/mvp-readiness`,
+        pilotValue: `${baseUrl}/pilot-value`,
+        pilotValueJson: `${baseUrl}/api/pilot-value`,
+        recordingScript: `${baseUrl}/recording-script`,
+        recordingScriptJson: `${baseUrl}/api/recording-script`,
+        submissionAssetsPage: `${baseUrl}/submission-assets`,
         competitiveBattlecard: `${baseUrl}/api/competitive-battlecard`
       }
     });
@@ -124,6 +145,9 @@ describe("judge snapshot", () => {
     expect(html).toContain("<!doctype html>");
     expect(html).toContain("Public Judge Snapshot");
     expect(html).toContain(`${baseUrl}/judge-snapshot`);
+    expect(html).toContain(`${baseUrl}/autonomy-snapshot`);
+    expect(html).toContain(`${baseUrl}/pilot-value`);
+    expect(html).toContain("Recording Script");
     expect(html).toContain("&lt;script&gt;alert(&#39;proof&#39;)&lt;/script&gt;");
     expect(html).not.toContain("<script>alert('proof')</script>");
   });

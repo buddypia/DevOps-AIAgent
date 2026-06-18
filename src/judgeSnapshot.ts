@@ -121,6 +121,17 @@ export function buildJudgeSnapshot(input: {
   const winnerPacketUrl = endpoint(baseUrl, "/api/winner-packet");
   const judgeCommandUrl = endpoint(baseUrl, "/api/judge-command-center");
   const acceptanceMatrixUrl = endpoint(baseUrl, "/api/acceptance-matrix");
+  const competitiveSwotUrl = endpoint(baseUrl, "/competitive-swot");
+  const competitiveSwotJsonUrl = endpoint(baseUrl, "/api/competitive-swot");
+  const mvpReadinessUrl = endpoint(baseUrl, "/mvp-readiness");
+  const mvpReadinessJsonUrl = endpoint(baseUrl, "/api/mvp-readiness");
+  const autonomySnapshotUrl = endpoint(baseUrl, "/autonomy-snapshot");
+  const autonomySnapshotJsonUrl = endpoint(baseUrl, "/api/autonomy-snapshot");
+  const recordingScriptUrl = endpoint(baseUrl, "/recording-script");
+  const recordingScriptJsonUrl = endpoint(baseUrl, "/api/recording-script");
+  const pilotValueUrl = endpoint(baseUrl, "/pilot-value");
+  const pilotValueJsonUrl = endpoint(baseUrl, "/api/pilot-value");
+  const submissionAssetsUrl = endpoint(baseUrl, "/submission-assets");
   const targetBaseUrl = input.releaseDrift?.targetBaseUrl ?? SUBMISSION_PROOF.deployedUrl;
 
   const postApis: JudgeSnapshotPostApi[] = [
@@ -222,8 +233,43 @@ export function buildJudgeSnapshot(input: {
         id: "mvp-readiness",
         label: "MVP Readiness Snapshot",
         method: "GET",
-        url: endpoint(baseUrl, "/mvp-readiness"),
+        url: mvpReadinessUrl,
         purpose: "MVP本体、外部提出gap、公開revisionの提出可否を確認する。"
+      },
+      {
+        id: "competitive-swot",
+        label: "Competitive SWOT Snapshot",
+        method: "GET",
+        url: competitiveSwotUrl,
+        purpose: "競合分析、SWOT、Criteria Duel、公式ソースを直接読む。"
+      },
+      {
+        id: "autonomy-snapshot",
+        label: "Autonomy Snapshot",
+        method: "GET",
+        url: autonomySnapshotUrl,
+        purpose: "AI中心性、A2A委任、検証receiptを直接読む。"
+      },
+      {
+        id: "pilot-value",
+        label: "Pilot Value Snapshot",
+        method: "GET",
+        url: pilotValueUrl,
+        purpose: "実用性、初回体験、導入採算を直接読む。"
+      },
+      {
+        id: "recording-script",
+        label: "Recording Script",
+        method: "GET",
+        url: recordingScriptUrl,
+        purpose: "30秒動画の台本、字幕、証拠URL、公開手順を読む。"
+      },
+      {
+        id: "submission-assets",
+        label: "Submission Assets",
+        method: "GET",
+        url: submissionAssetsUrl,
+        purpose: "ProtoPedia本文、構成図、タグ、提出URLの作業面を読む。"
       },
       {
         id: "app",
@@ -286,6 +332,7 @@ export function buildJudgeSnapshot(input: {
     judgeScript: [
       "最初に /api/judge-snapshot をGETで開き、directOpen と readiness を見せる。",
       `Judge Proof score ${input.proof.overallScore} と Criteria Duel score ${input.battlecard.criteriaDuel.duelScore} を1画面で確認する。`,
+      "そこから Competitive SWOT、Autonomy Snapshot、MVP Readiness、Pilot Value、Recording Script、Submission AssetsのGET証拠へ移動する。",
       `Agent Card exposes ${input.agentCardSkillIds.length} skills; judge.snapshot:get-proof が公開revisionに載っているかをRelease Driftで確認する。`,
       `深掘りはPOST APIをcurlで再実行する: ${postApis.map((api) => api.label).join(" / ")}。`,
       releaseVerdict === "not-run"
@@ -305,8 +352,17 @@ export function buildJudgeSnapshot(input: {
       endpoints: {
         judgeSnapshot: endpoint(baseUrl, "/judge-snapshot"),
         judgeSnapshotJson: judgeSnapshotUrl,
-        mvpReadiness: endpoint(baseUrl, "/mvp-readiness"),
-        mvpReadinessJson: endpoint(baseUrl, "/api/mvp-readiness"),
+        competitiveSwotSnapshot: competitiveSwotUrl,
+        competitiveSwotSnapshotJson: competitiveSwotJsonUrl,
+        mvpReadiness: mvpReadinessUrl,
+        mvpReadinessJson: mvpReadinessJsonUrl,
+        autonomySnapshot: autonomySnapshotUrl,
+        autonomySnapshotJson: autonomySnapshotJsonUrl,
+        pilotValue: pilotValueUrl,
+        pilotValueJson: pilotValueJsonUrl,
+        recordingScript: recordingScriptUrl,
+        recordingScriptJson: recordingScriptJsonUrl,
+        submissionAssetsPage: submissionAssetsUrl,
         judgeProof: proofUrl,
         competitiveBattlecard: battlecardUrl,
         demoConcierge: demoConciergeUrl,

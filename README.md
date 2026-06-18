@@ -108,12 +108,12 @@
 
 ## Public Judge Snapshot
 
-`Public Judge Snapshot` は、POST専用の深い証拠APIを、審査員が直接読めるGETの初回証拠ページへ束ねます。Judge Proof、Competitive Battlecard、Criteria Duel、Agent Card、CI、Cloud Run、深掘り用curlをHTMLで表示し、`/api/judge-snapshot?live=1` を付けた時だけRelease Drift Guardもライブ実行します。これによりProtoPediaや提出本文に貼った証拠URLをクリックしただけで、競合/SWOT・実装証拠・運用証拠の全体像を確認できます。
+`Public Judge Snapshot` は、POST専用の深い証拠APIとGETで直接開ける証拠ページを、審査員の初回入口へ束ねます。Judge Proof、Competitive Battlecard、Criteria Duel、Agent Card、CI、Cloud Run、Competitive SWOT、Autonomy Snapshot、MVP Readiness、Pilot Value、Recording Script、Submission Assets、深掘り用curlをHTMLで表示し、`/api/judge-snapshot?live=1` を付けた時だけRelease Drift Guardもライブ実行します。これによりProtoPediaや提出本文に貼った証拠URLをクリックしただけで、競合/SWOT・AI中心性・実用性・実装証拠・運用証拠の全体像を確認できます。
 
 - Page: `GET /judge-snapshot`
 - API: `GET /api/judge-snapshot`
 - App UI: `Judge Proof` の `Live Links > Judge Snapshot`
-- Output: human-readable proof page、directOpen、readiness、proof score、Criteria Duel、proof items、release lock、POST API curl、A2A `judge.snapshot` payload
+- Output: human-readable proof page、directOpen、readiness、proof score、Criteria Duel、GET proof links、proof items、release lock、POST API curl、A2A `judge.snapshot` payload
 
 ## Win Gap Radar
 
