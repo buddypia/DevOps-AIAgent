@@ -6889,6 +6889,7 @@ function JudgeProofBundle({
                 <a href="/judge-snapshot" target="_blank" rel="noreferrer">Judge Snapshot</a>
                 <a href="/competitive-swot" target="_blank" rel="noreferrer">Competitive SWOT</a>
                 <a href="/submission-assets" target="_blank" rel="noreferrer">Submission Assets</a>
+                <a href="/recording-script" target="_blank" rel="noreferrer">Recording Script</a>
                 <a href={proof.links.app} target="_blank" rel="noreferrer">Cloud Run</a>
                 <a href={proof.links.github} target="_blank" rel="noreferrer">GitHub</a>
                 <a href={proof.links.ci} target="_blank" rel="noreferrer">GitHub Actions</a>
@@ -7933,6 +7934,10 @@ function MissionControl({
                 <a href="/submission-assets" target="_blank" rel="noreferrer" className="icon-link">
                   <ExternalLink size={14} />
                   Assets Page
+                </a>
+                <a href="/recording-script" target="_blank" rel="noreferrer" className="icon-link">
+                  <ExternalLink size={14} />
+                  Recording
                 </a>
               </div>
               <strong>{visibleMission.submissionPack.protopediaTitle}</strong>

@@ -63,6 +63,7 @@
   - `submission.publish`
   - `submission.dossier`
   - `submission.launch`
+  - `recording.script`
   - `security.review`
   - `impact.case`
   - `pilot.economics`
@@ -138,10 +139,17 @@
 
 ## MVP Readiness Snapshot Surface
 
-- `GET /mvp-readiness`: MVP Audit、Acceptance Matrix、Release Drift、Deploy Recovery、Submission Assetsを審査員が直接読めるHTMLに束ねる
+- `GET /mvp-readiness`: MVP Audit、Acceptance Matrix、Release Drift、Deploy Recovery、Submission Assets、Recording Scriptを審査員が直接読めるHTMLに束ねる
 - `GET /api/mvp-readiness`: 同じ提出可否判断をA2A/自動検証用のJSONとして返す
 - Live drift option: `/mvp-readiness?live=1` の時だけRelease Drift Guardを実行し、通常表示は初回表示の安定性を優先する
 - A2A payload: `mvp.snapshot` skillとしてreadiness、MVP score、acceptance score、release verdict、external gap count、endpoint群を返す
+
+## Recording Script Surface
+
+- `GET /recording-script`: Pitch Director、Demo Runway、Submission Closeoutを、30秒動画の章、台詞、字幕、証拠URL、公開手順へ束ねる
+- `GET /api/recording-script`: 同じ録画台本をA2A/自動検証用のJSONとして返す
+- Video Proof Lock: `recording-external-watch` は動画台本がロック済みで、YouTube/Vimeo URLだけが外部watchで残る状態として扱う
+- A2A payload: `recording.script` skillとしてreadiness、chapter count、video lock、endpoint群を返す
 
 ## Judge Brief Surface
 
@@ -252,17 +260,17 @@
 
 ## Release Drift Surface
 
-- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Feature Freeze Lock tag、Winner Release Lock tag、Finalist Release Drift tag、Criteria Duel tag、GET Proof Snapshot tag、Acceptance Matrix、A2A artifactを返しているかを検査する
-- Drift probes: target health、Agent Card skill surface、Acceptance Matrix endpoint、A2A artifact endpoints、latest main CIを同時に評価する
+- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Feature Freeze Lock tag、Winner Release Lock tag、Finalist Release Drift tag、Criteria Duel tag、GET Proof Snapshot tag、Recording Script tag、Acceptance Matrix、A2A artifactを返しているかを検査する
+- Drift probes: target health、Agent Card skill surface、Acceptance Matrix endpoint、MVP Readiness endpoint、Recording Script endpoint、A2A artifact endpoints、latest main CIを同時に評価する
 - Verdict: 最新なら `release-current`、公開URLが古いなら `deploy-drift`、health/CIが落ちたら `release-blocked`
-- Runbook: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Acceptance Matrix、A2A artifactの再確認コマンドを返す
+- Runbook: `gcloud auth login`、Cloud Build submit、Agent Card skill count、MVP Readiness、Recording Script、Acceptance Matrix、A2A artifactの再確認コマンドを返す
 - A2A payload: `release.drift` skillとしてdrift score、missing skills、redeploy action、target endpointを返す
 
 ## Deploy Recovery Surface
 
 - `POST /api/deploy-recovery`: Release Drift Guardの結果と直近gcloudエラーを、再デプロイ復旧計画に変換する
 - Checks: target health、skill surface、Cloud Build auth、A2A artifact、latest main CIをready/watch/blockedで返す
-- Commands: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Recording Lock / Feature Freeze Lock / Winner Release Lock / Finalist Release Drift / Criteria Duel / GET Proof Snapshot / MVP Readiness Snapshot のrequired signal tags、`/api/mvp-readiness`、`/api/deploy-recovery`、A2A `deployRecoveryEndpoint` の再検証コマンドを返す
+- Commands: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Recording Lock / Feature Freeze Lock / Winner Release Lock / Finalist Release Drift / Criteria Duel / GET Proof Snapshot / MVP Readiness Snapshot / Recording Script のrequired signal tags、`/api/mvp-readiness`、`/api/recording-script`、`/api/deploy-recovery`、A2A `recordingScriptPageEndpoint` / `deployRecoveryEndpoint` の再検証コマンドを返す
 - A2A payload: `deploy.recover` skillとしてrecovery score、readiness、blocking commands、blockersを返す
 
 ## Demo Receipt Surface
@@ -440,16 +448,18 @@
 - Competitive battlecard proof: `competitive.battlecard` skillとして、競合別の短い回答、公式ソース、SWOT receipts、Criteria Duel、Objection Replay、top risksをA2A payloadにも含める
 - Competitive SWOT snapshot proof: `competitive.snapshot` skillとして、6競合、SWOT 4象限、公式ソース、Criteria Duel、Proof LockをGETで開ける審査用HTMLにも含める
 - MVP readiness snapshot proof: `mvp.snapshot` skillとして、MVP Audit、Acceptance Matrix、Release Drift、Deploy Recovery、外部提出gapをGETで開ける提出可否HTMLにも含める
+- Recording script proof: `recording.script` skillとして、30秒動画の台本、字幕、証拠URL、Video Proof LockをGETで開ける録画用HTMLにも含める
 
 ## Submission Surface
 
 - `GET /api/submission-kit`: 提出タイトル、タグ、ストーリー、動画ストーリーボード、構成図URL、提出チェックリストを返す
 - `GET /mvp-readiness`: MVP本体、外部提出gap、公開revision、復旧runbookを審査員・チームが直接読めるHTMLページに束ねる
 - `GET /submission-assets`: ProtoPedia提出に必要な動画台本、構成図、ストーリー、タグ、提出URLを審査員・チームが直接読めるHTMLページに束ねる
+- `GET /recording-script`: 30秒動画の録画台本、字幕、証拠リンク、公開手順を録画担当者が直接読めるHTMLページに束ねる
 - `public/assets/a2a-marketplace-architecture.svg`: ProtoPediaに貼れるシステム構成図
 - `POST /api/architecture-pack`: 構成図を提出証拠、Mermaid、必須技術対応表として再生成する
 - `docs/03_submission/submission-pack.md`: ProtoPediaストーリー欄に転記するMarkdown下書き
-- UI: Mission Control実行後に Assets Page / Architecture Diagram / 30s Storyboard / Required Assets を表示し、Submission DossierでArchitecture packを提出直前に確認する
+- UI: Mission Control実行後に Assets Page / Recording / Architecture Diagram / 30s Storyboard / Required Assets を表示し、Submission DossierでArchitecture packを提出直前に確認する
 
 ## GCP Surface
 

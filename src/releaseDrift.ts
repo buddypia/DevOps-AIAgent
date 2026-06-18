@@ -70,7 +70,12 @@ function driftVerdict(probes: ReleaseDriftProbe[], missingSkills: string[], miss
 }
 
 function actionFromProbe(probe: ReleaseDriftProbe): ReleaseDriftAction {
-  const deployRelated = probe.id === "agent-card-skill-surface" || probe.id === "acceptance-endpoint" || probe.id === "a2a-artifact";
+  const deployRelated =
+    probe.id === "agent-card-skill-surface" ||
+    probe.id === "acceptance-endpoint" ||
+    probe.id === "mvp-readiness-endpoint" ||
+    probe.id === "recording-script-endpoint" ||
+    probe.id === "a2a-artifact";
   return {
     id: probe.id,
     priority: probe.status === "missing" || deployRelated ? "now" : "next",
@@ -148,8 +153,9 @@ export function buildReleaseDriftGuard(input: {
       "gcloud auth login",
       "gcloud builds submit --config cloudbuild.yaml --substitutions _REGION=asia-northeast1,_SERVICE=a2a-agent-marketplace,_REPOSITORY=cloud-run-source-deploy,_GEMINI_SECRET=gemini-api-key-a2a-marketplace",
       `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills | length'`,
-      `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="mvp.snapshot") | {id, tags}'`,
+      `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="mvp.snapshot" or .id=="recording.script") | {id, tags}'`,
       `curl -s ${targetBaseUrl}/api/mvp-readiness | jq '{readiness, mvp: .summary.mvpScore, acceptance: .summary.acceptanceScore, release: .summary.releaseVerdict}'`,
+      `curl -s ${targetBaseUrl}/api/recording-script | jq '{readiness, chapters: .summary.chapterCount, videoLock: .summary.videoLockReadiness}'`,
       `curl -s -X POST ${targetBaseUrl}/api/acceptance-matrix -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}' | jq '{verdict, acceptanceScore, rows: (.rows | length)}'`,
       `curl -s -X POST ${targetBaseUrl}/a2a -H 'Content-Type: application/json' --data '{"method":"message/send","params":{"text":"A2A Cloud Run Gemini DevOps"}}' | jq '.result.artifacts[0].parts[0].data.releaseDriftEndpoint'`
     ],
@@ -170,7 +176,9 @@ export function buildReleaseDriftGuard(input: {
         currentAgentCard: `${currentBaseUrl}/.well-known/agent-card.json`,
         targetAgentCard: `${targetBaseUrl}/.well-known/agent-card.json`,
         releaseDrift: `${currentBaseUrl}/api/release-drift`,
-        targetAcceptanceMatrix: `${targetBaseUrl}/api/acceptance-matrix`
+        targetAcceptanceMatrix: `${targetBaseUrl}/api/acceptance-matrix`,
+        targetMvpReadiness: `${targetBaseUrl}/api/mvp-readiness`,
+        targetRecordingScript: `${targetBaseUrl}/api/recording-script`
       }
     }
   };

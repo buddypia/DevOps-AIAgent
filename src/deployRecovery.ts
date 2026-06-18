@@ -201,8 +201,8 @@ export function buildDeployRecoveryPlan(input: {
     {
       id: "verify-agent-card-signals",
       label: "Verify Agent Card signals",
-      command: `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="mvp.snapshot") | {id, tags}'`,
-      why: "Recording Lock、Feature Freeze Lock、Winner Release Lock、Finalist Release Drift、Criteria Duel、Competitive SWOT GET proof、Judge GET proof、MVP readiness GET proofが公開Agent Cardに載ったことを確認します。",
+      command: `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="mvp.snapshot" or .id=="recording.script") | {id, tags}'`,
+      why: "Recording Lock、Feature Freeze Lock、Winner Release Lock、Finalist Release Drift、Criteria Duel、Competitive SWOT GET proof、Judge GET proof、MVP readiness GET proof、Recording Script GET proofが公開Agent Cardに載ったことを確認します。",
       copyGroup: "verify",
       blocking: input.releaseDrift.missingAgentCardSignals.length > 0
     },
@@ -211,6 +211,14 @@ export function buildDeployRecoveryPlan(input: {
       label: "Verify MVP readiness endpoint",
       command: `curl -s ${targetBaseUrl}/api/mvp-readiness | jq '{readiness, mvp: .summary.mvpScore, acceptance: .summary.acceptanceScore, release: .summary.releaseVerdict}'`,
       why: "MVP Readiness Snapshotが公開revisionに載り、審査員がGETで提出可否を読めるか確認します。",
+      copyGroup: "verify",
+      blocking: false
+    },
+    {
+      id: "verify-recording-script",
+      label: "Verify recording script endpoint",
+      command: `curl -s ${targetBaseUrl}/api/recording-script | jq '{readiness, chapters: .summary.chapterCount, videoLock: .summary.videoLockReadiness}'`,
+      why: "Recording Scriptが公開revisionに載り、録画担当者が30秒台本をGETで直接読めるか確認します。",
       copyGroup: "verify",
       blocking: false
     },
@@ -299,7 +307,7 @@ export function buildDeployRecoveryPlan(input: {
     `Release drift: ${input.releaseDrift.observedSkillCount}/${input.releaseDrift.expectedSkillCount} skills, ${input.releaseDrift.verdict}.`,
     `Agent Card signals: missing ${input.releaseDrift.missingAgentCardSignals.join(", ") || "none"}.`,
     `Auth: ${authBlocked ? "manual gcloud auth login required" : "no auth failure provided"}.`,
-    `After deploy: verify Agent Card count, /api/mvp-readiness, /api/deploy-recovery, and A2A deployRecoveryEndpoint.`
+    `After deploy: verify Agent Card count, /api/mvp-readiness, /api/recording-script, /api/deploy-recovery, and A2A recordingScript/deployRecovery endpoints.`
   ];
 
   return {

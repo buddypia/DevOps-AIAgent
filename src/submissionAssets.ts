@@ -135,6 +135,13 @@ export function buildSubmissionAssetsPage(input: { baseUrl: string; mission: Mis
         url: `${baseUrl}/mvp-readiness`,
         status: "ready",
         purpose: "MVP本体、外部gap、公開revisionの提出可否ページ。"
+      },
+      {
+        id: "recording-script",
+        label: "Recording Script",
+        url: `${baseUrl}/recording-script`,
+        status: "ready",
+        purpose: "30秒動画の録画台本、字幕、証拠リンク、公開手順。"
       }
     ],
     pasteFields: [

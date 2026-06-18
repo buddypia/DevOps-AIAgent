@@ -147,6 +147,7 @@ export function buildMvpSnapshot(input: {
   const deployRecoveryUrl = endpoint(baseUrl, "/api/deploy-recovery");
   const winGapRadarUrl = endpoint(baseUrl, "/api/win-gap-radar");
   const judgeCommandUrl = endpoint(baseUrl, "/api/judge-command-center");
+  const recordingScriptUrl = endpoint(baseUrl, "/recording-script");
   const targetBaseUrl = input.releaseDrift?.targetBaseUrl ?? baseUrl;
   const postApis: MvpSnapshotPostApi[] = [
     {
@@ -254,6 +255,13 @@ export function buildMvpSnapshot(input: {
         purpose: "ProtoPedia本文、動画台本、構成図、タグ、提出URLの作業面。"
       },
       {
+        id: "recording-script",
+        label: "Recording Script",
+        method: "GET",
+        url: recordingScriptUrl,
+        purpose: "30秒動画の録画台本、字幕、証拠リンク、公開手順を直接開く。"
+      },
+      {
         id: "agent-card",
         label: "A2A Agent Card",
         method: "GET",
@@ -285,7 +293,7 @@ export function buildMvpSnapshot(input: {
       releaseVerdict === "not-run"
         ? "公開revision driftはPOST /api/release-drift、または /mvp-readiness?live=1 で最終確認する。"
         : `Release Drift verdict: ${releaseVerdict}; missing skills ${input.releaseDrift?.missingSkills.length ?? 0}; missing signals ${input.releaseDrift?.missingAgentCardSignals.length ?? 0}.`,
-      gaps > 0 ? `外部提出gapは${gaps}件。Submission AssetsでProtoPedia作品URLと動画URLを閉じる。` : "外部提出gapはありません。",
+      gaps > 0 ? `外部提出gapは${gaps}件。Submission AssetsとRecording ScriptでProtoPedia作品URLと動画URLを閉じる。` : "外部提出gapはありません。",
       "深掘りはMVP Audit、Acceptance Matrix、Win Gap Radar、Judge Command CenterのPOST証拠を再実行する。"
     ],
     a2aPayload: {
@@ -311,6 +319,8 @@ export function buildMvpSnapshot(input: {
         judgeSnapshot: endpoint(baseUrl, "/judge-snapshot"),
         competitiveSwotSnapshot: endpoint(baseUrl, "/competitive-swot"),
         submissionAssetsPage: endpoint(baseUrl, "/submission-assets"),
+        recordingScript: recordingScriptUrl,
+        recordingScriptJson: endpoint(baseUrl, "/api/recording-script"),
         agentCard: endpoint(baseUrl, "/.well-known/agent-card.json")
       }
     }

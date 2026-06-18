@@ -67,6 +67,7 @@ const expectedSkillIds = [
   "winner.packet",
   "submission.runway",
   "submission.assets",
+  "recording.script",
   "prize.strategy",
   "win.gap.radar",
   "submission.closeout",
@@ -287,7 +288,9 @@ describe("MVP readiness snapshot", () => {
     expect(snapshot.readiness).toBe("mvp-release-drift");
     expect(snapshot.summary.releaseVerdict).toBe("deploy-drift");
     expect(snapshot.summary.blockedRows).toBeGreaterThan(0);
-    expect(snapshot.links.map((link) => link.url)).toEqual(expect.arrayContaining([`${baseUrl}/judge-snapshot`, `${baseUrl}/competitive-swot`, `${baseUrl}/submission-assets`]));
+    expect(snapshot.links.map((link) => link.url)).toEqual(
+      expect.arrayContaining([`${baseUrl}/judge-snapshot`, `${baseUrl}/competitive-swot`, `${baseUrl}/submission-assets`, `${baseUrl}/recording-script`])
+    );
     expect(snapshot.postApis.map((api) => api.url)).toEqual(
       expect.arrayContaining([`${baseUrl}/api/mvp-audit`, `${baseUrl}/api/acceptance-matrix`, `${baseUrl}/api/release-drift`, `${baseUrl}/api/deploy-recovery`])
     );
@@ -299,7 +302,9 @@ describe("MVP readiness snapshot", () => {
         mvpReadiness: `${baseUrl}/mvp-readiness`,
         mvpReadinessJson: `${baseUrl}/api/mvp-readiness`,
         competitiveSwotSnapshot: `${baseUrl}/competitive-swot`,
-        submissionAssetsPage: `${baseUrl}/submission-assets`
+        submissionAssetsPage: `${baseUrl}/submission-assets`,
+        recordingScript: `${baseUrl}/recording-script`,
+        recordingScriptJson: `${baseUrl}/api/recording-script`
       }
     });
   });
@@ -321,6 +326,7 @@ describe("MVP readiness snapshot", () => {
     expect(html).toContain("MVP Readiness Snapshot");
     expect(html).toContain("Release Drift");
     expect(html).toContain("Submission Assets");
+    expect(html).toContain("Recording Script");
     expect(html).toContain("mvp.snapshot");
     expect(html).toContain("&lt;script&gt;alert(&#39;mvp&#39;)&lt;/script&gt;");
     expect(html).not.toContain("<script>alert('mvp')</script>");

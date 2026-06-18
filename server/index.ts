@@ -42,6 +42,7 @@ import { buildPitchRun } from "../src/pitch.js";
 import { buildJudgeProof, type CiProof, type JudgeProof } from "../src/proof.js";
 import { buildPrizeStrategyBoard } from "../src/prizeStrategy.js";
 import { buildProtoPediaPublisher } from "../src/publisher.js";
+import { buildRecordingScriptPage, renderRecordingScriptHtml } from "../src/recordingScript.js";
 import { buildReleaseDriftGuard, type ReleaseDriftProbe } from "../src/releaseDrift.js";
 import { buildSecurityReview } from "../src/security.js";
 import { buildSquadOptimizer } from "../src/squadOptimizer.js";
@@ -338,6 +339,12 @@ function agentCard(baseUrl: string) {
         name: "Open human-readable submission assets",
         description: "ProtoPedia提出に必要な動画台本、構成図、ストーリー、タグ、提出URLをGETで読めるページに束ねる。",
         tags: ["protopedia", "submission-assets", "video", "architecture", "findy_hackathon"]
+      },
+      {
+        id: "recording.script",
+        name: "Open the 30-second recording script",
+        description: "Pitch Director、Demo Runway、Submission Closeoutを束ね、録画担当者が直接読める30秒動画台本をGETで返す。",
+        tags: ["recording-script", "video", "protopedia", "submission", "get-proof"]
       },
       {
         id: "submission.publish",
@@ -1342,6 +1349,109 @@ app.get("/submission-assets", (req, res) => {
   res.type("html").send(renderSubmissionAssetsHtml(page));
 });
 
+async function buildRecordingScriptForRequest(req: express.Request) {
+  const baseUrl = publicBaseUrl(req);
+  const selectedAgentIds = ["market-broker", "gemini-strategist", "cloud-run-sre"];
+  const projectBrief = DEFAULT_PROJECT_BRIEF;
+  const recommendation = recommendSquad(projectBrief, selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const marketIntel = buildMarketIntelReport({ baseUrl, recommendation, strategy });
+  const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
+  const battlecard = buildCompetitiveBattlecard({ baseUrl, strategy, marketIntel, moatStress });
+  const mission = buildMissionRun(recommendation, strategy, "30秒動画の録画台本を審査員・提出者が直接開けるGETページにする。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const pitch = buildPitchRun({ baseUrl, recommendation, strategy, mission, opsDrill });
+  const judgeDrill = buildJudgeDrill({ baseUrl, recommendation, strategy, mission, opsDrill, pitch });
+  const finalist = buildFinalistSimulation({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    pitch,
+    judgeDrill,
+    squadContract
+  });
+  const publisher = buildProtoPediaPublisher({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist });
+  const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher, battlecard });
+  const ci = await fetchCiProof();
+  const proof = buildJudgeProof({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    gemini: localGeminiRecommendation(recommendation, "GET /recording-script keeps the teleprompter stable; POST /api/proof runs live Gemini."),
+    ci
+  });
+  const autopilot = buildWinningAutopilot({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    squadContract,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    proof
+  });
+  const dossier = buildSubmissionDossier({
+    recommendation,
+    strategy,
+    mission,
+    pitch,
+    finalist,
+    publisher,
+    demoRunway,
+    autopilot,
+    proof
+  });
+  const mvpAudit = buildMvpAudit({
+    baseUrl,
+    recommendation,
+    strategy,
+    mission,
+    opsDrill,
+    finalist,
+    autopilot,
+    dossier,
+    proof,
+    marketIntel
+  });
+  const launchGate = buildSubmissionLaunchGate({
+    mvpAudit,
+    dossier,
+    proof,
+    publisher
+  });
+  const closeout = buildSubmissionCloseoutWorkbench({
+    baseUrl,
+    publisher,
+    dossier,
+    demoRunway,
+    proof,
+    launchGate
+  });
+
+  return buildRecordingScriptPage({
+    baseUrl,
+    pitch,
+    demoRunway,
+    closeout
+  });
+}
+
+app.get("/api/recording-script", async (req, res) => {
+  res.json(await buildRecordingScriptForRequest(req));
+});
+
+app.get("/recording-script", async (req, res) => {
+  res.type("html").send(renderRecordingScriptHtml(await buildRecordingScriptForRequest(req)));
+});
+
 app.post("/api/architecture-pack", (req, res) => {
   const parsed = RecommendSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -2317,6 +2427,7 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
         const hasSubmissionCloseout = skills.some((skill) => skill.id === "submission.closeout");
         const hasSubmissionRunway = skills.some((skill) => skill.id === "submission.runway");
         const hasSubmissionAssets = skills.some((skill) => skill.id === "submission.assets");
+        const hasRecordingScript = skills.some((skill) => skill.id === "recording.script");
         const hasExternalEvidence = skills.some((skill) => skill.id === "external.evidence");
         const hasDeployRecovery = skills.some((skill) => skill.id === "deploy.recover");
         const hasObservabilityOracle = skills.some((skill) => skill.id === "observability.oracle");
@@ -2341,19 +2452,20 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
           hasSubmissionCloseout &&
           hasSubmissionRunway &&
           hasSubmissionAssets &&
+          hasRecordingScript &&
           hasExternalEvidence &&
           hasDeployRecovery &&
           hasObservabilityOracle &&
-          skills.length >= 49
+          skills.length >= 50
           ? {
               status: "passed",
               score: 100,
-              evidence: `Agent Card exposes ${skills.length} skills including observability.oracle, task.delegate, external.evidence, winner.packet, submission.runway, submission.assets, judge.rehearsal, submission.closeout, win.gap.radar, demo.concierge, prize.strategy, competitive.battlecard, competitive.snapshot, judge.snapshot, mvp.snapshot, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
+              evidence: `Agent Card exposes ${skills.length} skills including observability.oracle, task.delegate, external.evidence, winner.packet, submission.runway, submission.assets, recording.script, judge.rehearsal, submission.closeout, win.gap.radar, demo.concierge, prize.strategy, competitive.battlecard, competitive.snapshot, judge.snapshot, mvp.snapshot, deploy.recover, judge.command, pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
             }
           : {
               status: "watch",
               score: 72,
-              evidence: `Agent Card exposes ${skills.length} skills; expected observability oracle, task delegate, external evidence, winner packet, submission runway, submission assets, judge rehearsal, submission closeout, win gap radar, demo concierge, prize strategy, battlecard, competitive snapshot, judge snapshot, MVP snapshot, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
+              evidence: `Agent Card exposes ${skills.length} skills; expected observability oracle, task delegate, external evidence, winner packet, submission runway, submission assets, recording script, judge rehearsal, submission closeout, win gap radar, demo concierge, prize strategy, battlecard, competitive snapshot, judge snapshot, MVP snapshot, deploy recovery, judge command, pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
             };
       }
     }),
@@ -2415,6 +2527,8 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
           data?.winnerPacketEndpoint &&
           data?.submissionRunwayEndpoint &&
           data?.submissionAssetsPageEndpoint &&
+          data?.recordingScriptPageEndpoint &&
+          data?.recordingScriptJsonEndpoint &&
           data?.prizeStrategyEndpoint &&
           data?.winGapRadarEndpoint &&
           data?.submissionCloseoutEndpoint &&
@@ -2424,9 +2538,9 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes observabilityOracleEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
+                "A2A artifact exposes observabilityOracleEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but observability oracle/external evidence/task board/winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but observability oracle/external evidence/task board/winner packet/submission runway/submission assets/recording script/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -2580,7 +2694,8 @@ async function buildReleaseDriftForTarget(input: {
     "competitive.battlecard:tag:criteria-duel",
     "competitive.snapshot:tag:get-proof",
     "judge.snapshot:tag:get-proof",
-    "mvp.snapshot:tag:get-proof"
+    "mvp.snapshot:tag:get-proof",
+    "recording.script:tag:get-proof"
   ];
   const requiredSkillIds = [
     "task.delegate",
@@ -2598,6 +2713,7 @@ async function buildReleaseDriftForTarget(input: {
     "winner.packet",
     "submission.runway",
     "submission.assets",
+    "recording.script",
     "prize.strategy",
     "win.gap.radar",
     "submission.closeout",
@@ -2610,7 +2726,7 @@ async function buildReleaseDriftForTarget(input: {
   let observedSkillIds: string[] = [];
   let observedAgentCardSignals: string[] = [];
 
-  const [healthProbe, cardProbe, acceptanceProbe, mvpReadinessProbe, a2aProbe, ci] = await Promise.all([
+  const [healthProbe, cardProbe, acceptanceProbe, mvpReadinessProbe, recordingScriptProbe, a2aProbe, ci] = await Promise.all([
     liveJsonProbe({
       id: "target-health",
       label: "Target Cloud Run health",
@@ -2643,6 +2759,7 @@ async function buildReleaseDriftForTarget(input: {
         const competitiveSnapshot = skills.find((skill) => skill.id === "competitive.snapshot");
         const judgeSnapshot = skills.find((skill) => skill.id === "judge.snapshot");
         const mvpSnapshot = skills.find((skill) => skill.id === "mvp.snapshot");
+        const recordingScript = skills.find((skill) => skill.id === "recording.script");
         observedAgentCardSignals = [
           ...(judgeRehearsal?.tags?.includes("recording-lock") ? ["judge.rehearsal:tag:recording-lock"] : []),
           ...(winGapRadar?.tags?.includes("feature-freeze-lock") ? ["win.gap.radar:tag:feature-freeze-lock"] : []),
@@ -2651,7 +2768,8 @@ async function buildReleaseDriftForTarget(input: {
           ...(competitiveBattlecard?.tags?.includes("criteria-duel") ? ["competitive.battlecard:tag:criteria-duel"] : []),
           ...(competitiveSnapshot?.tags?.includes("get-proof") ? ["competitive.snapshot:tag:get-proof"] : []),
           ...(judgeSnapshot?.tags?.includes("get-proof") ? ["judge.snapshot:tag:get-proof"] : []),
-          ...(mvpSnapshot?.tags?.includes("get-proof") ? ["mvp.snapshot:tag:get-proof"] : [])
+          ...(mvpSnapshot?.tags?.includes("get-proof") ? ["mvp.snapshot:tag:get-proof"] : []),
+          ...(recordingScript?.tags?.includes("get-proof") ? ["recording.script:tag:get-proof"] : [])
         ];
         const missing = requiredSkillIds.filter((skill) => !observedSkillIds.includes(skill));
         const missingSignals = requiredAgentCardSignals.filter((signal) => !observedAgentCardSignals.includes(signal));
@@ -2707,6 +2825,20 @@ async function buildReleaseDriftForTarget(input: {
       }
     }),
     liveJsonProbe({
+      id: "recording-script-endpoint",
+      label: "Target Recording Script endpoint",
+      url: `${targetBaseUrl}/api/recording-script`,
+      required: true,
+      timeoutMs: 16000,
+      init: targetProbeHeaders ? { headers: targetProbeHeaders } : undefined,
+      evaluate: (payload) => {
+        const body = payload as { readiness?: string; a2aPayload?: { skill?: string } };
+        return body.a2aPayload?.skill === "recording.script" && typeof body.readiness === "string"
+          ? { status: "passed", score: 100, evidence: `Recording Script returned ${body.readiness}.` }
+          : { status: "missing", score: 24, evidence: "Recording Script endpoint did not return the current recording.script JSON payload." };
+      }
+    }),
+    liveJsonProbe({
       id: "a2a-artifact",
       label: "Target A2A artifact endpoints",
       url: `${targetBaseUrl}/a2a`,
@@ -2734,6 +2866,8 @@ async function buildReleaseDriftForTarget(input: {
           data?.winnerPacketEndpoint &&
           data?.submissionRunwayEndpoint &&
           data?.submissionAssetsPageEndpoint &&
+          data?.recordingScriptPageEndpoint &&
+          data?.recordingScriptJsonEndpoint &&
           data?.prizeStrategyEndpoint &&
           data?.winGapRadarEndpoint &&
           data?.submissionCloseoutEndpoint &&
@@ -2747,9 +2881,9 @@ async function buildReleaseDriftForTarget(input: {
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, observabilityOracleEndpoint, and deployRecoveryEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but observability oracle/external evidence/task board/winner packet/submission runway/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but observability oracle/external evidence/task board/winner packet/submission runway/submission assets/recording script/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/MVP snapshot/deploy recovery/judge command/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -2773,7 +2907,7 @@ async function buildReleaseDriftForTarget(input: {
     requiredSkillIds,
     requiredAgentCardSignals,
     observedAgentCardSignals,
-    probes: [healthProbe, cardProbe, acceptanceProbe, mvpReadinessProbe, a2aProbe, ciProbe]
+    probes: [healthProbe, cardProbe, acceptanceProbe, mvpReadinessProbe, recordingScriptProbe, a2aProbe, ciProbe]
   });
 }
 
@@ -6270,6 +6404,8 @@ app.post("/a2a", async (req, res) => {
                 winnerPacketEndpoint: `${publicBaseUrl(req)}/api/winner-packet`,
                 submissionRunwayEndpoint: `${publicBaseUrl(req)}/api/submission-runway`,
                 submissionAssetsPageEndpoint: `${publicBaseUrl(req)}/submission-assets`,
+                recordingScriptPageEndpoint: `${publicBaseUrl(req)}/recording-script`,
+                recordingScriptJsonEndpoint: `${publicBaseUrl(req)}/api/recording-script`,
                 winGapRadarEndpoint: `${publicBaseUrl(req)}/api/win-gap-radar`,
                 mvpAuditEndpoint: `${publicBaseUrl(req)}/api/mvp-audit`,
                 judgeBriefEndpoint: `${publicBaseUrl(req)}/api/judge-brief`,
