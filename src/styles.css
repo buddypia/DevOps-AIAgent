@@ -7474,6 +7474,109 @@ h1 {
   text-transform: uppercase;
 }
 
+.intel-source-lock {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.96fr) minmax(160px, 0.26fr) minmax(420px, 1.16fr);
+  gap: 1px;
+  background: #c7d6d7;
+}
+
+.intel-source-lock > div {
+  min-width: 0;
+  padding: 14px;
+  background: #f8fbfb;
+}
+
+.intel-source-lock h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  color: #26383b;
+  font-size: 1.04rem;
+}
+
+.intel-source-lock p,
+.intel-source-lock small,
+.intel-source-lock-probes p,
+.intel-source-lock-probes small {
+  color: #374548;
+  line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+
+.intel-source-lock p {
+  margin-top: 8px;
+}
+
+.intel-source-lock-score {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 5px;
+  color: #f8fbfb;
+  text-align: center;
+  background: #26383b !important;
+}
+
+.intel-source-lock-score strong {
+  font-size: 3rem;
+  line-height: 0.96;
+}
+
+.intel-source-lock-score span,
+.intel-source-lock-probes span {
+  color: var(--teal);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.intel-source-lock-score span,
+.intel-source-lock-score small {
+  color: rgba(248, 251, 251, 0.76);
+}
+
+.intel-source-lock-probes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.intel-source-lock-probes article {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #c7d6d7;
+  border-left: 4px solid var(--teal);
+  border-radius: 8px;
+  background: #fffdf9;
+}
+
+.intel-source-lock-probes article.watch,
+.intel-source-lock-probes article.unchecked {
+  border-left-color: var(--amber);
+  background: #fff9e9;
+}
+
+.intel-source-lock-probes article.failed {
+  border-left-color: var(--rose);
+  background: #fff5f5;
+}
+
+.intel-source-lock-probes article > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.intel-source-lock-probes strong {
+  overflow-wrap: anywhere;
+}
+
 .intel-source-strip {
   display: flex;
   flex-wrap: wrap;
@@ -12015,6 +12118,14 @@ pre {
     grid-template-columns: repeat(2, minmax(320px, 1fr));
   }
 
+  .intel-source-lock {
+    grid-template-columns: minmax(320px, 1fr) minmax(180px, 0.36fr);
+  }
+
+  .intel-source-lock-probes {
+    grid-column: 1 / -1;
+  }
+
   .proof-score-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -12295,6 +12406,8 @@ pre {
   .command-metrics,
   .command-buttons,
   .command-grid,
+  .intel-source-lock,
+  .intel-source-lock-probes,
   .concierge-summary,
   .concierge-route-lock,
   .concierge-lanes,

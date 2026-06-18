@@ -12,7 +12,7 @@
 4. 選択されたエージェントから改善スコアとA2A委任タイムラインを作る
 5. `src/contracts.ts` が選択済みAIの成果物、受入条件、SLA、検証コマンドを契約化する
 6. `src/strategy.ts` が競合、SWOT、審査5項目、MVP提出準備、次に雇うべきAIを算出する
-7. `src/marketIntel.ts` が公式ソース付き競合比較、差別化仮説、審査回答、次アクションを生成する
+7. `src/marketIntel.ts` が公式ソース付き競合比較、Source Freshness Lock、差別化仮説、審査回答、次アクションを生成する
 8. `src/moatStress.ts` が主要競合からの反論を想定し、証拠付き回答、残リスク、録画順を生成する
 9. `src/mvpAudit.ts` が必須技術、審査5項目、DevOps証拠、提出3点をハードゲート判定する
 10. `src/mission.ts` が弱点補強、A2A委任、検証runbook、ProtoPedia提出パックを生成する
@@ -93,6 +93,7 @@
 
 - `POST /api/market-intel`: Gemini Enterprise、Google ADK、A2A、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較を返す
 - Source checklist: 審査員に見せられる一次情報URLを固定する
+- Source Freshness Lock: 公式ソースURLをライブプローブし、競合/SWOTの根拠として使えるかをscore、readiness、probe evidence、curl runbookへ変換する
 - Competitor cuts: 競合ごとに「相手が強い点」「露出する隙」「こちらの反撃」「デモ証拠」を分ける
 - Judge answers: 審査5項目へそのまま返せる短い回答と証拠を生成する
 - A2A payload: `market.intel` skillとしてmarket score、source ids、next movesを返す

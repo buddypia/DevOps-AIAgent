@@ -4845,6 +4845,52 @@ function MarketIntelPanel({
             </div>
           </div>
 
+          <div className="intel-source-lock">
+            <div>
+              <span
+                className={cx(
+                  "risk-chip",
+                  intel.sourceProofLock.readiness === "source-lock-live"
+                    ? "low"
+                    : intel.sourceProofLock.readiness === "source-lock-blocked"
+                      ? "high"
+                      : "medium"
+                )}
+              >
+                {intel.sourceProofLock.readiness}
+              </span>
+              <h3>
+                <ShieldCheck size={16} />
+                Source Freshness Lock
+              </h3>
+              <p>{intel.sourceProofLock.headline}</p>
+              <small>{intel.sourceProofLock.hardTruth}</small>
+            </div>
+            <div className="intel-source-lock-score">
+              <strong>{intel.sourceProofLock.score}</strong>
+              <span>source lock</span>
+              <small>
+                {intel.sourceProofLock.passedCount} passed / {intel.sourceProofLock.failedCount} failed /{" "}
+                {intel.sourceProofLock.uncheckedCount} unchecked
+              </small>
+            </div>
+            <div className="intel-source-lock-probes">
+              {intel.sourceProofLock.probes.slice(0, 6).map((probe) => (
+                <article key={probe.id} className={probe.status}>
+                  <div>
+                    <strong>{probe.label}</strong>
+                    <span>{probe.status}</span>
+                  </div>
+                  <p>{probe.evidence}</p>
+                  <small>
+                    {probe.statusCode ? `HTTP ${probe.statusCode}` : "no status"} /{" "}
+                    {probe.latencyMs ? `${probe.latencyMs}ms` : "not timed"}
+                  </small>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="intel-source-strip">
             {intel.sourceChecklist.map((source) => (
               <a key={source.id} href={source.url} target="_blank" rel="noreferrer">

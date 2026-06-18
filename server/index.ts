@@ -27,7 +27,7 @@ import { buildJudgeRehearsalRoom } from "../src/judgeRehearsal.js";
 import { buildJudgeTour } from "../src/judgeTour.js";
 import { buildLiveEvidenceRun, type LiveEvidenceStatus } from "../src/liveEvidence.js";
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market.js";
-import { buildMarketIntelReport } from "../src/marketIntel.js";
+import { attachSourceProofLock, buildMarketIntelReport, probeMarketIntelSources } from "../src/marketIntel.js";
 import { buildMissionRun } from "../src/mission.js";
 import { buildMoatStressTest } from "../src/moatStress.js";
 import { buildMvpAudit } from "../src/mvpAudit.js";
@@ -883,7 +883,7 @@ app.post("/api/strategy", (req, res) => {
   res.json(buildWinningStrategy(recommendation));
 });
 
-app.post("/api/market-intel", (req, res) => {
+app.post("/api/market-intel", async (req, res) => {
   const parsed = RecommendSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
@@ -892,13 +892,16 @@ app.post("/api/market-intel", (req, res) => {
 
   const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
   const strategy = buildWinningStrategy(recommendation);
-  res.json(
-    buildMarketIntelReport({
-      baseUrl: publicBaseUrl(req),
-      recommendation,
-      strategy
-    })
-  );
+  const marketIntel = buildMarketIntelReport({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy
+  });
+  const sourceProofLock = await probeMarketIntelSources({
+    sourceLedger: marketIntel.sourceLedger,
+    timeoutMs: 6000
+  });
+  res.json(attachSourceProofLock(marketIntel, sourceProofLock));
 });
 
 app.post("/api/moat-stress", (req, res) => {
@@ -5174,6 +5177,12 @@ app.post("/a2a", async (req, res) => {
                   marketScore: marketIntel.marketScore,
                   status: marketIntel.status,
                   sourceCount: marketIntel.sources.length,
+                  sourceProofLock: {
+                    score: marketIntel.sourceProofLock.score,
+                    readiness: marketIntel.sourceProofLock.readiness,
+                    liveProbeCount: marketIntel.sourceProofLock.liveProbeCount,
+                    failedCount: marketIntel.sourceProofLock.failedCount
+                  },
                   competitors: marketIntel.comparisons.map((comparison) => ({
                     id: comparison.id,
                     sourceIds: comparison.sourceIds,

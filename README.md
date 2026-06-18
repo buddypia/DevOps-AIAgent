@@ -16,7 +16,7 @@
 - Contract: 選んだAIごとに成果物、受入条件、SLA、検証コマンド、支払い条件を生成
 - Agent Task Board: 選んだAIごとにA2A `message/send` 形式の仕事票、受入条件、証拠URL、sha256 receiptを生成
 - Strategy: ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsとの差分をアプリ内で比較し、SWOT、審査5項目、提出準備、次に雇うべきAIを算出
-- Market Intel: Gemini Enterprise、ADK、A2A、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較で、差別化仮説と審査回答を生成
+- Market Intel: Gemini Enterprise、ADK、A2A、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較とSource Freshness Lockで、差別化仮説、審査回答、ソース到達性を生成
 - Moat Stress Test: ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsからの反論を想定し、証拠付き回答と録画順を返す
 - Competitive Battlecard: 公式ソース、SWOT、競合反論、証拠routeを競合別の審査回答カードに束ね、Objection Replayで最弱競合への30秒回答順を固定する
 - Win Gap Radar: 競合/SWOT、MVP監査、最終候補判定、Prize Strategyを横断し、優勝に必要なMVP gapをfeature betsとcut listへ変換する
@@ -72,11 +72,11 @@
 
 ## Market Intel Board
 
-`Market Intel Board` は、競合分析を「やったつもり」にせず、審査員に見せられるソース付き証拠へ変換するパネルです。Gemini Enterprise Agent Platform、Google ADK、A2A protocol、Cloud Marketplace A2A agent requirements、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの一次情報リンクを持ち、競合ごとの強み、露出する隙、こちらの反撃、デモで見せる証拠を返します。Source Ledgerでは、各ソースのreview日、fresh/watch、審査で使う一言、紐づく競合を表示します。
+`Market Intel Board` は、競合分析を「やったつもり」にせず、審査員に見せられるソース付き証拠へ変換するパネルです。Gemini Enterprise Agent Platform、Google ADK、A2A protocol、Cloud Marketplace A2A agent requirements、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの一次情報リンクを持ち、競合ごとの強み、露出する隙、こちらの反撃、デモで見せる証拠を返します。Source Ledgerでは、各ソースのreview日、fresh/watch、審査で使う一言、紐づく競合を表示します。Source Freshness Lockでは、公式ソースURLをライブプローブし、競合/SWOTの根拠として今使えるかをscore/readiness/probe evidence/runbookで固定します。
 
 - API: `POST /api/market-intel`
 - App UI: `Run market intel`
-- Output: market score、source freshness、source ledger、source checklist、competitor cuts、judge answers、next moves、A2A `market.intel` payload
+- Output: market score、source freshness、Source Freshness Lock、source ledger、source checklist、competitor cuts、judge answers、next moves、A2A `market.intel` payload
 
 ## Moat Stress Test
 

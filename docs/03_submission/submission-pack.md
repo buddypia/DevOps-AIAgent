@@ -36,7 +36,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Contract Deskで、選択したAIの成果物、受入条件、SLA、検証コマンドを発行する
 - Agent Task Boardで、選択したAIごとのA2A仕事票、受入条件、証拠URL、検証キューを発行する
 - Winning Strategyで競合分析、SWOT、審査5項目、MVP proof、次に雇うべきAIを表示する
-- Market Intel Boardで、Gemini Enterprise、Google ADK、A2A、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較、差別化仮説、審査回答を表示する
+- Market Intel Boardで、Gemini Enterprise、Google ADK、A2A、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較、Source Freshness Lock、差別化仮説、審査回答を表示する
 - Moat Stress Testで、ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsからの反論を先に受け、証拠付き回答と録画順を表示する
 - MVP Auditで、必須技術、審査5項目、DevOps証拠、提出3点をpass/watch/failで監査し、外部未発行URLを合格扱いにしない
 - Judge Briefで、競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページにまとめる
@@ -84,7 +84,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 React UI
   -> Express API
   -> Recommendation / Contract / Strategy / Mission engines
-  -> Market Intel source-backed competitor board
+  -> Market Intel source-backed competitor board + Source Freshness Lock
   -> Moat Stress Test competitor rebuttal board
   -> MVP Audit hard gates
   -> Judge Brief one-page judge readout
@@ -127,10 +127,10 @@ React UI
 | 8-11s | Judge Tourで90秒導線、5つのjudge claims、外部URL不足を見せる |
 | 11-14s | Squad Optimizerで140予算内の最適編成、+22のUX追加ギャップ、swap planを見せる |
 | 14-16s | Competitive BattlecardのObjection Replayで「既存ツールでよくない？」へのsource、SWOT、proof routeを30秒順に出す |
-| 16-18s | Live Evidence Monitorで公開Cloud Run、Agent Card、A2A、Optimizer、CIの5 probesを見せる |
-| 18-20s | Observability Oracleで公開証拠、継続/復旧判断、買い手価値SLO、次のAI雇用を見せる |
-| 20-21s | Release Drift Guardで提出URLが最新skill surfaceか、古いrevisionならdeploy-driftかを見せる |
-| 21-23s | Competitive Battlecardで競合別カードとObjection Replayのready stepsを見せる |
+| 16-18s | Market IntelのSource Freshness Lockで、公式ソースURLが今も到達可能かを見せる |
+| 18-20s | Live Evidence Monitorで公開Cloud Run、Agent Card、A2A、Optimizer、CIの5 probesを見せる |
+| 20-22s | Observability Oracleで公開証拠、継続/復旧判断、買い手価値SLO、次のAI雇用を見せる |
+| 22-23s | Release Drift Guardで提出URLが最新skill surfaceか、古いrevisionならdeploy-driftかを見せる |
 | 23-24s | Deploy Recoveryでgcloud認証、Cloud Build、公開再検証コマンドを見せる |
 | 24-25s | Judge Demo Receiptでstamp、外部URLwatch、sha256 digestを控える |
 | 25-26s | Judge Acceptance Matrixで必須技術、審査5項目、公開証拠、提出物のaccepted/watchを見せる |

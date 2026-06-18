@@ -5,6 +5,8 @@ import type { Recommendation } from "./types.js";
 export type IntelStatus = "lead" | "parity" | "watch";
 export type IntelPriority = "now" | "next" | "later";
 export type SourceFreshness = "fresh" | "watch";
+export type SourceProofStatus = "passed" | "watch" | "failed" | "unchecked";
+export type SourceProofReadiness = "source-lock-live" | "source-lock-watch" | "source-lock-blocked" | "source-lock-declared";
 
 export type MarketIntelSource = {
   id: string;
@@ -69,6 +71,38 @@ export type MarketSourceFreshnessSummary = {
   competitorCoveragePercent: number;
 };
 
+export type MarketSourceProofProbe = {
+  id: string;
+  label: string;
+  url: string;
+  sourceType: MarketIntelSource["sourceType"];
+  status: SourceProofStatus;
+  statusCode?: number;
+  latencyMs?: number;
+  checkedAt: string;
+  competitorIds: string[];
+  evidence: string;
+  judgeUse: string;
+};
+
+export type MarketSourceProofLock = {
+  id: string;
+  score: number;
+  readiness: SourceProofReadiness;
+  checkedAt: string;
+  passedCount: number;
+  watchCount: number;
+  failedCount: number;
+  uncheckedCount: number;
+  liveProbeCount: number;
+  competitorCoveragePercent: number;
+  headline: string;
+  hardTruth: string;
+  probes: MarketSourceProofProbe[];
+  runbook: string[];
+  nextActions: string[];
+};
+
 export type MarketIntelReport = {
   id: string;
   marketScore: number;
@@ -80,10 +114,13 @@ export type MarketIntelReport = {
   judgeAnswers: MarketIntelJudgeAnswer[];
   moves: MarketIntelMove[];
   sourceFreshness: MarketSourceFreshnessSummary;
+  sourceProofLock: MarketSourceProofLock;
   sourceLedger: MarketSourceLedgerItem[];
   sourceChecklist: Array<{ id: string; label: string; url: string }>;
   a2aPayload: Record<string, unknown>;
 };
+
+export type SourceFetch = (url: string, init?: RequestInit) => Promise<Response>;
 
 const SOURCE_REVIEWED_AT = "2026-06-18";
 
@@ -370,6 +407,205 @@ function buildSourceFreshnessSummary(sourceLedger: MarketSourceLedgerItem[], com
   };
 }
 
+function sourceStatusScore(status: SourceProofStatus) {
+  if (status === "passed") return 100;
+  if (status === "watch") return 82;
+  if (status === "unchecked") return 62;
+  return 24;
+}
+
+function sourceProofReadiness(input: {
+  score: number;
+  failedCount: number;
+  watchCount: number;
+  uncheckedCount: number;
+  liveProbeCount: number;
+}): SourceProofReadiness {
+  if (input.failedCount > 0) return "source-lock-blocked";
+  if (input.liveProbeCount === 0 || input.uncheckedCount > 0) return "source-lock-declared";
+  if (input.watchCount > 0) return "source-lock-watch";
+  if (input.score >= 92) return "source-lock-live";
+  return "source-lock-watch";
+}
+
+function sourceProofHeadline(readiness: SourceProofReadiness) {
+  if (readiness === "source-lock-live") return "Official source links are live enough to defend the market thesis.";
+  if (readiness === "source-lock-watch") return "Official source links are mostly live, but at least one source needs a backup citation.";
+  if (readiness === "source-lock-blocked") return "At least one official source is not reachable; do not lead with unsupported competitor claims.";
+  return "Source citations are declared; run the live lock before final submission.";
+}
+
+function sourceProofHardTruth(readiness: SourceProofReadiness, failedCount: number, uncheckedCount: number) {
+  if (readiness === "source-lock-live") return "競合分析は公式ソース到達性つきで再実行できる。";
+  if (readiness === "source-lock-watch") return "一部ソースはwatch扱い。録画前に代替URLかスクリーンショット証拠を用意する。";
+  if (readiness === "source-lock-blocked") return `${failedCount}件の公式ソースが到達不可。審査で競合/SWOTの根拠として使う前に差し替える。`;
+  return `${uncheckedCount}件の公式ソースが未プローブ。提出直前に/api/market-intelでlive lockを再実行する。`;
+}
+
+function buildUncheckedSourceProbe(source: MarketSourceLedgerItem, checkedAt: string): MarketSourceProofProbe {
+  return {
+    id: source.id,
+    label: source.label,
+    url: source.url,
+    sourceType: source.sourceType,
+    status: "unchecked",
+    checkedAt,
+    competitorIds: source.competitorIds,
+    evidence: "Live probe has not run in this artifact; source is declared from the curated ledger.",
+    judgeUse: source.judgeUse
+  };
+}
+
+export function buildSourceProofLock(input: {
+  sourceLedger: MarketSourceLedgerItem[];
+  probes?: MarketSourceProofProbe[];
+  checkedAt?: string;
+}): MarketSourceProofLock {
+  const checkedAt = input.checkedAt ?? SOURCE_REVIEWED_AT;
+  const probeById = new Map((input.probes ?? []).map((probe) => [probe.id, probe]));
+  const probes = input.sourceLedger.map((source) => probeById.get(source.id) ?? buildUncheckedSourceProbe(source, checkedAt));
+  const passedCount = probes.filter((probe) => probe.status === "passed").length;
+  const watchCount = probes.filter((probe) => probe.status === "watch").length;
+  const failedCount = probes.filter((probe) => probe.status === "failed").length;
+  const uncheckedCount = probes.filter((probe) => probe.status === "unchecked").length;
+  const liveProbeCount = probes.length - uncheckedCount;
+  const coveredCompetitors = new Set(
+    probes.filter((probe) => probe.status === "passed" || probe.status === "watch").flatMap((probe) => probe.competitorIds)
+  );
+  const competitorIds = new Set(input.sourceLedger.flatMap((source) => source.competitorIds));
+  const competitorCoveragePercent = Math.round((coveredCompetitors.size / Math.max(1, competitorIds.size)) * 100);
+  const statusScore = average(probes.map((probe) => sourceStatusScore(probe.status)));
+  const score = Math.round(clamp(average([statusScore, competitorCoveragePercent, liveProbeCount === probes.length ? 100 : 70])));
+  const readiness = sourceProofReadiness({ score, failedCount, watchCount, uncheckedCount, liveProbeCount });
+  const normalizedRunbookUrls = input.sourceLedger.slice(0, 4).map((source) => `curl -I -L ${source.url}`);
+
+  return {
+    id: `source-proof-lock-${readiness}-${score}`,
+    score,
+    readiness,
+    checkedAt,
+    passedCount,
+    watchCount,
+    failedCount,
+    uncheckedCount,
+    liveProbeCount,
+    competitorCoveragePercent,
+    headline: sourceProofHeadline(readiness),
+    hardTruth: sourceProofHardTruth(readiness, failedCount, uncheckedCount),
+    probes,
+    runbook: [
+      "POST /api/market-intel to refresh the live Source Freshness Lock before recording.",
+      ...normalizedRunbookUrls
+    ],
+    nextActions:
+      readiness === "source-lock-blocked"
+        ? probes
+            .filter((probe) => probe.status === "failed")
+            .slice(0, 3)
+            .map((probe) => `Replace or screenshot ${probe.label} before using it in the battlecard.`)
+        : readiness === "source-lock-watch"
+          ? probes
+              .filter((probe) => probe.status === "watch")
+              .slice(0, 3)
+              .map((probe) => `Keep a backup citation or screenshot for ${probe.label}.`)
+        : readiness === "source-lock-declared"
+          ? ["Run /api/market-intel on the public Cloud Run URL and capture the live source lock."]
+          : ["Use Market Intel before Competitive Battlecard so citations appear before claims."]
+  };
+}
+
+function classifyProbeStatus(statusCode: number): SourceProofStatus {
+  if (statusCode >= 200 && statusCode < 400) return "passed";
+  if (statusCode === 401 || statusCode === 403 || statusCode === 429) return "watch";
+  return "failed";
+}
+
+export async function probeMarketIntelSources(input: {
+  sourceLedger: MarketSourceLedgerItem[];
+  fetcher?: SourceFetch;
+  checkedAt?: string;
+  timeoutMs?: number;
+}): Promise<MarketSourceProofLock> {
+  const fetcher = input.fetcher ?? fetch;
+  const checkedAt = input.checkedAt ?? new Date().toISOString();
+  const timeoutMs = input.timeoutMs ?? 4500;
+  const probes = await Promise.all(
+    input.sourceLedger.map(async (source): Promise<MarketSourceProofProbe> => {
+      const startedAt = Date.now();
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const response = await fetcher(source.url, {
+          method: "GET",
+          redirect: "follow",
+          signal: controller.signal,
+          headers: {
+            accept: "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8"
+          }
+        });
+        const latencyMs = Date.now() - startedAt;
+        const status = classifyProbeStatus(response.status);
+        return {
+          id: source.id,
+          label: source.label,
+          url: source.url,
+          sourceType: source.sourceType,
+          status,
+          statusCode: response.status,
+          latencyMs,
+          checkedAt,
+          competitorIds: source.competitorIds,
+          evidence:
+            status === "passed"
+              ? `HTTP ${response.status} in ${latencyMs}ms; official source is reachable.`
+              : `HTTP ${response.status} in ${latencyMs}ms; keep a backup citation or screenshot.`,
+          judgeUse: source.judgeUse
+        };
+      } catch (error) {
+        const isAbort = error instanceof Error && error.name === "AbortError";
+        return {
+          id: source.id,
+          label: source.label,
+          url: source.url,
+          sourceType: source.sourceType,
+          status: isAbort ? "watch" : "failed",
+          latencyMs: Date.now() - startedAt,
+          checkedAt,
+          competitorIds: source.competitorIds,
+          evidence: isAbort
+            ? `Probe timed out after ${timeoutMs}ms; keep a backup citation or screenshot.`
+            : `Probe failed: ${error instanceof Error ? error.message : "unknown error"}.`,
+          judgeUse: source.judgeUse
+        };
+      } finally {
+        clearTimeout(timeout);
+      }
+    })
+  );
+
+  return buildSourceProofLock({ sourceLedger: input.sourceLedger, probes, checkedAt });
+}
+
+export function attachSourceProofLock(report: MarketIntelReport, sourceProofLock: MarketSourceProofLock): MarketIntelReport {
+  return {
+    ...report,
+    sourceProofLock,
+    a2aPayload: {
+      ...report.a2aPayload,
+      sourceProofLock: {
+        score: sourceProofLock.score,
+        readiness: sourceProofLock.readiness,
+        checkedAt: sourceProofLock.checkedAt,
+        passedCount: sourceProofLock.passedCount,
+        watchCount: sourceProofLock.watchCount,
+        failedCount: sourceProofLock.failedCount,
+        liveProbeCount: sourceProofLock.liveProbeCount,
+        competitorCoveragePercent: sourceProofLock.competitorCoveragePercent
+      }
+    }
+  };
+}
+
 export function buildMarketIntelReport(input: {
   baseUrl: string;
   recommendation: Recommendation;
@@ -379,6 +615,7 @@ export function buildMarketIntelReport(input: {
   const comparisons = strategy.competitors.map(buildComparison);
   const sourceLedger = buildSourceLedger(comparisons);
   const sourceFreshness = buildSourceFreshnessSummary(sourceLedger, comparisons);
+  const sourceProofLock = buildSourceProofLock({ sourceLedger });
   const sourceCoverage = new Set(comparisons.flatMap((comparison) => comparison.sourceIds)).size;
   const marketScore = Math.round(
     clamp(
@@ -415,6 +652,7 @@ export function buildMarketIntelReport(input: {
     judgeAnswers: buildJudgeAnswers(strategy),
     moves: buildMoves(strategy, recommendation),
     sourceFreshness,
+    sourceProofLock,
     sourceLedger,
     sourceChecklist,
     a2aPayload: {
@@ -423,6 +661,16 @@ export function buildMarketIntelReport(input: {
       status,
       sources: sourceChecklist.map((source) => source.id),
       sourceFreshness,
+      sourceProofLock: {
+        score: sourceProofLock.score,
+        readiness: sourceProofLock.readiness,
+        checkedAt: sourceProofLock.checkedAt,
+        passedCount: sourceProofLock.passedCount,
+        watchCount: sourceProofLock.watchCount,
+        failedCount: sourceProofLock.failedCount,
+        liveProbeCount: sourceProofLock.liveProbeCount,
+        competitorCoveragePercent: sourceProofLock.competitorCoveragePercent
+      },
       sourceLedger: sourceLedger.map((source) => ({
         id: source.id,
         freshness: source.freshness,
