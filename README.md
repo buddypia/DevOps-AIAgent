@@ -296,11 +296,11 @@
 
 ## Pilot Economics
 
-`Pilot Economics` は、Impact CaseのKPIを「買う理由」まで落とし込む導入採算レイヤーです。時間短縮、想定人件費、公開デモリスク低下、提出信頼度上昇を月次価値へ換算し、pilot cost、payback days、価格レーン、買い手の反論、導入マイルストーンを審査員の前で再計算できる形にします。
+`Pilot Economics` は、Impact CaseのKPIを「買う理由」まで落とし込む導入採算レイヤーです。時間短縮、想定人件費、公開デモリスク低下、提出信頼度上昇を月次価値へ換算し、pilot cost、payback days、価格レーン、買い手の反論、導入マイルストーンを審査員の前で再計算できる形にします。Pilot Evidence Lockで、3 personaの初回価値到達、摩擦のオーナー、30日以内回収、買い手反論、公開証拠を1つの受入レシートに固定します。
 
 - API: `POST /api/pilot-economics`
 - App UI: `Build pilot economics`
-- Output: economics score、posture、unit economics、pricing lanes、pilot plan、buyer objections、A2A `pilot.economics` payload
+- Output: economics score、posture、Pilot Evidence Lock、unit economics、pricing lanes、pilot plan、buyer objections、A2A `pilot.economics` payload
 
 ## Contract Desk
 

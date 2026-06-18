@@ -87,6 +87,18 @@ describe("pilot economics", () => {
     expect(pilotEconomics.unitEconomics.savedHoursPerCycle).toBeGreaterThan(8);
     expect(pilotEconomics.unitEconomics.monthlyValueYen).toBeGreaterThan(pilotEconomics.unitEconomics.pilotCostYen);
     expect(pilotEconomics.unitEconomics.paybackDays).toBeLessThanOrEqual(30);
+    expect(pilotEconomics.evidenceLock).toMatchObject({
+      readiness: "buyer-ready",
+      targetBuyer: expect.stringContaining("DevOps"),
+      checks: expect.arrayContaining([
+        expect.objectContaining({ id: "three-persona-paths", status: "clear" }),
+        expect.objectContaining({ id: "payback-under-month", status: "clear" }),
+        expect.objectContaining({ id: "buyer-objections-clear", status: "clear" }),
+        expect.objectContaining({ id: "public-proof-ready", status: "clear" })
+      ])
+    });
+    expect(pilotEconomics.evidenceLock.lockScore).toBeGreaterThanOrEqual(90);
+    expect(pilotEconomics.evidenceLock.valueClaim).toContain("21日");
     expect(pilotEconomics.pricingLanes.map((lane) => lane.id)).toEqual(["two-week-pilot", "team-retainer", "procurement-desk"]);
     expect(pilotEconomics.pilotPlan.map((step) => step.id)).toEqual(["baseline", "first-run", "economic-check", "public-proof"]);
     expect(pilotEconomics.buyerObjections.map((objection) => objection.id)).toEqual(
@@ -95,7 +107,11 @@ describe("pilot economics", () => {
     expect(pilotEconomics.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "pilot.economics",
-      posture: "investment-ready"
+      posture: "investment-ready",
+      evidenceLock: {
+        readiness: "buyer-ready",
+        checks: expect.arrayContaining([expect.objectContaining({ id: "buyer-objections-clear", status: "clear" })])
+      }
     });
   });
 
@@ -103,6 +119,8 @@ describe("pilot economics", () => {
     const { pilotEconomics } = fixture(["cloud-run-sre"], { degradedSecurity: true, degradedOps: true });
 
     expect(pilotEconomics.posture).toBe("not-economic");
+    expect(pilotEconomics.evidenceLock.readiness).toBe("blocked");
+    expect(pilotEconomics.evidenceLock.checks.map((check) => check.status)).toContain("blocked");
     expect(pilotEconomics.buyerObjections.find((objection) => objection.id === "security")?.status).toBe("blocked");
     expect(pilotEconomics.buyerObjections.find((objection) => objection.id === "adoption")?.status).toBe("blocked");
     expect(pilotEconomics.nextActions.map((action) => action.id)).toEqual(expect.arrayContaining(["security", "adoption"]));

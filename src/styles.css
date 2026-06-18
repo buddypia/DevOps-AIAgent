@@ -6019,6 +6019,110 @@ h1 {
   text-transform: uppercase;
 }
 
+.economics-evidence-lock {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.72fr) minmax(420px, 1fr);
+  gap: 1px;
+  background: #d9d1bb;
+}
+
+.economics-evidence-lock > section,
+.economics-evidence-lock > div {
+  min-width: 0;
+  padding: 14px;
+  background: #fffdf5;
+}
+
+.economics-evidence-lock > section {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.economics-evidence-lock > section > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.economics-evidence-lock > section strong {
+  color: #2f302a;
+  font-size: 2.7rem;
+  line-height: 0.95;
+}
+
+.economics-evidence-lock h3 {
+  font-size: 1.06rem;
+  line-height: 1.2;
+}
+
+.economics-evidence-lock > section p,
+.economics-evidence-lock > section small {
+  color: #494637;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.economics-evidence-lock > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.economics-evidence-lock article {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid #d9d1bb;
+  border-left: 4px solid var(--green);
+  border-radius: 8px;
+  background: #fffef8;
+}
+
+.economics-evidence-lock article.watch {
+  border-left-color: var(--amber);
+  background: #fff8e6;
+}
+
+.economics-evidence-lock article.blocked {
+  border-left-color: var(--rose);
+  background: #fff1f2;
+}
+
+.economics-evidence-lock article > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.economics-evidence-lock article * {
+  min-width: 0;
+}
+
+.economics-evidence-lock article span {
+  color: #8a5a00;
+  font-size: 0.7rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.economics-evidence-lock article p,
+.economics-evidence-lock article small,
+.economics-evidence-lock article b {
+  color: #494637;
+  line-height: 1.38;
+  overflow-wrap: anywhere;
+}
+
+.economics-evidence-lock article b {
+  color: #2d5d54;
+  font-size: 0.76rem;
+}
+
 .economics-unit {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -11824,6 +11928,7 @@ pre {
   }
 
   .economics-unit,
+  .economics-evidence-lock > div,
   .economics-metrics {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -12022,6 +12127,7 @@ pre {
     .impact-metrics,
     .impact-grid,
     .economics-summary,
+    .economics-evidence-lock,
     .economics-unit,
     .economics-metrics,
     .economics-grid,
@@ -12081,7 +12187,8 @@ pre {
 
   .publisher-quality-lock > div,
   .dossier-quality-lock > div,
-  .closeout-quality-lock > div {
+  .closeout-quality-lock > div,
+  .economics-evidence-lock > div {
     grid-template-columns: 1fr;
   }
 

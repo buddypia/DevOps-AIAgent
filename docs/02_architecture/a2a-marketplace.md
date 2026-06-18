@@ -305,6 +305,7 @@
 
 - `POST /api/pilot-economics`: Impact Case、User Pilot、Contract Desk、Ops Drill、Security Reviewを使い、導入費用、回収日数、価格レーン、買い手の反論を返す
 - Unit economics: saved hours、assumed hourly cost、monthly value、pilot cost、payback days、confidence scoreを固定する
+- Pilot Evidence Lock: 3 personaの初回価値到達、first-run速度、摩擦オーナー、30日以内回収、買い手反論、公開証拠、confidence receiptをscore/readiness付きで返す
 - Pricing lanes: 2-week pilot、team retainer、procurement deskを価格、対象買い手、受入条件つきで返す
 - Buyer objections: 既存ツールで十分、ROI仮説、安全性、初回利用の4反論に証拠付きで答える
 - A2A payload: `pilot.economics` skillとしてeconomics score、posture、unit economics、pricing、pilot plan、buyer objectionsを返す
@@ -384,7 +385,7 @@
 - Submission launch proof: `submission.launch` skillとして、外部URL入力後のsubmit-ready判定と提出フォーム用packetをA2A payloadにも含める
 - Security review proof: `security.review` skillとして、Secret/IP/input/A2A/CIの安全境界をA2A payloadにも含める
 - Impact proof: `impact.case` skillとして、実用性の定量指標、ユーザー別KPI、導入計画をA2A payloadにも含める
-- Pilot economics proof: `pilot.economics` skillとして、導入費用、回収日数、価格レーン、買い手の反論をA2A payloadにも含める
+- Pilot economics proof: `pilot.economics` skillとして、Pilot Evidence Lock、導入費用、回収日数、価格レーン、買い手の反論をA2A payloadにも含める
 - Demo concierge proof: `demo.concierge` skillとして、審査員/買い手/提出者のfirst click、証拠URL、成功条件、friction cutsをA2A payloadにも含める
 - Judge command proof: `judge.command` skillとして、最初の90秒で押す証拠、Competitive Battlecard、公開revision drift、MVP受入状態、導入採算、残ブロッカーをA2A payloadにも含める
 - Win gap radar proof: `win.gap.radar` skillとして、競合/SWOTから導いたMVP gap lanes、feature bets、cut list、外部提出closeoutをA2A payloadにも含める

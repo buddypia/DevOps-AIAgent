@@ -8,6 +8,7 @@ import type { UserPilotLab } from "./userPilot.js";
 
 export type PilotEconomicsPosture = "investment-ready" | "needs-pilot-proof" | "not-economic";
 export type PilotEconomicsStatus = "clear" | "watch" | "blocked";
+export type PilotEvidenceLockReadiness = "buyer-ready" | "pilot-locked" | "needs-pilot-proof" | "blocked";
 
 export type UnitEconomics = {
   savedHoursPerCycle: number;
@@ -66,6 +67,26 @@ export type PilotEconomicsAction = {
   proof: string;
 };
 
+export type PilotEvidenceLockCheck = {
+  id: string;
+  label: string;
+  status: PilotEconomicsStatus;
+  proof: string;
+  acceptance: string;
+  evidenceRoute: string;
+};
+
+export type PilotEvidenceLock = {
+  id: string;
+  lockScore: number;
+  readiness: PilotEvidenceLockReadiness;
+  headline: string;
+  targetBuyer: string;
+  valueClaim: string;
+  proofScript: string[];
+  checks: PilotEvidenceLockCheck[];
+};
+
 export type PilotEconomics = {
   id: string;
   economicsScore: number;
@@ -73,6 +94,7 @@ export type PilotEconomics = {
   verdict: string;
   hardTruth: string;
   unitEconomics: UnitEconomics;
+  evidenceLock: PilotEvidenceLock;
   metrics: PilotEconomicsMetric[];
   pricingLanes: PricingLane[];
   pilotPlan: PilotMilestone[];
@@ -155,6 +177,126 @@ function actionFromObjection(objection: BuyerObjection): PilotEconomicsAction {
         ? `${objection.objection} への回答を審査動画とProtoPedia本文に固定する`
         : `${objection.objection} への証拠をPilot Economicsで補強する`,
     proof: objection.evidence
+  };
+}
+
+function lockScore(status: PilotEconomicsStatus) {
+  if (status === "clear") return 100;
+  if (status === "watch") return 72;
+  return 22;
+}
+
+function lockReadiness(input: {
+  economicsPosture: PilotEconomicsPosture;
+  checks: PilotEvidenceLockCheck[];
+}): PilotEvidenceLockReadiness {
+  if (input.economicsPosture === "not-economic" || input.checks.some((check) => check.status === "blocked")) return "blocked";
+  const allClear = input.checks.every((check) => check.status === "clear");
+  if (allClear && input.economicsPosture === "investment-ready") return "buyer-ready";
+  if (input.checks.filter((check) => check.status === "clear").length >= 5) return "pilot-locked";
+  return "needs-pilot-proof";
+}
+
+function buildPilotEvidenceLock(input: {
+  posture: PilotEconomicsPosture;
+  economicsScore: number;
+  unitEconomics: UnitEconomics;
+  userPilot: UserPilotLab;
+  pilotPlan: PilotMilestone[];
+  buyerObjections: BuyerObjection[];
+  metrics: PilotEconomicsMetric[];
+}): PilotEvidenceLock {
+  const { posture, economicsScore, unitEconomics, userPilot, pilotPlan, buyerObjections, metrics } = input;
+  const pathsUnderThreeMinutes = userPilot.paths.length >= 3 && userPilot.paths.every((path) => path.timeToValueSeconds <= 180);
+  const fastEnoughForDemo = userPilot.timeToValueSeconds <= 120;
+  const highFrictionCount = userPilot.frictions.filter((friction) => friction.severity === "high").length;
+  const objectionClearCount = buyerObjections.filter((objection) => objection.status === "clear").length;
+  const publicProof = pilotPlan.find((plan) => plan.id === "public-proof");
+  const confidenceMetric = metrics.find((metric) => metric.id === "confidence");
+  const checks: PilotEvidenceLockCheck[] = [
+    {
+      id: "three-persona-paths",
+      label: "3 target personas reach value",
+      status: pathsUnderThreeMinutes ? "clear" : "watch",
+      proof: `${userPilot.paths.length} paths / ${userPilot.timeToValueSeconds}s max`,
+      acceptance: "開発リード、Platform/SRE、提出者が3分以内に価値へ到達できる。",
+      evidenceRoute: "/api/user-pilot"
+    },
+    {
+      id: "demo-fast-path",
+      label: "First-run path fits the judge demo",
+      status: fastEnoughForDemo ? "clear" : userPilot.timeToValueSeconds <= 180 ? "watch" : "blocked",
+      proof: `${userPilot.timeToValueSeconds}s max time-to-value`,
+      acceptance: "30秒動画や90秒審査導線へ圧縮できる初回価値到達時間になっている。",
+      evidenceRoute: "/api/demo-concierge"
+    },
+    {
+      id: "friction-owned",
+      label: "Every friction has an owner and fix",
+      status: highFrictionCount === 0 && userPilot.frictions.every((friction) => friction.owner && friction.fix) ? "clear" : "watch",
+      proof: `${userPilot.frictions.length} frictions / ${highFrictionCount} high`,
+      acceptance: "摩擦を隠さず、オーナーと修正方針を審査・導入説明に出せる。",
+      evidenceRoute: "/api/user-pilot"
+    },
+    {
+      id: "payback-under-month",
+      label: "Pilot pays back within 30 days",
+      status: unitEconomics.paybackDays <= 30 ? "clear" : unitEconomics.paybackDays <= 60 ? "watch" : "blocked",
+      proof: `${unitEconomics.paybackDays}d payback / ${unitEconomics.monthlyValueYen.toLocaleString("ja-JP")}円 monthly value`,
+      acceptance: "小さな導入実験として買い手が判断できる回収日数に収まっている。",
+      evidenceRoute: "/api/pilot-economics"
+    },
+    {
+      id: "buyer-objections-clear",
+      label: "Buyer objections are answered",
+      status: objectionClearCount === buyerObjections.length ? "clear" : buyerObjections.some((objection) => objection.status === "blocked") ? "blocked" : "watch",
+      proof: `${objectionClearCount}/${buyerObjections.length} objections clear`,
+      acceptance: "既存ツール、ROI、安全性、初回利用への反論に証拠付きで答えられる。",
+      evidenceRoute: "/api/pilot-economics"
+    },
+    {
+      id: "public-proof-ready",
+      label: "Public proof is ready before submit",
+      status: publicProof?.status ?? "watch",
+      proof: publicProof?.successMetric ?? "Public proof plan missing.",
+      acceptance: "公開URL、Release Drift、Acceptance Matrix、Demo Receiptを提出直前に再実行できる。",
+      evidenceRoute: "/api/release-drift"
+    },
+    {
+      id: "confidence-receipt",
+      label: "Evidence confidence is high enough",
+      status: confidenceMetric?.status ?? "watch",
+      proof: `${unitEconomics.confidenceScore} confidence / ${economicsScore} economics`,
+      acceptance: "Impact、User Pilot、Contract、Ops、Security、審査基準が同じ投資判断に接続している。",
+      evidenceRoute: "/api/acceptance-matrix"
+    }
+  ];
+  const readiness = lockReadiness({ economicsPosture: posture, checks });
+  const lockScoreValue = Math.round(
+    clamp(average([economicsScore, userPilot.pilotScore, unitEconomics.confidenceScore, average(checks.map((check) => lockScore(check.status)))]))
+  );
+
+  return {
+    id: `pilot-evidence-lock-${lockScoreValue}-${readiness}`,
+    lockScore: lockScoreValue,
+    readiness,
+    headline:
+      readiness === "buyer-ready"
+        ? "対象ユーザー、回収日数、買い手反論、公開証拠が導入判断としてロック済みです。"
+        : readiness === "pilot-locked"
+          ? "導入価値の主要証拠は揃っています。watch項目を審査前に補強します。"
+          : readiness === "needs-pilot-proof"
+            ? "導入採算の主張には、追加の初回利用または買い手反論証拠が必要です。"
+            : "導入判断に耐えないblocked証拠があります。",
+    targetBuyer: "ハッカソン提出者 / 小規模DevOpsチーム / Platform-SRE",
+    valueClaim: `${unitEconomics.paybackDays}日回収、月${unitEconomics.monthlyValueYen.toLocaleString("ja-JP")}円相当、${userPilot.timeToValueSeconds}秒で初回価値到達。`,
+    proofScript: [
+      "User Pilotで3 personaのfirst-run pathを見せる。",
+      "Pilot Economicsでpayback daysとmonthly valueを開く。",
+      "Buyer objectionsで既存ツール、ROI、安全性、導入摩擦に答える。",
+      "Release DriftとAcceptance Matrixで公開証拠を再検証する。"
+    ],
+    checks
   };
 }
 
@@ -389,6 +531,15 @@ export function buildPilotEconomics(input: {
           }
         ])
   ];
+  const evidenceLock = buildPilotEvidenceLock({
+    posture,
+    economicsScore,
+    unitEconomics,
+    userPilot,
+    pilotPlan,
+    buyerObjections,
+    metrics
+  });
 
   return {
     id: `pilot-economics-${economicsScore}-${posture}`,
@@ -397,6 +548,7 @@ export function buildPilotEconomics(input: {
     verdict,
     hardTruth,
     unitEconomics,
+    evidenceLock,
     metrics,
     pricingLanes,
     pilotPlan,
@@ -407,6 +559,11 @@ export function buildPilotEconomics(input: {
       skill: "pilot.economics",
       posture,
       economicsScore,
+      evidenceLock: {
+        lockScore: evidenceLock.lockScore,
+        readiness: evidenceLock.readiness,
+        checks: evidenceLock.checks.map((check) => ({ id: check.id, status: check.status, evidenceRoute: check.evidenceRoute }))
+      },
       unitEconomics,
       pricing: pricingLanes.map((lane) => ({
         id: lane.id,

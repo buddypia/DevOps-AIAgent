@@ -5508,6 +5508,15 @@ app.post("/a2a", async (req, res) => {
                   id: pilotEconomics.id,
                   economicsScore: pilotEconomics.economicsScore,
                   posture: pilotEconomics.posture,
+                  evidenceLock: {
+                    lockScore: pilotEconomics.evidenceLock.lockScore,
+                    readiness: pilotEconomics.evidenceLock.readiness,
+                    checks: pilotEconomics.evidenceLock.checks.map((check) => ({
+                      id: check.id,
+                      status: check.status,
+                      evidenceRoute: check.evidenceRoute
+                    }))
+                  },
                   paybackDays: pilotEconomics.unitEconomics.paybackDays,
                   monthlyValueYen: pilotEconomics.unitEconomics.monthlyValueYen,
                   pilotCostYen: pilotEconomics.unitEconomics.pilotCostYen,

@@ -4578,6 +4578,42 @@ function PilotEconomicsPanel({
             </div>
           </div>
 
+          <div className="economics-evidence-lock">
+            <section>
+              <div>
+                <span
+                  className={cx(
+                    "risk-chip",
+                    economics.evidenceLock.readiness === "buyer-ready"
+                      ? "low"
+                      : economics.evidenceLock.readiness === "blocked"
+                        ? "high"
+                        : "medium"
+                  )}
+                >
+                  {economics.evidenceLock.readiness}
+                </span>
+                <strong>{economics.evidenceLock.lockScore}</strong>
+              </div>
+              <h3>Pilot Evidence Lock</h3>
+              <p>{economics.evidenceLock.valueClaim}</p>
+              <small>{economics.evidenceLock.targetBuyer}</small>
+            </section>
+            <div>
+              {economics.evidenceLock.checks.map((check) => (
+                <article key={check.id} className={check.status}>
+                  <div>
+                    <strong>{check.label}</strong>
+                    <span>{check.status}</span>
+                  </div>
+                  <p>{check.acceptance}</p>
+                  <small>{check.proof}</small>
+                  <b>{check.evidenceRoute}</b>
+                </article>
+              ))}
+            </div>
+          </div>
+
           <div className="economics-unit">
             <article>
               <span>Monthly value</span>

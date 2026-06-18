@@ -59,7 +59,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Agent Task Boardで、`task.delegate` を目的、検収条件、proof URL付きのA2A `message/send` payloadとして見せる
 - Security Sentinel Reviewで、Secret Manager、IP allowlist、Zod入力制限、A2A信頼境界、CIを審査員向け安全性証拠にする
 - Impact Caseで、対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性・体験価値の証拠にする
-- Pilot Economicsで、導入費用、回収日数、価格レーン、買い手の反論を投資判断の証拠にする
+- Pilot Economicsで、導入費用、回収日数、価格レーン、買い手の反論、Pilot Evidence Lockを投資判断の証拠にする
 - Submission Launch Gateで、ProtoPedia作品URLと動画URLを入力し、提出3点、タグ、本文、CI、証拠receiptを最終判定する
 - Mission Controlで、AIが弱点を検出し、A2A委任、検証runbook、提出パックを生成した証跡を見せる
 - Ops Drillで、Cloud Run公開デモの稼働シグナルから継続・ロールバック・追加雇用を判断する
