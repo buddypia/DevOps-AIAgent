@@ -58,6 +58,7 @@
   - `submission.launch`
   - `security.review`
   - `impact.case`
+  - `pilot.economics`
   - `demo.runway`
   - `win.autopilot`
   - `ops.drill`
@@ -161,10 +162,10 @@
 
 ## Acceptance Matrix Surface
 
-- `POST /api/acceptance-matrix`: 必須技術、審査5項目、競合/SWOT、公開証拠、Release Drift、提出物、Demo Receiptを通常13行の受入表へ束ねる
-- Rows: Cloud Run、Google AI、A2A中心性、競合/SWOT、Moat反論、User Pilot、Impact、Implementation、Live Evidence、Release Drift、Security、Submission assets、Demo Receiptをaccepted/watch/blockedで返す
+- `POST /api/acceptance-matrix`: 必須技術、審査5項目、競合/SWOT、公開証拠、Release Drift、提出物、Demo Receiptを最大14行の受入表へ束ねる
+- Rows: Cloud Run、Google AI、A2A中心性、競合/SWOT、Moat反論、User Pilot、Impact、Pilot Economics、Implementation、Live Evidence、Release Drift、Security、Submission assets、Demo Receiptをaccepted/watch/blockedで返す
 - Verdict: blockedがあれば `not-accepted`、外部URLなどwatchだけなら `accepted-with-external-gaps`、全行acceptedなら `ready-to-submit`
-- Digest: row statuses、Judge Proof digest、Demo Receipt digestからsha256を作り、質疑で同じ受入状態を照合する
+- Digest: row statuses、Judge Proof digest、Demo Receipt digest、Pilot Economics postureからsha256を作り、質疑で同じ受入状態を照合する
 - A2A payload: `acceptance.matrix` skillとしてacceptance score、verdict、row statuses、next actions、endpointを返す
 
 ## Autonomy Ledger Surface
@@ -198,6 +199,14 @@
 - Personas: 開発リード、Platform/SRE、ハッカソン提出者ごとのpain、workflow win、KPI、proofを返す
 - Workflow: sense -> buy -> delegate -> operate -> submit のbefore/afterを、A2A Market Broker、Contract Desk、Autonomy Ledger、Cloud Run SRE、Gemini Strategistへ割り当てる
 - A2A payload: `impact.case` skillとしてimpact score、posture、saved hours、runtime risk、submission confidence、next impact hireを返す
+
+## Pilot Economics Surface
+
+- `POST /api/pilot-economics`: Impact Case、User Pilot、Contract Desk、Ops Drill、Security Reviewを使い、導入費用、回収日数、価格レーン、買い手の反論を返す
+- Unit economics: saved hours、assumed hourly cost、monthly value、pilot cost、payback days、confidence scoreを固定する
+- Pricing lanes: 2-week pilot、team retainer、procurement deskを価格、対象買い手、受入条件つきで返す
+- Buyer objections: 既存ツールで十分、ROI仮説、安全性、初回利用の4反論に証拠付きで答える
+- A2A payload: `pilot.economics` skillとしてeconomics score、posture、unit economics、pricing、pilot plan、buyer objectionsを返す
 
 ## Contract Surface
 
@@ -259,6 +268,7 @@
 - Submission launch proof: `submission.launch` skillとして、外部URL入力後のsubmit-ready判定と提出フォーム用packetをA2A payloadにも含める
 - Security review proof: `security.review` skillとして、Secret/IP/input/A2A/CIの安全境界をA2A payloadにも含める
 - Impact proof: `impact.case` skillとして、実用性の定量指標、ユーザー別KPI、導入計画をA2A payloadにも含める
+- Pilot economics proof: `pilot.economics` skillとして、導入費用、回収日数、価格レーン、買い手の反論をA2A payloadにも含める
 - Judge tour proof: `judge.tour` skillとして、審査員が開く順番、反論、証拠リンク、外部URLギャップをA2A payloadにも含める
 - User pilot proof: `user.pilot` skillとして、開発リード、Platform/SRE、提出者のfirst-run usabilityをA2A payloadにも含める
 - Squad optimizer proof: `squad.optimize` skillとして、予算制約下の自律編成判断、coverage gap、funding stepをA2A payloadにも含める
@@ -294,6 +304,7 @@
 - Submission launch: `/api/submission-launch`
 - Security review: `/api/security-review`
 - Impact case: `/api/impact-case`
+- Pilot economics: `/api/pilot-economics`
 - Ops drill: `/api/ops-drill`
 - Contracts: `/api/contracts`
 - Publisher: `/api/publisher`
@@ -312,5 +323,5 @@
 - AIエージェントが価値の中心: 市場探索、購入判断、競合反論の証拠選択、予算内の編成最適化、A2A委任、ライブ証拠監視、release drift検知、審査デモreceipt、受入表、自律ミッション、運用ドリル、Gemini分析が体験の中心
 - 課題アプローチ: AIを作るだけでなく、必要なAI能力を発見・調達・運用する問題を扱う
 - ユーザビリティ: 数値・価格・改善量・競合/SWOTに加え、Judge Tour、Squad Optimizer、User Pilot Labで審査員と実利用者の最初の導線まで意思決定できる
-- 実用性: 開発現場のエージェント選定、DevOps改善、公開後の異常検知とrollback判断に加え、Impact CaseとJudge Tourで時間短縮、提出信頼度、ユーザー別KPI、審査説明順を説明可能
+- 実用性: 開発現場のエージェント選定、DevOps改善、公開後の異常検知とrollback判断に加え、Impact Case、Pilot Economics、Judge Tourで時間短縮、提出信頼度、回収日数、価格レーン、審査説明順を説明可能
 - 実装力: React、Gemini API、A2A Agent Card、Cloud Run、戦略API、ミッションAPI、ライブ証拠プローブ、release drift検知、sha256 receipt、acceptance digest、フォールバック、テストを含む

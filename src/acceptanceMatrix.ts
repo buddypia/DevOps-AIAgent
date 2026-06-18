@@ -4,6 +4,7 @@ import type { JudgeDemoReceipt } from "./demoReceipt.js";
 import type { ImpactCase } from "./impact.js";
 import type { MarketIntelReport } from "./marketIntel.js";
 import type { MvpAuditGate, MvpAuditReport } from "./mvpAudit.js";
+import type { PilotEconomics } from "./pilotEconomics.js";
 import type { JudgeProof } from "./proof.js";
 import type { ReleaseDriftGuard } from "./releaseDrift.js";
 import type { SecurityReview } from "./security.js";
@@ -142,6 +143,7 @@ export function buildJudgeAcceptanceMatrix(input: {
   proof: JudgeProof;
   userPilot: UserPilotLab;
   impactCase: ImpactCase;
+  pilotEconomics: PilotEconomics;
   securityReview: SecurityReview;
   demoReceipt: JudgeDemoReceipt;
   releaseDrift?: ReleaseDriftGuard;
@@ -247,6 +249,26 @@ export function buildJudgeAcceptanceMatrix(input: {
       nextAction: input.impactCase.nextImpactHire ? `${input.impactCase.nextImpactHire.name}を追加して実用性を補強する` : "Impact CaseをProtoPedia本文へ転記する"
     }),
     row({
+      id: "pilot-economics",
+      label: "Pilot economics",
+      area: "judge",
+      status:
+        input.pilotEconomics.posture === "investment-ready"
+          ? "accepted"
+          : input.pilotEconomics.posture === "needs-pilot-proof"
+            ? "watch"
+            : "blocked",
+      score: input.pilotEconomics.economicsScore,
+      requirement: "実用性・体験価値: 導入費用、回収日数、買い手の反論、価格レーンを説明できること",
+      evidence: input.pilotEconomics.hardTruth,
+      proofUrl: absoluteUrl(base, "/api/pilot-economics"),
+      nextAction:
+        input.pilotEconomics.posture === "investment-ready"
+          ? `Pilot Economicsの${input.pilotEconomics.unitEconomics.paybackDays}日paybackを提出ストーリーへ入れる`
+          : input.pilotEconomics.nextActions[0]?.action ??
+            `Pilot Economicsの${input.pilotEconomics.unitEconomics.paybackDays}日paybackを提出ストーリーへ入れる`
+    }),
+    row({
       id: "implementation-quality",
       label: "Implementation proof",
       area: "proof",
@@ -325,6 +347,7 @@ export function buildJudgeAcceptanceMatrix(input: {
     rows: rows.map((item) => ({ id: item.id, status: item.status, score: item.score })),
     proofDigest: input.proof.receipt.digest,
     demoReceiptDigest: input.demoReceipt.digest.digest,
+    pilotEconomicsPosture: input.pilotEconomics.posture,
     releaseDriftVerdict: input.releaseDrift?.verdict ?? "not-checked"
   };
   const acceptanceDigest = digest(payload);
@@ -348,6 +371,7 @@ export function buildJudgeAcceptanceMatrix(input: {
       { id: "mvp", label: "MVP band", value: input.mvpAudit.band, proof: input.mvpAudit.verdict },
       { id: "win", label: "Win readiness", value: input.autopilot.readiness, proof: `${input.autopilot.lanes.length} lanes / ${input.autopilot.winScore}` },
       { id: "brief", label: "Judge brief", value: input.marketIntel.status, proof: `${input.marketIntel.sources.length} sources` },
+      { id: "economics", label: "Pilot economics", value: input.pilotEconomics.posture, proof: `${input.pilotEconomics.unitEconomics.paybackDays}d payback` },
       ...(input.releaseDrift
         ? [{ id: "release", label: "Release drift", value: input.releaseDrift.verdict, proof: `${input.releaseDrift.observedSkillCount}/${input.releaseDrift.expectedSkillCount} skills` }]
         : []),
@@ -356,7 +380,8 @@ export function buildJudgeAcceptanceMatrix(input: {
     digest: {
       algorithm: "sha256",
       digest: acceptanceDigest,
-      verification: "Recompute sha256 over acceptanceScore, verdict, row statuses, Judge Proof digest, Demo Receipt digest, and Release Drift verdict."
+      verification:
+        "Recompute sha256 over acceptanceScore, verdict, row statuses, Judge Proof digest, Demo Receipt digest, Pilot Economics posture, and Release Drift verdict."
     },
     a2aPayload: {
       method: "message/send",
@@ -371,6 +396,7 @@ export function buildJudgeAcceptanceMatrix(input: {
         acceptanceMatrix: absoluteUrl(base, "/api/acceptance-matrix"),
         mvpAudit: absoluteUrl(base, "/api/mvp-audit"),
         winRun: absoluteUrl(base, "/api/win-run"),
+        pilotEconomics: absoluteUrl(base, "/api/pilot-economics"),
         releaseDrift: absoluteUrl(base, "/api/release-drift"),
         demoReceipt: absoluteUrl(base, "/api/demo-receipt")
       }

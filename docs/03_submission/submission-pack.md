@@ -49,6 +49,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Autonomy Ledgerで、市場探索、判断、契約、A2A委任、検証、運用、提出を検収可能なAI自律性台帳として見せる
 - Security Sentinel Reviewで、Secret Manager、IP allowlist、Zod入力制限、A2A信頼境界、CIを審査員向け安全性証拠にする
 - Impact Caseで、対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性・体験価値の証拠にする
+- Pilot Economicsで、導入費用、回収日数、価格レーン、買い手の反論を投資判断の証拠にする
 - Submission Launch Gateで、ProtoPedia作品URLと動画URLを入力し、提出3点、タグ、本文、CI、証拠receiptを最終判定する
 - Mission Controlで、AIが弱点を検出し、A2A委任、検証runbook、提出パックを生成した証跡を見せる
 - Ops Drillで、Cloud Run公開デモの稼働シグナルから継続・ロールバック・追加雇用を判断する
@@ -85,6 +86,7 @@ React UI
   -> Autonomy Ledger agent centrality audit
   -> Security Sentinel Review
   -> Impact Case
+  -> Pilot Economics
   -> Submission Launch Gate
   -> Ops Drill / Cloud Run runbook
   -> Judge Proof bundle
@@ -112,7 +114,7 @@ React UI
 | 15-18s | Release Drift Guardで提出URLが最新skill surfaceか、古いrevisionならdeploy-driftかを見せる |
 | 18-20s | Judge Demo Receiptでstamp、外部URLwatch、sha256 digestを控える |
 | 20-23s | Judge Acceptance Matrixで必須技術、審査5項目、公開証拠、提出物のaccepted/watchを見せる |
-| 23-25s | Security Sentinel Review、Impact Case、Submission Launch Gate、Judge Proofで安全境界、実用性KPI、外部URL、Gemini/Cloud Run/A2A/CI/DevOpsの証拠束を見せる |
+| 23-25s | Security Sentinel Review、Impact Case、Pilot Economics、Submission Launch Gate、Judge Proofで安全境界、実用性KPI、payback、外部URL、Gemini/Cloud Run/A2A/CI/DevOpsの証拠束を見せる |
 | 25-27s | Submission DossierでProtoPedia本文、提出リンク、録画順、最終チェックを見せる |
 | 27-28s | Marketplace、Winning Strategy、Mission、Opsで必要能力、SWOT、A2A委任、運用判断を見せる |
 | 28-30s | Cloud Run URL、GitHub Actions、Agent Card、構成図で締める |
@@ -169,6 +171,9 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/security-review \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/impact-case \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/pilot-economics \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/submission-launch \

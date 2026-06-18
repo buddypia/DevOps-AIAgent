@@ -25,6 +25,7 @@ import { buildMissionRun } from "../src/mission.js";
 import { buildMoatStressTest } from "../src/moatStress.js";
 import { buildMvpAudit } from "../src/mvpAudit.js";
 import { buildOpsDrill } from "../src/ops.js";
+import { buildPilotEconomics } from "../src/pilotEconomics.js";
 import { buildPitchRun } from "../src/pitch.js";
 import { buildJudgeProof } from "../src/proof.js";
 import { buildProtoPediaPublisher } from "../src/publisher.js";
@@ -273,6 +274,12 @@ function agentCard(baseUrl: string) {
         name: "Build practical value impact case",
         description: "対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性・体験価値の証拠へ変換する。",
         tags: ["impact", "practicality", "user-value", "roi", "judge-score"]
+      },
+      {
+        id: "pilot.economics",
+        name: "Build pilot economics and buyer proof",
+        description: "時間短縮、導入費用、回収日数、価格レーン、買い手の反論を投資判断の証拠へ変換する。",
+        tags: ["pilot", "economics", "roi", "pricing", "buyer-objection"]
       },
       {
         id: "ops.drill",
@@ -1532,9 +1539,18 @@ app.post("/api/live-evidence", async (req, res) => {
         const hasReceipt = skills.some((skill) => skill.id === "demo.receipt");
         const hasAcceptance = skills.some((skill) => skill.id === "acceptance.matrix");
         const hasReleaseDrift = skills.some((skill) => skill.id === "release.drift");
-        return hasEvidence && hasOptimizer && hasMoat && hasReceipt && hasAcceptance && hasReleaseDrift && skills.length >= 32
-          ? { status: "passed", score: 100, evidence: `Agent Card exposes ${skills.length} skills including release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.` }
-          : { status: "watch", score: 72, evidence: `Agent Card exposes ${skills.length} skills; expected release drift, acceptance, receipt, moat, live evidence, and optimizer skills.` };
+        const hasPilotEconomics = skills.some((skill) => skill.id === "pilot.economics");
+        return hasEvidence && hasOptimizer && hasMoat && hasReceipt && hasAcceptance && hasReleaseDrift && hasPilotEconomics && skills.length >= 33
+          ? {
+              status: "passed",
+              score: 100,
+              evidence: `Agent Card exposes ${skills.length} skills including pilot.economics, release.drift, acceptance.matrix, demo.receipt, moat.stress, evidence.monitor, and squad.optimize.`
+            }
+          : {
+              status: "watch",
+              score: 72,
+              evidence: `Agent Card exposes ${skills.length} skills; expected pilot economics, release drift, acceptance, receipt, moat, live evidence, and optimizer skills.`
+            };
       }
     }),
     liveJsonProbe({
@@ -1575,9 +1591,20 @@ app.post("/api/live-evidence", async (req, res) => {
       },
       evaluate: (payload) => {
         const data = (payload as { result?: { artifacts?: Array<{ parts?: Array<{ data?: Record<string, unknown> }> }> } }).result?.artifacts?.[0]?.parts?.[0]?.data;
-        return data?.squadOptimizerEndpoint && data?.liveEvidenceEndpoint && data?.moatStressEndpoint && data?.demoReceiptEndpoint && data?.acceptanceMatrixEndpoint && data?.releaseDriftEndpoint
-          ? { status: "passed", score: 100, evidence: "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, and releaseDriftEndpoint." }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
+        return data?.squadOptimizerEndpoint &&
+          data?.liveEvidenceEndpoint &&
+          data?.moatStressEndpoint &&
+          data?.demoReceiptEndpoint &&
+          data?.acceptanceMatrixEndpoint &&
+          data?.releaseDriftEndpoint &&
+          data?.pilotEconomicsEndpoint
+          ? {
+              status: "passed",
+              score: 100,
+              evidence:
+                "A2A artifact exposes squadOptimizerEndpoint, liveEvidenceEndpoint, moatStressEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, and pilotEconomicsEndpoint."
+            }
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -1609,7 +1636,7 @@ async function buildReleaseDriftForTarget(input: {
   const currentBaseUrl = input.currentBaseUrl.replace(/\/$/, "");
   const targetBaseUrl = input.targetBaseUrl.replace(/\/$/, "");
   const expectedSkillIds = agentCard(currentBaseUrl).skills.map((skill) => skill.id);
-  const requiredSkillIds = ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "win.autopilot"];
+  const requiredSkillIds = ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics", "win.autopilot"];
   let observedSkillIds: string[] = [];
 
   const [healthProbe, cardProbe, acceptanceProbe, a2aProbe, ci] = await Promise.all([
@@ -1665,7 +1692,7 @@ async function buildReleaseDriftForTarget(input: {
       },
       evaluate: (payload) => {
         const body = payload as { verdict?: string; rows?: unknown[]; a2aPayload?: { skill?: string } };
-        return body.a2aPayload?.skill === "acceptance.matrix" && Array.isArray(body.rows) && body.rows.length >= 12
+        return body.a2aPayload?.skill === "acceptance.matrix" && Array.isArray(body.rows) && body.rows.length >= 13
           ? { status: "passed", score: 100, evidence: `Acceptance Matrix returned ${body.verdict}; ${body.rows.length} rows.` }
           : { status: "missing", score: 24, evidence: "Acceptance Matrix endpoint did not return the current acceptance.matrix JSON payload." };
       }
@@ -1686,9 +1713,9 @@ async function buildReleaseDriftForTarget(input: {
       },
       evaluate: (payload) => {
         const data = (payload as { result?: { artifacts?: Array<{ parts?: Array<{ data?: Record<string, unknown> }> }> } }).result?.artifacts?.[0]?.parts?.[0]?.data;
-        return data?.releaseDriftEndpoint && data?.acceptanceMatrixEndpoint && data?.demoReceiptEndpoint
-          ? { status: "passed", score: 100, evidence: "A2A artifact exposes releaseDriftEndpoint, acceptanceMatrixEndpoint, and demoReceiptEndpoint." }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but release drift/acceptance/receipt endpoints are not all visible." };
+        return data?.releaseDriftEndpoint && data?.acceptanceMatrixEndpoint && data?.demoReceiptEndpoint && data?.pilotEconomicsEndpoint
+          ? { status: "passed", score: 100, evidence: "A2A artifact exposes releaseDriftEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, and pilotEconomicsEndpoint." }
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -1868,6 +1895,15 @@ app.post("/api/acceptance-matrix", async (req, res) => {
     securityReview,
     squadContract
   });
+  const pilotEconomics = buildPilotEconomics({
+    recommendation,
+    strategy,
+    impactCase,
+    userPilot,
+    squadContract,
+    opsDrill,
+    securityReview
+  });
   const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
   const squadOptimizer = buildSquadOptimizer({
     projectBrief: parsed.data.projectBrief,
@@ -1901,6 +1937,7 @@ app.post("/api/acceptance-matrix", async (req, res) => {
       proof,
       userPilot,
       impactCase,
+      pilotEconomics,
       securityReview,
       demoReceipt,
       releaseDrift
@@ -2140,6 +2177,50 @@ app.post("/api/impact-case", async (req, res) => {
     geminiSecretConfigured: geminiSecretConfigured()
   });
   res.json(buildImpactCase({ recommendation, strategy, opsDrill, securityReview }));
+});
+
+app.post("/api/pilot-economics", async (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const mission = buildMissionRun(recommendation, strategy, "導入費用、回収日数、価格レーン、買い手の反論をpilot economicsとして検証する。");
+  const opsDrill = buildOpsDrill(recommendation, strategy);
+  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
+  const ci = await fetchCiProof();
+  const securityReview = buildSecurityReview({
+    baseUrl: publicBaseUrl(req),
+    recommendation,
+    strategy,
+    allowlist: ipAllowlistSummary,
+    ci,
+    geminiSecretConfigured: geminiSecretConfigured()
+  });
+  const impactCase = buildImpactCase({ recommendation, strategy, opsDrill, securityReview });
+  const userPilot = buildUserPilotLab({
+    recommendation,
+    strategy,
+    impactCase,
+    opsDrill,
+    securityReview,
+    squadContract
+  });
+
+  res.json(
+    buildPilotEconomics({
+      recommendation,
+      strategy,
+      impactCase,
+      userPilot,
+      squadContract,
+      opsDrill,
+      securityReview
+    })
+  );
 });
 
 app.post("/api/contracts", (req, res) => {
@@ -2464,6 +2545,15 @@ app.post("/a2a", (req, res) => {
     securityReview,
     squadContract
   });
+  const pilotEconomics = buildPilotEconomics({
+    recommendation,
+    strategy,
+    impactCase,
+    userPilot,
+    squadContract,
+    opsDrill,
+    securityReview
+  });
   const squadOptimizer = buildSquadOptimizer({
     projectBrief: String(text),
     selectedAgentIds: recommendation.selected.map((agent) => agent.id),
@@ -2649,6 +2739,23 @@ app.post("/a2a", (req, res) => {
                     button: click.button
                   }))
                 },
+                pilotEconomics: {
+                  id: pilotEconomics.id,
+                  economicsScore: pilotEconomics.economicsScore,
+                  posture: pilotEconomics.posture,
+                  paybackDays: pilotEconomics.unitEconomics.paybackDays,
+                  monthlyValueYen: pilotEconomics.unitEconomics.monthlyValueYen,
+                  pilotCostYen: pilotEconomics.unitEconomics.pilotCostYen,
+                  pricingLanes: pilotEconomics.pricingLanes.map((lane) => ({
+                    id: lane.id,
+                    priceYen: lane.priceYen,
+                    status: lane.status
+                  })),
+                  buyerObjections: pilotEconomics.buyerObjections.map((objection) => ({
+                    id: objection.id,
+                    status: objection.status
+                  }))
+                },
                 squadOptimizer: {
                   id: squadOptimizer.id,
                   optimizerScore: squadOptimizer.optimizerScore,
@@ -2812,6 +2919,7 @@ app.post("/a2a", (req, res) => {
                 submissionLaunchEndpoint: `${publicBaseUrl(req)}/api/submission-launch`,
                 securityReviewEndpoint: `${publicBaseUrl(req)}/api/security-review`,
                 impactCaseEndpoint: `${publicBaseUrl(req)}/api/impact-case`,
+                pilotEconomicsEndpoint: `${publicBaseUrl(req)}/api/pilot-economics`,
                 userPilotEndpoint: `${publicBaseUrl(req)}/api/user-pilot`,
                 squadOptimizerEndpoint: `${publicBaseUrl(req)}/api/squad-optimizer`,
                 liveEvidenceEndpoint: `${publicBaseUrl(req)}/api/live-evidence`,

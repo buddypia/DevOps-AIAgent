@@ -48,6 +48,7 @@ import type { MissionRun } from "./mission";
 import type { MoatStressTest } from "./moatStress";
 import type { MvpAuditReport } from "./mvpAudit";
 import type { OpsDrill } from "./ops";
+import type { PilotEconomics } from "./pilotEconomics";
 import type { PitchRun } from "./pitch";
 import type { JudgeProof } from "./proof";
 import type { ProtoPediaPublisher } from "./publisher";
@@ -88,6 +89,10 @@ function scoreTone(value: number) {
   if (value >= 88) return "elite";
   if (value >= 74) return "solid";
   return "quiet";
+}
+
+function yen(value: number) {
+  return `¥${value.toLocaleString("ja-JP")}`;
 }
 
 function CapabilityBar({ label, value }: { label: string; value: number }) {
@@ -2476,6 +2481,194 @@ function ImpactCasePanel({
   );
 }
 
+function PilotEconomicsPanel({
+  recommendation,
+  projectBrief
+}: {
+  recommendation: Recommendation;
+  projectBrief: string;
+}) {
+  const [economics, setEconomics] = useState<PilotEconomics | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function runPilotEconomics() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/pilot-economics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectBrief,
+          selectedAgentIds: recommendation.selected.map((agent) => agent.id)
+        })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setEconomics((await response.json()) as PilotEconomics);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="pilot-economics">
+      <div className="economics-heading">
+        <div>
+          <span className="eyebrow">Buyer proof</span>
+          <h2>
+            <Coins size={20} />
+            Pilot Economics
+          </h2>
+        </div>
+        <button className="icon-button" onClick={runPilotEconomics} disabled={loading} title="導入費用と回収仮説を検証">
+          <Activity size={17} />
+          {loading ? "Calculating" : "Build pilot economics"}
+        </button>
+      </div>
+
+      {error && <p className="error-text">Pilot economics request failed: {error}</p>}
+
+      {economics ? (
+        <div className="economics-body">
+          <div className="economics-summary">
+            <div>
+              <span
+                className={cx(
+                  "risk-chip",
+                  economics.posture === "investment-ready" ? "low" : economics.posture === "needs-pilot-proof" ? "medium" : "high"
+                )}
+              >
+                {economics.posture}
+              </span>
+              <h3>{economics.verdict}</h3>
+              <p>{economics.hardTruth}</p>
+            </div>
+            <div className="economics-score">
+              <strong>{economics.economicsScore}</strong>
+              <span>economics score</span>
+            </div>
+          </div>
+
+          <div className="economics-unit">
+            <article>
+              <span>Monthly value</span>
+              <strong>{yen(economics.unitEconomics.monthlyValueYen)}</strong>
+              <p>{economics.unitEconomics.savedHoursPerCycle}h saved per cycle at {yen(economics.unitEconomics.assumedHourlyCostYen)} / h</p>
+            </article>
+            <article>
+              <span>Pilot cost</span>
+              <strong>{yen(economics.unitEconomics.pilotCostYen)}</strong>
+              <p>Contract Desk scope, selected AI budget, and acceptance overhead.</p>
+            </article>
+            <article>
+              <span>Payback</span>
+              <strong>{economics.unitEconomics.paybackDays} days</strong>
+              <p>Conservative pilot model; not a guaranteed financial forecast.</p>
+            </article>
+            <article>
+              <span>Confidence</span>
+              <strong>{economics.unitEconomics.confidenceScore}</strong>
+              <p>Impact, User Pilot, Contract, Ops, Security, and judge criteria.</p>
+            </article>
+          </div>
+
+          <div className="economics-metrics">
+            {economics.metrics.map((metric) => (
+              <article key={metric.id} className={metric.status}>
+                <span>{metric.status}</span>
+                <strong>{metric.label}</strong>
+                <p>
+                  {metric.unit === "yen" ? yen(metric.value) : metric.value} {metric.unit !== "yen" ? metric.unit : ""}
+                </p>
+                <small>{metric.evidence}</small>
+              </article>
+            ))}
+          </div>
+
+          <div className="economics-grid">
+            <section>
+              <h3>
+                <Coins size={15} />
+                Pricing lanes
+              </h3>
+              <div className="economics-pricing">
+                {economics.pricingLanes.map((lane) => (
+                  <article key={lane.id} className={lane.status}>
+                    <div>
+                      <strong>{lane.label}</strong>
+                      <span>{yen(lane.priceYen)}</span>
+                    </div>
+                    <p>{lane.targetBuyer}</p>
+                    <small>{lane.acceptance}</small>
+                    <b>{lane.includes.join(" / ")}</b>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <Rocket size={15} />
+                Pilot plan
+              </h3>
+              <div className="economics-plan">
+                {economics.pilotPlan.map((step) => (
+                  <article key={step.id} className={step.status}>
+                    <div>
+                      <strong>{step.horizon}</strong>
+                      <span>{step.status}</span>
+                    </div>
+                    <p>{step.action}</p>
+                    <small>{step.successMetric}</small>
+                    <b>{step.proof}</b>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>
+                <AlertTriangle size={15} />
+                Buyer objections
+              </h3>
+              <div className="economics-objections">
+                {economics.buyerObjections.map((objection) => (
+                  <article key={objection.id} className={objection.status}>
+                    <div>
+                      <strong>{objection.objection}</strong>
+                      <span>{objection.status}</span>
+                    </div>
+                    <p>{objection.answer}</p>
+                    <small>{objection.evidence}</small>
+                  </article>
+                ))}
+              </div>
+              <div className="economics-actions">
+                {economics.nextActions.map((action) => (
+                  <article key={action.id} className={action.priority}>
+                    <span>{action.priority}</span>
+                    <strong>{action.owner}</strong>
+                    <p>{action.action}</p>
+                    <small>{action.proof}</small>
+                  </article>
+                ))}
+              </div>
+              <pre>{JSON.stringify(economics.a2aPayload, null, 2)}</pre>
+            </section>
+          </div>
+        </div>
+      ) : (
+        <div className="economics-empty">
+          <Coins size={28} />
+          <strong>Build pilot economicsで、導入費用、回収日数、価格レーン、買い手の反論を投資判断の証拠にします。</strong>
+          <p>Impact CaseのKPIを、審査員が「これなら試す理由がある」と判断できるpilot investment caseへ変換します。</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function MarketIntelPanel({
   recommendation,
   projectBrief
@@ -4632,6 +4825,7 @@ export default function App() {
       <AutonomyLedgerPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SecurityReviewPanel recommendation={recommendation} projectBrief={projectBrief} />
       <ImpactCasePanel recommendation={recommendation} projectBrief={projectBrief} />
+      <PilotEconomicsPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MarketIntelPanel recommendation={recommendation} projectBrief={projectBrief} />
       <MvpAuditPanel recommendation={recommendation} projectBrief={projectBrief} />
       <SubmissionLaunchPanel recommendation={recommendation} projectBrief={projectBrief} />

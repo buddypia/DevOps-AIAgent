@@ -15,6 +15,7 @@ import { buildMissionRun } from "../src/mission";
 import { buildMoatStressTest } from "../src/moatStress";
 import { buildMvpAudit } from "../src/mvpAudit";
 import { buildOpsDrill } from "../src/ops";
+import { buildPilotEconomics } from "../src/pilotEconomics";
 import { buildPitchRun } from "../src/pitch";
 import { buildJudgeProof } from "../src/proof";
 import type { CiProof } from "../src/proof";
@@ -142,6 +143,15 @@ function fixture() {
     securityReview,
     squadContract
   });
+  const pilotEconomics = buildPilotEconomics({
+    recommendation,
+    strategy,
+    impactCase,
+    userPilot,
+    squadContract,
+    opsDrill,
+    securityReview
+  });
   const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
   const squadOptimizer = buildSquadOptimizer({
     projectBrief: DEFAULT_PROJECT_BRIEF,
@@ -166,6 +176,7 @@ function fixture() {
     proof,
     userPilot,
     impactCase,
+    pilotEconomics,
     securityReview,
     demoReceipt
   };
@@ -180,7 +191,7 @@ describe("judge acceptance matrix", () => {
 
     expect(matrix.acceptanceScore).toBeGreaterThanOrEqual(84);
     expect(matrix.verdict).toBe("accepted-with-external-gaps");
-    expect(matrix.rows).toHaveLength(12);
+    expect(matrix.rows).toHaveLength(13);
     expect(matrix.rows.map((row) => row.id)).toEqual(
       expect.arrayContaining([
         "cloud-run-required",
@@ -190,6 +201,7 @@ describe("judge acceptance matrix", () => {
         "moat-rebuttal",
         "usability-first-run",
         "practical-impact",
+        "pilot-economics",
         "implementation-quality",
         "live-public-proof",
         "security-boundary",
@@ -204,6 +216,7 @@ describe("judge acceptance matrix", () => {
     expect(matrix.rows.find((row) => row.id === "competitive-swot")?.evidence).toContain("SWOT");
     expect(matrix.rows.find((row) => row.id === "submission-assets")?.status).toBe("watch");
     expect(matrix.rows.find((row) => row.id === "demo-receipt")?.status).toBe("watch");
+    expect(matrix.rows.find((row) => row.id === "pilot-economics")?.status).toBe("accepted");
     expect(matrix.nextActions.map((action) => action.id)).toEqual(expect.arrayContaining(["submission-assets", "demo-receipt"]));
     expect(matrix.digest.digest).toMatch(/^[a-f0-9]{64}$/);
     expect(matrix.a2aPayload).toMatchObject({
@@ -211,7 +224,8 @@ describe("judge acceptance matrix", () => {
       skill: "acceptance.matrix",
       verdict: "accepted-with-external-gaps",
       endpoints: {
-        acceptanceMatrix: `${SUBMISSION_PROOF.deployedUrl}/api/acceptance-matrix`
+        acceptanceMatrix: `${SUBMISSION_PROOF.deployedUrl}/api/acceptance-matrix`,
+        pilotEconomics: `${SUBMISSION_PROOF.deployedUrl}/api/pilot-economics`
       }
     });
   });
@@ -221,16 +235,16 @@ describe("judge acceptance matrix", () => {
     const releaseDrift = buildReleaseDriftGuard({
       currentBaseUrl: "http://127.0.0.1:8090",
       targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
-      expectedSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift"],
+      expectedSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics"],
       observedSkillIds: ["evidence.monitor"],
-      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift"],
+      requiredSkillIds: ["evidence.monitor", "demo.receipt", "acceptance.matrix", "release.drift", "pilot.economics"],
       probes: [
         passedDriftProbe("target-health"),
         {
           ...passedDriftProbe("agent-card-skill-surface"),
           status: "watch",
           score: 58,
-          evidence: "Target Agent Card exposes 29/32 skills."
+          evidence: "Target Agent Card exposes 29/33 skills."
         },
         {
           ...passedDriftProbe("acceptance-endpoint"),
@@ -254,7 +268,7 @@ describe("judge acceptance matrix", () => {
     });
 
     expect(matrix.verdict).toBe("not-accepted");
-    expect(matrix.rows).toHaveLength(13);
+    expect(matrix.rows).toHaveLength(14);
     expect(matrix.rows.find((row) => row.id === "release-drift")).toMatchObject({
       status: "blocked",
       score: releaseDrift.driftScore
