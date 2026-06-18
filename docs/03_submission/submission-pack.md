@@ -198,6 +198,7 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/release-drift \
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/deploy-recovery \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"targetUrl":"https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app"}'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/deploy-recovery | rg 'Deploy Recovery|Copy/Paste Commands'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/demo-receipt \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"protopediaUrl":"https://protopedia.net/prototype/999999","videoUrl":"https://youtu.be/demo1234567"}'
@@ -287,7 +288,7 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - ProtoPedia Quality Lock: run `POST /api/publisher` or `POST /api/submission-closeout` and confirm `qualityLock` / `protopediaQualityLock` is `copy-locked` before publishing the work page
 - Publication Policy Lock: run `POST /api/publisher` or `POST /api/submission-closeout` and confirm `policyLock` / `protopediaPolicyLock` is `prototype-copy-locked`; after publishing the video URL it should become `publication-ready`
 - Video Proof Lock: run `POST /api/submission-closeout` and use the `videoProofLock` checks before publishing the video URL
-- Public Judge Snapshot: open `GET /judge-snapshot` first; it should link directly to Competitive SWOT、Autonomy Snapshot、MVP Readiness、Pilot Value、Recording Script、Architecture Pack、Submission Launch、Submission Assets、Winner Proof Packet without requiring POST APIs
+- Public Judge Snapshot: open `GET /judge-snapshot` first; it should link directly to Competitive SWOT、Autonomy Snapshot、MVP Readiness、Deploy Recovery、Pilot Value、Recording Script、Architecture Pack、Submission Launch、Submission Assets、Winner Proof Packet without requiring POST APIs
 - Recording Script page: open `GET /recording-script` before recording and use the chapter order, lower thirds, proof URLs, and publish steps as the teleprompter
 - Submission Dry Run Lock: run `POST /api/submission-closeout` and confirm `dryRunLock.readiness` is `submit-dry-run-ready` before recording; after publishing ProtoPedia/video URLs it should become `submit-dry-run-sealed`
 - System architecture diagram: `public/assets/a2a-marketplace-architecture.svg`

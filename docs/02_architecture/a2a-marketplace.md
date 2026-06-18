@@ -130,10 +130,10 @@
 
 ## Public Judge Snapshot Surface
 
-- `GET /judge-snapshot`: Judge Proof、Competitive Battlecard、Criteria Duel、Competitive SWOT、Autonomy Snapshot、MVP Readiness、Pilot Value、Recording Script、Architecture Pack、Submission Launch、Submission Assets、Agent Card、CI、深掘り用POST curlを、審査員が直接読める初回HTML証拠ページへ束ねる
+- `GET /judge-snapshot`: Judge Proof、Competitive Battlecard、Criteria Duel、Competitive SWOT、Autonomy Snapshot、MVP Readiness、Deploy Recovery、Pilot Value、Recording Script、Architecture Pack、Submission Launch、Submission Assets、Agent Card、CI、深掘り用POST curlを、審査員が直接読める初回HTML証拠ページへ束ねる
 - `GET /api/judge-snapshot`: 同じ証拠をA2A/自動検証用のJSONとして返す
-- Judge First-Click Strip: Cloud Runトップ画面直下で `/judge-snapshot`、`/winner-packet`、`/objection-arena`、`/competitive-swot`、`/mvp-readiness`、`/autonomy-snapshot`、`/pilot-value`、`/recording-script`、`/architecture-pack`、`/submission-launch`、`/submission-assets` をPOSTなしの証拠入口として固定し、Agent Cardの `judge.first-click` / `first-click-route-lock` とA2A artifactの `firstClickProof` で自動検収する
-- First-Click Smoke Lock: `/api/first-click-smoke` と `/first-click-smoke` が11本のGET証拠ページに固有title sentinelが含まれるかを検査し、SPA fallbackの200を `smoke-failed` として検出する
+- Judge First-Click Strip: Cloud Runトップ画面直下で `/judge-snapshot`、`/winner-packet`、`/objection-arena`、`/competitive-swot`、`/mvp-readiness`、`/deploy-recovery`、`/autonomy-snapshot`、`/pilot-value`、`/recording-script`、`/architecture-pack`、`/submission-launch`、`/submission-assets` をPOSTなしの証拠入口として固定し、Agent Cardの `judge.first-click` / `first-click-route-lock` とA2A artifactの `firstClickProof` で自動検収する
+- First-Click Smoke Lock: `/api/first-click-smoke` と `/first-click-smoke` が12本のGET証拠ページに固有title sentinelが含まれるかを検査し、SPA fallbackの200を `smoke-failed` として検出する
 - Direct-open proof: ProtoPediaや提出本文に貼ったリンクが、POST method errorや生JSONではなくreadiness、proof score、競合/SWOT証拠、運用証拠を返す
 - Live drift option: `/api/judge-snapshot?live=1` の時だけRelease Drift Guardを実行し、通常HTMLは初回表示の安定性を優先する
 - A2A payload: `judge.snapshot` skillとしてdirectOpen、readiness、proof score、Criteria Duel score、GET証拠endpoint群、POST深掘りendpoint群を返す
@@ -286,17 +286,19 @@
 
 ## Release Drift Surface
 
-- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Feature Freeze Lock tag、Winner Release Lock tag、Objection Lock tag、First-Click Smoke Lock tag、Finalist Release Drift tag、Criteria Duel tag、GET Proof Snapshot tag、Recording Script tag、Submission Launch tag、Architecture Pack tag、Pilot Value tag、Acceptance Matrix、A2A artifactを返しているかを検査する
-- Drift probes: target health、Agent Card skill surface、Acceptance Matrix endpoint、MVP Readiness endpoint、Recording Script endpoint、Architecture Pack endpoint、Submission Launch endpoint、Pilot Value endpoint、Objection Arena endpoint、First-Click Smoke endpoint、A2A artifact endpoints、latest main CIを同時に評価する
+- `POST /api/release-drift`: 提出用Cloud Run URLが最新mainのAgent Card、Recording Lock tag、Feature Freeze Lock tag、Winner Release Lock tag、Objection Lock tag、First-Click Smoke Lock tag、Finalist Release Drift tag、Criteria Duel tag、GET Proof Snapshot tag、Recording Script tag、Submission Launch tag、Architecture Pack tag、Pilot Value tag、Deploy Recovery GET Proof tag、Acceptance Matrix、A2A artifactを返しているかを検査する
+- Drift probes: target health、Agent Card skill surface、Acceptance Matrix endpoint、MVP Readiness endpoint、Recording Script endpoint、Architecture Pack endpoint、Submission Launch endpoint、Pilot Value endpoint、Objection Arena endpoint、First-Click Smoke endpoint、Deploy Recovery page、A2A artifact endpoints、latest main CIを同時に評価する
 - Verdict: 最新なら `release-current`、公開URLが古いなら `deploy-drift`、health/CIが落ちたら `release-blocked`
 - Runbook: `gcloud auth login`、Cloud Build submit、Agent Card skill count、MVP Readiness、Recording Script、Pilot Value、Acceptance Matrix、A2A artifactの再確認コマンドを返す
 - A2A payload: `release.drift` skillとしてdrift score、missing skills、redeploy action、target endpointを返す
 
 ## Deploy Recovery Surface
 
-- `POST /api/deploy-recovery`: Release Drift Guardの結果と直近gcloudエラーを、再デプロイ復旧計画に変換する
+- `GET /deploy-recovery`: Release Drift Guardの結果と直近gcloudエラーを、審査員が直接読める復旧証拠HTMLに変換する
+- `GET /api/deploy-recovery`: 同じ復旧計画をA2A/自動検証用JSONとして返す
+- `POST /api/deploy-recovery`: project brief、選択agent、target URL、直近gcloudエラーを受け取り、再デプロイ復旧計画に変換する
 - Checks: target health、skill surface、Cloud Build auth、A2A artifact、latest main CIをready/watch/blockedで返す
-- Commands: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Recording Lock / Feature Freeze Lock / Winner Release Lock / Finalist Release Drift / Criteria Duel / GET Proof Snapshot / MVP Readiness Snapshot / Recording Script / Pilot Value のrequired signal tags、`/api/mvp-readiness`、`/api/recording-script`、`/api/pilot-value`、`/api/deploy-recovery`、A2A `recordingScriptPageEndpoint` / `pilotValueSnapshotEndpoint` / `deployRecoveryEndpoint` の再検証コマンドを返す
+- Commands: `gcloud auth login`、Cloud Build submit、Agent Card skill count、Recording Lock / Feature Freeze Lock / Winner Release Lock / Finalist Release Drift / Criteria Duel / GET Proof Snapshot / MVP Readiness Snapshot / Recording Script / Pilot Value / Deploy Recovery のrequired signal tags、`/api/mvp-readiness`、`/api/recording-script`、`/api/pilot-value`、`/deploy-recovery`、`/api/deploy-recovery`、A2A `recordingScriptPageEndpoint` / `pilotValueSnapshotEndpoint` / `deployRecoveryEndpoint` / `deployRecoveryPageEndpoint` の再検証コマンドを返す
 - A2A payload: `deploy.recover` skillとしてrecovery score、readiness、blocking commands、blockersを返す
 
 ## Demo Receipt Surface
@@ -436,7 +438,7 @@
 - `POST /api/live-evidence`: 公開URL、Agent Card、A2A、Optimizer、CIをライブ検証する
 - `POST /api/external-evidence`: 公開GitHub、Cloud Run、ProtoPedia、動画URLの外部到達性を検証する
 - `POST /api/release-drift`: 提出用Cloud Run URLが最新revisionかを検査する
-- `POST /api/deploy-recovery`: release driftとgcloud認証失敗をCloud Run復旧計画へ変換する
+- `GET /deploy-recovery` / `GET /api/deploy-recovery` / `POST /api/deploy-recovery`: release driftとgcloud認証失敗をCloud Run復旧計画へ変換する
 - `POST /api/demo-receipt`: 審査デモのstamp、外部URL状態、sha256 digestを検収票として返す
 - `POST /api/acceptance-matrix`: 必須技術、審査5項目、公開証拠、提出物を受入表として返す
 - `POST /api/task-board`: `task.delegate` の委任先、目的、検収条件、A2A payload、receiptを返す
@@ -527,7 +529,7 @@
 - Live evidence: `/api/live-evidence`
 - External evidence: `/api/external-evidence`
 - Release drift: `/api/release-drift`
-- Deploy recovery: `/api/deploy-recovery`
+- Deploy recovery: `/deploy-recovery` and `/api/deploy-recovery`
 - Demo receipt: `/api/demo-receipt`
 - Acceptance matrix: `/api/acceptance-matrix`
 - Autonomy ledger: `/api/autonomy-ledger`

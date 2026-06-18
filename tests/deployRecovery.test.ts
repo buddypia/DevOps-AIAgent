@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { buildDeployRecoveryPlan } from "../src/deployRecovery";
+import { buildDeployRecoveryPlan, renderDeployRecoveryHtml } from "../src/deployRecovery";
 import { buildReleaseDriftGuard, type ReleaseDriftProbe } from "../src/releaseDrift";
 import { SUBMISSION_PROOF } from "../src/submission";
 
@@ -105,12 +105,25 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "verify-autonomy-snapshot")?.command).toContain("/api/autonomy-snapshot");
     expect(plan.commands.find((command) => command.id === "verify-recording-script")?.command).toContain("/api/recording-script");
     expect(plan.commands.find((command) => command.id === "verify-pilot-value")?.command).toContain("/api/pilot-value");
+    expect(plan.commands.find((command) => command.id === "verify-recovery-page")?.command).toContain("/deploy-recovery");
     expect(plan.commands.find((command) => command.id === "verify-recovery-endpoint")?.command).toContain("/api/deploy-recovery");
+    expect(plan.commands.find((command) => command.id === "verify-a2a-artifact")?.command).toContain("deployRecoveryPageEndpoint");
     expect(plan.blockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["gcloud-auth", "agent-card-skill-surface"]));
     expect(plan.a2aPayload).toMatchObject({
       skill: "deploy.recover",
-      readiness: "manual-auth-required"
+      readiness: "manual-auth-required",
+      pageEndpoint: "http://localhost:8080/deploy-recovery"
     });
+
+    const html = renderDeployRecoveryHtml({
+      ...plan,
+      hardTruth: "<script>alert('deploy')</script>"
+    });
+    expect(html).toContain("Deploy Recovery");
+    expect(html).toContain("Copy/Paste Commands");
+    expect(html).toContain("10-Minute Recovery Steps");
+    expect(html).toContain("&lt;script&gt;alert(&#39;deploy&#39;)&lt;/script&gt;");
+    expect(html).not.toContain("<script>alert('deploy')</script>");
   });
 
   test("marks recovery complete when release drift is current", () => {

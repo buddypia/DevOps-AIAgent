@@ -55,7 +55,8 @@ const requiredAgentCardSignals = [
   "recording.script:tag:get-proof",
   "submission.launch:tag:get-proof",
   "submission.package:tag:get-proof",
-  "pilot.value.snapshot:tag:get-proof"
+  "pilot.value.snapshot:tag:get-proof",
+  "deploy.recover:tag:get-proof"
 ];
 
 const passedProbe = (id: string): ReleaseDriftProbe => ({
@@ -168,7 +169,7 @@ describe("release drift guard", () => {
           ...passedProbe("agent-card-skill-surface"),
           status: "watch",
           score: 58,
-          evidence: "Target Agent Card exposes all skill ids but is missing autonomy.snapshot:tag:get-proof, competitive.battlecard:tag:criteria-duel, competitive.battlecard:tag:win-loss-lock, competitive.snapshot:tag:get-proof, judge.first-click-smoke:tag:first-click-smoke-lock, judge.first-click:tag:first-click-route-lock, judge.objection-arena:tag:objection-lock, judge.snapshot:tag:get-proof, mvp.snapshot:tag:get-proof, recording.script:tag:get-proof, submission.launch:tag:get-proof, submission.package:tag:get-proof, and pilot.value.snapshot:tag:get-proof."
+          evidence: "Target Agent Card exposes all skill ids but is missing autonomy.snapshot:tag:get-proof, competitive.battlecard:tag:criteria-duel, competitive.battlecard:tag:win-loss-lock, competitive.snapshot:tag:get-proof, deploy.recover:tag:get-proof, judge.first-click-smoke:tag:first-click-smoke-lock, judge.first-click:tag:first-click-route-lock, judge.objection-arena:tag:objection-lock, judge.snapshot:tag:get-proof, mvp.snapshot:tag:get-proof, recording.script:tag:get-proof, submission.launch:tag:get-proof, submission.package:tag:get-proof, and pilot.value.snapshot:tag:get-proof."
         },
         passedProbe("acceptance-endpoint"),
         passedProbe("a2a-artifact"),
@@ -183,6 +184,7 @@ describe("release drift guard", () => {
       "competitive.battlecard:tag:criteria-duel",
       "competitive.battlecard:tag:win-loss-lock",
       "competitive.snapshot:tag:get-proof",
+      "deploy.recover:tag:get-proof",
       "judge.first-click-smoke:tag:first-click-smoke-lock",
       "judge.first-click:tag:first-click-route-lock",
       "judge.objection-arena:tag:objection-lock",
@@ -194,13 +196,15 @@ describe("release drift guard", () => {
       "submission.package:tag:get-proof",
       "winner.packet:tag:get-proof"
     ]);
-    expect(guard.summary).toContain("0 required skills and 14 required Agent Card signals");
+    expect(guard.summary).toContain("0 required skills and 15 required Agent Card signals");
     expect(guard.runbook.join("\n")).toContain('or .id=="autonomy.snapshot" or .id=="recording.script" or .id=="submission.launch"');
+    expect(guard.runbook.join("\n")).toContain('or .id=="deploy.recover"');
     expect(guard.runbook.join("\n")).toContain("/api/mvp-readiness");
     expect(guard.runbook.join("\n")).toContain("/api/autonomy-snapshot");
     expect(guard.runbook.join("\n")).toContain("/api/recording-script");
     expect(guard.runbook.join("\n")).toContain("/api/submission-launch");
     expect(guard.runbook.join("\n")).toContain("/api/pilot-value");
+    expect(guard.runbook.join("\n")).toContain("/deploy-recovery");
     expect(guard.a2aPayload).toMatchObject({
       skill: "release.drift",
       verdict: "deploy-drift",
@@ -209,6 +213,7 @@ describe("release drift guard", () => {
         "competitive.battlecard:tag:criteria-duel",
         "competitive.battlecard:tag:win-loss-lock",
         "competitive.snapshot:tag:get-proof",
+        "deploy.recover:tag:get-proof",
         "judge.first-click-smoke:tag:first-click-smoke-lock",
         "judge.first-click:tag:first-click-route-lock",
         "judge.objection-arena:tag:objection-lock",

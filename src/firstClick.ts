@@ -84,6 +84,14 @@ export const FIRST_CLICK_PROOF_LINKS: FirstClickProofLink[] = [
     tone: "ready"
   },
   {
+    id: "deploy-recovery",
+    label: "Deploy Recovery",
+    href: "/deploy-recovery",
+    signal: "cloud-run-recovery",
+    judgeValue: "公開Cloud Runが古い時のgcloud認証、Cloud Build、Agent Card、A2A再検証手順を確認する。",
+    tone: "watch"
+  },
+  {
     id: "autonomy-snapshot",
     label: "Autonomy Snapshot",
     href: "/autonomy-snapshot",
@@ -137,7 +145,7 @@ export const FIRST_CLICK_SCORECARDS: FirstClickScorecard[] = [
   {
     id: "no-post-first",
     label: "No POST required",
-    value: "11 GET links",
+    value: "12 GET links",
     proof: "初回審査はcurlやJSONを知らなくても主要証拠に到達できる。"
   },
   {

@@ -239,6 +239,14 @@ export function buildDeployRecoveryPlan(input: {
       blocking: false
     },
     {
+      id: "verify-recovery-page",
+      label: "Verify recovery proof page",
+      command: `curl -s ${targetBaseUrl}/deploy-recovery | rg 'Deploy Recovery|Copy/Paste Commands'`,
+      why: "Deploy Recoveryの審査員向けGET証拠ページが公開revisionに載ったことを確認します。",
+      copyGroup: "verify",
+      blocking: false
+    },
+    {
       id: "verify-recovery-endpoint",
       label: "Verify recovery endpoint",
       command: `curl -s -X POST ${targetBaseUrl}/api/deploy-recovery -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}' | jq '{readiness, recoveryScore}'`,
@@ -249,8 +257,8 @@ export function buildDeployRecoveryPlan(input: {
     {
       id: "verify-a2a-artifact",
       label: "Verify A2A endpoint",
-      command: `curl -s -X POST ${targetBaseUrl}/a2a -H 'Content-Type: application/json' --data '{"method":"message/send","params":{"text":"A2A Cloud Run Gemini DevOps"}}' | jq '.result.artifacts[0].parts[0].data.deployRecoveryEndpoint'`,
-      why: "A2A artifactがDeploy Recovery endpointを公開しているかを確認します。",
+      command: `curl -s -X POST ${targetBaseUrl}/a2a -H 'Content-Type: application/json' --data '{"method":"message/send","params":{"text":"A2A Cloud Run Gemini DevOps"}}' | jq '.result.artifacts[0].parts[0].data | {deployRecoveryEndpoint, deployRecoveryPageEndpoint}'`,
+      why: "A2A artifactがDeploy Recovery APIとGET証拠ページを公開しているかを確認します。",
       copyGroup: "verify",
       blocking: false
     }
@@ -323,7 +331,7 @@ export function buildDeployRecoveryPlan(input: {
     `Release drift: ${input.releaseDrift.observedSkillCount}/${input.releaseDrift.expectedSkillCount} skills, ${input.releaseDrift.verdict}.`,
     `Agent Card signals: missing ${input.releaseDrift.missingAgentCardSignals.join(", ") || "none"}.`,
     `Auth: ${authBlocked ? "manual gcloud auth login required" : "no auth failure provided"}.`,
-    `After deploy: verify Agent Card count, /api/mvp-readiness, /api/autonomy-snapshot, /api/recording-script, /api/pilot-value, /api/deploy-recovery, and A2A autonomySnapshot/recordingScript/pilotValue/deployRecovery endpoints.`
+    `After deploy: verify Agent Card count, /api/mvp-readiness, /api/autonomy-snapshot, /api/recording-script, /api/pilot-value, /deploy-recovery, /api/deploy-recovery, and A2A autonomySnapshot/recordingScript/pilotValue/deployRecovery endpoints.`
   ];
 
   return {
@@ -353,7 +361,147 @@ export function buildDeployRecoveryPlan(input: {
       },
       commands: commands.map((command) => ({ id: command.id, copyGroup: command.copyGroup, blocking: command.blocking })),
       blockers: blockers.map((blocker) => ({ id: blocker.id, priority: blocker.priority, action: blocker.action })),
-      endpoint: `${baseUrl}/api/deploy-recovery`
+      endpoint: `${baseUrl}/api/deploy-recovery`,
+      pageEndpoint: `${baseUrl}/deploy-recovery`
     }
   };
+}
+
+function escapeHtml(value: unknown) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function tone(status: string) {
+  if (["recovered", "ready", "passed"].includes(status)) return "good";
+  if (["blocked", "missing", "manual-auth-required"].includes(status)) return "bad";
+  return "watch";
+}
+
+export function renderDeployRecoveryHtml(plan: DeployRecoveryPlan) {
+  const metrics = [
+    { label: "Readiness", value: plan.readiness, status: plan.readiness },
+    { label: "Recovery Score", value: plan.recoveryScore, status: plan.readiness },
+    { label: "Blocking Commands", value: plan.commands.filter((command) => command.blocking).length, status: plan.commands.some((command) => command.blocking) ? "blocked" : "ready" },
+    { label: "Blockers", value: plan.blockers.length, status: plan.blockers.length > 0 ? "blocked" : "ready" }
+  ]
+    .map(
+      (metric) => `
+        <article class="metric ${tone(String(metric.status))}">
+          <span>${escapeHtml(metric.label)}</span>
+          <strong>${escapeHtml(metric.value)}</strong>
+        </article>`
+    )
+    .join("");
+  const checks = plan.checks
+    .map(
+      (check) => `
+        <article class="card ${tone(check.status)}">
+          <div><strong>${escapeHtml(check.label)}</strong><span>${escapeHtml(check.status)}</span></div>
+          <p>${escapeHtml(check.evidence)}</p>
+        </article>`
+    )
+    .join("");
+  const commands = plan.commands
+    .map(
+      (command) => `
+        <article class="command ${command.blocking ? "bad" : tone(command.copyGroup)}">
+          <div><strong>${escapeHtml(command.label)}</strong><span>${escapeHtml(command.copyGroup)}${command.blocking ? " / blocking" : ""}</span></div>
+          <p>${escapeHtml(command.why)}</p>
+          <code>${escapeHtml(command.command)}</code>
+        </article>`
+    )
+    .join("");
+  const steps = plan.steps
+    .map(
+      (step) => `
+        <tr>
+          <td><strong>${escapeHtml(step.window)}</strong><span>${escapeHtml(step.status)}</span></td>
+          <td>${escapeHtml(step.owner)}</td>
+          <td>${escapeHtml(step.action)}</td>
+          <td>${escapeHtml(step.verify)}</td>
+        </tr>`
+    )
+    .join("");
+  const blockers =
+    plan.blockers.length === 0
+      ? "<li>No active deploy blockers.</li>"
+      : plan.blockers
+          .map((blocker) => `<li><strong>${escapeHtml(blocker.id)}</strong> ${escapeHtml(blocker.action)} <small>${escapeHtml(blocker.proof)}</small></li>`)
+          .join("");
+  const script = plan.judgeScript.map((line) => `<li>${escapeHtml(line)}</li>`).join("");
+
+  return `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Deploy Recovery</title>
+    <style>
+      :root { color-scheme: light; --ink: #17201d; --muted: #5f6965; --line: #dce5df; --paper: #fbfcfa; --panel: #fff; --green: #13715d; --mint: #e6f4ed; --amber: #8a620d; --amber-bg: #fff4d4; --coral: #b24735; --coral-bg: #fff0ec; --blue: #245c99; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; }
+      a { color: inherit; }
+      header, main, footer { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
+      header { padding: 40px 0 20px; }
+      .eyebrow { color: var(--green); font-size: .78rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0; }
+      h1 { margin: 8px 0 10px; font-size: clamp(2rem, 5vw, 4.2rem); line-height: 1; letter-spacing: 0; max-width: 980px; }
+      h2 { margin: 28px 0 10px; font-size: 1.12rem; }
+      p { color: var(--muted); }
+      .metrics, .grid { display: grid; gap: 12px; }
+      .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 22px; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metric, .card, .command, .panel { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 16px; box-shadow: 0 10px 24px rgba(23, 32, 29, .06); min-width: 0; }
+      .metric span, .card span, .command span { color: var(--muted); font-size: .74rem; font-weight: 900; text-transform: uppercase; }
+      .metric strong { display: block; margin-top: 6px; font-size: 1.45rem; overflow-wrap: anywhere; }
+      .card div, .command div { display: flex; gap: 12px; justify-content: space-between; align-items: start; }
+      .card strong, .card p, .command strong, .command p, code, td, li { overflow-wrap: anywhere; }
+      code { display: block; white-space: pre-wrap; padding: 10px; border-radius: 8px; background: #17201d; color: #eef8f4; font-size: .78rem; }
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      th, td { text-align: left; border-bottom: 1px solid var(--line); padding: 10px 8px; vertical-align: top; }
+      th { font-size: .78rem; text-transform: uppercase; color: var(--muted); }
+      td span, li small { display: block; color: var(--muted); font-size: .78rem; }
+      .good { border-color: #a9d8c2; background: var(--mint); }
+      .watch { border-color: #ead39a; background: var(--amber-bg); }
+      .bad { border-color: #efb7aa; background: var(--coral-bg); }
+      ol, ul { margin: 8px 0 0; padding-left: 20px; }
+      footer { padding: 20px 0 40px; color: var(--muted); }
+      @media (max-width: 860px) { .metrics, .grid { grid-template-columns: 1fr; } .card div, .command div { display: block; } table, thead, tbody, tr, th, td { display: block; } thead { display: none; } tr { border-top: 1px solid var(--line); padding: 8px 0; } td { border-bottom: 0; padding: 8px 0; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="eyebrow">Deploy Recovery</div>
+      <h1>${escapeHtml(plan.headline)}</h1>
+      <p>${escapeHtml(plan.hardTruth)}</p>
+      <section class="metrics">${metrics}</section>
+    </header>
+    <main>
+      <section class="panel ${tone(plan.readiness)}">
+        <h2>Primary Action</h2>
+        <p>${escapeHtml(plan.primaryAction)}</p>
+      </section>
+      <h2>Recovery Checks</h2>
+      <section class="grid">${checks}</section>
+      <h2>Copy/Paste Commands</h2>
+      <section class="grid">${commands}</section>
+      <h2>10-Minute Recovery Steps</h2>
+      <section class="panel">
+        <table>
+          <thead><tr><th>Window</th><th>Owner</th><th>Action</th><th>Verify</th></tr></thead>
+          <tbody>${steps}</tbody>
+        </table>
+      </section>
+      <h2>Blockers</h2>
+      <section class="panel bad"><ul>${blockers}</ul></section>
+      <h2>Judge Script</h2>
+      <section class="panel"><ol>${script}</ol></section>
+    </main>
+    <footer>${escapeHtml(plan.id)} / A2A skill deploy.recover</footer>
+  </body>
+</html>`;
 }
