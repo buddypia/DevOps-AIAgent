@@ -2200,6 +2200,12 @@ app.post("/api/judge-command-center", async (req, res) => {
     submissionLaunch
   });
   const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
+  const competitiveBattlecard = buildCompetitiveBattlecard({
+    baseUrl,
+    strategy,
+    marketIntel,
+    moatStress
+  });
   const squadOptimizer = buildSquadOptimizer({
     projectBrief: parsed.data.projectBrief,
     selectedAgentIds: parsed.data.selectedAgentIds,
@@ -2241,6 +2247,7 @@ app.post("/api/judge-command-center", async (req, res) => {
       baseUrl,
       acceptance,
       autopilot,
+      competitiveBattlecard,
       judgeTour,
       pilotEconomics,
       releaseDrift
@@ -2906,6 +2913,7 @@ app.post("/a2a", (req, res) => {
     baseUrl: publicBaseUrl(req),
     acceptance,
     autopilot: winAutopilot,
+    competitiveBattlecard,
     judgeTour,
     pilotEconomics
   });

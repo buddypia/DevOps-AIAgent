@@ -1892,7 +1892,7 @@ function CompetitiveBattlecardPanel({
   }
 
   return (
-    <section className="battlecard-panel">
+    <section id="competitive-battlecard" className="battlecard-panel">
       <div className="battle-heading">
         <div>
           <span className="eyebrow">Competitive battlecard</span>

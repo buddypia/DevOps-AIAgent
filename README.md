@@ -20,7 +20,7 @@
 - Competitive Battlecard: 公式ソース、SWOT、競合反論、証拠routeを競合別の審査回答カードに束ねる
 - MVP Audit: 必須技術、審査5項目、DevOps証拠、提出3点をハードゲートで判定し、外部未発行URLをwatchとして残す
 - Judge Brief: 競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページに圧縮
-- Judge Command Center: Judge Tour、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
+- Judge Command Center: Judge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
 - Judge Tour: Judge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
 - User Pilot Lab: 開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証し、摩擦と次クリックを出す
 - Squad Optimizer: 予算内のAI編成を総当たりし、審査スコア、必須技術カバレッジ、交換計画、追加予算ギャップを返す
@@ -100,11 +100,11 @@
 
 ## Judge Command Center
 
-`Judge Command Center` は、初見の審査員が機能一覧で迷う問題を避けるための司令塔です。Judge Tour、Acceptance Matrix、Release Drift Guard、Pilot Economics、Win Autopilotを1画面に集約し、最初に押す証拠、90秒タイムライン、残ブロッカー、A2A `judge.command` payloadを返します。公開Cloud Runが古いrevisionなら、良いローカル実装でも審査員には未実装に見えるため `blocked` として止めます。
+`Judge Command Center` は、初見の審査員が機能一覧で迷う問題を避けるための司令塔です。Judge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift Guard、Pilot Economics、Win Autopilotを1画面に集約し、最初に押す証拠、90秒タイムライン、残ブロッカー、A2A `judge.command` payloadを返します。公開Cloud Runが古いrevisionなら、良いローカル実装でも審査員には未実装に見えるため `blocked` として止めます。
 
 - API: `POST /api/judge-command-center`
 - App UI: `Build command center`
-- Output: command score、readiness、proof buttons、90秒timeline、blockers、judge script、A2A `judge.command` payload
+- Output: command score、readiness、Battlecard readiness、proof buttons、90秒timeline、blockers、judge script、A2A `judge.command` payload
 
 ## Judge Tour
 

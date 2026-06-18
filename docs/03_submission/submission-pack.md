@@ -39,7 +39,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Moat Stress Testで、ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsからの反論を先に受け、証拠付き回答と録画順を表示する
 - MVP Auditで、必須技術、審査5項目、DevOps証拠、提出3点をpass/watch/failで監査し、外部未発行URLを合格扱いにしない
 - Judge Briefで、競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページにまとめる
-- Judge Command Centerで、Judge Tour、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
+- Judge Command Centerで、Judge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
 - Judge Tourで、Judge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
 - User Pilot Labで、開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証する
 - Squad Optimizerで、予算内のAI編成を総当たりし、現行維持、交換、追加予算ギャップを判断する

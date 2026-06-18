@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine";
 import { buildJudgeAcceptanceMatrix } from "../src/acceptanceMatrix";
 import { buildWinningAutopilot } from "../src/autopilot";
+import { buildCompetitiveBattlecard } from "../src/competitiveBattlecard";
 import { buildSquadContract } from "../src/contracts";
 import { buildJudgeDemoReceipt } from "../src/demoReceipt";
 import { buildDemoRunway } from "../src/demoRunway";
@@ -186,6 +187,7 @@ function fixture(options: { staleRelease?: boolean } = {}) {
     submissionLaunch
   });
   const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
+  const competitiveBattlecard = buildCompetitiveBattlecard({ baseUrl, strategy, marketIntel, moatStress });
   const squadOptimizer = buildSquadOptimizer({
     projectBrief: DEFAULT_PROJECT_BRIEF,
     selectedAgentIds,
@@ -248,29 +250,38 @@ function fixture(options: { staleRelease?: boolean } = {}) {
     baseUrl,
     acceptance,
     autopilot,
+    competitiveBattlecard,
     judgeTour,
     pilotEconomics,
     releaseDrift
   });
-  return { command };
+  return { command, competitiveBattlecard };
 }
 
 describe("judge command center", () => {
   test("summarizes the first judge path when only external submission URLs are missing", () => {
-    const { command } = fixture();
+    const { command, competitiveBattlecard } = fixture();
 
     expect(command.readiness).toBe("external-gaps");
     expect(command.commandScore).toBeGreaterThanOrEqual(88);
-    expect(command.metrics.map((metric) => metric.id)).toEqual(["acceptance", "win", "tour", "economics", "release"]);
+    expect(command.metrics.map((metric) => metric.id)).toEqual(["acceptance", "win", "tour", "battlecard", "economics", "release"]);
     expect(command.proofButtons.map((button) => button.id)).toEqual([
       "judge-tour",
       "acceptance-matrix",
       "release-drift",
+      "competitive-battlecard",
       "pilot-economics",
       "win-autopilot"
     ]);
-    expect(command.timeline).toHaveLength(5);
+    expect(command.timeline).toHaveLength(6);
     expect(command.openingMove).toContain("Judge Tour");
+    expect(command.openingMove).toContain("Competitive Battlecard");
+    expect(command.a2aPayload).toMatchObject({
+      competitiveBattlecard: {
+        battleScore: competitiveBattlecard.battleScore,
+        readiness: competitiveBattlecard.readiness
+      }
+    });
     expect(command.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "judge.command",

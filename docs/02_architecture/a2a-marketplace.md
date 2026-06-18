@@ -25,7 +25,7 @@
 17. `src/proof.ts` がGemini、Cloud Run、A2A、競合/SWOT、Mission、Ops、提出URLを審査証拠束にまとめる
 18. `src/judgeBrief.ts` が競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員向け1ページに圧縮する
 19. `src/judgeTour.ts` がJudge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
-20. `src/judgeCommandCenter.ts` がJudge Tour、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
+20. `src/judgeCommandCenter.ts` がJudge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる
 21. `src/userPilot.ts` が開発リード、Platform/SRE、提出者の初回利用導線、摩擦、次クリックを検証する
 22. `src/squadOptimizer.ts` が予算内のAI編成を総当たりし、必須技術カバレッジ、交換計画、追加予算ギャップを返す
 23. `src/liveEvidence.ts` が公開Cloud Run、Agent Card、A2A、Squad Optimizer、CIのライブ証拠をスコア化する
@@ -128,8 +128,8 @@
 
 ## Judge Command Center Surface
 
-- `POST /api/judge-command-center`: Judge Tour、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを初回審査導線の司令塔に束ねる
-- Proof buttons: 90秒導線、MVP受入表、公開revision、導入採算、勝ち筋判定の5証拠へ移動できる
+- `POST /api/judge-command-center`: Judge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを初回審査導線の司令塔に束ねる
+- Proof buttons: 90秒導線、競合回答、MVP受入表、公開revision、導入採算、勝ち筋判定の6証拠へ移動できる
 - Blockers: 公開Cloud Runのrevision drift、受入表blocked、外部提出URLwatchをowner付きの次アクションへ変換する
 - A2A payload: `judge.command` skillとしてcommand score、readiness、metrics、proof buttons、blockersを返す
 
@@ -299,7 +299,7 @@
 - Security review proof: `security.review` skillとして、Secret/IP/input/A2A/CIの安全境界をA2A payloadにも含める
 - Impact proof: `impact.case` skillとして、実用性の定量指標、ユーザー別KPI、導入計画をA2A payloadにも含める
 - Pilot economics proof: `pilot.economics` skillとして、導入費用、回収日数、価格レーン、買い手の反論をA2A payloadにも含める
-- Judge command proof: `judge.command` skillとして、最初の90秒で押す証拠、公開revision drift、MVP受入状態、導入採算、残ブロッカーをA2A payloadにも含める
+- Judge command proof: `judge.command` skillとして、最初の90秒で押す証拠、Competitive Battlecard、公開revision drift、MVP受入状態、導入採算、残ブロッカーをA2A payloadにも含める
 - Judge tour proof: `judge.tour` skillとして、審査員が開く順番、反論、証拠リンク、外部URLギャップをA2A payloadにも含める
 - User pilot proof: `user.pilot` skillとして、開発リード、Platform/SRE、提出者のfirst-run usabilityをA2A payloadにも含める
 - Squad optimizer proof: `squad.optimize` skillとして、予算制約下の自律編成判断、coverage gap、funding stepをA2A payloadにも含める

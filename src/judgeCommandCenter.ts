@@ -1,5 +1,6 @@
 import type { JudgeAcceptanceMatrix } from "./acceptanceMatrix.js";
 import type { WinningAutopilotRun } from "./autopilot.js";
+import type { CompetitiveBattlecard } from "./competitiveBattlecard.js";
 import type { JudgeTour } from "./judgeTour.js";
 import type { PilotEconomics } from "./pilotEconomics.js";
 import type { ReleaseDriftGuard } from "./releaseDrift.js";
@@ -81,16 +82,23 @@ function statusFromScore(score: number): CommandCenterStatus {
 function readinessFrom(input: {
   acceptance: JudgeAcceptanceMatrix;
   autopilot: WinningAutopilotRun;
+  competitiveBattlecard: CompetitiveBattlecard;
   judgeTour: JudgeTour;
   releaseDrift?: ReleaseDriftGuard;
 }): CommandCenterReadiness {
   if (input.releaseDrift && input.releaseDrift.verdict !== "release-current") return "blocked";
-  if (input.acceptance.verdict === "not-accepted" || input.autopilot.readiness === "needs-build" || input.judgeTour.readiness === "needs-fix") {
+  if (
+    input.acceptance.verdict === "not-accepted" ||
+    input.autopilot.readiness === "needs-build" ||
+    input.competitiveBattlecard.readiness === "exposed" ||
+    input.judgeTour.readiness === "needs-fix"
+  ) {
     return "blocked";
   }
   if (
     input.acceptance.verdict === "accepted-with-external-gaps" ||
     input.autopilot.readiness === "external-gaps" ||
+    input.competitiveBattlecard.readiness === "needs-proof" ||
     input.judgeTour.readiness === "external-url-gaps"
   ) {
     return "external-gaps";
@@ -127,15 +135,16 @@ export function buildJudgeCommandCenter(input: {
   baseUrl: string;
   acceptance: JudgeAcceptanceMatrix;
   autopilot: WinningAutopilotRun;
+  competitiveBattlecard: CompetitiveBattlecard;
   judgeTour: JudgeTour;
   pilotEconomics: PilotEconomics;
   releaseDrift?: ReleaseDriftGuard;
 }): JudgeCommandCenter {
-  const { baseUrl, acceptance, autopilot, judgeTour, pilotEconomics, releaseDrift } = input;
-  const readiness = readinessFrom({ acceptance, autopilot, judgeTour, releaseDrift });
+  const { baseUrl, acceptance, autopilot, competitiveBattlecard, judgeTour, pilotEconomics, releaseDrift } = input;
+  const readiness = readinessFrom({ acceptance, autopilot, competitiveBattlecard, judgeTour, releaseDrift });
   const releaseScore = releaseDrift?.driftScore ?? 92;
   const commandScore = Math.round(
-    clamp(average([acceptance.acceptanceScore, autopilot.winScore, judgeTour.tourScore, pilotEconomics.economicsScore, releaseScore]))
+    clamp(average([acceptance.acceptanceScore, autopilot.winScore, competitiveBattlecard.battleScore, judgeTour.tourScore, pilotEconomics.economicsScore, releaseScore]))
   );
   const blockedRows = acceptance.rows.filter((row) => row.status === "blocked");
   const watchRows = acceptance.rows.filter((row) => row.status === "watch");
@@ -165,8 +174,8 @@ export function buildJudgeCommandCenter(input: {
     readiness === "blocked"
       ? (firstNow?.action ?? "blockedの受入行を先に直し、Judge Command Centerを再実行する")
       : readiness === "external-gaps"
-        ? "Judge Tourで価値を見せ、Submission Launch GateでProtoPedia作品URLと動画URLをwatchとして正直に示す"
-        : "Judge Tourを開き、Acceptance Matrix、Pilot Economics、Win Autopilotの順で証拠を見せる";
+        ? "Judge Tourで価値を見せ、Competitive Battlecardで競合質問へ答え、Submission Launch Gateで外部URLをwatchとして正直に示す"
+        : "Judge Tourを開き、Competitive Battlecard、Acceptance Matrix、Pilot Economics、Win Autopilotの順で証拠を見せる";
   const headline =
     readiness === "pitch-ready"
       ? "審査員の最初の90秒は、この司令塔から始めれば迷いません。"
@@ -179,7 +188,7 @@ export function buildJudgeCommandCenter(input: {
       : readiness === "blocked"
         ? "機能が多くても、受入表か公開証拠にblockedがある限りMVPとして説明できません。"
         : readiness === "external-gaps"
-          ? "外部URLは未発行なら未完了扱いにしつつ、AI中心性、競合差別化、実用性、実装力の証拠は見せられます。"
+          ? "外部URLは未発行なら未完了扱いにしつつ、AI中心性、競合差別化、Battlecard、実用性、実装力の証拠は見せられます。"
           : "提出前の初回導線、価値、採算、公開証拠が同じ画面で説明できます。";
 
   const metrics: CommandCenterMetric[] = [
@@ -203,6 +212,13 @@ export function buildJudgeCommandCenter(input: {
       value: `${judgeTour.tourScore}`,
       status: proofStatusForReadiness(judgeTour.readiness),
       evidence: `${judgeTour.steps.length} steps / ${judgeTour.readiness}`
+    },
+    {
+      id: "battlecard",
+      label: "Battlecard",
+      value: `${competitiveBattlecard.battleScore}`,
+      status: proofStatusForReadiness(competitiveBattlecard.readiness),
+      evidence: `${competitiveBattlecard.cards.length} competitors / ${competitiveBattlecard.readiness}`
     },
     {
       id: "economics",
@@ -247,6 +263,15 @@ export function buildJudgeCommandCenter(input: {
       status: releaseDrift ? proofStatusForReadiness(releaseDrift.verdict) : "watch",
       score: releaseScore,
       reason: releaseDrift?.hardTruth ?? "公開Cloud Runのrevision driftを提出前に確認します。"
+    },
+    {
+      id: "competitive-battlecard",
+      label: "Competitive Battlecard",
+      buttonLabel: "Answer competitor",
+      endpoint: absoluteUrl(baseUrl, "/api/competitive-battlecard"),
+      status: proofStatusForReadiness(competitiveBattlecard.readiness),
+      score: competitiveBattlecard.battleScore,
+      reason: competitiveBattlecard.headline
     },
     {
       id: "pilot-economics",
@@ -297,8 +322,17 @@ export function buildJudgeCommandCenter(input: {
       status: releaseDrift ? proofStatusForReadiness(releaseDrift.verdict) : "watch"
     },
     {
+      id: "battlecard",
+      timeRange: "42-56s",
+      screen: "Competitive Battlecard",
+      click: "Answer competitor",
+      say: competitiveBattlecard.headline,
+      proofButtonId: "competitive-battlecard",
+      status: proofStatusForReadiness(competitiveBattlecard.readiness)
+    },
+    {
       id: "value",
-      timeRange: "42-58s",
+      timeRange: "56-68s",
       screen: "Pilot Economics",
       click: "Show buyer proof",
       say: pilotEconomics.verdict,
@@ -307,7 +341,7 @@ export function buildJudgeCommandCenter(input: {
     },
     {
       id: "close",
-      timeRange: "58-90s",
+      timeRange: "68-90s",
       screen: "Judge Tour + Win Autopilot",
       click: "Open 90s route",
       say: judgeTour.openingScript,
@@ -320,6 +354,7 @@ export function buildJudgeCommandCenter(input: {
     `Opening: ${headline}`,
     `Move: ${openingMove}`,
     `Truth: Acceptance ${acceptance.acceptanceScore}, ${acceptance.verdict}.`,
+    `Competition: Battlecard ${competitiveBattlecard.battleScore}, ${competitiveBattlecard.readiness}, ${competitiveBattlecard.cards.length} competitors.`,
     `Value: Pilot payback ${pilotEconomics.unitEconomics.paybackDays} days, ${pilotEconomics.posture}.`,
     `Public proof: ${releaseDrift ? `${releaseDrift.observedSkillCount}/${releaseDrift.expectedSkillCount} skills, ${releaseDrift.verdict}` : "release drift not checked"}.`
   ];
@@ -344,6 +379,11 @@ export function buildJudgeCommandCenter(input: {
       openingMove,
       metrics: metrics.map((metric) => ({ id: metric.id, value: metric.value, status: metric.status })),
       proofButtons: proofButtons.map((button) => ({ id: button.id, endpoint: button.endpoint, status: button.status, score: button.score })),
+      competitiveBattlecard: {
+        battleScore: competitiveBattlecard.battleScore,
+        readiness: competitiveBattlecard.readiness,
+        cards: competitiveBattlecard.cards.map((card) => ({ id: card.id, status: card.status, score: card.score }))
+      },
       blockers: blockers.map((blocker) => ({ id: blocker.id, priority: blocker.priority, action: blocker.action }))
     }
   };
