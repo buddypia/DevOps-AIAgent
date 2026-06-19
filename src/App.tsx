@@ -28,7 +28,7 @@ import {
   Trophy,
   Workflow
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ComponentType } from "react";
 import type { JudgeAcceptanceMatrix } from "./acceptanceMatrix";
 import { recommendSquad } from "./agentEngine";
 import type { AutonomyLedger } from "./autonomyLedger";
@@ -123,43 +123,185 @@ function FirstClickIcon({ link }: { link: FirstClickProofLink }) {
 }
 
 function JudgeFirstClickStrip() {
+  const primaryProofIds = new Set(["win-autopilot", "judge-snapshot", "winner-packet"]);
+  const primaryLinks = FIRST_CLICK_PROOF_LINKS.filter((link) => primaryProofIds.has(link.id));
+  const supportingLinks = FIRST_CLICK_PROOF_LINKS.filter((link) => !primaryProofIds.has(link.id));
+  const productSteps = [
+    {
+      id: "choose",
+      icon: <Search size={18} />,
+      label: "1. Choose",
+      title: "必要なAI能力を選ぶ",
+      description: "Cloud Run SRE、Gemini Strategistなどを能力値とMCP成熟度で比較する。"
+    },
+    {
+      id: "delegate",
+      icon: <Workflow size={18} />,
+      label: "2. Delegate",
+      title: "A2Aで仕事を任せる",
+      description: "選んだAIに仕事票、契約、受入条件を渡し、判断と実行ログを残す。"
+    },
+    {
+      id: "prove",
+      icon: <BadgeCheck size={18} />,
+      label: "3. Prove",
+      title: "提出と運用を証明する",
+      description: "Cloud Run、Gemini、CI、ProtoPedia提出物をready/watchで束ねる。"
+    }
+  ];
+
   return (
     <section className="first-click-strip" aria-labelledby="first-click-title">
       <div className="first-click-heading">
         <div>
-          <span className="eyebrow">Judge first click</span>
+          <span className="eyebrow">Product focus</span>
           <h2 id="first-click-title">
-            <Trophy size={20} />
-            Start with proof, not feature hunting
+            <ShoppingCart size={20} />
+            AIエージェントを選び、A2Aで任せ、提出証拠まで閉じる
           </h2>
+          <p>これはAIエージェントを作るだけのデモではなく、必要なAI能力を市場から調達し、仕事と運用証拠まで回すDevOpsワークベンチです。</p>
         </div>
-        <a href="/judge-snapshot" target="_blank" rel="noreferrer" className="icon-link first-click-primary">
-          <ExternalLink size={16} />
-          Open snapshot
-        </a>
+        <div className="first-click-actions">
+          <a href="#marketplace-workbench" className="icon-link first-click-primary">
+            <ShoppingCart size={16} />
+            Marketplaceへ
+          </a>
+          <a href="/judge-snapshot" target="_blank" rel="noreferrer" className="icon-link first-click-secondary">
+            <ExternalLink size={16} />
+            Judge snapshot
+          </a>
+        </div>
       </div>
 
-      <div className="first-click-scorecards">
-        {FIRST_CLICK_SCORECARDS.map((card) => (
-          <article key={card.id}>
-            <span>{card.label}</span>
-            <strong>{card.value}</strong>
-            <p>{card.proof}</p>
+      <div className="first-click-flow">
+        {productSteps.map((step) => (
+          <article key={step.id}>
+            <div>
+              {step.icon}
+              <span>{step.label}</span>
+            </div>
+            <strong>{step.title}</strong>
+            <p>{step.description}</p>
           </article>
         ))}
       </div>
 
-      <div className="first-click-links">
-        {FIRST_CLICK_PROOF_LINKS.map((link) => (
-          <a key={link.id} href={link.href} target="_blank" rel="noreferrer" className={cx("first-click-link", link.tone)}>
-            <FirstClickIcon link={link} />
-            <span>{link.signal}</span>
-            <strong>{link.label}</strong>
-            <p>{link.judgeValue}</p>
-          </a>
-        ))}
+      <div className="first-click-proof-row">
+        <div className="first-click-scorecards" aria-label="Judge proof status">
+          {FIRST_CLICK_SCORECARDS.map((card) => (
+            <article key={card.id}>
+              <span>{card.label}</span>
+              <strong>{card.value}</strong>
+              <p>{card.proof}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="first-click-featured" aria-label="Primary judge proof links">
+          {primaryLinks.map((link) => (
+            <a key={link.id} href={link.href} target="_blank" rel="noreferrer" className={cx("first-click-link", link.tone)}>
+              <FirstClickIcon link={link} />
+              <span>{link.signal}</span>
+              <strong>{link.label}</strong>
+              <p>{link.judgeValue}</p>
+            </a>
+          ))}
+        </div>
       </div>
+
+      <details className="first-click-evidence">
+        <summary>
+          <span>Judge first click proof pages</span>
+          <strong>{supportingLinks.length} supporting links</strong>
+        </summary>
+        <div className="first-click-links">
+          {supportingLinks.map((link) => (
+            <a key={link.id} href={link.href} target="_blank" rel="noreferrer" className={cx("first-click-link", link.tone)}>
+              <FirstClickIcon link={link} />
+              <span>{link.signal}</span>
+              <strong>{link.label}</strong>
+              <p>{link.judgeValue}</p>
+            </a>
+          ))}
+        </div>
+      </details>
     </section>
+  );
+}
+
+type JudgeEvidencePanelProps = {
+  recommendation: Recommendation;
+  projectBrief: string;
+};
+
+const JUDGE_EVIDENCE_PANELS: Array<{ id: string; Component: ComponentType<JudgeEvidencePanelProps> }> = [
+  { id: "judge-command-center", Component: JudgeCommandCenterPanel },
+  { id: "demo-concierge", Component: DemoConciergePanel },
+  { id: "judge-rehearsal", Component: JudgeRehearsalPanel },
+  { id: "winner-packet", Component: WinnerPacketPanel },
+  { id: "submission-runway", Component: SubmissionRunwayPanel },
+  { id: "external-evidence", Component: ExternalEvidencePanel },
+  { id: "prize-strategy", Component: PrizeStrategyPanel },
+  { id: "win-gap-radar", Component: WinGapRadarPanel },
+  { id: "judge-tour", Component: JudgeTourPanel },
+  { id: "squad-optimizer", Component: SquadOptimizerPanel },
+  { id: "moat-stress", Component: MoatStressPanel },
+  { id: "competitive-battlecard", Component: CompetitiveBattlecardPanel },
+  { id: "live-evidence", Component: LiveEvidencePanel },
+  { id: "observability-oracle", Component: ObservabilityOraclePanel },
+  { id: "release-drift", Component: ReleaseDriftPanel },
+  { id: "deploy-recovery", Component: DeployRecoveryPanel },
+  { id: "demo-receipt", Component: DemoReceiptPanel },
+  { id: "user-pilot", Component: UserPilotPanel },
+  { id: "judge-brief", Component: JudgeBriefPanel },
+  { id: "acceptance-matrix", Component: AcceptanceMatrixPanel },
+  { id: "autonomy-ledger", Component: AutonomyLedgerPanel },
+  { id: "agent-task-board", Component: AgentTaskBoardPanel },
+  { id: "security-review", Component: SecurityReviewPanel },
+  { id: "impact-case", Component: ImpactCasePanel },
+  { id: "pilot-economics", Component: PilotEconomicsPanel },
+  { id: "market-intel", Component: MarketIntelPanel },
+  { id: "mvp-audit", Component: MvpAuditPanel },
+  { id: "submission-launch", Component: SubmissionLaunchPanel },
+  { id: "submission-closeout", Component: SubmissionCloseoutPanel },
+  { id: "win-autopilot", Component: WinAutopilotPanel },
+  { id: "submission-dossier", Component: SubmissionDossierPanel },
+  { id: "demo-runway", Component: DemoRunwayPanel },
+  { id: "judge-proof-bundle", Component: JudgeProofBundle },
+  { id: "pitch-director", Component: PitchDirector },
+  { id: "judge-drill", Component: JudgeDrillPanel },
+  { id: "finalist-simulator", Component: FinalistSimulator },
+  { id: "submission-publisher", Component: SubmissionPublisher }
+];
+
+function JudgeEvidenceShelf({ recommendation, projectBrief }: { recommendation: Recommendation; projectBrief: string }) {
+  const [hasOpened, setHasOpened] = useState(false);
+
+  return (
+    <details
+      className="evidence-shelf"
+      onToggle={(event) => {
+        if (event.target === event.currentTarget && event.currentTarget.open) {
+          setHasOpened(true);
+        }
+      }}
+    >
+      <summary>
+        <div>
+          <span className="eyebrow">Judge first click proof shelf</span>
+          <strong>審査・提出・競合証拠は必要な時だけ開く</strong>
+          <p>本体の市場体験を邪魔しないよう、勝ち筋、提出ロック、公開URL監視、競合比較はここに集約しています。</p>
+        </div>
+        <span>{FIRST_CLICK_PROOF_LINKS.length} proof routes</span>
+      </summary>
+      {hasOpened && (
+        <div className="evidence-shelf-body">
+          {JUDGE_EVIDENCE_PANELS.map(({ id, Component }) => (
+            <Component key={id} recommendation={recommendation} projectBrief={projectBrief} />
+          ))}
+        </div>
+      )}
+    </details>
   );
 }
 
@@ -8258,45 +8400,8 @@ export default function App() {
       </section>
 
       <JudgeFirstClickStrip />
-      <JudgeCommandCenterPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <DemoConciergePanel recommendation={recommendation} projectBrief={projectBrief} />
-      <JudgeRehearsalPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <WinnerPacketPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <SubmissionRunwayPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <ExternalEvidencePanel recommendation={recommendation} projectBrief={projectBrief} />
-      <PrizeStrategyPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <WinGapRadarPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <JudgeTourPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <SquadOptimizerPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <MoatStressPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <CompetitiveBattlecardPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <LiveEvidencePanel recommendation={recommendation} projectBrief={projectBrief} />
-      <ObservabilityOraclePanel recommendation={recommendation} projectBrief={projectBrief} />
-      <ReleaseDriftPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <DeployRecoveryPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <DemoReceiptPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <UserPilotPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <JudgeBriefPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <AcceptanceMatrixPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <AutonomyLedgerPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <AgentTaskBoardPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <SecurityReviewPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <ImpactCasePanel recommendation={recommendation} projectBrief={projectBrief} />
-      <PilotEconomicsPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <MarketIntelPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <MvpAuditPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <SubmissionLaunchPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <SubmissionCloseoutPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <WinAutopilotPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <SubmissionDossierPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <DemoRunwayPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <JudgeProofBundle recommendation={recommendation} projectBrief={projectBrief} />
-      <PitchDirector recommendation={recommendation} projectBrief={projectBrief} />
-      <JudgeDrillPanel recommendation={recommendation} projectBrief={projectBrief} />
-      <FinalistSimulator recommendation={recommendation} projectBrief={projectBrief} />
-      <SubmissionPublisher recommendation={recommendation} projectBrief={projectBrief} />
 
-      <section className="workbench">
+      <section id="marketplace-workbench" className="workbench">
         <aside className="panel brief-panel">
           <div className="panel-heading">
             <h2>
@@ -8413,6 +8518,8 @@ export default function App() {
         </section>
         <AgentCardJson />
       </section>
+
+      <JudgeEvidenceShelf recommendation={recommendation} projectBrief={projectBrief} />
     </main>
   );
 }

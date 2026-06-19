@@ -105,6 +105,7 @@ import { buildWinnerProofPacket, renderWinnerProofPacketHtml } from "../src/winn
 
 const app = express();
 const port = Number(process.env.PORT || 8080);
+const host = process.env.HOST || "0.0.0.0";
 const model = process.env.GEMINI_MODEL || "gemini-3.5-flash";
 
 const RecommendSchema = z.object({
@@ -7623,6 +7624,7 @@ app.use((_req, res) => {
   res.sendFile(path.join(distPath, "index.html"));
 });
 
-app.listen(port, () => {
-  console.log(`A2A Agent Marketplace listening on ${port}`);
+app.listen(port, host, () => {
+  const displayHost = host === "0.0.0.0" ? "127.0.0.1" : host;
+  console.log(`A2A Agent Marketplace listening on http://${displayHost}:${port}`);
 });

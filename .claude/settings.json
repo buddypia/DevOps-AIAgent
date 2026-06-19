@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/secret-leak-guard.mjs",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/secret-leak-guard.mjs\"",
             "timeout": 5
           }
         ]
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/destructive-git-guard.mjs",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/destructive-git-guard.mjs\"",
             "timeout": 5
           }
         ]
@@ -41,7 +41,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/prompt-injection-guard.mjs",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/prompt-injection-guard.mjs\"",
             "timeout": 5
           }
         ]
@@ -51,7 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/edit-error-recovery.mjs",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/edit-error-recovery.mjs\"",
             "timeout": 5
           }
         ]
