@@ -156,6 +156,7 @@ export function buildReleaseDriftGuard(input: {
     probes,
     nextActions,
     runbook: [
+      "DRY_RUN=1 PROJECT_ID=$(gcloud config get-value project) REPO=buddypia/DevOps-AIAgent ./scripts/bootstrap_github_actions_deploy.sh",
       "PROJECT_ID=$(gcloud config get-value project) REPO=buddypia/DevOps-AIAgent ./scripts/bootstrap_github_actions_deploy.sh",
       "gh workflow run deploy-cloud-run.yml --ref main -f region=asia-northeast1 -f service=a2a-agent-marketplace -f repository=cloud-run-source-deploy -f gemini_secret=gemini-api-key-a2a-marketplace -f target_url=https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app",
       "gcloud auth login",

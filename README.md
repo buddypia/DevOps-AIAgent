@@ -528,7 +528,15 @@
 
 - Workflow: <https://github.com/buddypia/DevOps-AIAgent/actions/workflows/deploy-cloud-run.yml>
 - Required secrets: `GCP_PROJECT_ID` / `GCP_WORKLOAD_IDENTITY_PROVIDER` / `GCP_DEPLOY_SERVICE_ACCOUNT`
-- Bootstrap:
+- Preview bootstrap:
+
+```bash
+DRY_RUN=1 PROJECT_ID=$(gcloud config get-value project) \
+REPO=buddypia/DevOps-AIAgent \
+./scripts/bootstrap_github_actions_deploy.sh
+```
+
+- Apply bootstrap:
 
 ```bash
 PROJECT_ID=$(gcloud config get-value project) \

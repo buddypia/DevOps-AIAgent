@@ -190,8 +190,16 @@ export function buildDeployRecoveryPlan(input: {
       blocking: readiness === "manual-auth-required"
     },
     {
+      id: "preview-github-actions-deploy-bootstrap",
+      label: "Preview deploy auth bootstrap",
+      command: "DRY_RUN=1 PROJECT_ID=$(gcloud config get-value project) REPO=buddypia/DevOps-AIAgent ./scripts/bootstrap_github_actions_deploy.sh",
+      why: "Google Cloud IAMやGitHub Secretsを変更する前に、Workload Identity bootstrapが実行するコマンドを表示します。",
+      copyGroup: "auth",
+      blocking: false
+    },
+    {
       id: "bootstrap-github-actions-deploy",
-      label: "Bootstrap GitHub deploy auth",
+      label: "Apply GitHub deploy auth bootstrap",
       command: "PROJECT_ID=$(gcloud config get-value project) REPO=buddypia/DevOps-AIAgent ./scripts/bootstrap_github_actions_deploy.sh",
       why: "Workload Identity Pool、OIDC Provider、deploy用Service Account、GitHub Secretsを1回で作成し、Deploy Cloud Run workflowを実行可能にします。",
       copyGroup: "auth",

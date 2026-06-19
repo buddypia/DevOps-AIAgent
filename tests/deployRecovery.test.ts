@@ -110,6 +110,8 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "auth-login")).toMatchObject({ blocking: true, copyGroup: "auth" });
     expect(plan.commands.find((command) => command.id === "verify-github-deploy-secrets")).toMatchObject({ blocking: true, copyGroup: "auth" });
     expect(plan.commands.find((command) => command.id === "verify-github-deploy-secrets")?.command).toContain("GCP_WORKLOAD_IDENTITY_PROVIDER");
+    expect(plan.commands.find((command) => command.id === "preview-github-actions-deploy-bootstrap")).toMatchObject({ blocking: false, copyGroup: "auth" });
+    expect(plan.commands.find((command) => command.id === "preview-github-actions-deploy-bootstrap")?.command).toContain("DRY_RUN=1");
     expect(plan.commands.find((command) => command.id === "bootstrap-github-actions-deploy")).toMatchObject({ blocking: true, copyGroup: "auth" });
     expect(plan.commands.find((command) => command.id === "bootstrap-github-actions-deploy")?.command).toContain("./scripts/bootstrap_github_actions_deploy.sh");
     expect(plan.commands.find((command) => command.id === "github-actions-deploy")).toMatchObject({ blocking: true, copyGroup: "deploy" });

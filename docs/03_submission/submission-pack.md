@@ -197,6 +197,7 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/external-evidence 
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/release-drift \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"targetUrl":"https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app"}'
+DRY_RUN=1 PROJECT_ID=$(gcloud config get-value project) REPO=buddypia/DevOps-AIAgent ./scripts/bootstrap_github_actions_deploy.sh
 PROJECT_ID=$(gcloud config get-value project) REPO=buddypia/DevOps-AIAgent ./scripts/bootstrap_github_actions_deploy.sh
 gh workflow run deploy-cloud-run.yml --ref main \
   -f region=asia-northeast1 \
