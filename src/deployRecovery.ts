@@ -234,8 +234,8 @@ export function buildDeployRecoveryPlan(input: {
     {
       id: "verify-agent-card-signals",
       label: "Verify Agent Card signals",
-      command: `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="winner.sufficiency" or .id=="win.autopilot" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="mvp.snapshot" or .id=="autonomy.snapshot" or .id=="observability.oracle" or .id=="acceptance.matrix" or .id=="recording.script" or .id=="prize.strategy" or .id=="submission.publish" or .id=="pilot.value.snapshot" or .id=="deploy.recover") | {id, tags}'`,
-      why: "Recording Lock、Feature Freeze Lock、Winner Release Lock、Finalist Release Drift、Criteria Duel、Competitive SWOT GET proof、Judge GET proof、MVP readiness GET proof、Acceptance Matrix GET proof、Autonomy Snapshot GET proof、Recording Script GET proof、Prize Strategy GET proof、Publisher GET proof、Pilot Value GET proofが公開Agent Cardに載ったことを確認します。",
+      command: `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="winner.sufficiency" or .id=="win.autopilot" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="mvp.snapshot" or .id=="autonomy.snapshot" or .id=="observability.oracle" or .id=="acceptance.matrix" or .id=="recording.script" or .id=="prize.strategy" or .id=="submission.publish" or .id=="submission.dossier" or .id=="pilot.value.snapshot" or .id=="deploy.recover") | {id, tags}'`,
+      why: "Recording Lock、Feature Freeze Lock、Winner Release Lock、Finalist Release Drift、Criteria Duel、Competitive SWOT GET proof、Judge GET proof、MVP readiness GET proof、Acceptance Matrix GET proof、Autonomy Snapshot GET proof、Recording Script GET proof、Prize Strategy GET proof、Publisher GET proof、Dossier GET proof、Pilot Value GET proofが公開Agent Cardに載ったことを確認します。",
       copyGroup: "verify",
       blocking: input.releaseDrift.missingAgentCardSignals.length > 0
     },
@@ -304,6 +304,14 @@ export function buildDeployRecoveryPlan(input: {
       blocking: false
     },
     {
+      id: "verify-dossier-page",
+      label: "Verify dossier proof page",
+      command: `curl -s ${targetBaseUrl}/dossier | rg 'Submission Dossier Proof|Handoff Packet'`,
+      why: "Submission DossierのGET証拠ページが公開revisionに載り、提出フォームhandoff packetと最終ドシエをPOSTなしで直接読めるか確認します。",
+      copyGroup: "verify",
+      blocking: false
+    },
+    {
       id: "verify-acceptance-matrix-page",
       label: "Verify acceptance matrix proof page",
       command: `curl -s ${targetBaseUrl}/acceptance-matrix | rg 'Acceptance Matrix Proof|Acceptance Rows'`,
@@ -330,8 +338,8 @@ export function buildDeployRecoveryPlan(input: {
     {
       id: "verify-a2a-artifact",
       label: "Verify A2A endpoint",
-      command: `curl -s -X POST ${targetBaseUrl}/a2a -H 'Content-Type: application/json' --data '{"method":"message/send","params":{"text":"A2A Cloud Run Gemini DevOps"}}' | jq '.result.artifacts[0].parts[0].data | {deployRecoveryEndpoint, deployRecoveryPageEndpoint, prizeStrategyPageEndpoint, publisherPageEndpoint}'`,
-      why: "A2A artifactがDeploy Recovery API/GET証拠ページ、Prize Strategy GET証拠ページ、Publisher GET証拠ページを公開しているかを確認します。",
+      command: `curl -s -X POST ${targetBaseUrl}/a2a -H 'Content-Type: application/json' --data '{"method":"message/send","params":{"text":"A2A Cloud Run Gemini DevOps"}}' | jq '.result.artifacts[0].parts[0].data | {deployRecoveryEndpoint, deployRecoveryPageEndpoint, prizeStrategyPageEndpoint, publisherPageEndpoint, dossierPageEndpoint}'`,
+      why: "A2A artifactがDeploy Recovery API/GET証拠ページ、Prize Strategy GET証拠ページ、Publisher/Dossier GET証拠ページを公開しているかを確認します。",
       copyGroup: "verify",
       blocking: false
     }
@@ -404,7 +412,7 @@ export function buildDeployRecoveryPlan(input: {
     `Release drift: ${input.releaseDrift.observedSkillCount}/${input.releaseDrift.expectedSkillCount} skills, ${input.releaseDrift.verdict}.`,
     `Agent Card signals: missing ${input.releaseDrift.missingAgentCardSignals.join(", ") || "none"}.`,
     `Auth: ${authBlocked ? "run GitHub Actions deploy workflow or refresh gcloud auth" : "no auth failure provided"}.`,
-    `After deploy: verify Agent Card count, /win-autopilot, /winner-sufficiency, /observability-oracle, /api/mvp-readiness, /api/autonomy-snapshot, /api/recording-script, /prize-strategy, /publisher, /api/pilot-value, /deploy-recovery, /api/deploy-recovery, and A2A autonomySnapshot/recordingScript/prizeStrategy/publisher/pilotValue/deployRecovery endpoints.`
+    `After deploy: verify Agent Card count, /win-autopilot, /winner-sufficiency, /observability-oracle, /api/mvp-readiness, /api/autonomy-snapshot, /api/recording-script, /prize-strategy, /publisher, /dossier, /api/pilot-value, /deploy-recovery, /api/deploy-recovery, and A2A autonomySnapshot/recordingScript/prizeStrategy/publisher/dossier/pilotValue/deployRecovery endpoints.`
   ];
 
   return {

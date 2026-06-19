@@ -268,6 +268,8 @@ curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/api/win-autopilot | jq '{readi
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/win-run \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/dossier | rg 'Submission Dossier Proof|Handoff Packet'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/api/dossier | jq '{readiness, dossierScore, blocks: (.copyBlocks | length), page: .a2aPayload.endpoints.dossierPage}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/dossier \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
@@ -311,6 +313,7 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - ProtoPedia work URL: needs final URL
 - Video URL: needs YouTube or Vimeo URL
 - Publisher Page/API: `GET /publisher`, `GET /api/publisher`, `POST /api/publisher`
+- Submission Dossier Page/API: `GET /dossier`, `GET /api/dossier`, `POST /api/dossier`
 - ProtoPedia Quality Lock: run `GET /api/publisher` or `POST /api/submission-closeout` and confirm `qualityLock` / `protopediaQualityLock` is `copy-locked` before publishing the work page
 - Publication Policy Lock: run `GET /api/publisher` or `POST /api/submission-closeout` and confirm `policyLock` / `protopediaPolicyLock` is `prototype-copy-locked`; after publishing the video URL it should become `publication-ready`
 - Video Proof Lock: run `POST /api/submission-closeout` and use the `videoProofLock` checks before publishing the video URL

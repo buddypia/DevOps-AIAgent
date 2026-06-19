@@ -22,6 +22,7 @@ const expectedSkillIds = [
   "winner.packet",
   "winner.sufficiency",
   "judge.objection-arena",
+  "submission.dossier",
   "submission.launch",
   "submission.runway",
   "submission.assets",
@@ -62,6 +63,7 @@ const requiredAgentCardSignals = [
   "recording.script:tag:get-proof",
   "prize.strategy:tag:prize-strategy-lock",
   "submission.publish:tag:submission-publish-lock",
+  "submission.dossier:tag:submission-dossier-lock",
   "submission.launch:tag:get-proof",
   "submission.package:tag:get-proof",
   "pilot.value.snapshot:tag:get-proof",
@@ -89,7 +91,7 @@ describe("release drift guard", () => {
   "evidence.monitor", "win.autopilot"],
       requiredSkillIds: ["task.delegate",
   "external.evidence",
-  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "mvp.snapshot", "autonomy.snapshot", "pilot.economics", "pilot.value.snapshot", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "winner.sufficiency", "judge.objection-arena", "submission.launch", "submission.runway", "submission.assets", "recording.script", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "competitive.snapshot", "judge.snapshot", "judge.first-click", "judge.first-click-smoke", "win.autopilot"],
+  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "mvp.snapshot", "autonomy.snapshot", "pilot.economics", "pilot.value.snapshot", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "winner.sufficiency", "judge.objection-arena", "submission.dossier", "submission.launch", "submission.runway", "submission.assets", "recording.script", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "competitive.snapshot", "judge.snapshot", "judge.first-click", "judge.first-click-smoke", "win.autopilot"],
       generatedAt: "2026-06-18T00:00:00.000Z",
       probes: [
         passedProbe("target-health"),
@@ -117,7 +119,7 @@ describe("release drift guard", () => {
 
     expect(guard.verdict).toBe("deploy-drift");
     expect(guard.missingSkills).toEqual(
-      expect.arrayContaining(["demo.receipt", "acceptance.matrix", "release.drift", "mvp.snapshot", "autonomy.snapshot", "pilot.economics", "pilot.value.snapshot", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "winner.sufficiency", "judge.objection-arena", "submission.launch", "submission.runway", "submission.assets", "recording.script", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "competitive.snapshot", "judge.snapshot", "judge.first-click", "judge.first-click-smoke"])
+      expect.arrayContaining(["demo.receipt", "acceptance.matrix", "release.drift", "mvp.snapshot", "autonomy.snapshot", "pilot.economics", "pilot.value.snapshot", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "winner.sufficiency", "judge.objection-arena", "submission.dossier", "submission.launch", "submission.runway", "submission.assets", "recording.script", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "competitive.snapshot", "judge.snapshot", "judge.first-click", "judge.first-click-smoke"])
     );
     expect(guard.missingAgentCardSignals).toEqual([]);
     expect(guard.nextActions.map((action) => action.id)).toEqual(expect.arrayContaining(["agent-card-skill-surface", "acceptance-endpoint"]));
@@ -140,7 +142,7 @@ describe("release drift guard", () => {
       observedSkillIds: expectedSkillIds,
       requiredSkillIds: ["task.delegate",
   "external.evidence",
-  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "mvp.snapshot", "autonomy.snapshot", "pilot.economics", "pilot.value.snapshot", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "winner.sufficiency", "judge.objection-arena", "submission.launch", "submission.runway", "submission.assets", "recording.script", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "competitive.snapshot", "judge.first-click", "judge.first-click-smoke", "judge.snapshot", "win.autopilot"],
+  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "mvp.snapshot", "autonomy.snapshot", "pilot.economics", "pilot.value.snapshot", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "winner.sufficiency", "judge.objection-arena", "submission.dossier", "submission.launch", "submission.runway", "submission.assets", "recording.script", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "competitive.snapshot", "judge.first-click", "judge.first-click-smoke", "judge.snapshot", "win.autopilot"],
       requiredAgentCardSignals,
       observedAgentCardSignals: requiredAgentCardSignals,
       probes: [
@@ -166,7 +168,7 @@ describe("release drift guard", () => {
       observedSkillIds: expectedSkillIds,
       requiredSkillIds: ["task.delegate",
   "external.evidence",
-  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "mvp.snapshot", "autonomy.snapshot", "pilot.economics", "pilot.value.snapshot", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "winner.sufficiency", "judge.objection-arena", "submission.launch", "submission.runway", "submission.assets", "recording.script", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "competitive.snapshot", "judge.snapshot", "judge.first-click", "judge.first-click-smoke", "win.autopilot"],
+  "evidence.monitor", "observability.oracle", "demo.receipt", "acceptance.matrix", "release.drift", "mvp.snapshot", "autonomy.snapshot", "pilot.economics", "pilot.value.snapshot", "demo.concierge", "judge.command", "judge.rehearsal", "winner.packet", "winner.sufficiency", "judge.objection-arena", "submission.dossier", "submission.launch", "submission.runway", "submission.assets", "recording.script", "prize.strategy", "win.gap.radar", "submission.closeout", "deploy.recover", "competitive.battlecard", "competitive.snapshot", "judge.snapshot", "judge.first-click", "judge.first-click-smoke", "win.autopilot"],
       requiredAgentCardSignals,
       observedAgentCardSignals: [
         "judge.rehearsal:tag:recording-lock",
@@ -209,6 +211,7 @@ describe("release drift guard", () => {
       "pilot.value.snapshot:tag:get-proof",
       "prize.strategy:tag:prize-strategy-lock",
       "recording.script:tag:get-proof",
+      "submission.dossier:tag:submission-dossier-lock",
       "submission.launch:tag:get-proof",
       "submission.package:tag:get-proof",
       "submission.publish:tag:submission-publish-lock",
@@ -216,13 +219,14 @@ describe("release drift guard", () => {
       "winner.packet:tag:get-proof",
       "winner.sufficiency:tag:winner-sufficiency-lock"
     ]);
-    expect(guard.summary).toContain("0 required skills and 23 required Agent Card signals");
+    expect(guard.summary).toContain("0 required skills and 24 required Agent Card signals");
     expect(guard.runbook.join("\n")).toContain('select(.id=="judge.command"');
     expect(guard.runbook.join("\n")).toContain('or .id=="acceptance.matrix"');
     expect(guard.runbook.join("\n")).toContain('or .id=="autonomy.snapshot" or .id=="external.evidence"');
     expect(guard.runbook.join("\n")).toContain('or .id=="recording.script"');
     expect(guard.runbook.join("\n")).toContain('or .id=="prize.strategy"');
     expect(guard.runbook.join("\n")).toContain('or .id=="submission.publish"');
+    expect(guard.runbook.join("\n")).toContain('or .id=="submission.dossier"');
     expect(guard.runbook.join("\n")).toContain('or .id=="win.autopilot"');
     expect(guard.runbook.join("\n")).toContain('or .id=="winner.sufficiency"');
     expect(guard.runbook.join("\n")).toContain('or .id=="deploy.recover"');
@@ -236,6 +240,7 @@ describe("release drift guard", () => {
     expect(guard.runbook.join("\n")).toContain("/api/recording-script");
     expect(guard.runbook.join("\n")).toContain("/prize-strategy");
     expect(guard.runbook.join("\n")).toContain("/publisher");
+    expect(guard.runbook.join("\n")).toContain("/dossier");
     expect(guard.runbook.join("\n")).toContain("/api/submission-launch");
     expect(guard.runbook.join("\n")).toContain("/api/pilot-value");
     expect(guard.runbook.join("\n")).toContain("/deploy-recovery");
@@ -261,6 +266,7 @@ describe("release drift guard", () => {
         "pilot.value.snapshot:tag:get-proof",
         "prize.strategy:tag:prize-strategy-lock",
         "recording.script:tag:get-proof",
+        "submission.dossier:tag:submission-dossier-lock",
         "submission.launch:tag:get-proof",
         "submission.package:tag:get-proof",
         "submission.publish:tag:submission-publish-lock",

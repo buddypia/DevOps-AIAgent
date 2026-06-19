@@ -13,6 +13,10 @@ import type { Recommendation } from "./types.js";
 import type { ImpactCase } from "./impact.js";
 import type { PilotEconomics, PilotEconomicsStatus } from "./pilotEconomics.js";
 
+export const SUBMISSION_DOSSIER_SKILL_ID = "submission.dossier";
+export const SUBMISSION_DOSSIER_LOCK_TAG = "submission-dossier-lock";
+export const SUBMISSION_DOSSIER_REQUIRED_SIGNAL = `${SUBMISSION_DOSSIER_SKILL_ID}:tag:${SUBMISSION_DOSSIER_LOCK_TAG}`;
+
 export type DossierReadiness = "ready-to-submit" | "needs-external-urls";
 
 export type DossierCopyBlock = {
@@ -148,6 +152,21 @@ function yen(value: number) {
   return `${value.toLocaleString("ja-JP")}円`;
 }
 
+function escapeHtml(value: unknown) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function tone(status: string) {
+  if (["ready", "ready-to-submit", "copy-locked", "submit-page-ready"].includes(status)) return "good";
+  if (["missing", "blocked"].includes(status)) return "bad";
+  return "watch";
+}
+
 export function buildSubmissionDossier(input: {
   recommendation: Recommendation;
   strategy: WinningStrategy;
@@ -163,6 +182,7 @@ export function buildSubmissionDossier(input: {
   pilotEconomics?: PilotEconomics;
 }): SubmissionDossier {
   const { recommendation, strategy, mission, pitch, finalist, publisher, demoRunway, autopilot, proof, battlecard, impactCase, pilotEconomics } = input;
+  const baseUrl = baseUrlFromProof(proof, mission);
   const selectedAgents = recommendation.selected.map((agent) => agent.name).join(" / ") || "A2A Market Broker";
   const pasteField = (id: string) => publisher.pasteFields.find((field) => field.id === id);
   const externalGapIds = new Set([...publisher.missingExternal.map((item) => item.id), ...autopilot.blockers.map((item) => item.id)]);
@@ -369,7 +389,7 @@ export function buildSubmissionDossier(input: {
     status: step.status
   }));
   const architecturePack = buildArchitecturePack({
-    baseUrl: baseUrlFromProof(proof, mission),
+    baseUrl,
     recommendation,
     strategy,
     mission
@@ -491,11 +511,18 @@ export function buildSubmissionDossier(input: {
     markdown,
     a2aPayload: {
       method: "message/send",
-      skill: "submission.dossier",
+      skill: SUBMISSION_DOSSIER_SKILL_ID,
       dossierScore,
       readiness,
       winScore: autopilot.winScore,
       selectedAgents: recommendation.selected.map((agent) => agent.id),
+      endpoints: {
+        dossier: `${baseUrl}/api/dossier`,
+        dossierPage: `${baseUrl}/dossier`,
+        publisherPage: `${baseUrl}/publisher`,
+        architecturePackPage: `${baseUrl}/architecture-pack`,
+        submissionLaunchPage: `${baseUrl}/submission-launch`
+      },
       copyBlocks: copyBlocks.map((item) => ({ id: item.id, target: item.target, status: item.status })),
       missingLinks: links.filter((item) => item.status === "watch").map((item) => item.id),
       handoffPacket: {
@@ -530,4 +557,198 @@ export function buildSubmissionDossier(input: {
       finalChecks: finalChecks.map((item) => ({ id: item.id, status: item.status }))
     }
   };
+}
+
+export function renderSubmissionDossierHtml(dossier: SubmissionDossier) {
+  const metrics = [
+    { label: "Readiness", value: dossier.readiness, status: dossier.readiness },
+    { label: "Dossier Score", value: dossier.dossierScore, status: dossier.dossierScore >= 86 ? "ready" : "watch" },
+    { label: "Copy Blocks", value: dossier.copyBlocks.length, status: "ready" },
+    { label: "Missing External", value: dossier.handoffPacket.missingOnly.length, status: dossier.handoffPacket.missingOnly.length === 0 ? "ready" : "watch" }
+  ]
+    .map(
+      (metric) => `
+        <article class="metric ${tone(String(metric.status))}">
+          <span>${escapeHtml(metric.label)}</span>
+          <strong>${escapeHtml(metric.value)}</strong>
+        </article>`
+    )
+    .join("");
+  const copyBlocks = dossier.copyBlocks
+    .map(
+      (blockItem) => `
+        <article class="card ${tone(blockItem.status)}">
+          <div><strong>${escapeHtml(blockItem.label)}</strong><span>${escapeHtml(blockItem.status)}</span></div>
+          <small>${escapeHtml(blockItem.target)}</small>
+          <pre>${escapeHtml(blockItem.value)}</pre>
+        </article>`
+    )
+    .join("");
+  const submitFields = dossier.handoffPacket.submitFields
+    .map(
+      (field) => `
+        <li class="${tone(field.status)}">
+          <strong>${escapeHtml(field.label)}</strong>
+          <span>${escapeHtml(field.status)} / ${escapeHtml(field.target)}</span>
+          <small>${escapeHtml(field.value || field.proof)}</small>
+        </li>`
+    )
+    .join("");
+  const protopediaFields = dossier.handoffPacket.protopediaFields
+    .map(
+      (field) => `
+        <li class="${tone(field.status)}">
+          <strong>${escapeHtml(field.label)}</strong>
+          <span>${escapeHtml(field.status)} / ${escapeHtml(field.target)}</span>
+          <small>${escapeHtml(field.proof)}</small>
+        </li>`
+    )
+    .join("");
+  const qualityChecks = dossier.handoffPacket.qualityLock.checks
+    .map(
+      (check) => `
+        <li class="${tone(check.status)}">
+          <strong>${escapeHtml(check.label)}</strong>
+          <span>${escapeHtml(check.status)} / ${escapeHtml(check.proof)}</span>
+          <small>${escapeHtml(check.acceptance)}</small>
+        </li>`
+    )
+    .join("");
+  const competitive = dossier.handoffPacket.competitiveReceipts
+    .map(
+      (receipt) => `
+        <article class="card ${tone(receipt.status)}">
+          <div><strong>${escapeHtml(receipt.competitor)}</strong><span>${escapeHtml(receipt.status)}</span></div>
+          <p>${escapeHtml(receipt.objection)}</p>
+          <small>${escapeHtml(receipt.proofRoute)}</small>
+          <small>${escapeHtml(receipt.acceptance)}</small>
+        </article>`
+    )
+    .join("");
+  const buyerValue = dossier.handoffPacket.buyerValueReceipts
+    .map(
+      (receipt) => `
+        <article class="card ${tone(receipt.status)}">
+          <div><strong>${escapeHtml(receipt.label)}</strong><span>${escapeHtml(receipt.status)}</span></div>
+          <p>${escapeHtml(receipt.claim)}</p>
+          <small>${escapeHtml(receipt.metric)}</small>
+          <small>${escapeHtml(receipt.proof)}</small>
+        </article>`
+    )
+    .join("");
+  const recordingPlan = dossier.recordingPlan.map((step) => `<li>${escapeHtml(step)}</li>`).join("");
+  const videoChapters = dossier.handoffPacket.videoChapters
+    .map(
+      (chapter) => `
+        <tr>
+          <td><strong>${escapeHtml(chapter.timeRange)}</strong><span>${escapeHtml(chapter.status)}</span></td>
+          <td>${escapeHtml(chapter.screen)}</td>
+          <td>${escapeHtml(chapter.narration)}</td>
+          <td><a href="${escapeHtml(chapter.evidenceUrl)}">${escapeHtml(chapter.evidenceUrl)}</a></td>
+        </tr>`
+    )
+    .join("");
+  const proofLinks = dossier.handoffPacket.proofLinks
+    .map(
+      (link) => `
+        <article class="card ${tone(link.status)}">
+          <div><strong>${escapeHtml(link.label)}</strong><span>${escapeHtml(link.status)}</span></div>
+          <p>${escapeHtml(link.proof)}</p>
+          ${link.url ? `<a href="${escapeHtml(link.url)}">${escapeHtml(link.url)}</a>` : `<small>External URL watch</small>`}
+        </article>`
+    )
+    .join("");
+  const finalChecks = dossier.finalChecks
+    .map(
+      (check) => `
+        <li class="${tone(check.status)}">
+          <strong>${escapeHtml(check.label)}</strong>
+          <span>${escapeHtml(check.status)} / ${escapeHtml(check.proof)}</span>
+          <small>${escapeHtml(check.action)}</small>
+        </li>`
+    )
+    .join("");
+  const missingOnly =
+    dossier.handoffPacket.missingOnly.length === 0
+      ? `<li>No external gaps remain.</li>`
+      : dossier.handoffPacket.missingOnly
+          .map((item) => `<li><strong>${escapeHtml(item.label)}</strong> ${escapeHtml(item.target)} <small>${escapeHtml(item.action)}</small></li>`)
+          .join("");
+
+  return `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Submission Dossier Proof</title>
+    <style>
+      :root { color-scheme: light; --ink: #1d2220; --muted: #5e6c67; --line: #d9e4de; --paper: #fbfcfa; --panel: #fff; --green: #13715d; --mint: #e6f4ed; --amber-bg: #fff4d4; --coral-bg: #fff0ec; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; }
+      a { color: inherit; overflow-wrap: anywhere; }
+      header, main, footer { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+      header { padding: 40px 0 20px; }
+      .eyebrow { color: var(--green); font-size: .78rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0; }
+      h1 { margin: 8px 0 10px; font-size: 3rem; line-height: 1; letter-spacing: 0; max-width: 980px; }
+      h2 { margin: 28px 0 10px; font-size: 1.12rem; }
+      p { color: var(--muted); }
+      .metrics, .grid { display: grid; gap: 12px; }
+      .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 22px; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metric, .card, .panel { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 16px; box-shadow: 0 10px 24px rgba(29, 34, 32, .06); min-width: 0; }
+      .metric span, .card span, li span, td span { color: var(--muted); font-size: .74rem; font-weight: 900; text-transform: uppercase; }
+      .metric strong { display: block; margin-top: 6px; font-size: 1.35rem; overflow-wrap: anywhere; }
+      .card div { display: flex; gap: 12px; justify-content: space-between; align-items: start; }
+      pre { margin: 10px 0 0; padding: 12px; white-space: pre-wrap; overflow-wrap: anywhere; background: rgba(29, 34, 32, .04); border-radius: 8px; font: inherit; color: var(--ink); }
+      ol { margin: 8px 0 0; padding-left: 20px; }
+      li { margin-bottom: 10px; padding: 8px; border-radius: 8px; overflow-wrap: anywhere; }
+      li span, li small, li a, td span { display: block; margin-top: 4px; overflow-wrap: anywhere; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); padding: 10px; overflow-wrap: anywhere; }
+      th { color: var(--muted); font-size: .74rem; text-transform: uppercase; }
+      .good { border-color: #a9d8c2; background: var(--mint); }
+      .watch { border-color: #ead39a; background: var(--amber-bg); }
+      .bad { border-color: #efb7aa; background: var(--coral-bg); }
+      footer { padding: 20px 0 40px; color: var(--muted); }
+      @media (max-width: 900px) { h1 { font-size: 2rem; } .metrics, .grid { grid-template-columns: 1fr; } .card div { display: block; } th, td { display: block; padding: 8px 0; } tr { display: block; border-bottom: 1px solid var(--line); padding: 8px 0; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="eyebrow">Submission Dossier Proof</div>
+      <h1>${escapeHtml(dossier.title)}</h1>
+      <p><strong>${escapeHtml(dossier.executiveMemo)}</strong></p>
+      <p>${escapeHtml(dossier.handoffPacket.qualityLock.headline)}</p>
+      <section class="metrics">${metrics}</section>
+    </header>
+    <main>
+      <h2>Copy Blocks</h2>
+      <section class="grid">${copyBlocks}</section>
+      <h2>Handoff Packet</h2>
+      <section class="grid">
+        <article class="panel"><h3>Submit Fields</h3><ol>${submitFields}</ol></article>
+        <article class="panel"><h3>ProtoPedia Fields</h3><ol>${protopediaFields}</ol></article>
+      </section>
+      <section class="panel"><h3>ProtoPedia Quality Lock</h3><ol>${qualityChecks}</ol></section>
+      <section class="panel"><h3>Missing External Only</h3><ol>${missingOnly}</ol></section>
+      <h2>Competitive Receipts</h2>
+      <section class="grid">${competitive}</section>
+      <h2>Buyer Value Receipts</h2>
+      <section class="grid">${buyerValue}</section>
+      <h2>Recording Plan</h2>
+      <section class="panel"><ol>${recordingPlan}</ol></section>
+      <section class="panel">
+        <h3>Video Chapters</h3>
+        <table><thead><tr><th>Time</th><th>Screen</th><th>Narration</th><th>Evidence</th></tr></thead><tbody>${videoChapters}</tbody></table>
+      </section>
+      <h2>Proof Links</h2>
+      <section class="grid">${proofLinks}</section>
+      <h2>Final Checks</h2>
+      <section class="panel"><ol>${finalChecks}</ol></section>
+      <h2>Markdown Dossier</h2>
+      <section class="panel"><pre>${escapeHtml(dossier.markdown)}</pre></section>
+    </main>
+    <footer>${escapeHtml(dossier.id)} / A2A skill ${SUBMISSION_DOSSIER_SKILL_ID}</footer>
+  </body>
+</html>`;
 }

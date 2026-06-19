@@ -450,7 +450,9 @@
 - `GET /publisher`: ProtoPediaに貼る本文、タグ、URL、動画台本、Quality Lock、Publication Policy LockをHTML証拠ページで直接開く
 - `GET /api/publisher`: 同じPublisher proofをA2A payload付きJSONで返す
 - `POST /api/publisher`: 任意brief/selected agentsでProtoPediaに貼る本文、タグ、URL、動画台本、提出チェックリストを返す
-- `POST /api/dossier`: ProtoPedia本文、動画録画順、提出フォームhandoff packet、構成図パケット、提出リンク、証拠デッキ、最終チェックを返す
+- `GET /dossier`: ProtoPedia本文、動画録画順、提出フォームhandoff packet、構成図パケット、提出リンク、証拠デッキ、最終チェックをHTML証拠ページで直接開く
+- `GET /api/dossier`: 同じSubmission Dossier proofをA2A payload付きJSONで返す
+- `POST /api/dossier`: 任意brief/selected agentsでProtoPedia本文、動画録画順、提出フォームhandoff packet、構成図パケット、提出リンク、証拠デッキ、最終チェックを返す
 - `POST /api/architecture-pack`: 構成図URL、Mermaid、ノード/エッジ、必須技術対応表、ProtoPedia貼り付けチェックリストを返す
 - `POST /api/demo-run`: Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線にする
 - `GET /win-autopilot`: 競合/SWOT、Live Evidence、Judge Demo Receipt、Moat Stress、Squad Optimizer、最終候補判定、提出、運用を束ねたWin Autopilotを審査員が直接読めるHTMLで返す
@@ -493,7 +495,7 @@
 - Judge drill: `judge.drill` skillとして、審査員の反論、競合Cross-exam deck、60秒回答パス、証拠リンクをA2A payloadにも含める
 - Finalist proof: `finalist.simulate` skillとして、最終候補スコア、judge consensus、Release Drift、Finalist Internal Lock、外部URL status、残ギャップをA2A payloadにも含め、Agent Cardの `release-drift` tagをRelease Drift Guardの必須signalにする
 - Publisher proof: `submission.publish` skillとして、ProtoPedia貼り付け本文、Publication Policy Lock、メディアURL、未完了外部作業、`publisherPage` endpointをA2A payloadにも含める
-- Dossier proof: `submission.dossier` skillとして、提出コピー欄、録画順、提出フォームhandoff packet、構成図パケット、提出リンク、MarkdownドシエをA2A payloadにも含める
+- Dossier proof: `submission.dossier` skillとして、提出コピー欄、録画順、提出フォームhandoff packet、構成図パケット、提出リンク、Markdownドシエ、`dossierPage` endpointをA2A payloadにも含める
 - Closeout proof: `submission.closeout` skillとして、外部提出の残作業、copy tray、Publication Policy Lock、video run、Video Proof Lock、Submission Dry Run Lock、Submission Asset Lock、submit packetをA2A payloadにも含める
 - Architecture proof: `submission.package` skillとして、システム構成図、Mermaid、必須技術対応表、ProtoPedia checklistをA2A payloadにも含める
 - Demo runway proof: `demo.runway` skillとして、30秒デモ順、証拠リンク、録画キュー、外部残リスクをA2A payloadにも含める
@@ -579,7 +581,7 @@
 - Ops drill: `/api/ops-drill`
 - Contracts: `/api/contracts`
 - Publisher: `/publisher` and `/api/publisher`
-- Submission dossier: `/api/dossier`
+- Submission dossier: `/dossier` and `/api/dossier`
 - Demo runway: `/api/demo-run`
 - Win autopilot: `/win-autopilot`, `/api/win-autopilot`, and `/api/win-run`
 - Pitch director: `/api/pitch`

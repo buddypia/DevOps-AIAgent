@@ -4,7 +4,7 @@ import { buildWinningAutopilot } from "../src/autopilot";
 import { buildCompetitiveBattlecard } from "../src/competitiveBattlecard";
 import { buildSquadContract } from "../src/contracts";
 import { buildDemoRunway } from "../src/demoRunway";
-import { buildSubmissionDossier } from "../src/dossier";
+import { buildSubmissionDossier, renderSubmissionDossierHtml, SUBMISSION_DOSSIER_REQUIRED_SIGNAL, SUBMISSION_DOSSIER_SKILL_ID } from "../src/dossier";
 import { buildFinalistSimulation } from "../src/finalist";
 import { buildImpactCase } from "../src/impact";
 import { buildJudgeDrill } from "../src/judgeDrill";
@@ -185,8 +185,13 @@ describe("submission dossier", () => {
     expect(dossier.markdown).toContain("needs external URL");
     expect(dossier.a2aPayload).toMatchObject({
       method: "message/send",
-      skill: "submission.dossier",
+      skill: SUBMISSION_DOSSIER_SKILL_ID,
       readiness: "needs-external-urls",
+      endpoints: {
+        dossier: `${baseUrl}/api/dossier`,
+        dossierPage: `${baseUrl}/dossier`,
+        publisherPage: `${baseUrl}/publisher`
+      },
       handoffPacket: {
         submitFields: expect.arrayContaining([expect.objectContaining({ id: "github-url", status: "ready" })]),
         qualityLock: {
@@ -203,5 +208,21 @@ describe("submission dossier", () => {
         missingOnly: expect.arrayContaining([expect.objectContaining({ id: "protopedia-url" })])
       }
     });
+    expect(SUBMISSION_DOSSIER_REQUIRED_SIGNAL).toBe("submission.dossier:tag:submission-dossier-lock");
+
+    const html = renderSubmissionDossierHtml({
+      ...dossier,
+      title: "<script>alert('dossier')</script>",
+      executiveMemo: "<script>alert('memo')</script>"
+    });
+    expect(html).toContain("Submission Dossier Proof");
+    expect(html).toContain("Copy Blocks");
+    expect(html).toContain("Handoff Packet");
+    expect(html).toContain("Competitive Receipts");
+    expect(html).toContain("Buyer Value Receipts");
+    expect(html).toContain("Markdown Dossier");
+    expect(html).toContain("&lt;script&gt;alert(&#39;dossier&#39;)&lt;/script&gt;");
+    expect(html).toContain("&lt;script&gt;alert(&#39;memo&#39;)&lt;/script&gt;");
+    expect(html).not.toContain("<script>alert('dossier')</script>");
   });
 });
