@@ -110,6 +110,8 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "auth-login")).toMatchObject({ blocking: true, copyGroup: "auth" });
     expect(plan.commands.find((command) => command.id === "verify-github-deploy-secrets")).toMatchObject({ blocking: true, copyGroup: "auth" });
     expect(plan.commands.find((command) => command.id === "verify-github-deploy-secrets")?.command).toContain("GCP_WORKLOAD_IDENTITY_PROVIDER");
+    expect(plan.commands.find((command) => command.id === "bootstrap-github-actions-deploy")).toMatchObject({ blocking: true, copyGroup: "auth" });
+    expect(plan.commands.find((command) => command.id === "bootstrap-github-actions-deploy")?.command).toContain("./scripts/bootstrap_github_actions_deploy.sh");
     expect(plan.commands.find((command) => command.id === "github-actions-deploy")).toMatchObject({ blocking: true, copyGroup: "deploy" });
     expect(plan.commands.find((command) => command.id === "github-actions-deploy")?.command).toContain("gh workflow run deploy-cloud-run.yml");
     expect(plan.commands.find((command) => command.id === "verify-autonomy-snapshot")?.command).toContain("/api/autonomy-snapshot");
@@ -119,7 +121,7 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "verify-recovery-endpoint")?.command).toContain("/api/deploy-recovery");
     expect(plan.commands.find((command) => command.id === "verify-a2a-artifact")?.command).toContain("deployRecoveryPageEndpoint");
     expect(plan.blockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["gcloud-auth", "agent-card-skill-surface"]));
-    expect(plan.blockers.find((blocker) => blocker.id === "gcloud-auth")?.action).toContain("Deploy Cloud Run workflow");
+    expect(plan.blockers.find((blocker) => blocker.id === "gcloud-auth")?.action).toContain("bootstrap script");
     expect(plan.judgeScript.join("\n")).toContain("GitHub Actions deploy workflow");
     expect(plan.a2aPayload).toMatchObject({
       skill: "deploy.recover",

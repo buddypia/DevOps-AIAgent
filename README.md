@@ -308,7 +308,7 @@
 
 ## Deploy Recovery
 
-`Deploy Recovery` は、Release Drift Guardの結果を運用復旧へ変換します。公開Cloud Runが古い時、または `gcloud builds submit` が `Reauthentication failed` で止まった時に、GitHub Actions手動deploy lane、認証更新、Cloud Build再実行、Agent Card skill count、必須Agent Card signal tags、`/observability-oracle`、`/api/mvp-readiness`、`/api/recording-script`、`/api/pilot-value`、`/deploy-recovery`、`/api/deploy-recovery`、A2A `winnerPacketPageEndpoint` / `observabilityOraclePageEndpoint` / `recordingScriptPageEndpoint` / `pilotValueSnapshotEndpoint` / `deployRecoveryEndpoint` / `deployRecoveryPageEndpoint` の再検証コマンドをまとめます。審査員は `GET /deploy-recovery` を開くだけで、復旧状況、copy/pasteコマンド、10分復旧手順、説明台本を読めます。
+`Deploy Recovery` は、Release Drift Guardの結果を運用復旧へ変換します。公開Cloud Runが古い時、または `gcloud builds submit` が `Reauthentication failed` で止まった時に、GitHub Actions手動deploy lane、Workload Identity bootstrap、認証更新、Cloud Build再実行、Agent Card skill count、必須Agent Card signal tags、`/observability-oracle`、`/api/mvp-readiness`、`/api/recording-script`、`/api/pilot-value`、`/deploy-recovery`、`/api/deploy-recovery`、A2A `winnerPacketPageEndpoint` / `observabilityOraclePageEndpoint` / `recordingScriptPageEndpoint` / `pilotValueSnapshotEndpoint` / `deployRecoveryEndpoint` / `deployRecoveryPageEndpoint` の再検証コマンドをまとめます。審査員は `GET /deploy-recovery` を開くだけで、復旧状況、copy/pasteコマンド、10分復旧手順、説明台本を読めます。
 
 - Page: `GET /deploy-recovery`
 - API: `GET /api/deploy-recovery`
@@ -528,6 +528,14 @@
 
 - Workflow: <https://github.com/buddypia/DevOps-AIAgent/actions/workflows/deploy-cloud-run.yml>
 - Required secrets: `GCP_PROJECT_ID` / `GCP_WORKLOAD_IDENTITY_PROVIDER` / `GCP_DEPLOY_SERVICE_ACCOUNT`
+- Bootstrap:
+
+```bash
+PROJECT_ID=$(gcloud config get-value project) \
+REPO=buddypia/DevOps-AIAgent \
+./scripts/bootstrap_github_actions_deploy.sh
+```
+
 - Trigger:
 
 ```bash

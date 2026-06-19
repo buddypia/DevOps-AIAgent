@@ -190,6 +190,14 @@ export function buildDeployRecoveryPlan(input: {
       blocking: readiness === "manual-auth-required"
     },
     {
+      id: "bootstrap-github-actions-deploy",
+      label: "Bootstrap GitHub deploy auth",
+      command: "PROJECT_ID=$(gcloud config get-value project) REPO=buddypia/DevOps-AIAgent ./scripts/bootstrap_github_actions_deploy.sh",
+      why: "Workload Identity Pool、OIDC Provider、deploy用Service Account、GitHub Secretsを1回で作成し、Deploy Cloud Run workflowを実行可能にします。",
+      copyGroup: "auth",
+      blocking: readiness === "manual-auth-required"
+    },
+    {
       id: "cloud-build-submit",
       label: "Deploy latest main",
       command:
@@ -286,8 +294,8 @@ export function buildDeployRecoveryPlan(input: {
       id: "auth",
       window: "0-2m",
       owner: "Release owner",
-      action: authBlocked ? "Deploy Cloud Run workflowのSecretsを確認し、未設定ならgcloud auth loginで認証を更新する" : "gcloud account/projectまたはGitHub deploy workflowのSecretsを確認する",
-      verify: authBlocked ? "gh secret list or gcloud config get-value project" : "gcloud config get-value project",
+      action: authBlocked ? "Deploy Cloud Run workflowのSecretsを確認し、未設定ならbootstrap scriptかgcloud auth loginで認証を更新する" : "gcloud account/projectまたはGitHub deploy workflowのSecretsを確認する",
+      verify: authBlocked ? "gh secret list or ./scripts/bootstrap_github_actions_deploy.sh" : "gcloud config get-value project",
       status: authBlocked ? "blocked" : "watch"
     },
     {
@@ -323,7 +331,7 @@ export function buildDeployRecoveryPlan(input: {
             id: "gcloud-auth",
             priority: "now" as const,
             owner: "Release owner",
-            action: "GitHub Actions Deploy Cloud Run workflowを実行する。Secrets未設定ならgcloud auth loginで非対話Cloud Buildを再実行できる状態にする",
+            action: "GitHub Actions Deploy Cloud Run workflowを実行する。Secrets未設定ならbootstrap scriptでWorkload Identityを作るか、gcloud auth loginで非対話Cloud Buildを再実行できる状態にする",
             proof: input.lastDeployError ?? "gcloud reauthentication failed"
           }
         ]
