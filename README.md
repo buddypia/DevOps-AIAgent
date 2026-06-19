@@ -590,6 +590,8 @@ gh workflow run verify-public-proof.yml --ref main \
   -f target_url=https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app
 ```
 
+公開提出では、審査員とGitHub Actionsから開けることを優先するため、アプリ内IP allowlistは既定で `monitor` modeです。非公開デモとしてアクセス制限を有効化したい場合だけ、Cloud Runに `IP_ALLOWLIST_MODE=strict` を設定します。
+
 ## Local Development
 
 ```bash

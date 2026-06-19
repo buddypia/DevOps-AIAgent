@@ -55,6 +55,8 @@ export type SecurityReview = {
 };
 
 type AllowlistSummary = {
+  mode?: string;
+  enforced?: boolean;
   exactIpCount: number;
   localDevelopmentCidrCount: number;
   rakutenMobileCidrCount: number;
@@ -107,6 +109,8 @@ function actor(recommendation: Recommendation, id: string, fallback: string) {
 
 function allowlistScore(allowlist: AllowlistSummary) {
   const cidrCount = allowlist.exactIpCount + allowlist.localDevelopmentCidrCount + allowlist.rakutenMobileCidrCount;
+  const enforced = allowlist.enforced ?? cidrCount > 0;
+  if (!enforced && cidrCount > 0) return 76;
   if (cidrCount >= 3 && allowlist.rakutenMobileCidrCount > 0) return 96;
   if (cidrCount > 0) return 72;
   return 35;
@@ -141,6 +145,8 @@ export function buildSecurityReview(input: {
   const hasSentinel = hasAgent(recommendation, "security-sentinel");
   const secretConfigured = Boolean(input.geminiSecretConfigured);
   const cidrCount = allowlist.exactIpCount + allowlist.localDevelopmentCidrCount + allowlist.rakutenMobileCidrCount;
+  const allowlistEnforced = allowlist.enforced ?? cidrCount > 0;
+  const allowlistMode = allowlist.mode ?? (allowlistEnforced ? "strict" : "monitor");
 
   const controls: SecurityControl[] = [
     control({
@@ -155,9 +161,9 @@ export function buildSecurityReview(input: {
       id: "ip-allowlist",
       label: "Public demo IP allowlist",
       score: allowlistScore(allowlist),
-      evidence: `${allowlist.exactIpCount} exact IPs, ${allowlist.rakutenMobileCidrCount} Rakuten Mobile CIDRs, ${allowlist.localDevelopmentCidrCount} local CIDRs are enforced before API routes.`,
-      judgeValue: "公開URLでも、誰でも無制限に叩けるデモではないことを示す。",
-      action: cidrCount > 0 ? "HealthzのipAllowlist summaryを証拠リンクに添える" : "server/ipAllowlist.tsへ提出者/審査環境の許可範囲を追加する"
+      evidence: `${allowlist.exactIpCount} exact IPs, ${allowlist.rakutenMobileCidrCount} Rakuten Mobile CIDRs, ${allowlist.localDevelopmentCidrCount} local CIDRs are available in ${allowlistMode} mode; enforced=${allowlistEnforced}.`,
+      judgeValue: allowlistEnforced ? "非公開デモではアクセス範囲を制限できる。" : "提出用公開URLは審査員とGitHub検証が開ける状態を優先し、制限範囲は監査証跡として表示する。",
+      action: allowlistEnforced ? "HealthzのipAllowlist summaryを証拠リンクに添える" : "非公開運用に切り替える時だけIP_ALLOWLIST_MODE=strictでenforceする"
     }),
     control({
       id: "input-contract",

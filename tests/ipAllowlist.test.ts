@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { isAllowedClientIp } from "../server/ipAllowlist";
+import { ipAllowlistSummary, isAllowedClientIp } from "../server/ipAllowlist";
 
 describe("IP allowlist", () => {
   test("allows local development loopback addresses", () => {
@@ -25,5 +25,12 @@ describe("IP allowlist", () => {
   test("rejects unrelated public addresses", () => {
     expect(isAllowedClientIp("8.8.8.8")).toBe(false);
     expect(isAllowedClientIp("2001:4860:4860::8888")).toBe(false);
+  });
+
+  test("defaults to monitor mode so public judges and GitHub proof checks can open the demo", () => {
+    expect(ipAllowlistSummary).toMatchObject({
+      mode: "monitor",
+      enforced: false
+    });
   });
 });

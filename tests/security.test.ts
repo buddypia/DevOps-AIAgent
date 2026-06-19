@@ -100,4 +100,24 @@ describe("security sentinel review", () => {
     expect(review.controls.find((control) => control.id === "ci-quality-gate")?.status).toBe("fail");
     expect(review.hardTruth).toContain("公開デモ");
   });
+
+  test("treats public judging allowlist monitor mode as a watch guardrail, not a blocker", () => {
+    const recommendation = recommendSquad(DEFAULT_PROJECT_BRIEF, ["market-broker", "gemini-strategist", "cloud-run-sre"], 140);
+    const strategy = buildWinningStrategy(recommendation);
+    const review = buildSecurityReview({
+      baseUrl: "https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app",
+      recommendation,
+      strategy,
+      allowlist: { ...allowlist, mode: "monitor", enforced: false },
+      ci: passedCi,
+      geminiSecretConfigured: true
+    });
+
+    expect(review.posture).toBe("guarded");
+    expect(review.controls.find((control) => control.id === "ip-allowlist")).toMatchObject({
+      status: "watch",
+      score: 76
+    });
+    expect(review.controls.find((control) => control.id === "ip-allowlist")?.evidence).toContain("enforced=false");
+  });
 });

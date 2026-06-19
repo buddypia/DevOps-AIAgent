@@ -285,6 +285,10 @@ export function isAllowedClientIp(ip: string) {
   return ALLOWED_CIDRS.some((cidr) => isIpInCidr(ip, cidr));
 }
 
+export function isIpAllowlistEnforced() {
+  return process.env.IP_ALLOWLIST_MODE === "strict" || process.env.ENFORCE_IP_ALLOWLIST === "true";
+}
+
 export function getClientIp(req: Request) {
   const forwardedFor = req.header("x-forwarded-for");
   const candidate = forwardedFor?.split(",")[0]?.trim() || req.socket.remoteAddress || "";
@@ -292,6 +296,11 @@ export function getClientIp(req: Request) {
 }
 
 export function ipAllowlistMiddleware(req: Request, res: Response, next: NextFunction) {
+  if (!isIpAllowlistEnforced()) {
+    next();
+    return;
+  }
+
   const clientIp = getClientIp(req);
   if (clientIp && isAllowedClientIp(clientIp)) {
     next();
@@ -305,6 +314,8 @@ export function ipAllowlistMiddleware(req: Request, res: Response, next: NextFun
 }
 
 export const ipAllowlistSummary = {
+  mode: isIpAllowlistEnforced() ? "strict" : "monitor",
+  enforced: isIpAllowlistEnforced(),
   exactIpCount: EXACT_ALLOWED_IPS.length,
   localDevelopmentCidrCount: LOCAL_DEVELOPMENT_CIDRS.length,
   rakutenMobileCidrCount: RAKUTEN_MOBILE_CIDRS.length
