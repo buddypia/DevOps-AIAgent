@@ -1,5 +1,11 @@
 import { describe, expect, test } from "vitest";
-import { buildExternalEvidenceRun, type ExternalEvidenceProbe } from "../src/externalEvidence";
+import {
+  buildExternalEvidenceRun,
+  EXTERNAL_EVIDENCE_REQUIRED_SIGNAL,
+  EXTERNAL_EVIDENCE_SKILL_ID,
+  renderExternalEvidenceHtml,
+  type ExternalEvidenceProbe
+} from "../src/externalEvidence";
 
 const passedProbe = (id: ExternalEvidenceProbe["id"]): ExternalEvidenceProbe => ({
   id,
@@ -25,8 +31,11 @@ describe("external evidence verifier", () => {
     expect(run.nextActions).toHaveLength(0);
     expect(run.a2aPayload).toMatchObject({
       method: "message/send",
-      skill: "external.evidence",
-      finalUrlsReady: true
+      skill: EXTERNAL_EVIDENCE_SKILL_ID,
+      finalUrlsReady: true,
+      endpoints: {
+        externalEvidencePage: "https://a2a-agent-marketplace.example.com/external-evidence"
+      }
     });
   });
 
@@ -58,7 +67,7 @@ describe("external evidence verifier", () => {
     expect(run.evidenceScore).toBeLessThan(80);
     expect(run.nextActions.map((action) => action.id)).toEqual(["protopedia-url", "video-url"]);
     expect(run.a2aPayload).toMatchObject({
-      skill: "external.evidence",
+      skill: EXTERNAL_EVIDENCE_SKILL_ID,
       finalUrlsReady: false
     });
   });
@@ -82,5 +91,39 @@ describe("external evidence verifier", () => {
 
     expect(run.readiness).toBe("blocked");
     expect(run.nextActions.map((action) => action.id)).toContain("deployed-url");
+  });
+
+  test("exports a release-drift signal for the direct GET proof page", () => {
+    expect(EXTERNAL_EVIDENCE_REQUIRED_SIGNAL).toBe("external.evidence:tag:external-evidence-lock");
+  });
+
+  test("renders a human-readable proof page without leaking raw HTML", () => {
+    const run = buildExternalEvidenceRun({
+      baseUrl: "https://a2a-agent-marketplace.example.com",
+      generatedAt: "2026-06-18T00:00:00.000Z",
+      probes: [
+        {
+          ...passedProbe("github-url"),
+          evidence: "<script>alert('x')</script>"
+        },
+        passedProbe("deployed-url"),
+        {
+          ...passedProbe("protopedia-url"),
+          status: "missing",
+          score: 30,
+          url: "",
+          evidence: "ProtoPedia URL is missing."
+        },
+        passedProbe("video-url")
+      ]
+    });
+
+    const html = renderExternalEvidenceHtml(run);
+
+    expect(html).toContain("External Evidence Proof");
+    expect(html).toContain("Submission URL Probes");
+    expect(html).toContain("/external-evidence");
+    expect(html).toContain("&lt;script&gt;alert(&#39;x&#39;)&lt;/script&gt;");
+    expect(html).not.toContain("<script>alert('x')</script>");
   });
 });

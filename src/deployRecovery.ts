@@ -272,6 +272,14 @@ export function buildDeployRecoveryPlan(input: {
       blocking: false
     },
     {
+      id: "verify-external-evidence-page",
+      label: "Verify external evidence proof page",
+      command: `curl -s ${targetBaseUrl}/external-evidence | rg 'External Evidence Proof|Submission URL Probes'`,
+      why: "External EvidenceのGET証拠ページが公開revisionに載り、提出URL検証を審査員がPOSTなしで直接読めるか確認します。",
+      copyGroup: "verify",
+      blocking: false
+    },
+    {
       id: "verify-recovery-page",
       label: "Verify recovery proof page",
       command: `curl -s ${targetBaseUrl}/deploy-recovery | rg 'Deploy Recovery|Copy/Paste Commands'`,

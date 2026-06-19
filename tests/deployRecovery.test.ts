@@ -46,6 +46,7 @@ const requiredAgentCardSignals = [
   "judge.snapshot:tag:get-proof",
   "mvp.snapshot:tag:get-proof",
   "autonomy.snapshot:tag:get-proof",
+  "external.evidence:tag:external-evidence-lock",
   "observability.oracle:tag:observability-oracle-lock",
   "recording.script:tag:get-proof",
   "pilot.value.snapshot:tag:get-proof"
@@ -119,6 +120,7 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "verify-autonomy-snapshot")?.command).toContain("/api/autonomy-snapshot");
     expect(plan.commands.find((command) => command.id === "verify-recording-script")?.command).toContain("/api/recording-script");
     expect(plan.commands.find((command) => command.id === "verify-pilot-value")?.command).toContain("/api/pilot-value");
+    expect(plan.commands.find((command) => command.id === "verify-external-evidence-page")?.command).toContain("/external-evidence");
     expect(plan.commands.find((command) => command.id === "verify-recovery-page")?.command).toContain("/deploy-recovery");
     expect(plan.commands.find((command) => command.id === "verify-recovery-endpoint")?.command).toContain("/api/deploy-recovery");
     expect(plan.commands.find((command) => command.id === "verify-a2a-artifact")?.command).toContain("deployRecoveryPageEndpoint");
@@ -243,6 +245,7 @@ describe("deploy recovery plan", () => {
     expect(plan.judgeScript.join("\n")).toContain("mvp.snapshot:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("autonomy.snapshot:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("/api/autonomy-snapshot");
+    expect(plan.judgeScript.join("\n")).toContain("external.evidence:tag:external-evidence-lock");
     expect(plan.judgeScript.join("\n")).toContain("observability.oracle:tag:observability-oracle-lock");
     expect(plan.judgeScript.join("\n")).toContain("/observability-oracle");
     expect(plan.judgeScript.join("\n")).toContain("recording.script:tag:get-proof");
@@ -261,6 +264,7 @@ describe("deploy recovery plan", () => {
           "autonomy.snapshot:tag:get-proof",
           "competitive.battlecard:tag:criteria-duel",
           "competitive.snapshot:tag:get-proof",
+          "external.evidence:tag:external-evidence-lock",
           "judge.snapshot:tag:get-proof",
           "mvp.snapshot:tag:get-proof",
           "observability.oracle:tag:observability-oracle-lock",

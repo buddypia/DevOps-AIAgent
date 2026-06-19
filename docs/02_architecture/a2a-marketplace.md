@@ -290,10 +290,12 @@
 
 ## External Evidence Surface
 
+- `GET /external-evidence`: 公開GitHub、Cloud Run、ProtoPedia作品URL、動画URLの検証結果を審査員が直接読めるHTML証拠ページで返す
+- `GET /api/external-evidence`: 同じ検証結果をデフォルト入力でJSONとして返す
 - `POST /api/external-evidence`: 公開GitHub、Cloud Run、ProtoPedia作品URL、動画URLが審査員から開けるかをライブプローブする
 - Safe URL policy: 任意URLを無制限にfetchせず、GitHub、Cloud Run、ProtoPedia、YouTube/Vimeoを最終提出URLとして検証し、Google Driveはbackup watch扱いに留める
 - Runbook: 提出直前に同じ4 URLを再検証できるcurlを返す
-- A2A payload: `external.evidence` skillとしてexternal proof score、finalUrlsReady、probe statuses、next actionsを返す
+- A2A payload: `external.evidence` skillとしてexternal proof score、finalUrlsReady、probe statuses、next actions、`externalEvidencePageEndpoint`を返す
 
 ## Release Drift Surface
 
