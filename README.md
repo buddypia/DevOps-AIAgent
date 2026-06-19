@@ -202,6 +202,7 @@
 
 - Page: `GET /winner-sufficiency`
 - API: `GET /api/winner-sufficiency`
+- Live closeout: `GET /winner-sufficiency?live=1` / `GET /api/winner-sufficiency?live=1` でCompetitive SWOTの公式ソースもライブ検証し、証拠URLを `/competitive-swot?live=1` へ固定する
 - Output: sufficiency score、verdict、6 checks、next actions、judge script、A2A `winner.sufficiency` payload
 
 ## Objection Arena

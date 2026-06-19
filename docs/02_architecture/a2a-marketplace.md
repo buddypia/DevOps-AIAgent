@@ -211,6 +211,7 @@
 
 - `GET /winner-sufficiency`: MVP Readiness、Competitive SWOT、Win Gap Radar、First-Click Smoke、Submission Launchを束ね、「機能は本当に十分か」を審査員が直接読めるHTMLで返す
 - `GET /api/winner-sufficiency`: 同じ判定をA2A/自動検証用JSONとして返す
+- `GET /winner-sufficiency?live=1` / `GET /api/winner-sufficiency?live=1`: Competitive SWOTの公式ソースをライブプローブし、競合/SWOT proof URLを `/competitive-swot?live=1` へ固定する
 - Sufficiency checks: MVP core、Competitive/SWOT proof、Public release、First-click proof、Feature Freeze、Submission Launchをpassed/watch/blockedで検収する
 - Verdict: `winner-sufficient`、`external-closeout`、`public-drift`、`needs-feature-work` の4状態で、機能追加を止めるべきか、外部提出を閉じるべきか、公開再デプロイすべきかを分ける
 - A2A payload: `winner.sufficiency` skillとしてsufficiency score、verdict、checks、actions、endpoint群を返す

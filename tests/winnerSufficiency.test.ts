@@ -111,9 +111,16 @@ describe("winner sufficiency lock", () => {
       skill: WINNER_SUFFICIENCY_SKILL_ID,
       sufficientForWinner: true,
       endpoints: {
-        winnerSufficiencyPage: "https://example.com/winner-sufficiency"
+        winnerSufficiencyPage: "https://example.com/winner-sufficiency",
+        competitiveSwotLive: "https://example.com/competitive-swot?live=1"
       }
     });
+    expect(lock.checks.find((check) => check.id === "competitive-swot")).toMatchObject({
+      status: "passed",
+      proofUrl: "https://example.com/competitive-swot?live=1",
+      action: "Use live Competitive SWOT in the first 60 seconds."
+    });
+    expect(lock.judgeScript.join("\n")).toContain("open https://example.com/competitive-swot?live=1");
     expect(WINNER_SUFFICIENCY_REQUIRED_SIGNAL).toBe("winner.sufficiency:tag:winner-sufficiency-lock");
   });
 

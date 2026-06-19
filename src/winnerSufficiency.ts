@@ -116,6 +116,14 @@ function launchStatus(launch: SubmissionLaunchGate): WinnerSufficiencyStatus {
   return "blocked";
 }
 
+function hasLiveCompetitiveSourceProof(snapshot: CompetitiveSnapshot) {
+  return snapshot.summary.sourceLockReadiness === "source-lock-live" || snapshot.summary.sourceLiveProbeCount > 0;
+}
+
+function competitiveProofUrl(baseUrl: string, snapshot: CompetitiveSnapshot) {
+  return endpoint(baseUrl, hasLiveCompetitiveSourceProof(snapshot) ? "/competitive-swot?live=1" : "/competitive-swot");
+}
+
 function verdictFor(input: {
   mvp: MvpSnapshot;
   competitive: CompetitiveSnapshot;
@@ -193,6 +201,7 @@ export function buildWinnerSufficiencyLock(input: {
   const smokeCheckStatus = smokeStatus(input.firstClickSmoke);
   const freezeCheckStatus = freezeStatus(input.winGapRadar);
   const launchCheckStatus = launchStatus(input.submissionLaunch);
+  const competitiveProof = competitiveProofUrl(baseUrl, input.competitiveSnapshot);
 
   const checks: WinnerSufficiencyCheck[] = [
     {
@@ -209,9 +218,9 @@ export function buildWinnerSufficiencyLock(input: {
       label: "Competitive/SWOT Proof",
       status: competitiveCheckStatus,
       score: checkScore(competitiveCheckStatus, input.competitiveSnapshot.summary.battleScore),
-      evidence: `${input.competitiveSnapshot.readiness}; ${input.competitiveSnapshot.summary.competitorCount} competitors; ${input.competitiveSnapshot.summary.swotQuadrantCount}/4 SWOT quadrants; source lock ${input.competitiveSnapshot.summary.sourceLockReadiness}.`,
-      action: competitiveCheckStatus === "passed" ? "Use Competitive SWOT in the first 60 seconds." : input.competitiveSnapshot.hardTruth,
-      proofUrl: endpoint(baseUrl, "/competitive-swot")
+      evidence: `${input.competitiveSnapshot.readiness}; ${input.competitiveSnapshot.summary.competitorCount} competitors; ${input.competitiveSnapshot.summary.swotQuadrantCount}/4 SWOT quadrants; source lock ${input.competitiveSnapshot.summary.sourceLockReadiness}; live probes ${input.competitiveSnapshot.summary.sourceLiveProbeCount ?? 0}.`,
+      action: competitiveCheckStatus === "passed" ? "Use live Competitive SWOT in the first 60 seconds." : input.competitiveSnapshot.hardTruth,
+      proofUrl: competitiveProof
     },
     {
       id: "public-release",
@@ -294,7 +303,7 @@ export function buildWinnerSufficiencyLock(input: {
     judgeScript: [
       `Sufficiency verdict: ${verdict}; score ${sufficiencyScore}.`,
       answerFor(verdict),
-      `Competitive/SWOT: ${input.competitiveSnapshot.readiness}; ${input.competitiveSnapshot.summary.competitorCount} competitors; source lock ${input.competitiveSnapshot.summary.sourceLockReadiness}.`,
+      `Competitive/SWOT: ${input.competitiveSnapshot.readiness}; ${input.competitiveSnapshot.summary.competitorCount} competitors; source lock ${input.competitiveSnapshot.summary.sourceLockReadiness}; open ${competitiveProof}.`,
       `MVP: ${input.mvpSnapshot.readiness}; release ${input.mvpSnapshot.summary.releaseVerdict}; external gaps ${input.mvpSnapshot.summary.externalGapCount}.`,
       `First click: ${input.firstClickSmoke.readiness}; ${input.firstClickSmoke.passedCount}/${input.firstClickSmoke.probes.length} proof pages passed.`,
       `Submission: ${input.submissionLaunch.readiness}; final submit ${input.submissionLaunch.finalSubmitLock.readiness}.`
@@ -312,6 +321,7 @@ export function buildWinnerSufficiencyLock(input: {
         winnerSufficiencyPage: endpoint(baseUrl, "/winner-sufficiency"),
         mvpReadiness: endpoint(baseUrl, "/mvp-readiness"),
         competitiveSwot: endpoint(baseUrl, "/competitive-swot"),
+        competitiveSwotLive: endpoint(baseUrl, "/competitive-swot?live=1"),
         firstClickSmoke: endpoint(baseUrl, "/first-click-smoke"),
         submissionLaunch: endpoint(baseUrl, "/submission-launch")
       }
