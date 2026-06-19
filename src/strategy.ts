@@ -122,6 +122,28 @@ export const COMPETITORS: Competitor[] = [
     sourceUrl: "https://docs.dify.ai/en/use-dify/getting-started/introduction"
   },
   {
+    id: "microsoft-copilot-studio",
+    name: "Microsoft Copilot Studio",
+    category: "企業向けローコードAgent Studio",
+    marketProof: "自然言語やグラフィカルUIでエージェントを設計、テスト、公開し、Microsoft 365 Copilotへ配布できる。",
+    strengths: ["low-code agent builder", "Microsoft 365配布", "企業データ/コネクタ統合"],
+    threatLevel: "high",
+    counterPosition: "Copilot Studioは企業内エージェントを作り配る。こちらはハッカソン/DevOpsで、どの外部AI能力を買い、A2Aで委任し、公開証拠で検収するかに集中する。",
+    counterMove: "Judge First-Click、Acceptance Matrix、Release Driftを開き、作成ツールではなく提出可能な検収体験で差を出す。",
+    sourceUrl: "https://learn.microsoft.com/en-us/microsoft-copilot-studio/fundamentals-what-is-copilot-studio"
+  },
+  {
+    id: "openai-agents-sdk",
+    name: "OpenAI Agents SDK",
+    category: "コードファーストAgent SDK",
+    marketProof: "エージェントが計画、ツール呼び出し、専門家間の協調、状態を持つアプリをSDKで構築できる。",
+    strengths: ["tool execution", "handoffs", "stateful orchestration"],
+    threatLevel: "medium",
+    counterPosition: "OpenAI Agents SDKはアプリ内オーケストレーションに強い。こちらはベンダー横断のAgent Card、調達判断、Cloud Run検収を前面に出す。",
+    counterMove: "A2A artifact、Agent Card skill、Competitive SWOTを並べ、単一SDKではなくエージェント能力市場として見せる。",
+    sourceUrl: "https://developers.openai.com/api/docs/guides/agents"
+  },
+  {
     id: "agentops",
     name: "AgentOps",
     category: "Agent Observability",

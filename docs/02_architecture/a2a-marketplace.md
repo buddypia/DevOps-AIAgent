@@ -94,7 +94,7 @@
 
 ## Strategy Surface
 
-- Competitive arena: ADK / Google Cloud AI Agent Marketplace / LangGraph / CrewAI / Dify / AgentOps を比較
+- Competitive arena: ADK / Google Cloud AI Agent Marketplace / Microsoft Copilot Studio / OpenAI Agents SDK / LangGraph / CrewAI / Dify / AgentOps を比較
 - SWOT: 現在の編成から strengths / weaknesses / opportunities / threats を再計算
 - Judge scorecard: 審査5項目ごとのスコア、証拠、次アクションを表示
 - MVP proof: Cloud Run、Gemini、A2A、公開GitHub、ProtoPediaの提出準備を分離
@@ -102,7 +102,7 @@
 
 ## Market Intel Surface
 
-- `POST /api/market-intel`: Gemini Enterprise、Google ADK、A2A、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較を返す
+- `POST /api/market-intel`: Gemini Enterprise、Google ADK、A2A、Copilot Studio、OpenAI Agents SDK、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較を返す
 - Source checklist: 審査員に見せられる一次情報URLを固定する
 - Source Freshness Lock: 公式ソースURLをライブプローブし、競合/SWOTの根拠として使えるかをscore、readiness、probe evidence、curl runbookへ変換する
 - Competitor cuts: 競合ごとに「相手が強い点」「露出する隙」「こちらの反撃」「デモ証拠」を分ける
@@ -111,7 +111,7 @@
 
 ## Moat Stress Surface
 
-- `POST /api/moat-stress`: ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsからの反論を競合別にストレステストする
+- `POST /api/moat-stress`: ADK、A2A Marketplace、Copilot Studio、OpenAI Agents SDK、LangGraph、CrewAI、Dify、AgentOpsからの反論を競合別にストレステストする
 - Objections: 「ADKで十分では」「LangGraphで代替できるのでは」などの審査員ツッコミを固定する
 - Proof routes: 各反論に対してMarket Intel、Judge Tour、Live Evidence、Agent Cardのどれを見せるかを返す
 - Recording order: 競合/SWOT、Moat Stress、Live Evidence、Submission Launch Gateを録画順に変換する
@@ -515,7 +515,7 @@
 - Task board proof: `task.delegate` skillとして、agent work orders、execution order、verification queue、receipt digestをA2A payloadにも含める
 - Moat stress proof: `moat.stress` skillとして、競合別の想定反論、反証、見せる証拠、録画順をA2A payloadにも含める
 - Competitive battlecard proof: `competitive.battlecard` skillとして、競合別の短い回答、公式ソース、SWOT receipts、Criteria Duel、Win/Loss Lock、Objection Replay、top risksをA2A payloadにも含める
-- Competitive SWOT snapshot proof: `competitive.snapshot` skillとして、6競合、SWOT 4象限、公式ソース、Criteria Duel、Win/Loss Lock、Proof Lock、Source Freshness LockをGETで開ける審査用HTMLにも含め、`?live=1` で公式ソース到達性を再検証する
+- Competitive SWOT snapshot proof: `competitive.snapshot` skillとして、8競合、SWOT 4象限、公式ソース、Criteria Duel、Win/Loss Lock、Proof Lock、Source Freshness LockをGETで開ける審査用HTMLにも含め、`?live=1` で公式ソース到達性を再検証する
 - MVP readiness snapshot proof: `mvp.snapshot` skillとして、MVP Audit、Acceptance Matrix、Release Drift、Deploy Recovery、外部提出gapをGETで開ける提出可否HTMLにも含める
 - Recording script proof: `recording.script` skillとして、30秒動画の台本、字幕、証拠URL、Video Proof LockをGETで開ける録画用HTMLにも含める
 

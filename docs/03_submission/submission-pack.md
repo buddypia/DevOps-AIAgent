@@ -21,7 +21,7 @@ Agent-To-Agent Marketplace
 
 ### 1. 解決したい課題と背景
 
-AIエージェント開発では、エージェントを作る前に「どの能力を持つAIを選ぶべきか」が曖昧になりやすい。ADK、LangGraph、CrewAI、Dify、AgentOpsなどの基盤は強力だが、開発チームが審査基準、運用制約、A2A連携、検証証跡を見ながらAI能力を調達する体験はまだ弱い。
+AIエージェント開発では、エージェントを作る前に「どの能力を持つAIを選ぶべきか」が曖昧になりやすい。ADK、Copilot Studio、OpenAI Agents SDK、LangGraph、CrewAI、Dify、AgentOpsなどの基盤は強力だが、開発チームが審査基準、運用制約、A2A連携、検証証跡を見ながらAI能力を調達する体験はまだ弱い。
 
 ### 2. 想定ユーザー
 
@@ -36,8 +36,8 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Contract Deskで、選択したAIの成果物、受入条件、SLA、検証コマンドを発行する
 - Agent Task Boardで、選択したAIごとのA2A仕事票、受入条件、証拠URL、検証キューを発行する
 - Winning Strategyで競合分析、SWOT、審査5項目、MVP proof、次に雇うべきAIを表示する
-- Market Intel Boardで、Gemini Enterprise、Google ADK、A2A、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較、Source Freshness Lock、差別化仮説、審査回答を表示する
-- Moat Stress Testで、ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsからの反論を先に受け、証拠付き回答と録画順を表示する
+- Market Intel Boardで、Gemini Enterprise、Google ADK、A2A、Copilot Studio、OpenAI Agents SDK、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較、Source Freshness Lock、差別化仮説、審査回答を表示する
+- Moat Stress Testで、ADK、A2A Marketplace、Copilot Studio、OpenAI Agents SDK、LangGraph、CrewAI、Dify、AgentOpsからの反論を先に受け、証拠付き回答と録画順を表示する
 - MVP Auditで、必須技術、審査5項目、DevOps証拠、提出3点をpass/watch/failで監査し、外部未発行URLを合格扱いにしない
 - Judge Briefで、競合差別化、MVP監査、勝ち筋、提出証拠、30秒導線、残リスクを審査員の初見1ページにまとめる
 - Judge Command Centerで、Judge Tour、Competitive Battlecard、Criteria Duel、Objection Replay、Competitive Proof Lock、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを最初の90秒の司令塔に束ねる

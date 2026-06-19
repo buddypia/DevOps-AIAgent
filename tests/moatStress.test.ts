@@ -15,8 +15,9 @@ describe("moat stress test", () => {
 
     expect(moat.stressScore).toBeGreaterThanOrEqual(80);
     expect(moat.scenarios).toHaveLength(marketIntel.comparisons.length);
-    expect(moat.scenarios.map((scenario) => scenario.id)).toEqual(expect.arrayContaining(["google-adk", "langgraph", "agentops"]));
+    expect(moat.scenarios.map((scenario) => scenario.id)).toEqual(expect.arrayContaining(["google-adk", "microsoft-copilot-studio", "openai-agents-sdk", "langgraph", "agentops"]));
     expect(moat.scenarios.find((scenario) => scenario.id === "google-adk")?.objection).toContain("ADK");
+    expect(moat.scenarios.find((scenario) => scenario.id === "microsoft-copilot-studio")?.objection).toContain("Copilot Studio");
     expect(moat.scenarios.find((scenario) => scenario.id === "a2a-marketplace")?.evidenceLinks.map((link) => link.label)).toEqual(
       expect.arrayContaining(["Agent Card", "Live Evidence"])
     );

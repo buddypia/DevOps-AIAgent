@@ -125,7 +125,7 @@ function headlineFor(readiness: CompetitiveSnapshotReadiness) {
 }
 
 function hardTruthFor(readiness: CompetitiveSnapshotReadiness) {
-  if (readiness === "competitive-swot-ready") return "6競合、4象限SWOT、審査5項目別の反論、公式ソース、公開proof routeを1クリックで確認できます。";
+  if (readiness === "competitive-swot-ready") return "主要競合、4象限SWOT、審査5項目別の反論、公式ソース、公開proof routeを1クリックで確認できます。";
   if (readiness === "competitive-swot-watch") return "分析構造は揃っていますが、GETページでは外部ソースをライブプローブしません。提出直前にPOST /api/market-intelでSource Freshness Lockを更新します。";
   return "競合の強みを否定するだけでは勝てません。公式ソース、SWOT signal、動く証拠routeを同じ画面で補強します。";
 }
@@ -177,7 +177,7 @@ export function buildCompetitiveSnapshot(input: {
       label: "Moat Stress",
       method: "POST",
       url: moatStressUrl,
-      purpose: "ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsからの反論を再評価する。",
+      purpose: "ADK、A2A Marketplace、Copilot Studio、OpenAI Agents SDK、LangGraph、CrewAI、Dify、AgentOpsからの反論を再評価する。",
       curl: postCurl(moatStressUrl, input.projectBrief, input.selectedAgentIds)
     }
   ];
@@ -270,7 +270,7 @@ export function buildCompetitiveSnapshot(input: {
     sourceLedger: input.marketIntel.sourceLedger,
     postApis,
     judgeScript: [
-      "最初に Competitive SWOT Snapshot を開き、6競合とSWOT 4象限が1画面にあることを見せる。",
+      `最初に Competitive SWOT Snapshot を開き、${input.battlecard.cards.length}競合とSWOT 4象限が1画面にあることを見せる。`,
       `Battle score ${input.battlecard.battleScore}、Criteria Duel ${input.battlecard.criteriaDuel.duelScore}、Win/Loss ${input.battlecard.winLossLock.winLossScore}、Proof Lock ${input.battlecard.proofLock.proofScore} を読み上げる。`,
       `最弱質問は ${input.battlecard.objectionReplay.weakestCompetitor}: ${input.battlecard.objectionReplay.openingObjection}`,
       "Win/Loss Lockで、競合ごとに譲る強み、反撃、必ず開く証拠URL、MVP actionがあることを確認する。",

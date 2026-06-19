@@ -35,14 +35,14 @@ describe("competitive SWOT snapshot", () => {
 
     expect(snapshot.readiness).toBe("competitive-swot-watch");
     expect(snapshot.summary).toMatchObject({
-      competitorCount: 6,
-      highThreatCount: 2,
-      sourceUrlCount: 11,
+      competitorCount: 8,
+      highThreatCount: 3,
+      sourceUrlCount: 14,
       winLossScore: expect.any(Number),
       swotQuadrantCount: 4,
       sourceLockReadiness: "source-lock-declared",
       sourceLiveProbeCount: 0,
-      sourceUncheckedCount: expect.any(Number),
+      sourceUncheckedCount: 14,
       sourceCompetitorCoveragePercent: 0
     });
     expect(snapshot.summary.sourceUncheckedCount).toBe(snapshot.sourceLedger.length);
@@ -53,7 +53,9 @@ describe("competitive SWOT snapshot", () => {
       uncheckedCount: snapshot.sourceLedger.length
     });
     expect(snapshot.swotMatrix.map((group) => group.quadrant)).toEqual(["strengths", "weaknesses", "opportunities", "threats"]);
-    expect(snapshot.competitors.map((card) => card.id)).toEqual(expect.arrayContaining(["google-adk", "a2a-marketplace", "langgraph", "crewai", "dify", "agentops"]));
+    expect(snapshot.competitors.map((card) => card.id)).toEqual(
+      expect.arrayContaining(["google-adk", "a2a-marketplace", "langgraph", "crewai", "dify", "microsoft-copilot-studio", "openai-agents-sdk", "agentops"])
+    );
     expect(snapshot.competitors.find((card) => card.id === "google-adk")?.sourceUrls.map((source) => source.url)).toEqual(
       expect.arrayContaining(["https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/adk"])
     );

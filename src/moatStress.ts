@@ -81,6 +81,8 @@ function objectionFor(comparison: MarketIntelComparison) {
   if (comparison.id === "langgraph") return "LangGraphのオーケストレーションで代替できるのでは？";
   if (comparison.id === "crewai") return "CrewAIのcrew設計で同じ体験を作れるのでは？";
   if (comparison.id === "dify") return "Difyならもっと速くワークフロー化できるのでは？";
+  if (comparison.id === "microsoft-copilot-studio") return "Microsoft Copilot Studioならローコードで作って配れるのでは？";
+  if (comparison.id === "openai-agents-sdk") return "OpenAI Agents SDKで同じオーケストレーションを実装できるのでは？";
   if (comparison.id === "agentops") return "AgentOps/LangSmith系の観測で十分では？";
   return `${comparison.competitor}で代替できるのでは？`;
 }
@@ -202,7 +204,7 @@ export function buildMoatStressTest(input: {
           ? "反論は成立していますが、動画で証拠を見せないと既存ツールとの差分が薄く見えます。"
           : "競合に飲み込まれる危険があります。調達体験と公開証拠を先に補強してください。",
     hardTruth:
-      "ADK、LangGraph、CrewAI、Dify、AgentOpsは強いです。勝ち筋は置き換えではなく、どのAI能力を雇い、A2Aで委任し、Cloud Run上の証拠へ閉じるかを審査員に操作させることです。",
+      "ADK、Copilot Studio、OpenAI Agents SDK、LangGraph、CrewAI、Dify、AgentOpsは強いです。勝ち筋は置き換えではなく、どのAI能力を雇い、A2Aで委任し、Cloud Run上の証拠へ閉じるかを審査員に操作させることです。",
     scenarios,
     recordingOrder: [
       "Judge Tourで90秒の審査導線を開く",

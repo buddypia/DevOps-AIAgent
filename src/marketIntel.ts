@@ -234,6 +234,42 @@ const SOURCES: MarketIntelSource[] = [
     judgeUse: "Use this when comparing visual workflow building against proof-driven DevOps submission."
   },
   {
+    id: "microsoft-copilot-studio",
+    label: "Microsoft Copilot Studio",
+    category: "enterprise low-code agent studio",
+    url: "https://learn.microsoft.com/en-us/microsoft-copilot-studio/fundamentals-what-is-copilot-studio",
+    sourceType: "official-doc",
+    reviewedAt: SOURCE_REVIEWED_AT,
+    freshness: "fresh",
+    currentSignal: "Copilot Studio is a graphical, low-code tool for building agents and agent flows with connectors and enterprise data.",
+    strategicRead: "Enterprise low-code agent builders are strong; our wedge must be cross-vendor capability buying, A2A delegation, and submission proof.",
+    judgeUse: "Use this when a judge asks why Microsoft-style low-code agent building is not already the product."
+  },
+  {
+    id: "microsoft-copilot-studio-product",
+    label: "Microsoft Copilot Studio product page",
+    category: "enterprise low-code agent studio",
+    url: "https://www.microsoft.com/en-us/microsoft-365-copilot/microsoft-copilot-studio",
+    sourceType: "official-site",
+    reviewedAt: SOURCE_REVIEWED_AT,
+    freshness: "fresh",
+    currentSignal: "Microsoft positions Copilot Studio as an end-to-end conversational AI platform for designing, testing, and publishing agents.",
+    strategicRead: "The low-code publishing story is credible; our demo must show why hackathon teams still need procurement, proof, and release evidence.",
+    judgeUse: "Use this as the second official citation before claiming we have answered Copilot Studio."
+  },
+  {
+    id: "openai-agents-sdk",
+    label: "OpenAI Agents SDK",
+    category: "code-first agent SDK",
+    url: "https://developers.openai.com/api/docs/guides/agents",
+    sourceType: "official-doc",
+    reviewedAt: SOURCE_REVIEWED_AT,
+    freshness: "fresh",
+    currentSignal: "OpenAI describes agents as applications that plan, call tools, collaborate across specialists, and keep state for multi-step work.",
+    strategicRead: "SDK orchestration is a credible build path; this project should show the buyer-facing proof loop around which capability to delegate.",
+    judgeUse: "Use this when a judge asks whether a code-first agent SDK would replace the marketplace workflow."
+  },
+  {
     id: "agentops",
     label: "AgentOps",
     category: "agent observability",
@@ -276,6 +312,8 @@ function sourceIdsFor(competitor: Competitor) {
   if (competitor.id === "langgraph") return ["langgraph"];
   if (competitor.id === "crewai") return ["crewai"];
   if (competitor.id === "dify") return ["dify"];
+  if (competitor.id === "microsoft-copilot-studio") return ["microsoft-copilot-studio", "microsoft-copilot-studio-product"];
+  if (competitor.id === "openai-agents-sdk") return ["openai-agents-sdk"];
   if (competitor.id === "agentops") return ["agentops"];
   return [];
 }
@@ -286,6 +324,8 @@ function theyWinAt(competitor: Competitor) {
   if (competitor.id === "langgraph") return "stateful orchestration and developer control";
   if (competitor.id === "crewai") return "crew design, guardrails, memory, and workflow automation";
   if (competitor.id === "dify") return "visual agentic workflow and RAG app delivery";
+  if (competitor.id === "microsoft-copilot-studio") return "enterprise low-code agent creation, connectors, and Microsoft 365 distribution";
+  if (competitor.id === "openai-agents-sdk") return "code-first agent orchestration, tools, handoffs, and state";
   if (competitor.id === "agentops") return "post-run traces, debugging, and observability";
   return competitor.strengths.join(", ");
 }
@@ -296,6 +336,8 @@ function exposedGap(competitor: Competitor) {
   if (competitor.id === "langgraph") return "Graph control is powerful, but it is not a buyer-facing procurement and judging surface.";
   if (competitor.id === "crewai") return "Crew creation does not automatically produce acceptance criteria, submission proof, or DevOps runbooks.";
   if (competitor.id === "dify") return "App building speed is not the same as proving AI-agent centrality and Cloud Run operations.";
+  if (competitor.id === "microsoft-copilot-studio") return "Low-code agent building does not answer cross-vendor capability selection, hackathon judging, or public release proof.";
+  if (competitor.id === "openai-agents-sdk") return "An SDK can orchestrate agents, but it does not provide buyer-facing procurement, A2A marketplace evidence, or submission closeout.";
   if (competitor.id === "agentops") return "Observability starts after execution; the hackathon story needs pre-run capability selection too.";
   return "The product category does not cover capability procurement, judging, and submission proof in one loop.";
 }

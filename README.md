@@ -15,9 +15,9 @@
 - UX: Agent Studio の「AIをキャラクターとして管理する」発想を、市場・購入・編成のゲームループに再構成
 - Contract: 選んだAIごとに成果物、受入条件、SLA、検証コマンド、支払い条件を生成
 - Agent Task Board: 選んだAIごとにA2A `message/send` 形式の仕事票、受入条件、証拠URL、sha256 receiptを生成
-- Strategy: ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsとの差分をアプリ内で比較し、SWOT、審査5項目、提出準備、次に雇うべきAIを算出
-- Market Intel: Gemini Enterprise、ADK、A2A、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較とSource Freshness Lockで、差別化仮説、審査回答、ソース到達性を生成
-- Moat Stress Test: ADK、A2A Marketplace、LangGraph、CrewAI、Dify、AgentOpsからの反論を想定し、証拠付き回答と録画順を返す
+- Strategy: ADK、A2A Marketplace、Microsoft Copilot Studio、OpenAI Agents SDK、LangGraph、CrewAI、Dify、AgentOpsとの差分をアプリ内で比較し、SWOT、審査5項目、提出準備、次に雇うべきAIを算出
+- Market Intel: Gemini Enterprise、ADK、A2A、Copilot Studio、OpenAI Agents SDK、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較とSource Freshness Lockで、差別化仮説、審査回答、ソース到達性を生成
+- Moat Stress Test: ADK、A2A Marketplace、Copilot Studio、OpenAI Agents SDK、LangGraph、CrewAI、Dify、AgentOpsからの反論を想定し、証拠付き回答と録画順を返す
 - Competitive Battlecard: 公式ソース、SWOT、競合反論、証拠routeを競合別の審査回答カードに束ね、Criteria Duelで審査5項目ごとの競合勝敗を固定し、Win/Loss Lockで各競合の譲る強み・反撃・証拠URL・MVP actionを検収し、Objection ReplayとCompetitive Proof Lockで最弱競合への30秒回答順と証拠完全性を固定する
 - Win Gap Radar: 競合/SWOT、MVP監査、最終候補判定、Prize Strategyを横断し、優勝に必要なMVP gapをfeature bets、Feature Freeze Lock、cut listへ変換する
 - MVP Audit: 必須技術、審査5項目、DevOps証拠、提出3点をハードゲートで判定し、外部未発行URLをwatchとして残す
@@ -71,7 +71,7 @@
 
 アプリ内の `Winning Strategy` では次を動的に表示します。
 
-- 競合分析: Google ADK / AI Agent Marketplace / LangGraph / CrewAI / Dify / AgentOps
+- 競合分析: Google ADK / AI Agent Marketplace / Microsoft Copilot Studio / OpenAI Agents SDK / LangGraph / CrewAI / Dify / AgentOps
 - SWOT: 選択したエージェント編成から強み、弱み、機会、脅威を再計算
 - Judge Scorecard: ハッカソン審査5項目に対する現在スコアと次アクション
 - MVP Proof: Cloud Run、Gemini、A2A、公開GitHub、ProtoPediaの提出準備
@@ -79,7 +79,7 @@
 
 ## Market Intel Board
 
-`Market Intel Board` は、競合分析を「やったつもり」にせず、審査員に見せられるソース付き証拠へ変換するパネルです。Gemini Enterprise Agent Platform、Google ADK、A2A protocol、Cloud Marketplace A2A agent requirements、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの一次情報リンクを持ち、競合ごとの強み、露出する隙、こちらの反撃、デモで見せる証拠を返します。Source Ledgerでは、各ソースのreview日、fresh/watch、審査で使う一言、紐づく競合を表示します。Source Freshness Lockでは、公式ソースURLをライブプローブし、競合/SWOTの根拠として今使えるかをscore/readiness/probe evidence/runbookで固定します。
+`Market Intel Board` は、競合分析を「やったつもり」にせず、審査員に見せられるソース付き証拠へ変換するパネルです。Gemini Enterprise Agent Platform、Google ADK、A2A protocol、Cloud Marketplace A2A agent requirements、Microsoft Copilot Studio、OpenAI Agents SDK、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの一次情報リンクを持ち、競合ごとの強み、露出する隙、こちらの反撃、デモで見せる証拠を返します。Source Ledgerでは、各ソースのreview日、fresh/watch、審査で使う一言、紐づく競合を表示します。Source Freshness Lockでは、公式ソースURLをライブプローブし、競合/SWOTの根拠として今使えるかをscore/readiness/probe evidence/runbookで固定します。
 
 - API: `POST /api/market-intel`
 - App UI: `Run market intel`
@@ -95,7 +95,7 @@
 
 ## Competitive Battlecard
 
-`Competitive Battlecard` は、Market Intel、Moat Stress Test、SWOTを審査員の質疑でそのまま使える競合別カードに圧縮します。各カードは、相手が勝つ領域、こちらが勝つ領域、短い回答、公式ソース、SWOT根拠、録画で開く証拠routeを持ちます。さらにCriteria Duelで審査5項目ごとに最も疑われる競合、相手の勝ち筋、こちらの証拠URL、SWOT signalを1行に固定します。Win/Loss Lockで各競合の譲る強み、反撃ポジション、必ず開く証拠URL、MVP actionをwin/contest/loss-riskで検収し、Objection Replayで最弱競合への質問、source ledger、SWOT receipt、Live Evidence proof routeを30秒の順番へ固定し、Competitive Proof Lockで6競合、公式ソース、SWOTリンク、反論receipt、replay、live source lockの完全性を検収します。
+`Competitive Battlecard` は、Market Intel、Moat Stress Test、SWOTを審査員の質疑でそのまま使える競合別カードに圧縮します。各カードは、相手が勝つ領域、こちらが勝つ領域、短い回答、公式ソース、SWOT根拠、録画で開く証拠routeを持ちます。さらにCriteria Duelで審査5項目ごとに最も疑われる競合、相手の勝ち筋、こちらの証拠URL、SWOT signalを1行に固定します。Win/Loss Lockで各競合の譲る強み、反撃ポジション、必ず開く証拠URL、MVP actionをwin/contest/loss-riskで検収し、Objection Replayで最弱競合への質問、source ledger、SWOT receipt、Live Evidence proof routeを30秒の順番へ固定し、Competitive Proof Lockで8競合、公式ソース、SWOTリンク、反論receipt、replay、live source lockの完全性を検収します。
 
 - API: `POST /api/competitive-battlecard`
 - App UI: `Build battlecard`
@@ -103,7 +103,7 @@
 
 ## Competitive SWOT Snapshot
 
-`Competitive SWOT Snapshot` は、競合分析とSWOTをPOST APIの奥に隠さず、審査員が直接読めるGETページにします。6競合、SWOT 4象限、公式ソース、Criteria Duel、Win/Loss Lock、Competitive Proof Lock、Source Freshness Lock、Source Ledger、深掘りcurlを1ページに束ね、提出本文やJudge Snapshotから「競合分析を実施済み」と確認できます。通常GETでは宣言済みソースを軽く表示し、`?live=1` では公式ソースURLをその場でプローブしてpassed/watch/failed、競合カバレッジ、次アクションまで表示します。
+`Competitive SWOT Snapshot` は、競合分析とSWOTをPOST APIの奥に隠さず、審査員が直接読めるGETページにします。8競合、SWOT 4象限、公式ソース、Criteria Duel、Win/Loss Lock、Competitive Proof Lock、Source Freshness Lock、Source Ledger、深掘りcurlを1ページに束ね、提出本文やJudge Snapshotから「競合分析を実施済み」と確認できます。通常GETでは宣言済みソースを軽く表示し、`?live=1` では公式ソースURLをその場でプローブしてpassed/watch/failed、競合カバレッジ、次アクションまで表示します。
 
 - Page: `GET /competitive-swot`
 - API: `GET /api/competitive-swot`

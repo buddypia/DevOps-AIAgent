@@ -363,9 +363,9 @@ const CRITERIA_DUEL_CONFIG: Record<string, { competitorId: string; proofPath: st
     recordingCue: "ADKの強みを認めてから、調達と検収の市場体験へ話をずらす。"
   },
   usability: {
-    competitorId: "dify",
+    competitorId: "microsoft-copilot-studio",
     proofPath: "/api/demo-concierge",
-    recordingCue: "Demo Conciergeのfirst clickで、ワークフロー作成ではなく審査導線の迷いを解く。"
+    recordingCue: "Demo Conciergeのfirst clickで、ローコード作成ではなく審査導線と提出検収の迷いを解く。"
   },
   practicality: {
     competitorId: "agentops",
@@ -385,6 +385,8 @@ const WIN_LOSS_CONFIG: Record<string, { criterionId: string; proofPath: string }
   langgraph: { criterionId: "implementation", proofPath: "/api/release-drift" },
   crewai: { criterionId: "agentCentrality", proofPath: "/api/autonomy-snapshot" },
   dify: { criterionId: "usability", proofPath: "/api/demo-concierge" },
+  "microsoft-copilot-studio": { criterionId: "usability", proofPath: "/judge-command-center" },
+  "openai-agents-sdk": { criterionId: "implementation", proofPath: "/api/release-drift" },
   agentops: { criterionId: "practicality", proofPath: "/api/pilot-economics" }
 };
 
@@ -746,7 +748,7 @@ export function buildCompetitiveBattlecard(input: {
           ? "差別化は語れますが、動画では証拠routeを先に開かないと既存ツールに見えます。"
           : "競合に飲み込まれる危険があります。SWOTと反論証拠を補強してください。",
     hardTruth:
-      "ADK、LangGraph、CrewAI、Dify、AgentOpsはいずれも本物の競合です。勝つには相手の強みを否定せず、AI能力を買い、A2Aで委任し、Cloud Runの証拠で検収する体験に焦点を固定する必要があります。",
+      "ADK、Copilot Studio、OpenAI Agents SDK、LangGraph、CrewAI、Dify、AgentOpsはいずれも本物の競合です。勝つには相手の強みを否定せず、AI能力を買い、A2Aで委任し、Cloud Runの証拠で検収する体験に焦点を固定する必要があります。",
     thesis: input.marketIntel.thesis,
     cards,
     topRisks,

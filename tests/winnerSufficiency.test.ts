@@ -37,7 +37,7 @@ function competitive(input: Record<string, unknown> = {}): CompetitiveSnapshot {
     hardTruth: "Competitive SWOT is ready.",
     summary: {
       battleScore: 94,
-      competitorCount: 6,
+      competitorCount: 8,
       swotQuadrantCount: 4,
       sourceLockReadiness: "source-lock-live"
     },

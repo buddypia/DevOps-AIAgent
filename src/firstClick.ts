@@ -80,7 +80,7 @@ export const FIRST_CLICK_PROOF_LINKS: FirstClickProofLink[] = [
     label: "Competitive SWOT",
     href: "/competitive-swot",
     signal: "source-backed-swot",
-    judgeValue: "ADK、LangGraph、CrewAI、Dify、AgentOps等との違いとSWOT根拠を確認する。",
+    judgeValue: "ADK、Copilot Studio、OpenAI Agents SDK、LangGraph、CrewAI、Dify、AgentOps等との違いとSWOT根拠を確認する。",
     tone: "ready"
   },
   {

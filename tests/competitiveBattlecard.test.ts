@@ -39,6 +39,15 @@ describe("competitive battlecard", () => {
     );
     expect(battlecard.topRisks.length).toBeGreaterThan(0);
     expect(battlecard.objectionReceipts).toHaveLength(battlecard.cards.length);
+    expect(battlecard.cards.find((card) => card.id === "microsoft-copilot-studio")?.sourceUrls.map((source) => source.url)).toEqual(
+      expect.arrayContaining([
+        "https://learn.microsoft.com/en-us/microsoft-copilot-studio/fundamentals-what-is-copilot-studio",
+        "https://www.microsoft.com/en-us/microsoft-365-copilot/microsoft-copilot-studio"
+      ])
+    );
+    expect(battlecard.cards.find((card) => card.id === "openai-agents-sdk")?.sourceUrls.map((source) => source.url)).toEqual(
+      expect.arrayContaining(["https://developers.openai.com/api/docs/guides/agents"])
+    );
     expect(battlecard.objectionReplay).toMatchObject({
       readiness: "replay-ready",
       weakestCompetitor: "Google ADK / Gemini Enterprise",
@@ -59,7 +68,7 @@ describe("competitive battlecard", () => {
         }),
         expect.objectContaining({
           id: "usability",
-          targetCompetitor: "Dify",
+          targetCompetitor: "Microsoft Copilot Studio",
           proofUrl: `${baseUrl}/api/demo-concierge`
         }),
         expect.objectContaining({
@@ -73,12 +82,12 @@ describe("competitive battlecard", () => {
     expect(battlecard.winLossLock).toMatchObject({
       readiness: "win-loss-locked",
       winLossScore: expect.any(Number),
-      winCount: 6,
+      winCount: 8,
       contestCount: 0,
       lossRiskCount: 0
     });
     expect(battlecard.winLossLock.winLossScore).toBeGreaterThanOrEqual(90);
-    expect(battlecard.winLossLock.rows).toHaveLength(6);
+    expect(battlecard.winLossLock.rows).toHaveLength(8);
     expect(battlecard.winLossLock.rows.find((row) => row.id === "google-adk")).toMatchObject({
       status: "win",
       judgeCriterionId: "approach",
@@ -97,10 +106,10 @@ describe("competitive battlecard", () => {
       watchCount: 1,
       missingCount: 0,
       coverage: {
-        competitorCount: 6,
-        sourceUrlCount: 11,
-        swotLinkCount: 20,
-        proofRouteCount: 6,
+        competitorCount: 8,
+        sourceUrlCount: 14,
+        swotLinkCount: 27,
+        proofRouteCount: 8,
         liveSourceReadiness: "source-lock-declared"
       }
     });

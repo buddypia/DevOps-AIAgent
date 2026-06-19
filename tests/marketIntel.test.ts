@@ -23,6 +23,9 @@ describe("market intel board", () => {
         "langgraph",
         "crewai",
         "dify",
+        "microsoft-copilot-studio",
+        "microsoft-copilot-studio-product",
+        "openai-agents-sdk",
         "agentops",
         "cloud-run"
       ])
@@ -47,6 +50,10 @@ describe("market intel board", () => {
     expect(intel.comparisons.find((comparison) => comparison.id === "a2a-marketplace")?.sourceIds).toEqual(
       expect.arrayContaining(["a2a-upgrade", "google-marketplace-ai-agents"])
     );
+    expect(intel.comparisons.find((comparison) => comparison.id === "microsoft-copilot-studio")?.sourceIds).toEqual(
+      expect.arrayContaining(["microsoft-copilot-studio", "microsoft-copilot-studio-product"])
+    );
+    expect(intel.comparisons.find((comparison) => comparison.id === "openai-agents-sdk")?.sourceIds).toEqual(expect.arrayContaining(["openai-agents-sdk"]));
     expect(intel.comparisons.find((comparison) => comparison.id === "langgraph")?.ourCounter).toContain("意思決定");
     expect(intel.judgeAnswers.map((answer) => answer.criterionId)).toEqual(expect.arrayContaining(["agentCentrality", "approach", "implementation"]));
     expect(intel.moves.map((move) => move.id)).toEqual(expect.arrayContaining(["cite-sources", "record-market-intel", "connect-runtime-proof"]));
