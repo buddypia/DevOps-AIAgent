@@ -104,8 +104,14 @@ describe("deploy recovery plan", () => {
 
     expect(plan.readiness).toBe("manual-auth-required");
     expect(plan.recoveryScore).toBe(73);
+    expect(plan.hardTruth).toContain("GitHub Actions");
     expect(plan.primaryAction).toContain("gcloud auth login");
+    expect(plan.primaryAction).toContain("Deploy Cloud Run workflow");
     expect(plan.commands.find((command) => command.id === "auth-login")).toMatchObject({ blocking: true, copyGroup: "auth" });
+    expect(plan.commands.find((command) => command.id === "verify-github-deploy-secrets")).toMatchObject({ blocking: true, copyGroup: "auth" });
+    expect(plan.commands.find((command) => command.id === "verify-github-deploy-secrets")?.command).toContain("GCP_WORKLOAD_IDENTITY_PROVIDER");
+    expect(plan.commands.find((command) => command.id === "github-actions-deploy")).toMatchObject({ blocking: true, copyGroup: "deploy" });
+    expect(plan.commands.find((command) => command.id === "github-actions-deploy")?.command).toContain("gh workflow run deploy-cloud-run.yml");
     expect(plan.commands.find((command) => command.id === "verify-autonomy-snapshot")?.command).toContain("/api/autonomy-snapshot");
     expect(plan.commands.find((command) => command.id === "verify-recording-script")?.command).toContain("/api/recording-script");
     expect(plan.commands.find((command) => command.id === "verify-pilot-value")?.command).toContain("/api/pilot-value");
@@ -113,6 +119,8 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "verify-recovery-endpoint")?.command).toContain("/api/deploy-recovery");
     expect(plan.commands.find((command) => command.id === "verify-a2a-artifact")?.command).toContain("deployRecoveryPageEndpoint");
     expect(plan.blockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["gcloud-auth", "agent-card-skill-surface"]));
+    expect(plan.blockers.find((blocker) => blocker.id === "gcloud-auth")?.action).toContain("Deploy Cloud Run workflow");
+    expect(plan.judgeScript.join("\n")).toContain("GitHub Actions deploy workflow");
     expect(plan.a2aPayload).toMatchObject({
       skill: "deploy.recover",
       readiness: "manual-auth-required",
@@ -218,6 +226,7 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="observability.oracle"');
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="autonomy.snapshot"');
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="recording.script"');
+    expect(plan.commands.find((command) => command.id === "github-actions-deploy")?.command).toContain("deploy-cloud-run.yml");
     expect(plan.commands.find((command) => command.id === "verify-mvp-readiness")?.command).toContain("/api/mvp-readiness");
     expect(plan.commands.find((command) => command.id === "verify-autonomy-snapshot")?.why).toContain("Autonomy Snapshot");
     expect(plan.commands.find((command) => command.id === "verify-recording-script")?.why).toContain("Recording Script");

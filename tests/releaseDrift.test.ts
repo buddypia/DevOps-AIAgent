@@ -116,6 +116,7 @@ describe("release drift guard", () => {
     );
     expect(guard.missingAgentCardSignals).toEqual([]);
     expect(guard.nextActions.map((action) => action.id)).toEqual(expect.arrayContaining(["agent-card-skill-surface", "acceptance-endpoint"]));
+    expect(guard.runbook.join("\n")).toContain("gh workflow run deploy-cloud-run.yml");
     expect(guard.runbook.join("\n")).toContain("gcloud builds submit");
     expect(guard.a2aPayload).toMatchObject({
       method: "message/send",

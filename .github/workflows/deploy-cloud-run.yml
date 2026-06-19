@@ -1,0 +1,63 @@
+name: Deploy Cloud Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      region:
+        description: "Cloud Run region"
+        required: true
+        default: "asia-northeast1"
+      service:
+        description: "Cloud Run service name"
+        required: true
+        default: "a2a-agent-marketplace"
+      repository:
+        description: "Artifact Registry repository"
+        required: true
+        default: "cloud-run-source-deploy"
+      gemini_secret:
+        description: "Secret Manager secret name for GEMINI_API_KEY"
+        required: true
+        default: "gemini-api-key-a2a-marketplace"
+      target_url:
+        description: "Public Cloud Run URL to verify after deploy"
+        required: true
+        default: "https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    name: Cloud Build deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v3
+        with:
+          version: ">= 416.0.0"
+
+      - name: Submit Cloud Build
+        run: |
+          gcloud builds submit \
+            --config cloudbuild.yaml \
+            --substitutions _REGION=${{ inputs.region }},_SERVICE=${{ inputs.service }},_REPOSITORY=${{ inputs.repository }},_GEMINI_SECRET=${{ inputs.gemini_secret }}
+
+      - name: Verify public proof surface
+        run: |
+          curl -fsSL "${{ inputs.target_url }}/api/healthz"
+          curl -fsSL "${{ inputs.target_url }}/.well-known/agent-card.json" | jq '.skills | length'
+          curl -fsSL "${{ inputs.target_url }}/win-autopilot" | grep -E 'Win Autopilot Proof'
+          curl -fsSL "${{ inputs.target_url }}/winner-sufficiency" | grep -E 'Winner Sufficiency Lock'
+          curl -fsSL "${{ inputs.target_url }}/observability-oracle" | grep -E 'Observability Oracle Proof'

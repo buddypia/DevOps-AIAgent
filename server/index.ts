@@ -349,8 +349,8 @@ function agentCard(baseUrl: string) {
       {
         id: "deploy.recover",
         name: "Recover stale Cloud Run deployment",
-        description: "release drift、gcloud認証、Cloud Build、必須Agent Card signal、公開再検証を復旧計画へ変換する。",
-        tags: ["cloud-run", "cloud-build", "recovery", "agent-card-signals", "deployment", "runbook", "get-proof"]
+        description: "release drift、gcloud認証、GitHub Actions deploy lane、Cloud Build、必須Agent Card signal、公開再検証を復旧計画へ変換する。",
+        tags: ["cloud-run", "cloud-build", "github-actions-deploy", "recovery", "agent-card-signals", "deployment", "runbook", "get-proof"]
       },
       {
         id: "demo.receipt",

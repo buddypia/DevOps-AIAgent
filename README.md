@@ -308,7 +308,7 @@
 
 ## Deploy Recovery
 
-`Deploy Recovery` は、Release Drift Guardの結果を運用復旧へ変換します。公開Cloud Runが古い時、または `gcloud builds submit` が `Reauthentication failed` で止まった時に、認証更新、Cloud Build再実行、Agent Card skill count、必須Agent Card signal tags、`/observability-oracle`、`/api/mvp-readiness`、`/api/recording-script`、`/api/pilot-value`、`/deploy-recovery`、`/api/deploy-recovery`、A2A `winnerPacketPageEndpoint` / `observabilityOraclePageEndpoint` / `recordingScriptPageEndpoint` / `pilotValueSnapshotEndpoint` / `deployRecoveryEndpoint` / `deployRecoveryPageEndpoint` の再検証コマンドをまとめます。審査員は `GET /deploy-recovery` を開くだけで、復旧状況、copy/pasteコマンド、10分復旧手順、説明台本を読めます。
+`Deploy Recovery` は、Release Drift Guardの結果を運用復旧へ変換します。公開Cloud Runが古い時、または `gcloud builds submit` が `Reauthentication failed` で止まった時に、GitHub Actions手動deploy lane、認証更新、Cloud Build再実行、Agent Card skill count、必須Agent Card signal tags、`/observability-oracle`、`/api/mvp-readiness`、`/api/recording-script`、`/api/pilot-value`、`/deploy-recovery`、`/api/deploy-recovery`、A2A `winnerPacketPageEndpoint` / `observabilityOraclePageEndpoint` / `recordingScriptPageEndpoint` / `pilotValueSnapshotEndpoint` / `deployRecoveryEndpoint` / `deployRecoveryPageEndpoint` の再検証コマンドをまとめます。審査員は `GET /deploy-recovery` を開くだけで、復旧状況、copy/pasteコマンド、10分復旧手順、説明台本を読めます。
 
 - Page: `GET /deploy-recovery`
 - API: `GET /api/deploy-recovery`
@@ -521,6 +521,23 @@
 - Runs on: push to `main` and pull requests
 - Checks: `npm run typecheck` / `npm test` / `npm run build` / `make q.check-architecture`
 - Proof API: `/api/proof` が最新main runをGitHub public APIから読み、CI statusとrun URLを証拠束に含める
+
+## GitHub Actions Deploy
+
+公開Cloud Runのrevision driftをローカルgcloud認証に閉じ込めないため、`.github/workflows/deploy-cloud-run.yml` を手動実行用に用意しています。Workload Identity Federationを使うため、長期サービスアカウント鍵は置きません。
+
+- Workflow: <https://github.com/buddypia/DevOps-AIAgent/actions/workflows/deploy-cloud-run.yml>
+- Required secrets: `GCP_PROJECT_ID` / `GCP_WORKLOAD_IDENTITY_PROVIDER` / `GCP_DEPLOY_SERVICE_ACCOUNT`
+- Trigger:
+
+```bash
+gh workflow run deploy-cloud-run.yml --ref main \
+  -f region=asia-northeast1 \
+  -f service=a2a-agent-marketplace \
+  -f repository=cloud-run-source-deploy \
+  -f gemini_secret=gemini-api-key-a2a-marketplace \
+  -f target_url=https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app
+```
 
 ## Local Development
 

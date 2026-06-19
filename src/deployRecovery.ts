@@ -112,7 +112,7 @@ export function buildDeployRecoveryPlan(input: {
     readiness === "recovered"
       ? "Judge Command Center、Agent Card、A2A artifactを公開URLでそのまま見せられます。"
       : readiness === "manual-auth-required"
-        ? "非対話環境ではgcloudがログイン画面を出せないため、Cloud Build submitは成功しません。人間が一度だけ認証を更新する必要があります。"
+        ? "非対話環境ではgcloudがログイン画面を出せないため、ローカルCloud Build submitは成功しません。GitHub Actionsの手動deploy laneか、人間のgcloud認証更新が必要です。"
         : readiness === "redeploy-required"
           ? "CIが緑でも、Cloud Runの公開revisionが古ければ審査員には新機能が存在しないように見えます。"
           : "healthまたはCIが欠けていると、再デプロイしても提出証拠として弱いままです。";
@@ -120,7 +120,7 @@ export function buildDeployRecoveryPlan(input: {
     readiness === "recovered"
       ? "Release Drift Guardを録画前に再実行し、release-currentを検収票に残す"
       : readiness === "manual-auth-required"
-        ? "ローカルでgcloud auth loginを実行し、同じCloud Buildコマンドを再実行する"
+        ? "GitHub ActionsのDeploy Cloud Run workflowを手動実行する。未設定ならローカルでgcloud auth loginを実行する"
         : readiness === "redeploy-required"
           ? "Cloud BuildでCloud Runへ最新mainを再デプロイする"
           : "target health、GitHub Actions CI、A2A artifactのmissing証拠を先に復旧する";
@@ -182,6 +182,14 @@ export function buildDeployRecoveryPlan(input: {
       blocking: false
     },
     {
+      id: "verify-github-deploy-secrets",
+      label: "Verify GitHub deploy secrets",
+      command: "gh secret list | rg 'GCP_PROJECT_ID|GCP_WORKLOAD_IDENTITY_PROVIDER|GCP_DEPLOY_SERVICE_ACCOUNT'",
+      why: "Deploy Cloud Run workflowが鍵ファイルなしでGoogle Cloudへ認証するために必要な3つのSecretsを確認します。",
+      copyGroup: "auth",
+      blocking: readiness === "manual-auth-required"
+    },
+    {
       id: "cloud-build-submit",
       label: "Deploy latest main",
       command:
@@ -189,6 +197,15 @@ export function buildDeployRecoveryPlan(input: {
       why: "最新mainをCloud Build経由でCloud Runへ反映します。",
       copyGroup: "deploy",
       blocking: readiness !== "recovered"
+    },
+    {
+      id: "github-actions-deploy",
+      label: "Deploy from GitHub Actions",
+      command:
+        "gh workflow run deploy-cloud-run.yml --ref main -f region=asia-northeast1 -f service=a2a-agent-marketplace -f repository=cloud-run-source-deploy -f gemini_secret=gemini-api-key-a2a-marketplace -f target_url=https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app",
+      why: "ローカルgcloudの再認証に詰まった場合でも、Workload Identity設定済みのGitHub ActionsからCloud Buildを起動できます。",
+      copyGroup: "deploy",
+      blocking: readiness === "manual-auth-required"
     },
     {
       id: "verify-agent-card",
@@ -269,8 +286,8 @@ export function buildDeployRecoveryPlan(input: {
       id: "auth",
       window: "0-2m",
       owner: "Release owner",
-      action: authBlocked ? "gcloud auth loginで認証を更新する" : "gcloud account/projectを確認する",
-      verify: "gcloud config get-value project",
+      action: authBlocked ? "Deploy Cloud Run workflowのSecretsを確認し、未設定ならgcloud auth loginで認証を更新する" : "gcloud account/projectまたはGitHub deploy workflowのSecretsを確認する",
+      verify: authBlocked ? "gh secret list or gcloud config get-value project" : "gcloud config get-value project",
       status: authBlocked ? "blocked" : "watch"
     },
     {
@@ -306,7 +323,7 @@ export function buildDeployRecoveryPlan(input: {
             id: "gcloud-auth",
             priority: "now" as const,
             owner: "Release owner",
-            action: "gcloud auth loginで非対話Cloud Buildを再実行できる状態にする",
+            action: "GitHub Actions Deploy Cloud Run workflowを実行する。Secrets未設定ならgcloud auth loginで非対話Cloud Buildを再実行できる状態にする",
             proof: input.lastDeployError ?? "gcloud reauthentication failed"
           }
         ]
@@ -330,7 +347,7 @@ export function buildDeployRecoveryPlan(input: {
     `Primary action: ${primaryAction}`,
     `Release drift: ${input.releaseDrift.observedSkillCount}/${input.releaseDrift.expectedSkillCount} skills, ${input.releaseDrift.verdict}.`,
     `Agent Card signals: missing ${input.releaseDrift.missingAgentCardSignals.join(", ") || "none"}.`,
-    `Auth: ${authBlocked ? "manual gcloud auth login required" : "no auth failure provided"}.`,
+    `Auth: ${authBlocked ? "run GitHub Actions deploy workflow or refresh gcloud auth" : "no auth failure provided"}.`,
     `After deploy: verify Agent Card count, /win-autopilot, /winner-sufficiency, /observability-oracle, /api/mvp-readiness, /api/autonomy-snapshot, /api/recording-script, /api/pilot-value, /deploy-recovery, /api/deploy-recovery, and A2A autonomySnapshot/recordingScript/pilotValue/deployRecovery endpoints.`
   ];
 
