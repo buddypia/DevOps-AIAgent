@@ -39,6 +39,7 @@ const expectedSkillIds = [
 ];
 
 const requiredAgentCardSignals = [
+  "acceptance.matrix:tag:acceptance-matrix-lock",
   "judge.rehearsal:tag:recording-lock",
   "win.gap.radar:tag:feature-freeze-lock",
   "winner.packet:tag:winner-release-lock",
@@ -189,6 +190,7 @@ describe("release drift guard", () => {
     expect(guard.verdict).toBe("deploy-drift");
     expect(guard.missingSkills).toEqual([]);
     expect(guard.missingAgentCardSignals).toEqual([
+      "acceptance.matrix:tag:acceptance-matrix-lock",
       "autonomy.snapshot:tag:get-proof",
       "competitive.battlecard:tag:criteria-duel",
       "competitive.battlecard:tag:win-loss-lock",
@@ -210,9 +212,11 @@ describe("release drift guard", () => {
       "winner.packet:tag:get-proof",
       "winner.sufficiency:tag:winner-sufficiency-lock"
     ]);
-    expect(guard.summary).toContain("0 required skills and 20 required Agent Card signals");
+    expect(guard.summary).toContain("0 required skills and 21 required Agent Card signals");
     expect(guard.runbook.join("\n")).toContain('select(.id=="judge.command"');
-    expect(guard.runbook.join("\n")).toContain('or .id=="autonomy.snapshot" or .id=="external.evidence" or .id=="recording.script"');
+    expect(guard.runbook.join("\n")).toContain('or .id=="acceptance.matrix"');
+    expect(guard.runbook.join("\n")).toContain('or .id=="autonomy.snapshot" or .id=="external.evidence"');
+    expect(guard.runbook.join("\n")).toContain('or .id=="recording.script"');
     expect(guard.runbook.join("\n")).toContain('or .id=="win.autopilot"');
     expect(guard.runbook.join("\n")).toContain('or .id=="winner.sufficiency"');
     expect(guard.runbook.join("\n")).toContain('or .id=="deploy.recover"');
@@ -227,10 +231,12 @@ describe("release drift guard", () => {
     expect(guard.runbook.join("\n")).toContain("/api/submission-launch");
     expect(guard.runbook.join("\n")).toContain("/api/pilot-value");
     expect(guard.runbook.join("\n")).toContain("/deploy-recovery");
+    expect(guard.runbook.join("\n")).toContain("/acceptance-matrix");
     expect(guard.a2aPayload).toMatchObject({
       skill: "release.drift",
       verdict: "deploy-drift",
       missingAgentCardSignals: [
+        "acceptance.matrix:tag:acceptance-matrix-lock",
         "autonomy.snapshot:tag:get-proof",
         "competitive.battlecard:tag:criteria-duel",
         "competitive.battlecard:tag:win-loss-lock",

@@ -216,6 +216,8 @@ curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/deploy-recovery | rg 'Deploy R
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/demo-receipt \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"protopediaUrl":"https://protopedia.net/prototype/999999","videoUrl":"https://youtu.be/demo1234567"}'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/acceptance-matrix | rg 'Acceptance Matrix Proof|Acceptance Rows'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/api/acceptance-matrix | jq '{verdict, acceptanceScore, rows: (.rows | length), page: .a2aPayload.endpoints.acceptanceMatrixPage}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/acceptance-matrix \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
@@ -325,4 +327,5 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - Agent Task Board API: `POST /api/task-board`
 - Judge Command Center Page/API: `GET /judge-command-center`, `GET /api/judge-command-center`, `POST /api/judge-command-center`
 - External Evidence Page/API: `GET /external-evidence`, `GET /api/external-evidence`, `POST /api/external-evidence`
+- Acceptance Matrix Page/API: `GET /acceptance-matrix`, `GET /api/acceptance-matrix`, `POST /api/acceptance-matrix`
 - Required tag: `findy_hackathon`

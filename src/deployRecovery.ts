@@ -234,8 +234,8 @@ export function buildDeployRecoveryPlan(input: {
     {
       id: "verify-agent-card-signals",
       label: "Verify Agent Card signals",
-      command: `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="winner.sufficiency" or .id=="win.autopilot" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="mvp.snapshot" or .id=="autonomy.snapshot" or .id=="observability.oracle" or .id=="recording.script" or .id=="pilot.value.snapshot" or .id=="deploy.recover") | {id, tags}'`,
-      why: "Recording Lock、Feature Freeze Lock、Winner Release Lock、Finalist Release Drift、Criteria Duel、Competitive SWOT GET proof、Judge GET proof、MVP readiness GET proof、Autonomy Snapshot GET proof、Recording Script GET proof、Pilot Value GET proofが公開Agent Cardに載ったことを確認します。",
+      command: `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="winner.sufficiency" or .id=="win.autopilot" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="mvp.snapshot" or .id=="autonomy.snapshot" or .id=="observability.oracle" or .id=="acceptance.matrix" or .id=="recording.script" or .id=="pilot.value.snapshot" or .id=="deploy.recover") | {id, tags}'`,
+      why: "Recording Lock、Feature Freeze Lock、Winner Release Lock、Finalist Release Drift、Criteria Duel、Competitive SWOT GET proof、Judge GET proof、MVP readiness GET proof、Acceptance Matrix GET proof、Autonomy Snapshot GET proof、Recording Script GET proof、Pilot Value GET proofが公開Agent Cardに載ったことを確認します。",
       copyGroup: "verify",
       blocking: input.releaseDrift.missingAgentCardSignals.length > 0
     },
@@ -284,6 +284,14 @@ export function buildDeployRecoveryPlan(input: {
       label: "Verify judge command proof page",
       command: `curl -s ${targetBaseUrl}/judge-command-center | rg 'Judge Command Center Proof|90-Second Timeline'`,
       why: "Judge Command CenterのGET証拠ページが公開revisionに載り、審査員の最初の90秒導線をPOSTなしで直接読めるか確認します。",
+      copyGroup: "verify",
+      blocking: false
+    },
+    {
+      id: "verify-acceptance-matrix-page",
+      label: "Verify acceptance matrix proof page",
+      command: `curl -s ${targetBaseUrl}/acceptance-matrix | rg 'Acceptance Matrix Proof|Acceptance Rows'`,
+      why: "Acceptance MatrixのGET証拠ページが公開revisionに載り、MVP受入状態を審査員がPOSTなしで直接読めるか確認します。",
       copyGroup: "verify",
       blocking: false
     },

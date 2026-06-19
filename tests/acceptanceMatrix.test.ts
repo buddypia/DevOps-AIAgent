@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine";
-import { buildJudgeAcceptanceMatrix } from "../src/acceptanceMatrix";
+import { ACCEPTANCE_MATRIX_REQUIRED_SIGNAL, ACCEPTANCE_MATRIX_SKILL_ID, buildJudgeAcceptanceMatrix, renderAcceptanceMatrixHtml } from "../src/acceptanceMatrix";
 import { buildWinningAutopilot } from "../src/autopilot";
 import { buildSquadContract } from "../src/contracts";
 import { buildJudgeDemoReceipt } from "../src/demoReceipt";
@@ -270,7 +270,7 @@ describe("judge acceptance matrix", () => {
     expect(matrix.digest.digest).toMatch(/^[a-f0-9]{64}$/);
     expect(matrix.a2aPayload).toMatchObject({
       method: "message/send",
-      skill: "acceptance.matrix",
+      skill: ACCEPTANCE_MATRIX_SKILL_ID,
       verdict: "accepted-with-external-gaps",
       submissionLaunch: {
         readiness: "needs-external-urls",
@@ -285,6 +285,7 @@ describe("judge acceptance matrix", () => {
       },
       endpoints: {
         acceptanceMatrix: `${SUBMISSION_PROOF.deployedUrl}/api/acceptance-matrix`,
+        acceptanceMatrixPage: `${SUBMISSION_PROOF.deployedUrl}/acceptance-matrix`,
         pilotEconomics: `${SUBMISSION_PROOF.deployedUrl}/api/pilot-economics`,
         observabilityOracle: `${SUBMISSION_PROOF.deployedUrl}/api/observability-oracle`
       }
@@ -377,11 +378,32 @@ describe("judge acceptance matrix", () => {
       value: "deploy-drift"
     });
     expect(matrix.a2aPayload).toMatchObject({
-      skill: "acceptance.matrix",
+      skill: ACCEPTANCE_MATRIX_SKILL_ID,
       verdict: "not-accepted",
       endpoints: {
         releaseDrift: `${SUBMISSION_PROOF.deployedUrl}/api/release-drift`
       }
     });
+  });
+
+  test("exports a release-drift signal for the direct acceptance proof page", () => {
+    expect(ACCEPTANCE_MATRIX_REQUIRED_SIGNAL).toBe("acceptance.matrix:tag:acceptance-matrix-lock");
+  });
+
+  test("renders a human-readable acceptance matrix without leaking raw HTML", () => {
+    const matrix = buildJudgeAcceptanceMatrix({
+      ...fixture(),
+      generatedAt: "2026-06-18T00:00:00.000Z"
+    });
+    const html = renderAcceptanceMatrixHtml({
+      ...matrix,
+      hardTruth: "<script>alert('accept')</script>"
+    });
+
+    expect(html).toContain("Acceptance Matrix Proof");
+    expect(html).toContain("Acceptance Rows");
+    expect(html).toContain("Receipt");
+    expect(html).toContain("&lt;script&gt;alert(&#39;accept&#39;)&lt;/script&gt;");
+    expect(html).not.toContain("<script>alert('accept')</script>");
   });
 });

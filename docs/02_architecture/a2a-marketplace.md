@@ -327,11 +327,13 @@
 
 ## Acceptance Matrix Surface
 
+- `GET /acceptance-matrix`: 必須技術、審査5項目、競合/SWOT、公開証拠、Release Drift、提出物、Demo Receiptを審査員が直接読めるGET証拠ページへ束ねる
+- `GET /api/acceptance-matrix`: 既定project briefで同じ受入表をJSONとして返し、`?live=1` または `targetUrl` 指定時だけRelease Driftも実行する
 - `POST /api/acceptance-matrix`: 必須技術、審査5項目、競合/SWOT、公開証拠、Release Drift、提出物、Demo Receiptを最大14行の受入表へ束ねる
 - Rows: Cloud Run、Google AI、A2A中心性、競合/SWOT、Moat反論、User Pilot、Impact、Pilot Economics、Implementation、Live Evidence、Release Drift、Security、Submission assets、Demo Receiptをaccepted/watch/blockedで返す
 - Verdict: blockedがあれば `not-accepted`、外部URLなどwatchだけなら `accepted-with-external-gaps`、全行acceptedなら `ready-to-submit`
 - Digest: row statuses、Judge Proof digest、Demo Receipt digest、Pilot Economics postureからsha256を作り、質疑で同じ受入状態を照合する
-- A2A payload: `acceptance.matrix` skillとしてacceptance score、verdict、row statuses、next actions、endpointを返す
+- A2A payload: `acceptance.matrix` skillとしてacceptance score、verdict、row statuses、next actions、`acceptanceMatrixPage` endpointを返す
 
 ## Autonomy Ledger Surface
 
@@ -556,7 +558,7 @@
 - Release drift: `/api/release-drift`
 - Deploy recovery: `/deploy-recovery` and `/api/deploy-recovery`
 - Demo receipt: `/api/demo-receipt`
-- Acceptance matrix: `/api/acceptance-matrix`
+- Acceptance matrix: `/acceptance-matrix` / `/api/acceptance-matrix`
 - Autonomy ledger: `/api/autonomy-ledger`
 - Autonomy snapshot: `/api/autonomy-snapshot` / `/autonomy-snapshot`
 - Agent task board: `/api/task-board`

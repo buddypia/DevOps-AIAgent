@@ -57,6 +57,10 @@ export type JudgeAcceptanceMatrix = {
   a2aPayload: Record<string, unknown>;
 };
 
+export const ACCEPTANCE_MATRIX_SKILL_ID = "acceptance.matrix";
+export const ACCEPTANCE_MATRIX_LOCK_TAG = "acceptance-matrix-lock";
+export const ACCEPTANCE_MATRIX_REQUIRED_SIGNAL = `${ACCEPTANCE_MATRIX_SKILL_ID}:tag:${ACCEPTANCE_MATRIX_LOCK_TAG}`;
+
 function clamp(value: number, min = 0, max = 100) {
   return Math.max(min, Math.min(max, value));
 }
@@ -84,6 +88,21 @@ function digest(value: unknown) {
 function absoluteUrl(baseUrl: string, path: string) {
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
   return `${baseUrl.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+function escapeHtml(value: unknown) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function tone(status: string) {
+  if (["ready-to-submit", "accepted"].includes(status)) return "good";
+  if (["not-accepted", "blocked"].includes(status)) return "bad";
+  return "watch";
 }
 
 function statusFromScore(score: number): AcceptanceStatus {
@@ -457,7 +476,7 @@ export function buildJudgeAcceptanceMatrix(input: {
     },
     a2aPayload: {
       method: "message/send",
-      skill: "acceptance.matrix",
+      skill: ACCEPTANCE_MATRIX_SKILL_ID,
       acceptanceScore,
       verdict,
       digest: acceptanceDigest,
@@ -481,6 +500,7 @@ export function buildJudgeAcceptanceMatrix(input: {
       endpoints: {
         app: base,
         acceptanceMatrix: absoluteUrl(base, "/api/acceptance-matrix"),
+        acceptanceMatrixPage: absoluteUrl(base, "/acceptance-matrix"),
         mvpAudit: absoluteUrl(base, "/api/mvp-audit"),
         winRun: absoluteUrl(base, "/api/win-run"),
         winAutopilot: absoluteUrl(base, "/api/win-autopilot"),
@@ -492,4 +512,110 @@ export function buildJudgeAcceptanceMatrix(input: {
       }
     }
   };
+}
+
+export function renderAcceptanceMatrixHtml(matrix: JudgeAcceptanceMatrix) {
+  const accepted = matrix.rows.filter((row) => row.status === "accepted").length;
+  const watch = matrix.rows.filter((row) => row.status === "watch").length;
+  const blocked = matrix.rows.filter((row) => row.status === "blocked").length;
+  const metrics = [
+    { label: "Verdict", value: matrix.verdict, status: matrix.verdict },
+    { label: "Acceptance Score", value: matrix.acceptanceScore, status: matrix.verdict },
+    { label: "Rows", value: `${accepted} accepted / ${watch} watch / ${blocked} blocked`, status: blocked > 0 ? "blocked" : watch > 0 ? "watch" : "accepted" },
+    { label: "Digest", value: matrix.digest.digest.slice(0, 16), status: "accepted" }
+  ]
+    .map(
+      (metric) => `
+        <article class="metric ${tone(String(metric.status))}">
+          <span>${escapeHtml(metric.label)}</span>
+          <strong>${escapeHtml(metric.value)}</strong>
+        </article>`
+    )
+    .join("");
+  const rows = matrix.rows
+    .map(
+      (item) => `
+        <tr class="${tone(item.status)}">
+          <td><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.area)} / ${escapeHtml(item.status)} / ${escapeHtml(item.score)}</span></td>
+          <td>${escapeHtml(item.requirement)}</td>
+          <td>${escapeHtml(item.evidence)}</td>
+          <td><a href="${escapeHtml(item.proofUrl)}">${escapeHtml(item.proofUrl)}</a></td>
+          <td>${escapeHtml(item.nextAction)}</td>
+        </tr>`
+    )
+    .join("");
+  const actions =
+    matrix.nextActions.length === 0
+      ? `<li>All acceptance rows are accepted. Keep the page open before final submission.</li>`
+      : matrix.nextActions
+          .map((action) => `<li><strong>${escapeHtml(action.owner)}</strong> ${escapeHtml(action.action)} <small>${escapeHtml(action.priority)} / ${escapeHtml(action.proof)}</small></li>`)
+          .join("");
+  const proofs = matrix.decisiveProof.map((proof) => `<li><strong>${escapeHtml(proof.label)}</strong> ${escapeHtml(proof.value)} <small>${escapeHtml(proof.proof)}</small></li>`).join("");
+
+  return `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Acceptance Matrix Proof</title>
+    <style>
+      :root { color-scheme: light; --ink: #18201e; --muted: #5f6d68; --line: #d9e3dd; --paper: #fbfcfa; --panel: #fff; --green: #13715d; --mint: #e6f4ed; --amber: #8a620d; --amber-bg: #fff4d4; --coral: #b24735; --coral-bg: #fff0ec; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; }
+      a { color: inherit; overflow-wrap: anywhere; }
+      header, main, footer { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+      header { padding: 40px 0 20px; }
+      .eyebrow { color: var(--green); font-size: .78rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0; }
+      h1 { margin: 8px 0 10px; font-size: clamp(2rem, 5vw, 4rem); line-height: 1; letter-spacing: 0; max-width: 980px; }
+      h2 { margin: 28px 0 10px; font-size: 1.12rem; }
+      p { color: var(--muted); }
+      .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 22px; }
+      .metric, .panel { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 16px; box-shadow: 0 10px 24px rgba(24, 32, 30, .06); min-width: 0; }
+      .metric span, td span { color: var(--muted); font-size: .74rem; font-weight: 900; text-transform: uppercase; }
+      .metric strong { display: block; margin-top: 6px; font-size: 1.35rem; overflow-wrap: anywhere; }
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      th, td { text-align: left; border-bottom: 1px solid var(--line); padding: 10px 8px; vertical-align: top; overflow-wrap: anywhere; }
+      th { font-size: .78rem; text-transform: uppercase; color: var(--muted); }
+      td span { display: block; margin-top: 4px; }
+      tr.good td { background: var(--mint); }
+      tr.watch td { background: var(--amber-bg); }
+      tr.bad td { background: var(--coral-bg); }
+      .good { border-color: #a9d8c2; background: var(--mint); }
+      .watch { border-color: #ead39a; background: var(--amber-bg); }
+      .bad { border-color: #efb7aa; background: var(--coral-bg); }
+      ol { margin: 8px 0 0; padding-left: 20px; }
+      li, small { overflow-wrap: anywhere; }
+      footer { padding: 20px 0 40px; color: var(--muted); }
+      @media (max-width: 900px) { .metrics { grid-template-columns: 1fr; } table, thead, tbody, tr, th, td { display: block; } thead { display: none; } tr { border-top: 1px solid var(--line); padding: 8px 0; } td { border-bottom: 0; padding: 8px; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="eyebrow">Acceptance Matrix Proof</div>
+      <h1>${escapeHtml(matrix.headline)}</h1>
+      <p>${escapeHtml(matrix.hardTruth)}</p>
+      <section class="metrics">${metrics}</section>
+    </header>
+    <main>
+      <h2>Acceptance Rows</h2>
+      <section class="panel">
+        <table>
+          <thead><tr><th>Row</th><th>Requirement</th><th>Evidence</th><th>Proof</th><th>Next Action</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </section>
+      <h2>Next Actions</h2>
+      <section class="panel"><ol>${actions}</ol></section>
+      <h2>Decisive Proof</h2>
+      <section class="panel"><ol>${proofs}</ol></section>
+      <h2>Receipt</h2>
+      <section class="panel">
+        <p><strong>${escapeHtml(matrix.digest.algorithm)}</strong></p>
+        <p>${escapeHtml(matrix.digest.digest)}</p>
+        <p>${escapeHtml(matrix.digest.verification)}</p>
+      </section>
+    </main>
+    <footer>${escapeHtml(matrix.id)} / generated ${escapeHtml(matrix.generatedAt)} / A2A skill ${ACCEPTANCE_MATRIX_SKILL_ID}</footer>
+  </body>
+</html>`;
 }

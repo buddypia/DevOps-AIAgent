@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { z } from "zod";
 import { getClientIp, ipAllowlistMiddleware, ipAllowlistSummary } from "./ipAllowlist.js";
-import { buildJudgeAcceptanceMatrix } from "../src/acceptanceMatrix.js";
+import { ACCEPTANCE_MATRIX_LOCK_TAG, ACCEPTANCE_MATRIX_REQUIRED_SIGNAL, ACCEPTANCE_MATRIX_SKILL_ID, buildJudgeAcceptanceMatrix, renderAcceptanceMatrixHtml } from "../src/acceptanceMatrix.js";
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js";
 import { buildArchitecturePack, renderArchitecturePackHtml } from "../src/architecturePack.js";
 import { buildWinningAutopilot, renderWinningAutopilotHtml, WIN_AUTOPILOT_LOCK_TAG, WIN_AUTOPILOT_REQUIRED_SIGNAL, WIN_AUTOPILOT_SKILL_ID } from "../src/autopilot.js";
@@ -264,10 +264,10 @@ function agentCard(baseUrl: string) {
         tags: ["mvp", "readiness", "acceptance", "release-drift", "get-proof"]
       },
       {
-        id: "acceptance.matrix",
+        id: ACCEPTANCE_MATRIX_SKILL_ID,
         name: "Build the judge acceptance matrix",
-        description: "必須技術、審査5項目、公開証拠、提出物、receiptをaccepted/watch/blockedの受入表に束ねる。",
-        tags: ["acceptance", "mvp", "judge-score", "proof", "submission"]
+        description: "必須技術、審査5項目、公開証拠、提出物、receiptをGET証拠ページのaccepted/watch/blocked受入表に束ねる。",
+        tags: ["acceptance", ACCEPTANCE_MATRIX_LOCK_TAG, "mvp", "judge-score", "proof", "submission", "get-proof"]
       },
       {
         id: "judge.brief",
@@ -2858,6 +2858,7 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
           data?.autonomySnapshotJsonEndpoint &&
           data?.demoReceiptEndpoint &&
           data?.acceptanceMatrixEndpoint &&
+          data?.acceptanceMatrixPageEndpoint &&
           data?.releaseDriftEndpoint &&
           data?.taskBoardEndpoint &&
           data?.externalEvidenceEndpoint &&
@@ -2892,9 +2893,9 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, observabilityOraclePageEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, externalEvidencePageEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeCommandPageEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, winnerSufficiencyEndpoint, winnerSufficiencyPageEndpoint, winAutopilotEndpoint, winAutopilotPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, submissionLaunchEndpoint, submissionLaunchPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, deployRecoveryEndpoint, and deployRecoveryPageEndpoint."
+                "A2A artifact exposes autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, observabilityOraclePageEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, externalEvidencePageEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, acceptanceMatrixPageEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeCommandPageEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, winnerSufficiencyEndpoint, winnerSufficiencyPageEndpoint, winAutopilotEndpoint, winAutopilotPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, submissionLaunchEndpoint, submissionLaunchPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, deployRecoveryEndpoint, and deployRecoveryPageEndpoint."
             }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but autonomy snapshot/observability oracle/external evidence API/page/task board/winner packet/winner sufficiency/win autopilot/submission runway/submission assets/submission launch/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/MVP snapshot/deploy recovery page/judge command API/page/pilot economics/release drift/acceptance/receipt/moat/live evidence endpoints were not visible." };
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but autonomy snapshot/observability oracle/external evidence API/page/task board/winner packet/winner sufficiency/win autopilot/submission runway/submission assets/submission launch/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/MVP snapshot/deploy recovery page/judge command API/page/pilot economics/release drift/acceptance API/page/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -3124,6 +3125,7 @@ async function buildReleaseDriftForTarget(input: {
     WIN_AUTOPILOT_REQUIRED_SIGNAL,
     "judge.objection-arena:tag:objection-lock",
     "finalist.simulate:tag:release-drift",
+    ACCEPTANCE_MATRIX_REQUIRED_SIGNAL,
     "competitive.battlecard:tag:criteria-duel",
     COMPETITIVE_WIN_LOSS_REQUIRED_SIGNAL,
     "competitive.snapshot:tag:get-proof",
@@ -3223,6 +3225,7 @@ async function buildReleaseDriftForTarget(input: {
         const winAutopilot = skills.find((skill) => skill.id === WIN_AUTOPILOT_SKILL_ID);
         const objectionArena = skills.find((skill) => skill.id === "judge.objection-arena");
         const finalistSimulate = skills.find((skill) => skill.id === "finalist.simulate");
+        const acceptanceMatrix = skills.find((skill) => skill.id === ACCEPTANCE_MATRIX_SKILL_ID);
         const competitiveBattlecard = skills.find((skill) => skill.id === "competitive.battlecard");
         const competitiveSnapshot = skills.find((skill) => skill.id === "competitive.snapshot");
         const judgeSnapshot = skills.find((skill) => skill.id === "judge.snapshot");
@@ -3247,6 +3250,7 @@ async function buildReleaseDriftForTarget(input: {
           ...(winAutopilot?.tags?.includes(WIN_AUTOPILOT_LOCK_TAG) ? [WIN_AUTOPILOT_REQUIRED_SIGNAL] : []),
           ...(objectionArena?.tags?.includes("objection-lock") ? ["judge.objection-arena:tag:objection-lock"] : []),
           ...(finalistSimulate?.tags?.includes("release-drift") ? ["finalist.simulate:tag:release-drift"] : []),
+          ...(acceptanceMatrix?.tags?.includes(ACCEPTANCE_MATRIX_LOCK_TAG) ? [ACCEPTANCE_MATRIX_REQUIRED_SIGNAL] : []),
           ...(competitiveBattlecard?.tags?.includes("criteria-duel") ? ["competitive.battlecard:tag:criteria-duel"] : []),
           ...(competitiveBattlecard?.tags?.includes(COMPETITIVE_WIN_LOSS_LOCK_TAG) ? [COMPETITIVE_WIN_LOSS_REQUIRED_SIGNAL] : []),
           ...(competitiveSnapshot?.tags?.includes("get-proof") ? ["competitive.snapshot:tag:get-proof"] : []),
@@ -3440,6 +3444,7 @@ async function buildReleaseDriftForTarget(input: {
           data?.externalEvidenceEndpoint &&
           data?.externalEvidencePageEndpoint &&
           data?.acceptanceMatrixEndpoint &&
+          data?.acceptanceMatrixPageEndpoint &&
           data?.demoReceiptEndpoint &&
           data?.pilotEconomicsEndpoint &&
           data?.demoConciergeEndpoint &&
@@ -3484,9 +3489,9 @@ async function buildReleaseDriftForTarget(input: {
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, externalEvidencePageEndpoint, acceptanceMatrixEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeCommandPageEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, winnerSufficiencyEndpoint, winnerSufficiencyPageEndpoint, winAutopilotEndpoint, winAutopilotPageEndpoint, objectionArenaEndpoint, objectionArenaPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, submissionLaunchEndpoint, submissionLaunchPageEndpoint, architecturePackEndpoint, architecturePackPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, firstClickProof, firstClickSmokeEndpoint, firstClickSmokePageEndpoint, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, observabilityOraclePageEndpoint, deployRecoveryEndpoint, and deployRecoveryPageEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, externalEvidencePageEndpoint, acceptanceMatrixEndpoint, acceptanceMatrixPageEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeCommandPageEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, winnerSufficiencyEndpoint, winnerSufficiencyPageEndpoint, winAutopilotEndpoint, winAutopilotPageEndpoint, objectionArenaEndpoint, objectionArenaPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, submissionLaunchEndpoint, submissionLaunchPageEndpoint, architecturePackEndpoint, architecturePackPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, firstClickProof, firstClickSmokeEndpoint, firstClickSmokePageEndpoint, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, observabilityOraclePageEndpoint, deployRecoveryEndpoint, and deployRecoveryPageEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but autonomy snapshot/observability oracle/external evidence API/page/task board/winner packet/winner sufficiency/win autopilot/objection arena/submission runway/submission assets/submission launch/architecture pack/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/first-click proof/first-click smoke/MVP snapshot/deploy recovery page/judge command API/page/pilot economics/release drift/acceptance/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but autonomy snapshot/observability oracle/external evidence API/page/task board/winner packet/winner sufficiency/win autopilot/objection arena/submission runway/submission assets/submission launch/architecture pack/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy/battlecard/judge snapshot/first-click proof/first-click smoke/MVP snapshot/deploy recovery page/judge command API/page/pilot economics/release drift/acceptance API/page/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -3648,15 +3653,24 @@ app.post("/api/demo-receipt", (req, res) => {
   );
 });
 
-app.post("/api/acceptance-matrix", async (req, res) => {
-  const parsed = AcceptanceMatrixSchema.safeParse(req.body);
+function acceptanceMatrixQueryInput(req: express.Request) {
+  const parsed = AcceptanceMatrixSchema.safeParse({
+    projectBrief: DEFAULT_PROJECT_BRIEF,
+    selectedAgentIds: ["market-broker", "gemini-strategist", "cloud-run-sre"],
+    skipReleaseDrift: !(req.query.live === "1" || typeof req.query.targetUrl === "string"),
+    ...(typeof req.query.targetUrl === "string" ? { targetUrl: req.query.targetUrl } : {}),
+    ...(typeof req.query.protopediaUrl === "string" ? { protopediaUrl: req.query.protopediaUrl } : {}),
+    ...(typeof req.query.videoUrl === "string" ? { videoUrl: req.query.videoUrl } : {})
+  });
   if (!parsed.success) {
-    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
-    return;
+    return { error: { error: "invalid_request", issues: parsed.error.issues } };
   }
+  return { input: parsed.data };
+}
 
+async function buildAcceptanceMatrixForRequest(req: express.Request, input: z.infer<typeof AcceptanceMatrixSchema>) {
   const baseUrl = publicBaseUrl(req);
-  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
+  const recommendation = recommendSquad(input.projectBrief, input.selectedAgentIds);
   const strategy = buildWinningStrategy(recommendation);
   const marketIntel = buildMarketIntelReport({ baseUrl, recommendation, strategy });
   const mission = buildMissionRun(recommendation, strategy, "審査5項目、必須技術、提出物、公開証拠を受入表として閉じる。");
@@ -3673,12 +3687,12 @@ app.post("/api/acceptance-matrix", async (req, res) => {
     pitch,
     judgeDrill,
     squadContract,
-    submissionUrls: submissionUrlEvidence(parsed.data)
+    submissionUrls: submissionUrlEvidence(input)
   });
   const publisher = buildProtoPediaPublisher({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist });
   const demoRunway = buildDemoRunway({ baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist, publisher });
   const [geminiResult, ciResult] = await Promise.allSettled([
-    runGeminiWithRetry(parsed.data.projectBrief, parsed.data.selectedAgentIds),
+    runGeminiWithRetry(input.projectBrief, input.selectedAgentIds),
     fetchCiProof()
   ]);
   const gemini =
@@ -3727,8 +3741,8 @@ app.post("/api/acceptance-matrix", async (req, res) => {
     marketIntel
   });
   const submissionLaunch = buildSubmissionLaunchGate({
-    protopediaUrl: parsed.data.protopediaUrl,
-    videoUrl: parsed.data.videoUrl,
+    protopediaUrl: input.protopediaUrl,
+    videoUrl: input.videoUrl,
     mvpAudit,
     dossier,
     proof,
@@ -3770,8 +3784,8 @@ app.post("/api/acceptance-matrix", async (req, res) => {
   });
   const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
   const squadOptimizer = buildSquadOptimizer({
-    projectBrief: parsed.data.projectBrief,
-    selectedAgentIds: parsed.data.selectedAgentIds,
+    projectBrief: input.projectBrief,
+    selectedAgentIds: input.selectedAgentIds,
     budget: 140,
     maxSquadSize: 4
   });
@@ -3781,37 +3795,63 @@ app.post("/api/acceptance-matrix", async (req, res) => {
     strategy,
     moatStress,
     squadOptimizer,
-    protopediaUrl: parsed.data.protopediaUrl,
-    videoUrl: parsed.data.videoUrl
+    protopediaUrl: input.protopediaUrl,
+    videoUrl: input.videoUrl
   });
-  const releaseDrift = parsed.data.skipReleaseDrift
+  const releaseDrift = input.skipReleaseDrift
     ? undefined
     : await buildReleaseDriftForTarget({
         currentBaseUrl: baseUrl,
-        targetBaseUrl: parsed.data.targetUrl || SUBMISSION_PROOF.deployedUrl,
-        projectBrief: parsed.data.projectBrief,
-        selectedAgentIds: parsed.data.selectedAgentIds,
+        targetBaseUrl: input.targetUrl || SUBMISSION_PROOF.deployedUrl,
+        projectBrief: input.projectBrief,
+        selectedAgentIds: input.selectedAgentIds,
         forwardedHeaders: selfProbeHeaders(req)
       });
 
-  res.json(
-    buildJudgeAcceptanceMatrix({
-      baseUrl,
-      strategy,
-      marketIntel,
-      mvpAudit,
-      autopilot,
-      proof,
-      userPilot,
-      impactCase,
-      pilotEconomics,
-      observabilityOracle,
-      securityReview,
-      demoReceipt,
-      releaseDrift,
-      submissionLaunch
-    })
-  );
+  return buildJudgeAcceptanceMatrix({
+    baseUrl,
+    strategy,
+    marketIntel,
+    mvpAudit,
+    autopilot,
+    proof,
+    userPilot,
+    impactCase,
+    pilotEconomics,
+    observabilityOracle,
+    securityReview,
+    demoReceipt,
+    releaseDrift,
+    submissionLaunch
+  });
+}
+
+app.get("/api/acceptance-matrix", async (req, res) => {
+  const result = acceptanceMatrixQueryInput(req);
+  if ("error" in result) {
+    res.status(400).json(result.error);
+    return;
+  }
+  res.json(await buildAcceptanceMatrixForRequest(req, result.input));
+});
+
+app.get("/acceptance-matrix", async (req, res) => {
+  const result = acceptanceMatrixQueryInput(req);
+  if ("error" in result) {
+    res.status(400).json(result.error);
+    return;
+  }
+  res.type("html").send(renderAcceptanceMatrixHtml(await buildAcceptanceMatrixForRequest(req, result.input)));
+});
+
+app.post("/api/acceptance-matrix", async (req, res) => {
+  const parsed = AcceptanceMatrixSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  res.json(await buildAcceptanceMatrixForRequest(req, parsed.data));
 });
 
 function commandCenterQueryInput(req: express.Request) {
@@ -7362,6 +7402,7 @@ app.post("/a2a", async (req, res) => {
                 winAutopilotPageEndpoint: `${publicBaseUrl(req)}/win-autopilot`,
                 demoReceiptEndpoint: `${publicBaseUrl(req)}/api/demo-receipt`,
                 acceptanceMatrixEndpoint: `${publicBaseUrl(req)}/api/acceptance-matrix`,
+                acceptanceMatrixPageEndpoint: `${publicBaseUrl(req)}/acceptance-matrix`,
                 judgeTourEndpoint: `${publicBaseUrl(req)}/api/judge-tour`,
                 winRunEndpoint: `${publicBaseUrl(req)}/api/win-run`,
                 demoRunEndpoint: `${publicBaseUrl(req)}/api/demo-run`,

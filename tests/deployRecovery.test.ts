@@ -34,6 +34,7 @@ const expectedSkillIds = [
 ];
 
 const requiredAgentCardSignals = [
+  "acceptance.matrix:tag:acceptance-matrix-lock",
   "judge.rehearsal:tag:recording-lock",
   "win.gap.radar:tag:feature-freeze-lock",
   "winner.packet:tag:winner-release-lock",
@@ -123,6 +124,7 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "verify-pilot-value")?.command).toContain("/api/pilot-value");
     expect(plan.commands.find((command) => command.id === "verify-external-evidence-page")?.command).toContain("/external-evidence");
     expect(plan.commands.find((command) => command.id === "verify-judge-command-page")?.command).toContain("/judge-command-center");
+    expect(plan.commands.find((command) => command.id === "verify-acceptance-matrix-page")?.command).toContain("/acceptance-matrix");
     expect(plan.commands.find((command) => command.id === "verify-recovery-page")?.command).toContain("/deploy-recovery");
     expect(plan.commands.find((command) => command.id === "verify-recovery-endpoint")?.command).toContain("/api/deploy-recovery");
     expect(plan.commands.find((command) => command.id === "verify-a2a-artifact")?.command).toContain("deployRecoveryPageEndpoint");
@@ -215,6 +217,7 @@ describe("deploy recovery plan", () => {
       status: "blocked",
       evidence: expect.stringContaining("competitive.battlecard:tag:criteria-duel")
     });
+    expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("acceptance.matrix:tag:acceptance-matrix-lock");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("judge.snapshot:tag:get-proof");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("mvp.snapshot:tag:get-proof");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("autonomy.snapshot:tag:get-proof");
@@ -232,6 +235,7 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="winner.sufficiency"');
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="win.autopilot"');
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="observability.oracle"');
+    expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="acceptance.matrix"');
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="autonomy.snapshot"');
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="recording.script"');
     expect(plan.commands.find((command) => command.id === "github-actions-deploy")?.command).toContain("deploy-cloud-run.yml");
@@ -242,6 +246,7 @@ describe("deploy recovery plan", () => {
     expect(plan.steps.find((step) => step.id === "skill-surface")?.status).toBe("blocked");
     expect(plan.blockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["agent-card-signals", "agent-card-skill-surface"]));
     expect(plan.judgeScript.join("\n")).toContain("competitive.battlecard:tag:criteria-duel");
+    expect(plan.judgeScript.join("\n")).toContain("acceptance.matrix:tag:acceptance-matrix-lock");
     expect(plan.judgeScript.join("\n")).toContain("competitive.snapshot:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("judge.snapshot:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("mvp.snapshot:tag:get-proof");
@@ -264,6 +269,7 @@ describe("deploy recovery plan", () => {
       skill: "deploy.recover",
       releaseDrift: {
         missingAgentCardSignals: [
+          "acceptance.matrix:tag:acceptance-matrix-lock",
           "autonomy.snapshot:tag:get-proof",
           "competitive.battlecard:tag:criteria-duel",
           "competitive.snapshot:tag:get-proof",

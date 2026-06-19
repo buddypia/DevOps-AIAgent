@@ -162,7 +162,7 @@ export function buildReleaseDriftGuard(input: {
       "gcloud auth login",
       "gcloud builds submit --config cloudbuild.yaml --substitutions _REGION=asia-northeast1,_SERVICE=a2a-agent-marketplace,_REPOSITORY=cloud-run-source-deploy,_GEMINI_SECRET=gemini-api-key-a2a-marketplace",
       `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills | length'`,
-      `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.command" or .id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="winner.sufficiency" or .id=="win.autopilot" or .id=="judge.objection-arena" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="judge.first-click" or .id=="mvp.snapshot" or .id=="autonomy.snapshot" or .id=="external.evidence" or .id=="recording.script" or .id=="submission.launch" or .id=="submission.package" or .id=="pilot.value.snapshot" or .id=="deploy.recover") | {id, tags}'`,
+      `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills[] | select(.id=="judge.command" or .id=="judge.rehearsal" or .id=="win.gap.radar" or .id=="winner.packet" or .id=="winner.sufficiency" or .id=="win.autopilot" or .id=="judge.objection-arena" or .id=="finalist.simulate" or .id=="competitive.battlecard" or .id=="competitive.snapshot" or .id=="judge.snapshot" or .id=="judge.first-click" or .id=="mvp.snapshot" or .id=="autonomy.snapshot" or .id=="external.evidence" or .id=="acceptance.matrix" or .id=="recording.script" or .id=="submission.launch" or .id=="submission.package" or .id=="pilot.value.snapshot" or .id=="deploy.recover") | {id, tags}'`,
       `curl -s ${targetBaseUrl}/ | rg 'Judge first click|Start with proof, not feature hunting'`,
       `curl -s ${targetBaseUrl}/win-autopilot | rg 'Win Autopilot Proof|Evidence Lanes'`,
       `curl -s ${targetBaseUrl}/winner-sufficiency | rg 'Winner Sufficiency Lock|Sufficiency Checks'`,
@@ -180,6 +180,8 @@ export function buildReleaseDriftGuard(input: {
       `curl -s ${targetBaseUrl}/api/objection-arena | jq '{readiness, arenaScore, answered: .lock.answeredCount, blocked: .lock.blockedCount}'`,
       `curl -s ${targetBaseUrl}/api/first-click-smoke | jq '{readiness, smokeScore, passedCount, missingCount}'`,
       `curl -s ${targetBaseUrl}/deploy-recovery | rg 'Deploy Recovery|Copy/Paste Commands'`,
+      `curl -s ${targetBaseUrl}/acceptance-matrix | rg 'Acceptance Matrix Proof|Acceptance Rows'`,
+      `curl -s ${targetBaseUrl}/api/acceptance-matrix | jq '{verdict, acceptanceScore, rows: (.rows | length)}'`,
       `curl -s -X POST ${targetBaseUrl}/api/acceptance-matrix -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}' | jq '{verdict, acceptanceScore, rows: (.rows | length)}'`,
       `curl -s -X POST ${targetBaseUrl}/a2a -H 'Content-Type: application/json' --data '{"method":"message/send","params":{"text":"A2A Cloud Run Gemini DevOps"}}' | jq '.result.artifacts[0].parts[0].data.releaseDriftEndpoint'`
     ],
