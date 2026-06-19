@@ -49,9 +49,9 @@ function smoke(input: Record<string, unknown> = {}): FirstClickSmokeLock {
   return {
     readiness: "smoke-passed",
     smokeScore: 100,
-    passedCount: 13,
+    passedCount: 14,
     missingCount: 0,
-    probes: Array.from({ length: 13 }, (_, index) => ({ id: `probe-${index}` })),
+    probes: Array.from({ length: 14 }, (_, index) => ({ id: `probe-${index}` })),
     ...input
   } as unknown as FirstClickSmokeLock;
 }

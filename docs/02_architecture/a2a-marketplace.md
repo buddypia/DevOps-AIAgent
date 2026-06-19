@@ -60,6 +60,7 @@
   - `moat.stress`
   - `competitive.battlecard`
   - `competitive.snapshot`
+  - `competitive.decision-matrix`
   - `mvp.audit`
   - `mvp.snapshot`
   - `mission.run`
@@ -120,6 +121,8 @@
 ## Competitive Battlecard Surface
 
 - `POST /api/competitive-battlecard`: Market Intel、Moat Stress、SWOTを競合別の審査回答カードへ束ね、Criteria Duelで審査5項目ごとの競合勝敗を固定する
+- `GET /competitive-decision-matrix` / `GET /api/competitive-decision-matrix`: 5審査項目 x 主要競合のHead-to-Head勝敗表、SWOT signal、証拠URL、Decision Matrix Lockを直接表示する
+- `POST /api/competitive-decision-matrix`: 任意brief/selected agentsでHead-to-Head競合比較表を再生成する
 - Cards: 競合ごとに「審査員の質問」「短い回答」「相手が勝つ領域」「こちらが勝つ領域」「見せる証拠route」を返す
 - Source/SWOT receipts: 公式ソースURLとSWOT項目を同じカードに載せ、競合分析が主張だけで終わらないようにする
 - Objection Replay: 最弱競合への質問、source ledger、SWOT receipt、Live Evidence proof routeを0-30秒のready/watch/blocked stepsに固定する
@@ -134,8 +137,8 @@
 
 - `GET /judge-snapshot`: Judge Proof、Competitive Battlecard、Criteria Duel、Competitive SWOT、Autonomy Snapshot、MVP Readiness、Deploy Recovery、Pilot Value、Recording Script、Architecture Pack、Submission Launch、Submission Assets、Agent Card、CI、深掘り用POST curlを、審査員が直接読める初回HTML証拠ページへ束ねる
 - `GET /api/judge-snapshot`: 同じ証拠をA2A/自動検証用のJSONとして返す
-- Judge First-Click Strip: Cloud Runトップ画面直下で `/win-autopilot`、`/judge-snapshot`、`/winner-packet`、`/objection-arena`、`/competitive-swot`、`/mvp-readiness`、`/deploy-recovery`、`/autonomy-snapshot`、`/pilot-value`、`/recording-script`、`/architecture-pack`、`/submission-launch`、`/submission-assets` をPOSTなしの証拠入口として固定し、Agent Cardの `judge.first-click` / `first-click-route-lock` とA2A artifactの `firstClickProof` で自動検収する
-- First-Click Smoke Lock: `/api/first-click-smoke` と `/first-click-smoke` が13本のGET証拠ページに固有title sentinelが含まれるかを検査し、SPA fallbackの200を `smoke-failed` として検出する
+- Judge First-Click Strip: Cloud Runトップ画面直下で `/win-autopilot`、`/judge-snapshot`、`/winner-packet`、`/objection-arena`、`/competitive-swot`、`/competitive-decision-matrix`、`/mvp-readiness`、`/deploy-recovery`、`/autonomy-snapshot`、`/pilot-value`、`/recording-script`、`/architecture-pack`、`/submission-launch`、`/submission-assets` をPOSTなしの証拠入口として固定し、Agent Cardの `judge.first-click` / `first-click-route-lock` とA2A artifactの `firstClickProof` で自動検収する
+- First-Click Smoke Lock: `/api/first-click-smoke` と `/first-click-smoke` が14本のGET証拠ページに固有title sentinelが含まれるかを検査し、SPA fallbackの200を `smoke-failed` として検出する
 - Direct-open proof: ProtoPediaや提出本文に貼ったリンクが、POST method errorや生JSONではなくreadiness、proof score、競合/SWOT証拠、運用証拠を返す
 - Live drift option: `/api/judge-snapshot?live=1` の時だけRelease Drift Guardを実行し、通常HTMLは初回表示の安定性を優先する
 - A2A payload: `judge.snapshot` skillとしてdirectOpen、readiness、proof score、Criteria Duel score、GET証拠endpoint群、POST深掘りendpoint群を返す
@@ -524,6 +527,7 @@
 - Moat stress proof: `moat.stress` skillとして、競合別の想定反論、反証、見せる証拠、録画順をA2A payloadにも含める
 - Competitive battlecard proof: `competitive.battlecard` skillとして、競合別の短い回答、公式ソース、SWOT receipts、Criteria Duel、Win/Loss Lock、Objection Replay、top risksをA2A payloadにも含める
 - Competitive SWOT snapshot proof: `competitive.snapshot` skillとして、8競合、SWOT 4象限、公式ソース、Criteria Duel、Win/Loss Lock、Proof Lock、Source Freshness LockをGETで開ける審査用HTMLにも含め、`?live=1` で公式ソース到達性を再検証する
+- Competitive decision matrix proof: `competitive.decision-matrix` skillとして、5審査項目 x 主要競合の勝敗、SWOT signal、証拠URL、Decision Matrix Lock、`competitiveDecisionMatrixPageEndpoint`をA2A payloadにも含める
 - MVP readiness snapshot proof: `mvp.snapshot` skillとして、MVP Audit、Acceptance Matrix、Release Drift、Deploy Recovery、外部提出gapをGETで開ける提出可否HTMLにも含める
 - Recording script proof: `recording.script` skillとして、30秒動画の台本、字幕、証拠URL、Video Proof LockをGETで開ける録画用HTMLにも含める
 
@@ -547,6 +551,7 @@
 - Market intel: `/api/market-intel`
 - Moat stress: `/api/moat-stress`
 - Competitive battlecard: `/api/competitive-battlecard`
+- Competitive decision matrix: `/competitive-decision-matrix` and `/api/competitive-decision-matrix`
 - Win gap radar: `/api/win-gap-radar`
 - MVP audit: `/api/mvp-audit`
 - MVP readiness snapshot: `/api/mvp-readiness` and `/mvp-readiness`

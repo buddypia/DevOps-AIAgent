@@ -12,6 +12,13 @@ import { buildAutonomyLedger } from "../src/autonomyLedger.js";
 import { buildAutonomySnapshot, renderAutonomySnapshotHtml } from "../src/autonomySnapshot.js";
 import { ciStatusFromBadge } from "../src/ciProof.js";
 import { buildCompetitiveBattlecard, COMPETITIVE_WIN_LOSS_LOCK_TAG, COMPETITIVE_WIN_LOSS_REQUIRED_SIGNAL } from "../src/competitiveBattlecard.js";
+import {
+  buildCompetitiveDecisionMatrix,
+  COMPETITIVE_DECISION_MATRIX_LOCK_TAG,
+  COMPETITIVE_DECISION_MATRIX_REQUIRED_SIGNAL,
+  COMPETITIVE_DECISION_MATRIX_SKILL_ID,
+  renderCompetitiveDecisionMatrixHtml
+} from "../src/competitiveDecisionMatrix.js";
 import { buildCompetitiveSnapshot, renderCompetitiveSnapshotHtml } from "../src/competitiveSnapshot.js";
 import { buildSquadContract } from "../src/contracts.js";
 import { buildDeployRecoveryPlan, renderDeployRecoveryHtml } from "../src/deployRecovery.js";
@@ -252,6 +259,12 @@ function agentCard(baseUrl: string) {
         tags: ["competitive-analysis", "swot", "source-ledger", "judge-qa", "get-proof"]
       },
       {
+        id: COMPETITIVE_DECISION_MATRIX_SKILL_ID,
+        name: "Open head-to-head competitive decision matrix",
+        description: "5審査項目 x 主要競合の勝敗、SWOT signal、開く証拠URLをGET証拠ページに束ねる。",
+        tags: ["competitive-analysis", "swot", "head-to-head", COMPETITIVE_DECISION_MATRIX_LOCK_TAG, "judge-qa", "get-proof"]
+      },
+      {
         id: "judge.snapshot",
         name: "Open the public judge proof snapshot",
         description: "POST専用の深い証拠群を、審査員がGETで直接開ける初回証拠スナップショットへ束ねる。",
@@ -260,8 +273,8 @@ function agentCard(baseUrl: string) {
       {
         id: FIRST_CLICK_SKILL_ID,
         name: "Route the judge first click",
-        description: "トップ画面直下から13本のGET証拠ページへ迷わず到達できる初回審査導線を固定する。",
-        tags: ["first-click", FIRST_CLICK_ROUTE_LOCK_TAG, "get-proof", "win-autopilot", "judge-snapshot", "winner-packet", "objection-arena", "mvp-readiness", "deploy-recovery", "architecture-pack", "submission-launch"]
+        description: "トップ画面直下から14本のGET証拠ページへ迷わず到達できる初回審査導線を固定する。",
+        tags: ["first-click", FIRST_CLICK_ROUTE_LOCK_TAG, "get-proof", "win-autopilot", "judge-snapshot", "winner-packet", "objection-arena", "competitive-decision-matrix", "mvp-readiness", "deploy-recovery", "architecture-pack", "submission-launch"]
       },
       {
         id: FIRST_CLICK_SMOKE_SKILL_ID,
@@ -1196,6 +1209,61 @@ app.get("/api/competitive-swot", async (req, res) => {
 
 app.get("/competitive-swot", async (req, res) => {
   res.type("html").send(renderCompetitiveSnapshotHtml(await buildCompetitiveSnapshotForRequest(req, competitiveSnapshotQueryInput(req))));
+});
+
+function defaultCompetitiveDecisionInput(): z.infer<typeof RecommendSchema> {
+  return {
+    projectBrief: DEFAULT_PROJECT_BRIEF,
+    selectedAgentIds: ["market-broker", "gemini-strategist", "cloud-run-sre"]
+  };
+}
+
+async function buildCompetitiveDecisionMatrixForRequest(
+  req: express.Request,
+  input: z.infer<typeof RecommendSchema>,
+  options: { liveSourceProof?: boolean } = {}
+) {
+  const baseUrl = publicBaseUrl(req);
+  const recommendation = recommendSquad(input.projectBrief, input.selectedAgentIds);
+  const strategy = buildWinningStrategy(recommendation);
+  const marketIntelBase = buildMarketIntelReport({ baseUrl, recommendation, strategy });
+  const marketIntel = options.liveSourceProof
+    ? attachSourceProofLock(
+        marketIntelBase,
+        await probeMarketIntelSources({
+          sourceLedger: marketIntelBase.sourceLedger,
+          timeoutMs: 6000
+        })
+      )
+    : marketIntelBase;
+  const moatStress = buildMoatStressTest({ baseUrl, recommendation, strategy, marketIntel });
+  const battlecard = buildCompetitiveBattlecard({ baseUrl, strategy, marketIntel, moatStress });
+
+  return buildCompetitiveDecisionMatrix({
+    baseUrl,
+    strategy,
+    battlecard
+  });
+}
+
+app.get("/api/competitive-decision-matrix", async (req, res) => {
+  res.json(await buildCompetitiveDecisionMatrixForRequest(req, defaultCompetitiveDecisionInput(), competitiveSnapshotQueryInput(req)));
+});
+
+app.get("/competitive-decision-matrix", async (req, res) => {
+  res
+    .type("html")
+    .send(renderCompetitiveDecisionMatrixHtml(await buildCompetitiveDecisionMatrixForRequest(req, defaultCompetitiveDecisionInput(), competitiveSnapshotQueryInput(req))));
+});
+
+app.post("/api/competitive-decision-matrix", async (req, res) => {
+  const parsed = RecommendSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
+    return;
+  }
+
+  res.json(await buildCompetitiveDecisionMatrixForRequest(req, parsed.data, { liveSourceProof: req.query.live === "1" || req.query.live === "true" }));
 });
 
 async function buildJudgeSnapshotForRequest(req: express.Request) {
@@ -2904,6 +2972,8 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
           data?.moatStressEndpoint &&
           data?.competitiveBattlecardEndpoint &&
           data?.competitiveSwotSnapshotEndpoint &&
+          data?.competitiveDecisionMatrixEndpoint &&
+          data?.competitiveDecisionMatrixPageEndpoint &&
           data?.judgeSnapshotEndpoint &&
           data?.judgeSnapshotPageEndpoint &&
           data?.mvpReadinessSnapshotEndpoint &&
@@ -2951,9 +3021,9 @@ async function buildLiveEvidenceForRequest(req: express.Request, input: z.infer<
               status: "passed",
               score: 100,
               evidence:
-                "A2A artifact exposes autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, observabilityOraclePageEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, externalEvidencePageEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, acceptanceMatrixPageEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeCommandPageEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, winnerSufficiencyEndpoint, winnerSufficiencyPageEndpoint, winAutopilotEndpoint, winAutopilotPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, submissionLaunchEndpoint, submissionLaunchPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, prizeStrategyPageEndpoint, publisherEndpoint, publisherPageEndpoint, dossierEndpoint, dossierPageEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, deployRecoveryEndpoint, and deployRecoveryPageEndpoint."
+                "A2A artifact exposes autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, observabilityOraclePageEndpoint, squadOptimizerEndpoint, liveEvidenceEndpoint, externalEvidenceEndpoint, externalEvidencePageEndpoint, moatStressEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, competitiveDecisionMatrixEndpoint, competitiveDecisionMatrixPageEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, mvpReadinessSnapshotEndpoint, demoReceiptEndpoint, acceptanceMatrixEndpoint, acceptanceMatrixPageEndpoint, releaseDriftEndpoint, taskBoardEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeCommandPageEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, winnerSufficiencyEndpoint, winnerSufficiencyPageEndpoint, winAutopilotEndpoint, winAutopilotPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, submissionLaunchEndpoint, submissionLaunchPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, prizeStrategyPageEndpoint, publisherEndpoint, publisherPageEndpoint, dossierEndpoint, dossierPageEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, deployRecoveryEndpoint, and deployRecoveryPageEndpoint."
             }
-          : { status: "watch", score: 72, evidence: "A2A artifact returned, but autonomy snapshot/observability oracle/external evidence API/page/task board/winner packet/winner sufficiency/win autopilot/submission runway/submission assets/submission launch/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy API/page/publisher API/page/dossier API/page/battlecard/judge snapshot/MVP snapshot/deploy recovery page/judge command API/page/pilot economics/release drift/acceptance API/page/receipt/moat/live evidence endpoints were not visible." };
+          : { status: "watch", score: 72, evidence: "A2A artifact returned, but autonomy snapshot/observability oracle/external evidence API/page/task board/winner packet/winner sufficiency/win autopilot/submission runway/submission assets/submission launch/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy API/page/publisher API/page/dossier API/page/battlecard/decision matrix/judge snapshot/MVP snapshot/deploy recovery page/judge command API/page/pilot economics/release drift/acceptance API/page/receipt/moat/live evidence endpoints were not visible." };
       }
     }),
     fetchCiProof()
@@ -3187,6 +3257,7 @@ async function buildReleaseDriftForTarget(input: {
     "competitive.battlecard:tag:criteria-duel",
     COMPETITIVE_WIN_LOSS_REQUIRED_SIGNAL,
     "competitive.snapshot:tag:get-proof",
+    COMPETITIVE_DECISION_MATRIX_REQUIRED_SIGNAL,
     "judge.snapshot:tag:get-proof",
     FIRST_CLICK_REQUIRED_SIGNAL,
     FIRST_CLICK_SMOKE_REQUIRED_SIGNAL,
@@ -3233,6 +3304,7 @@ async function buildReleaseDriftForTarget(input: {
     "deploy.recover",
     "competitive.battlecard",
     "competitive.snapshot",
+    COMPETITIVE_DECISION_MATRIX_SKILL_ID,
     "judge.snapshot",
     FIRST_CLICK_SKILL_ID,
     FIRST_CLICK_SMOKE_SKILL_ID,
@@ -3290,6 +3362,7 @@ async function buildReleaseDriftForTarget(input: {
         const acceptanceMatrix = skills.find((skill) => skill.id === ACCEPTANCE_MATRIX_SKILL_ID);
         const competitiveBattlecard = skills.find((skill) => skill.id === "competitive.battlecard");
         const competitiveSnapshot = skills.find((skill) => skill.id === "competitive.snapshot");
+        const competitiveDecisionMatrix = skills.find((skill) => skill.id === COMPETITIVE_DECISION_MATRIX_SKILL_ID);
         const judgeSnapshot = skills.find((skill) => skill.id === "judge.snapshot");
         const firstClick = skills.find((skill) => skill.id === FIRST_CLICK_SKILL_ID);
         const firstClickSmoke = skills.find((skill) => skill.id === FIRST_CLICK_SMOKE_SKILL_ID);
@@ -3319,6 +3392,7 @@ async function buildReleaseDriftForTarget(input: {
           ...(competitiveBattlecard?.tags?.includes("criteria-duel") ? ["competitive.battlecard:tag:criteria-duel"] : []),
           ...(competitiveBattlecard?.tags?.includes(COMPETITIVE_WIN_LOSS_LOCK_TAG) ? [COMPETITIVE_WIN_LOSS_REQUIRED_SIGNAL] : []),
           ...(competitiveSnapshot?.tags?.includes("get-proof") ? ["competitive.snapshot:tag:get-proof"] : []),
+          ...(competitiveDecisionMatrix?.tags?.includes(COMPETITIVE_DECISION_MATRIX_LOCK_TAG) ? [COMPETITIVE_DECISION_MATRIX_REQUIRED_SIGNAL] : []),
           ...(judgeSnapshot?.tags?.includes("get-proof") ? ["judge.snapshot:tag:get-proof"] : []),
           ...(firstClick?.tags?.includes(FIRST_CLICK_ROUTE_LOCK_TAG) ? [FIRST_CLICK_REQUIRED_SIGNAL] : []),
           ...(firstClickSmoke?.tags?.includes(FIRST_CLICK_SMOKE_LOCK_TAG) ? [FIRST_CLICK_SMOKE_REQUIRED_SIGNAL] : []),
@@ -3545,6 +3619,8 @@ async function buildReleaseDriftForTarget(input: {
           data?.submissionCloseoutEndpoint &&
           data?.competitiveBattlecardEndpoint &&
           data?.competitiveSwotSnapshotEndpoint &&
+          data?.competitiveDecisionMatrixEndpoint &&
+          data?.competitiveDecisionMatrixPageEndpoint &&
           data?.judgeSnapshotEndpoint &&
           data?.judgeSnapshotPageEndpoint &&
           data?.firstClickProof &&
@@ -3562,9 +3638,9 @@ async function buildReleaseDriftForTarget(input: {
           ? {
               status: "passed",
               score: 100,
-              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, externalEvidencePageEndpoint, acceptanceMatrixEndpoint, acceptanceMatrixPageEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeCommandPageEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, winnerSufficiencyEndpoint, winnerSufficiencyPageEndpoint, winAutopilotEndpoint, winAutopilotPageEndpoint, objectionArenaEndpoint, objectionArenaPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, submissionLaunchEndpoint, submissionLaunchPageEndpoint, architecturePackEndpoint, architecturePackPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, prizeStrategyPageEndpoint, publisherEndpoint, publisherPageEndpoint, dossierEndpoint, dossierPageEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, firstClickProof, firstClickSmokeEndpoint, firstClickSmokePageEndpoint, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, observabilityOraclePageEndpoint, deployRecoveryEndpoint, and deployRecoveryPageEndpoint."
+              evidence: "A2A artifact exposes releaseDriftEndpoint, taskBoardEndpoint, externalEvidenceEndpoint, externalEvidencePageEndpoint, acceptanceMatrixEndpoint, acceptanceMatrixPageEndpoint, demoReceiptEndpoint, pilotEconomicsEndpoint, pilotValueSnapshotEndpoint, demoConciergeEndpoint, judgeCommandEndpoint, judgeCommandPageEndpoint, judgeRehearsalEndpoint, winnerPacketEndpoint, winnerPacketPageEndpoint, winnerSufficiencyEndpoint, winnerSufficiencyPageEndpoint, winAutopilotEndpoint, winAutopilotPageEndpoint, objectionArenaEndpoint, objectionArenaPageEndpoint, submissionRunwayEndpoint, submissionAssetsPageEndpoint, submissionLaunchEndpoint, submissionLaunchPageEndpoint, architecturePackEndpoint, architecturePackPageEndpoint, recordingScriptPageEndpoint, recordingScriptJsonEndpoint, prizeStrategyEndpoint, prizeStrategyPageEndpoint, publisherEndpoint, publisherPageEndpoint, dossierEndpoint, dossierPageEndpoint, winGapRadarEndpoint, submissionCloseoutEndpoint, competitiveBattlecardEndpoint, competitiveSwotSnapshotEndpoint, competitiveDecisionMatrixEndpoint, competitiveDecisionMatrixPageEndpoint, judgeSnapshotEndpoint, judgeSnapshotPageEndpoint, firstClickProof, firstClickSmokeEndpoint, firstClickSmokePageEndpoint, mvpReadinessSnapshotEndpoint, autonomySnapshotEndpoint, autonomySnapshotJsonEndpoint, observabilityOracleEndpoint, observabilityOraclePageEndpoint, deployRecoveryEndpoint, and deployRecoveryPageEndpoint."
             }
-          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but autonomy snapshot/observability oracle/external evidence API/page/task board/winner packet/winner sufficiency/win autopilot/objection arena/submission runway/submission assets/submission launch/architecture pack/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy API/page/publisher API/page/dossier API/page/battlecard/judge snapshot/first-click proof/first-click smoke/MVP snapshot/deploy recovery page/judge command API/page/pilot economics/release drift/acceptance API/page/receipt endpoints are not all visible." };
+          : { status: "watch", score: 62, evidence: "A2A artifact is reachable, but autonomy snapshot/observability oracle/external evidence API/page/task board/winner packet/winner sufficiency/win autopilot/objection arena/submission runway/submission assets/submission launch/architecture pack/recording script/pilot value snapshot/judge rehearsal/submission closeout/win gap radar/demo concierge/prize strategy API/page/publisher API/page/dossier API/page/battlecard/decision matrix/judge snapshot/first-click proof/first-click smoke/MVP snapshot/deploy recovery page/judge command API/page/pilot economics/release drift/acceptance API/page/receipt endpoints are not all visible." };
       }
     }),
     fetchCiProof()
@@ -7467,6 +7543,8 @@ app.post("/a2a", async (req, res) => {
                 moatStressEndpoint: `${publicBaseUrl(req)}/api/moat-stress`,
                 competitiveBattlecardEndpoint: `${publicBaseUrl(req)}/api/competitive-battlecard`,
                 competitiveSwotSnapshotEndpoint: `${publicBaseUrl(req)}/competitive-swot`,
+                competitiveDecisionMatrixEndpoint: `${publicBaseUrl(req)}/api/competitive-decision-matrix`,
+                competitiveDecisionMatrixPageEndpoint: `${publicBaseUrl(req)}/competitive-decision-matrix`,
                 judgeSnapshotEndpoint: `${publicBaseUrl(req)}/api/judge-snapshot`,
                 judgeSnapshotPageEndpoint: `${publicBaseUrl(req)}/judge-snapshot`,
                 firstClickProof: buildFirstClickProof(publicBaseUrl(req)),

@@ -114,6 +114,7 @@ function FirstClickIcon({ link }: { link: FirstClickProofLink }) {
   if (link.id === "winner-packet") return <BadgeCheck size={18} />;
   if (link.id === "objection-arena") return <AlertTriangle size={18} />;
   if (link.id === "competitive-swot") return <Crosshair size={18} />;
+  if (link.id === "competitive-decision-matrix") return <Gauge size={18} />;
   if (link.id === "mvp-readiness") return <ClipboardCheck size={18} />;
   if (link.id === "autonomy-snapshot") return <Workflow size={18} />;
   if (link.id === "pilot-value") return <TrendingUp size={18} />;

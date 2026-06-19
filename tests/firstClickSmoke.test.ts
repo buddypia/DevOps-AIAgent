@@ -38,7 +38,7 @@ describe("first-click smoke lock", () => {
       targetBaseUrl: "https://example.com",
       smokeScore: 100,
       readiness: "smoke-passed",
-      passedCount: 13,
+      passedCount: 14,
       missingCount: 0
     });
     expect(lock.a2aPayload).toMatchObject({

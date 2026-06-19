@@ -29,6 +29,7 @@ const expectedSkillIds = [
   "submission.closeout",
   "deploy.recover",
   "competitive.battlecard",
+  "competitive.decision-matrix",
   "competitive.snapshot",
   "judge.snapshot",
   "win.autopilot"
@@ -44,6 +45,7 @@ const requiredAgentCardSignals = [
   "win.autopilot:tag:win-autopilot-lock",
   "finalist.simulate:tag:release-drift",
   "competitive.battlecard:tag:criteria-duel",
+  "competitive.decision-matrix:tag:decision-matrix-lock",
   "competitive.snapshot:tag:get-proof",
   "judge.snapshot:tag:get-proof",
   "mvp.snapshot:tag:get-proof",
@@ -127,6 +129,7 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "verify-recording-script")?.command).toContain("/api/recording-script");
     expect(plan.commands.find((command) => command.id === "verify-pilot-value")?.command).toContain("/api/pilot-value");
     expect(plan.commands.find((command) => command.id === "verify-external-evidence-page")?.command).toContain("/external-evidence");
+    expect(plan.commands.find((command) => command.id === "verify-competitive-decision-matrix-page")?.command).toContain("/competitive-decision-matrix");
     expect(plan.commands.find((command) => command.id === "verify-judge-command-page")?.command).toContain("/judge-command-center");
     expect(plan.commands.find((command) => command.id === "verify-prize-strategy-page")?.command).toContain("/prize-strategy");
     expect(plan.commands.find((command) => command.id === "verify-publisher-page")?.command).toContain("/publisher");
@@ -138,6 +141,7 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "verify-a2a-artifact")?.command).toContain("prizeStrategyPageEndpoint");
     expect(plan.commands.find((command) => command.id === "verify-a2a-artifact")?.command).toContain("publisherPageEndpoint");
     expect(plan.commands.find((command) => command.id === "verify-a2a-artifact")?.command).toContain("dossierPageEndpoint");
+    expect(plan.commands.find((command) => command.id === "verify-a2a-artifact")?.command).toContain("competitiveDecisionMatrixPageEndpoint");
     expect(plan.blockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["gcloud-auth", "agent-card-skill-surface"]));
     expect(plan.blockers.find((blocker) => blocker.id === "gcloud-auth")?.action).toContain("bootstrap script");
     expect(plan.judgeScript.join("\n")).toContain("GitHub Actions deploy workflow");
@@ -234,6 +238,7 @@ describe("deploy recovery plan", () => {
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("observability.oracle:tag:observability-oracle-lock");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("recording.script:tag:get-proof");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("pilot.value.snapshot:tag:get-proof");
+    expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("competitive.decision-matrix:tag:decision-matrix-lock");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("competitive.snapshot:tag:get-proof");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("winner.packet:tag:get-proof");
     expect(plan.checks.find((check) => check.id === "agent-card-signals")?.evidence).toContain("winner.sufficiency:tag:winner-sufficiency-lock");
@@ -247,6 +252,7 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="observability.oracle"');
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="acceptance.matrix"');
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="autonomy.snapshot"');
+    expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="competitive.decision-matrix"');
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="recording.script"');
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="prize.strategy"');
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="submission.publish"');
@@ -260,6 +266,7 @@ describe("deploy recovery plan", () => {
     expect(plan.blockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["agent-card-signals", "agent-card-skill-surface"]));
     expect(plan.judgeScript.join("\n")).toContain("competitive.battlecard:tag:criteria-duel");
     expect(plan.judgeScript.join("\n")).toContain("acceptance.matrix:tag:acceptance-matrix-lock");
+    expect(plan.judgeScript.join("\n")).toContain("competitive.decision-matrix:tag:decision-matrix-lock");
     expect(plan.judgeScript.join("\n")).toContain("competitive.snapshot:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("judge.snapshot:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("mvp.snapshot:tag:get-proof");
@@ -269,6 +276,7 @@ describe("deploy recovery plan", () => {
     expect(plan.judgeScript.join("\n")).toContain("observability.oracle:tag:observability-oracle-lock");
     expect(plan.judgeScript.join("\n")).toContain("judge.command:tag:judge-command-lock");
     expect(plan.judgeScript.join("\n")).toContain("/observability-oracle");
+    expect(plan.judgeScript.join("\n")).toContain("/competitive-decision-matrix");
     expect(plan.judgeScript.join("\n")).toContain("recording.script:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("pilot.value.snapshot:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("prize.strategy:tag:prize-strategy-lock");
@@ -291,6 +299,7 @@ describe("deploy recovery plan", () => {
           "acceptance.matrix:tag:acceptance-matrix-lock",
           "autonomy.snapshot:tag:get-proof",
           "competitive.battlecard:tag:criteria-duel",
+          "competitive.decision-matrix:tag:decision-matrix-lock",
           "competitive.snapshot:tag:get-proof",
           "external.evidence:tag:external-evidence-lock",
           "judge.command:tag:judge-command-lock",

@@ -84,6 +84,14 @@ export const FIRST_CLICK_PROOF_LINKS: FirstClickProofLink[] = [
     tone: "ready"
   },
   {
+    id: "competitive-decision-matrix",
+    label: "Decision Matrix",
+    href: "/competitive-decision-matrix",
+    signal: "head-to-head-proof",
+    judgeValue: "5審査項目 x 主要競合の勝敗、SWOT signal、開く証拠URLを一画面で確認する。",
+    tone: "ready"
+  },
+  {
     id: "mvp-readiness",
     label: "MVP Readiness",
     href: "/mvp-readiness",
@@ -153,7 +161,7 @@ export const FIRST_CLICK_SCORECARDS: FirstClickScorecard[] = [
   {
     id: "no-post-first",
     label: "No POST required",
-    value: "13 GET links",
+    value: "14 GET links",
     proof: "初回審査はcurlやJSONを知らなくても主要証拠に到達できる。"
   },
   {

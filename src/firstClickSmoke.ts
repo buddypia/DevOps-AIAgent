@@ -43,6 +43,7 @@ export const FIRST_CLICK_SMOKE_SENTINELS: FirstClickSmokeSentinel[] = [
   { id: "winner-packet", href: "/winner-packet", label: "Winner Packet", sentinel: "Winner Proof Packet" },
   { id: "objection-arena", href: "/objection-arena", label: "Objection Arena", sentinel: "Objection Arena" },
   { id: "competitive-swot", href: "/competitive-swot", label: "Competitive SWOT", sentinel: "Competitive SWOT Snapshot" },
+  { id: "competitive-decision-matrix", href: "/competitive-decision-matrix", label: "Decision Matrix", sentinel: "Competitive Decision Matrix" },
   { id: "mvp-readiness", href: "/mvp-readiness", label: "MVP Readiness", sentinel: "MVP Readiness Snapshot" },
   { id: "deploy-recovery", href: "/deploy-recovery", label: "Deploy Recovery", sentinel: "Deploy Recovery" },
   { id: "autonomy-snapshot", href: "/autonomy-snapshot", label: "Autonomy Snapshot", sentinel: "Autonomy Snapshot" },

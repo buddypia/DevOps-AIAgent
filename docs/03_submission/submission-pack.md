@@ -163,6 +163,11 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/moat-stress \
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/competitive-battlecard \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/competitive-decision-matrix | rg 'Competitive Decision Matrix|Head-to-Head Matrix'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/api/competitive-decision-matrix | jq '{readiness, matrixScore, cells: .summary.cellCount, page: .a2aPayload.endpoints.competitiveDecisionMatrix}'
+curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/competitive-decision-matrix \
+  -H 'Content-Type: application/json' \
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/win-gap-radar \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
@@ -312,6 +317,7 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - Deployed URL: <https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app>
 - ProtoPedia work URL: needs final URL
 - Video URL: needs YouTube or Vimeo URL
+- Competitive Decision Matrix: `GET /competitive-decision-matrix`, `GET /api/competitive-decision-matrix`, `POST /api/competitive-decision-matrix`
 - Publisher Page/API: `GET /publisher`, `GET /api/publisher`, `POST /api/publisher`
 - Submission Dossier Page/API: `GET /dossier`, `GET /api/dossier`, `POST /api/dossier`
 - ProtoPedia Quality Lock: run `GET /api/publisher` or `POST /api/submission-closeout` and confirm `qualityLock` / `protopediaQualityLock` is `copy-locked` before publishing the work page
