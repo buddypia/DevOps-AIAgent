@@ -277,6 +277,8 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/architecture-pack 
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/demo-run \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/publisher | rg 'Submission Publisher Proof|ProtoPedia Quality Lock'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/api/publisher | jq '{readiness, publishScore, quality: .qualityLock.readiness, page: .a2aPayload.endpoints.publisherPage}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/publisher \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
@@ -308,8 +310,9 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - Deployed URL: <https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app>
 - ProtoPedia work URL: needs final URL
 - Video URL: needs YouTube or Vimeo URL
-- ProtoPedia Quality Lock: run `POST /api/publisher` or `POST /api/submission-closeout` and confirm `qualityLock` / `protopediaQualityLock` is `copy-locked` before publishing the work page
-- Publication Policy Lock: run `POST /api/publisher` or `POST /api/submission-closeout` and confirm `policyLock` / `protopediaPolicyLock` is `prototype-copy-locked`; after publishing the video URL it should become `publication-ready`
+- Publisher Page/API: `GET /publisher`, `GET /api/publisher`, `POST /api/publisher`
+- ProtoPedia Quality Lock: run `GET /api/publisher` or `POST /api/submission-closeout` and confirm `qualityLock` / `protopediaQualityLock` is `copy-locked` before publishing the work page
+- Publication Policy Lock: run `GET /api/publisher` or `POST /api/submission-closeout` and confirm `policyLock` / `protopediaPolicyLock` is `prototype-copy-locked`; after publishing the video URL it should become `publication-ready`
 - Video Proof Lock: run `POST /api/submission-closeout` and use the `videoProofLock` checks before publishing the video URL
 - Public Judge Snapshot: open `GET /judge-snapshot` first; it should link directly to Competitive SWOT、Autonomy Snapshot、MVP Readiness、Deploy Recovery、Pilot Value、Recording Script、Architecture Pack、Submission Launch、Submission Assets、Winner Proof Packet without requiring POST APIs. Then open `GET /winner-sufficiency` to decide whether remaining work is feature work, public drift, or external closeout.
 - Recording Script page: open `GET /recording-script` before recording and use the chapter order, lower thirds, proof URLs, and publish steps as the teleprompter

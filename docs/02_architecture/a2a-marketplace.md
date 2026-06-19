@@ -447,7 +447,9 @@
 - `POST /api/pitch`: 30秒動画のshot list、voiceover、lower thirds、recording checklist、提出残リスクを返す
 - `POST /api/judge-drill`: 審査5項目と主要競合への厳しめ質問、回答、60秒回答パス、証拠リンク、デモ画面を返す
 - `POST /api/finalist`: 審査員5役の最終候補判定、Release Drift、Finalist Internal Lock、落選理由、残ギャップ、次の一手を返す。任意の `protopediaUrl` / `videoUrl` / `targetUrl` / `skipReleaseDrift` を受け取り、妥当なProtoPediaとYouTube/Vimeo URLなら外部gapを閉じ、不正URLや古い公開Cloud Run revisionはblocker/watchとして扱う
-- `POST /api/publisher`: ProtoPediaに貼る本文、タグ、URL、動画台本、提出チェックリストを返す
+- `GET /publisher`: ProtoPediaに貼る本文、タグ、URL、動画台本、Quality Lock、Publication Policy LockをHTML証拠ページで直接開く
+- `GET /api/publisher`: 同じPublisher proofをA2A payload付きJSONで返す
+- `POST /api/publisher`: 任意brief/selected agentsでProtoPediaに貼る本文、タグ、URL、動画台本、提出チェックリストを返す
 - `POST /api/dossier`: ProtoPedia本文、動画録画順、提出フォームhandoff packet、構成図パケット、提出リンク、証拠デッキ、最終チェックを返す
 - `POST /api/architecture-pack`: 構成図URL、Mermaid、ノード/エッジ、必須技術対応表、ProtoPedia貼り付けチェックリストを返す
 - `POST /api/demo-run`: Judge Proof、Finalist、Publisher、Marketplace、Strategy、Mission、Opsを30秒の審査員導線にする
@@ -490,7 +492,7 @@
 - Pitch proof: `pitch.director` skillとして、審査員に見せる順番と提出動画の残作業をA2A payloadにも含める
 - Judge drill: `judge.drill` skillとして、審査員の反論、競合Cross-exam deck、60秒回答パス、証拠リンクをA2A payloadにも含める
 - Finalist proof: `finalist.simulate` skillとして、最終候補スコア、judge consensus、Release Drift、Finalist Internal Lock、外部URL status、残ギャップをA2A payloadにも含め、Agent Cardの `release-drift` tagをRelease Drift Guardの必須signalにする
-- Publisher proof: `submission.publish` skillとして、ProtoPedia貼り付け本文、Publication Policy Lock、メディアURL、未完了外部作業をA2A payloadにも含める
+- Publisher proof: `submission.publish` skillとして、ProtoPedia貼り付け本文、Publication Policy Lock、メディアURL、未完了外部作業、`publisherPage` endpointをA2A payloadにも含める
 - Dossier proof: `submission.dossier` skillとして、提出コピー欄、録画順、提出フォームhandoff packet、構成図パケット、提出リンク、MarkdownドシエをA2A payloadにも含める
 - Closeout proof: `submission.closeout` skillとして、外部提出の残作業、copy tray、Publication Policy Lock、video run、Video Proof Lock、Submission Dry Run Lock、Submission Asset Lock、submit packetをA2A payloadにも含める
 - Architecture proof: `submission.package` skillとして、システム構成図、Mermaid、必須技術対応表、ProtoPedia checklistをA2A payloadにも含める
@@ -576,7 +578,7 @@
 - Pilot value snapshot: `/pilot-value`
 - Ops drill: `/api/ops-drill`
 - Contracts: `/api/contracts`
-- Publisher: `/api/publisher`
+- Publisher: `/publisher` and `/api/publisher`
 - Submission dossier: `/api/dossier`
 - Demo runway: `/api/demo-run`
 - Win autopilot: `/win-autopilot`, `/api/win-autopilot`, and `/api/win-run`

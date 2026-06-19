@@ -103,6 +103,10 @@ const PROTOPEDIA_POLICY_SOURCE_URLS = [
   "https://protopedia.gitbook.io/helpcenter/faq"
 ] as const;
 
+export const SUBMISSION_PUBLISH_SKILL_ID = "submission.publish";
+export const SUBMISSION_PUBLISH_LOCK_TAG = "submission-publish-lock";
+export const SUBMISSION_PUBLISH_REQUIRED_SIGNAL = `${SUBMISSION_PUBLISH_SKILL_ID}:tag:${SUBMISSION_PUBLISH_LOCK_TAG}`;
+
 function clamp(value: number, min = 0, max = 100) {
   return Math.max(min, Math.min(max, value));
 }
@@ -122,6 +126,21 @@ function lockPoints(status: PublisherStatus) {
 
 function statusFromUrl(value: string): PublisherStatus {
   return value.startsWith("http://") || hasSubmissionUrl(value) ? "ready" : "watch";
+}
+
+function escapeHtml(value: unknown) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function tone(status: string) {
+  if (["ready", "ready-to-register", "submit-page-ready", "publication-ready"].includes(status)) return "good";
+  if (["needs-copy-repair", "needs-prototype-repair"].includes(status)) return "bad";
+  return "watch";
 }
 
 function field(id: string, label: string, value: string, copyHint: string): PublisherField {
@@ -515,7 +534,7 @@ export function buildProtoPediaPublisher(input: {
     recordingScript: pitch.voiceoverScript,
     a2aPayload: {
       method: "message/send",
-      skill: "submission.publish",
+      skill: SUBMISSION_PUBLISH_SKILL_ID,
       publishScore,
       readiness,
       selectedAgents: recommendation.selected.map((agent) => agent.id),
@@ -533,7 +552,150 @@ export function buildProtoPediaPublisher(input: {
       pasteFields: pasteFields.map((item) => ({ id: item.id, label: item.label, status: item.status })),
       assets: assets.map((item) => ({ id: item.id, status: item.status, url: item.url ?? null })),
       missingExternal: missingExternal.map((item) => ({ id: item.id, action: item.action })),
-      appUrl
+      appUrl,
+      endpoints: {
+        publisher: `${baseUrl.replace(/\/$/, "")}/api/publisher`,
+        publisherPage: `${baseUrl.replace(/\/$/, "")}/publisher`,
+        submissionAssetsPage: `${baseUrl.replace(/\/$/, "")}/submission-assets`,
+        architecturePackPage: `${baseUrl.replace(/\/$/, "")}/architecture-pack`,
+        submissionLaunchPage: `${baseUrl.replace(/\/$/, "")}/submission-launch`
+      }
     }
   };
+}
+
+export function renderProtoPediaPublisherHtml(publisher: ProtoPediaPublisher) {
+  const metrics = [
+    { label: "Readiness", value: publisher.readiness, status: publisher.readiness },
+    { label: "Publish Score", value: publisher.publishScore, status: publisher.readiness },
+    { label: "Quality Lock", value: `${publisher.qualityLock.qualityScore} / ${publisher.qualityLock.readiness}`, status: publisher.qualityLock.readiness },
+    { label: "Policy Lock", value: `${publisher.policyLock.policyScore} / ${publisher.policyLock.readiness}`, status: publisher.policyLock.readiness }
+  ]
+    .map(
+      (metric) => `
+        <article class="metric ${tone(String(metric.status))}">
+          <span>${escapeHtml(metric.label)}</span>
+          <strong>${escapeHtml(metric.value)}</strong>
+        </article>`
+    )
+    .join("");
+  const pasteFields = publisher.pasteFields
+    .map(
+      (fieldItem) => `
+        <article class="card ${tone(fieldItem.status)}">
+          <div><strong>${escapeHtml(fieldItem.label)}</strong><span>${escapeHtml(fieldItem.status)}</span></div>
+          <small>${escapeHtml(fieldItem.copyHint)}</small>
+          <pre>${escapeHtml(fieldItem.value)}</pre>
+        </article>`
+    )
+    .join("");
+  const qualityChecks = publisher.qualityLock.checks
+    .map(
+      (check) => `
+        <li class="${tone(check.status)}">
+          <strong>${escapeHtml(check.label)}</strong>
+          <span>${escapeHtml(check.status)} / ${escapeHtml(check.proof)}</span>
+          <small>${escapeHtml(check.acceptance)}</small>
+        </li>`
+    )
+    .join("");
+  const policyChecks = publisher.policyLock.checks
+    .map(
+      (check) => `
+        <li class="${tone(check.status)}">
+          <strong>${escapeHtml(check.label)}</strong>
+          <span>${escapeHtml(check.status)} / ${escapeHtml(check.proof)}</span>
+          <small>${escapeHtml(check.acceptance)}</small>
+          <a href="${escapeHtml(check.sourceUrl)}">${escapeHtml(check.sourceUrl)}</a>
+        </li>`
+    )
+    .join("");
+  const assets = publisher.assets
+    .map(
+      (assetItem) => `
+        <article class="card ${tone(assetItem.status)}">
+          <div><strong>${escapeHtml(assetItem.label)}</strong><span>${escapeHtml(assetItem.status)}</span></div>
+          <p>${escapeHtml(assetItem.proof)}</p>
+          ${assetItem.url ? `<a href="${escapeHtml(assetItem.url)}">${escapeHtml(assetItem.url)}</a>` : `<small>External URL watch</small>`}
+        </article>`
+    )
+    .join("");
+  const checklist = publisher.finalChecklist
+    .map(
+      (item) => `
+        <li class="${tone(item.status)}">
+          <strong>${escapeHtml(item.label)}</strong>
+          <span>${escapeHtml(item.status)}</span>
+          <small>${escapeHtml(item.action)}</small>
+          <small>${escapeHtml(item.proof)}</small>
+        </li>`
+    )
+    .join("");
+  const external =
+    publisher.missingExternal.length === 0
+      ? `<li>No external URL gaps remain.</li>`
+      : publisher.missingExternal.map((item) => `<li><strong>${escapeHtml(item.label)}</strong> ${escapeHtml(item.action)} <small>${escapeHtml(item.proof)}</small></li>`).join("");
+
+  return `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Submission Publisher Proof</title>
+    <style>
+      :root { color-scheme: light; --ink: #18201e; --muted: #5f6d68; --line: #d9e3dd; --paper: #fbfcfa; --panel: #fff; --green: #13715d; --mint: #e6f4ed; --amber-bg: #fff4d4; --coral-bg: #fff0ec; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; }
+      a { color: inherit; overflow-wrap: anywhere; }
+      header, main, footer { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+      header { padding: 40px 0 20px; }
+      .eyebrow { color: var(--green); font-size: .78rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0; }
+      h1 { margin: 8px 0 10px; font-size: 3rem; line-height: 1; letter-spacing: 0; max-width: 980px; }
+      h2 { margin: 28px 0 10px; font-size: 1.12rem; }
+      p { color: var(--muted); }
+      .metrics, .grid { display: grid; gap: 12px; }
+      .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 22px; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metric, .card, .panel { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 16px; box-shadow: 0 10px 24px rgba(24, 32, 30, .06); min-width: 0; }
+      .metric span, .card span, li span { color: var(--muted); font-size: .74rem; font-weight: 900; text-transform: uppercase; }
+      .metric strong { display: block; margin-top: 6px; font-size: 1.35rem; overflow-wrap: anywhere; }
+      .card div { display: flex; gap: 12px; justify-content: space-between; align-items: start; }
+      pre { margin: 10px 0 0; padding: 12px; white-space: pre-wrap; overflow-wrap: anywhere; background: rgba(24, 32, 30, .04); border-radius: 8px; font: inherit; color: var(--ink); }
+      ol { margin: 8px 0 0; padding-left: 20px; }
+      li { margin-bottom: 10px; padding: 8px; border-radius: 8px; overflow-wrap: anywhere; }
+      li span, li small, li a { display: block; margin-top: 4px; overflow-wrap: anywhere; }
+      .good { border-color: #a9d8c2; background: var(--mint); }
+      .watch { border-color: #ead39a; background: var(--amber-bg); }
+      .bad { border-color: #efb7aa; background: var(--coral-bg); }
+      footer { padding: 20px 0 40px; color: var(--muted); }
+      @media (max-width: 900px) { h1 { font-size: 2rem; } .metrics, .grid { grid-template-columns: 1fr; } .card div { display: block; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="eyebrow">Submission Publisher Proof</div>
+      <h1>${escapeHtml(publisher.summary)}</h1>
+      <p><strong>${escapeHtml(publisher.qualityLock.headline)}</strong></p>
+      <p>${escapeHtml(publisher.policyLock.operatorLine)}</p>
+      <section class="metrics">${metrics}</section>
+    </header>
+    <main>
+      <h2>Paste Fields</h2>
+      <section class="grid">${pasteFields}</section>
+      <h2>ProtoPedia Quality Lock</h2>
+      <section class="panel"><ol>${qualityChecks}</ol></section>
+      <h2>Publication Policy Lock</h2>
+      <section class="panel"><ol>${policyChecks}</ol></section>
+      <h2>Assets</h2>
+      <section class="grid">${assets}</section>
+      <h2>Final Checklist</h2>
+      <section class="panel"><ol>${checklist}</ol></section>
+      <h2>External Gaps</h2>
+      <section class="panel"><ol>${external}</ol></section>
+      <h2>Recording Script</h2>
+      <section class="panel"><pre>${escapeHtml(publisher.recordingScript)}</pre></section>
+    </main>
+    <footer>${escapeHtml(publisher.id)} / A2A skill ${SUBMISSION_PUBLISH_SKILL_ID}</footer>
+  </body>
+</html>`;
 }

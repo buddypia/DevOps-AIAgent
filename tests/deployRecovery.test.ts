@@ -52,6 +52,7 @@ const requiredAgentCardSignals = [
   "judge.command:tag:judge-command-lock",
   "recording.script:tag:get-proof",
   "prize.strategy:tag:prize-strategy-lock",
+  "submission.publish:tag:submission-publish-lock",
   "pilot.value.snapshot:tag:get-proof"
 ];
 
@@ -126,11 +127,13 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "verify-external-evidence-page")?.command).toContain("/external-evidence");
     expect(plan.commands.find((command) => command.id === "verify-judge-command-page")?.command).toContain("/judge-command-center");
     expect(plan.commands.find((command) => command.id === "verify-prize-strategy-page")?.command).toContain("/prize-strategy");
+    expect(plan.commands.find((command) => command.id === "verify-publisher-page")?.command).toContain("/publisher");
     expect(plan.commands.find((command) => command.id === "verify-acceptance-matrix-page")?.command).toContain("/acceptance-matrix");
     expect(plan.commands.find((command) => command.id === "verify-recovery-page")?.command).toContain("/deploy-recovery");
     expect(plan.commands.find((command) => command.id === "verify-recovery-endpoint")?.command).toContain("/api/deploy-recovery");
     expect(plan.commands.find((command) => command.id === "verify-a2a-artifact")?.command).toContain("deployRecoveryPageEndpoint");
     expect(plan.commands.find((command) => command.id === "verify-a2a-artifact")?.command).toContain("prizeStrategyPageEndpoint");
+    expect(plan.commands.find((command) => command.id === "verify-a2a-artifact")?.command).toContain("publisherPageEndpoint");
     expect(plan.blockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["gcloud-auth", "agent-card-skill-surface"]));
     expect(plan.blockers.find((blocker) => blocker.id === "gcloud-auth")?.action).toContain("bootstrap script");
     expect(plan.judgeScript.join("\n")).toContain("GitHub Actions deploy workflow");
@@ -242,6 +245,7 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="autonomy.snapshot"');
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="recording.script"');
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="prize.strategy"');
+    expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="submission.publish"');
     expect(plan.commands.find((command) => command.id === "github-actions-deploy")?.command).toContain("deploy-cloud-run.yml");
     expect(plan.commands.find((command) => command.id === "verify-mvp-readiness")?.command).toContain("/api/mvp-readiness");
     expect(plan.commands.find((command) => command.id === "verify-autonomy-snapshot")?.why).toContain("Autonomy Snapshot");
@@ -263,6 +267,7 @@ describe("deploy recovery plan", () => {
     expect(plan.judgeScript.join("\n")).toContain("recording.script:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("pilot.value.snapshot:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("prize.strategy:tag:prize-strategy-lock");
+    expect(plan.judgeScript.join("\n")).toContain("submission.publish:tag:submission-publish-lock");
     expect(plan.judgeScript.join("\n")).toContain("winner.packet:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("winner.sufficiency:tag:winner-sufficiency-lock");
     expect(plan.judgeScript.join("\n")).toContain("win.autopilot:tag:win-autopilot-lock");
@@ -270,6 +275,7 @@ describe("deploy recovery plan", () => {
     expect(plan.judgeScript.join("\n")).toContain("/winner-sufficiency");
     expect(plan.judgeScript.join("\n")).toContain("/api/recording-script");
     expect(plan.judgeScript.join("\n")).toContain("/prize-strategy");
+    expect(plan.judgeScript.join("\n")).toContain("/publisher");
     expect(plan.judgeScript.join("\n")).toContain("/api/pilot-value");
     expect(plan.a2aPayload).toMatchObject({
       skill: "deploy.recover",
@@ -287,6 +293,7 @@ describe("deploy recovery plan", () => {
           "pilot.value.snapshot:tag:get-proof",
           "prize.strategy:tag:prize-strategy-lock",
           "recording.script:tag:get-proof",
+          "submission.publish:tag:submission-publish-lock",
           "win.autopilot:tag:win-autopilot-lock",
           "winner.packet:tag:get-proof",
           "winner.sufficiency:tag:winner-sufficiency-lock"

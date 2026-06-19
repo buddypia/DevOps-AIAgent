@@ -7,7 +7,7 @@ import { DEFAULT_PROJECT_BRIEF } from "../src/market";
 import { buildMissionRun } from "../src/mission";
 import { buildOpsDrill } from "../src/ops";
 import { buildPitchRun } from "../src/pitch";
-import { buildProtoPediaPublisher } from "../src/publisher";
+import { buildProtoPediaPublisher, renderProtoPediaPublisherHtml, SUBMISSION_PUBLISH_REQUIRED_SIGNAL, SUBMISSION_PUBLISH_SKILL_ID } from "../src/publisher";
 import { buildWinningStrategy } from "../src/strategy";
 
 describe("protopedia publisher", () => {
@@ -83,7 +83,7 @@ describe("protopedia publisher", () => {
     expect(publisher.recordingScript).toContain("AI能力");
     expect(publisher.a2aPayload).toMatchObject({
       method: "message/send",
-      skill: "submission.publish",
+      skill: SUBMISSION_PUBLISH_SKILL_ID,
       qualityLock: {
         readiness: "copy-locked",
         checks: expect.arrayContaining([expect.objectContaining({ id: "external-url-closure", status: "watch" })])
@@ -91,7 +91,30 @@ describe("protopedia publisher", () => {
       policyLock: {
         readiness: "prototype-copy-locked",
         checks: expect.arrayContaining([expect.objectContaining({ id: "embeddable-media", status: "watch" })])
+      },
+      endpoints: {
+        publisher: `${baseUrl}/api/publisher`,
+        publisherPage: `${baseUrl}/publisher`,
+        submissionAssetsPage: `${baseUrl}/submission-assets`,
+        architecturePackPage: `${baseUrl}/architecture-pack`,
+        submissionLaunchPage: `${baseUrl}/submission-launch`
       }
     });
+
+    expect(SUBMISSION_PUBLISH_REQUIRED_SIGNAL).toBe("submission.publish:tag:submission-publish-lock");
+
+    const html = renderProtoPediaPublisherHtml({
+      ...publisher,
+      summary: "<script>alert('publisher')</script>",
+      recordingScript: "Record <strong>proof</strong>"
+    });
+    expect(html).toContain("Submission Publisher Proof");
+    expect(html).toContain("Paste Fields");
+    expect(html).toContain("ProtoPedia Quality Lock");
+    expect(html).toContain("Publication Policy Lock");
+    expect(html).toContain("Final Checklist");
+    expect(html).toContain("&lt;script&gt;alert(&#39;publisher&#39;)&lt;/script&gt;");
+    expect(html).toContain("Record &lt;strong&gt;proof&lt;/strong&gt;");
+    expect(html).not.toContain("<script>alert('publisher')</script>");
   });
 });

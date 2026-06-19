@@ -61,6 +61,7 @@ const requiredAgentCardSignals = [
   "judge.command:tag:judge-command-lock",
   "recording.script:tag:get-proof",
   "prize.strategy:tag:prize-strategy-lock",
+  "submission.publish:tag:submission-publish-lock",
   "submission.launch:tag:get-proof",
   "submission.package:tag:get-proof",
   "pilot.value.snapshot:tag:get-proof",
@@ -210,16 +211,18 @@ describe("release drift guard", () => {
       "recording.script:tag:get-proof",
       "submission.launch:tag:get-proof",
       "submission.package:tag:get-proof",
+      "submission.publish:tag:submission-publish-lock",
       "win.autopilot:tag:win-autopilot-lock",
       "winner.packet:tag:get-proof",
       "winner.sufficiency:tag:winner-sufficiency-lock"
     ]);
-    expect(guard.summary).toContain("0 required skills and 22 required Agent Card signals");
+    expect(guard.summary).toContain("0 required skills and 23 required Agent Card signals");
     expect(guard.runbook.join("\n")).toContain('select(.id=="judge.command"');
     expect(guard.runbook.join("\n")).toContain('or .id=="acceptance.matrix"');
     expect(guard.runbook.join("\n")).toContain('or .id=="autonomy.snapshot" or .id=="external.evidence"');
     expect(guard.runbook.join("\n")).toContain('or .id=="recording.script"');
     expect(guard.runbook.join("\n")).toContain('or .id=="prize.strategy"');
+    expect(guard.runbook.join("\n")).toContain('or .id=="submission.publish"');
     expect(guard.runbook.join("\n")).toContain('or .id=="win.autopilot"');
     expect(guard.runbook.join("\n")).toContain('or .id=="winner.sufficiency"');
     expect(guard.runbook.join("\n")).toContain('or .id=="deploy.recover"');
@@ -232,6 +235,7 @@ describe("release drift guard", () => {
     expect(guard.runbook.join("\n")).toContain("/external-evidence");
     expect(guard.runbook.join("\n")).toContain("/api/recording-script");
     expect(guard.runbook.join("\n")).toContain("/prize-strategy");
+    expect(guard.runbook.join("\n")).toContain("/publisher");
     expect(guard.runbook.join("\n")).toContain("/api/submission-launch");
     expect(guard.runbook.join("\n")).toContain("/api/pilot-value");
     expect(guard.runbook.join("\n")).toContain("/deploy-recovery");
@@ -259,6 +263,7 @@ describe("release drift guard", () => {
         "recording.script:tag:get-proof",
         "submission.launch:tag:get-proof",
         "submission.package:tag:get-proof",
+        "submission.publish:tag:submission-publish-lock",
         "win.autopilot:tag:win-autopilot-lock",
         "winner.packet:tag:get-proof",
         "winner.sufficiency:tag:winner-sufficiency-lock"
