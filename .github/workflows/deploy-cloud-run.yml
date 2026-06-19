@@ -36,6 +36,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Preflight deploy secrets
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          GCP_DEPLOY_SERVICE_ACCOUNT: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+        run: |
+          missing=0
+          for name in GCP_PROJECT_ID GCP_WORKLOAD_IDENTITY_PROVIDER GCP_DEPLOY_SERVICE_ACCOUNT; do
+            if [ -z "${!name}" ]; then
+              echo "::error title=Missing deploy secret::${name} is required for Deploy Cloud Run."
+              missing=1
+            fi
+          done
+          exit "${missing}"
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
