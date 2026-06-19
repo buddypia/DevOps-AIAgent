@@ -25,7 +25,7 @@ import { buildOpsDrill } from "../src/ops";
 import { buildPilotEconomics } from "../src/pilotEconomics";
 import { buildPitchRun } from "../src/pitch";
 import { buildJudgeProof, type CiProof } from "../src/proof";
-import { buildPrizeStrategyBoard } from "../src/prizeStrategy";
+import { buildPrizeStrategyBoard, PRIZE_STRATEGY_REQUIRED_SIGNAL, PRIZE_STRATEGY_SKILL_ID, renderPrizeStrategyHtml } from "../src/prizeStrategy";
 import { buildProtoPediaPublisher } from "../src/publisher";
 import { buildReleaseDriftGuard, type ReleaseDriftProbe } from "../src/releaseDrift";
 import { buildSecurityReview } from "../src/security";
@@ -393,13 +393,13 @@ describe("prize strategy board", () => {
     expect(board.proofMoves.find((move) => move.id === "route-lock")?.score).toBeGreaterThanOrEqual(92);
     expect(board.proofMoves.find((move) => move.id === "usability-lock")).toMatchObject({
       screen: "Prize Strategy Board",
-      endpoint: `${SUBMISSION_PROOF.deployedUrl}/api/prize-strategy`,
+      endpoint: `${SUBMISSION_PROOF.deployedUrl}/prize-strategy`,
       proof: expect.stringContaining("internal usability"),
       score: 100
     });
     expect(board.proofMoves.find((move) => move.id === "criteria-lock")).toMatchObject({
       screen: "Prize Strategy Board",
-      endpoint: `${SUBMISSION_PROOF.deployedUrl}/api/prize-strategy`,
+      endpoint: `${SUBMISSION_PROOF.deployedUrl}/prize-strategy`,
       proof: expect.stringContaining("internal criteria"),
       score: 100
     });
@@ -423,7 +423,7 @@ describe("prize strategy board", () => {
     expect(board.risks.map((risk) => risk.id)).toEqual(expect.arrayContaining(["submission-assets", "demo-receipt"]));
     expect(board.a2aPayload).toMatchObject({
       method: "message/send",
-      skill: "prize.strategy",
+      skill: PRIZE_STRATEGY_SKILL_ID,
       usabilityLock: {
         readiness: "usability-external-watch",
         internalScore: 100,
@@ -470,9 +470,27 @@ describe("prize strategy board", () => {
       endpoints: {
         demoConcierge: `${SUBMISSION_PROOF.deployedUrl}/api/demo-concierge`,
         prizeStrategy: `${SUBMISSION_PROOF.deployedUrl}/api/prize-strategy`,
+        prizeStrategyPage: `${SUBMISSION_PROOF.deployedUrl}/prize-strategy`,
         competitiveBattlecard: `${SUBMISSION_PROOF.deployedUrl}/api/competitive-battlecard`,
         observabilityOracle: `${SUBMISSION_PROOF.deployedUrl}/api/observability-oracle`
       }
     });
+
+    expect(PRIZE_STRATEGY_REQUIRED_SIGNAL).toBe("prize.strategy:tag:prize-strategy-lock");
+
+    const html = renderPrizeStrategyHtml({
+      ...board,
+      headline: "<script>alert('prize')</script>",
+      winHypothesis: "Win with <strong>evidence</strong>"
+    });
+    expect(html).toContain("Prize Strategy Proof");
+    expect(html).toContain("Five-Criterion Score Plan");
+    expect(html).toContain("Proof Moves");
+    expect(html).toContain("Pitch Order");
+    expect(html).toContain("Prize Locks");
+    expect(html).toContain("Judge Close");
+    expect(html).toContain("&lt;script&gt;alert(&#39;prize&#39;)&lt;/script&gt;");
+    expect(html).toContain("Win with &lt;strong&gt;evidence&lt;/strong&gt;");
+    expect(html).not.toContain("<script>alert('prize')</script>");
   });
 });

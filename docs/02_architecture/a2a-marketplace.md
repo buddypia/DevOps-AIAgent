@@ -235,13 +235,15 @@
 
 ## Prize Strategy Surface
 
-- `POST /api/prize-strategy`: 審査5項目のtarget score、現在スコア、足りない証拠、Prize Criteria Lock、最終ピッチ順を優勝作戦へ束ねる
+- `GET /prize-strategy`: 審査5項目のtarget score、現在スコア、Prize Usability Lock、Prize Criteria Lock、proof moves、最終ピッチ順を審査員向けHTML証拠ページで直接開く
+- `GET /api/prize-strategy`: 同じ優勝作戦をA2A payload付きJSONとして返す
+- `POST /api/prize-strategy`: 任意brief/提出URLを受け取り、審査5項目のtarget score、現在スコア、足りない証拠、Prize Criteria Lock、最終ピッチ順を優勝作戦へ束ねる
 - Criteria board: AI中心性、課題アプローチ、ユーザビリティ、実用性、実装力をtarget 92点のgapとして評価する
 - Proof moves: Demo Concierge、Judge Route Lock、Judge Command Center、Competitive Battlecard、Objection Replay、Acceptance Matrix、Release Drift、Pilot Economicsを最終ピッチで開く順番へ変換する
 - Prize Usability Lock: 外部URL watchをUsability不足として二重減点せず、first click、90秒route、proof URL、Focus path、persona lanes、opening command、外部gap honestyをsealed/watch/missingで分離する
 - Prize Criteria Lock: AI中心性、課題アプローチ、ユーザビリティ、実用性、実装力を既存証拠routeでsealed/watch/missingにし、ProtoPedia/動画URLだけを外部watchとして残す
 - Risks: 外部提出URL、公開revision、弱い採点軸、command blockerをowner付きの次アクションにする
-- A2A payload: `prize.strategy` skillとしてprize score、readiness、criteria gaps、Prize Usability Lock、Prize Criteria Lock、proof moves、risksを返す
+- A2A payload: `prize.strategy` skillとしてprize score、readiness、criteria gaps、Prize Usability Lock、Prize Criteria Lock、proof moves、risks、`prizeStrategyPage` endpointを返す
 
 ## Win Gap Radar Surface
 
@@ -439,7 +441,9 @@
 - `GET /api/winner-packet`: Winner Proof PacketをJSONで返す
 - `POST /api/winner-packet`: 審査5項目の証拠URL、反論回答、録画cue、Winner Release Lock、提出copyを返す
 - `POST /api/submission-runway`: 提出締切から逆算した動画、ProtoPedia、構成図、最終フォームの検収順を返す
-- `POST /api/prize-strategy`: 審査5項目の優勝作戦、proof moves、final pitch orderを返す
+- `GET /prize-strategy`: 審査5項目の優勝作戦、proof moves、final pitch orderをHTML証拠ページで返す
+- `GET /api/prize-strategy`: 審査5項目の優勝作戦、proof moves、final pitch orderをJSONで返す
+- `POST /api/prize-strategy`: 任意brief/提出URLを受け取り、審査5項目の優勝作戦、proof moves、final pitch orderを返す
 - `POST /api/pitch`: 30秒動画のshot list、voiceover、lower thirds、recording checklist、提出残リスクを返す
 - `POST /api/judge-drill`: 審査5項目と主要競合への厳しめ質問、回答、60秒回答パス、証拠リンク、デモ画面を返す
 - `POST /api/finalist`: 審査員5役の最終候補判定、Release Drift、Finalist Internal Lock、落選理由、残ギャップ、次の一手を返す。任意の `protopediaUrl` / `videoUrl` / `targetUrl` / `skipReleaseDrift` を受け取り、妥当なProtoPediaとYouTube/Vimeo URLなら外部gapを閉じ、不正URLや古い公開Cloud Run revisionはblocker/watchとして扱う

@@ -116,6 +116,10 @@ export type PrizeStrategyBoard = {
   a2aPayload: Record<string, unknown>;
 };
 
+export const PRIZE_STRATEGY_SKILL_ID = "prize.strategy";
+export const PRIZE_STRATEGY_LOCK_TAG = "prize-strategy-lock";
+export const PRIZE_STRATEGY_REQUIRED_SIGNAL = `${PRIZE_STRATEGY_SKILL_ID}:tag:${PRIZE_STRATEGY_LOCK_TAG}`;
+
 function clamp(value: number, min = 0, max = 100) {
   return Math.max(min, Math.min(max, value));
 }
@@ -128,6 +132,21 @@ function average(values: number[]) {
 function absoluteUrl(baseUrl: string, path: string) {
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
   return `${baseUrl.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+function escapeHtml(value: unknown) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function tone(status: string) {
+  if (["winner-ready", "sealed", "criteria-locked", "usability-locked"].includes(status)) return "good";
+  if (["needs-proof", "missing", "needs-criteria-proof", "needs-usability-proof"].includes(status)) return "bad";
+  return "watch";
 }
 
 function criterion(strategy: WinningStrategy, id: string): JudgeCriterion | undefined {
@@ -271,7 +290,7 @@ function proofMoves(input: {
                   id: "usability-lock",
                   label: "Prize usability lock",
                   screen: "Prize Strategy Board",
-                  endpoint: absoluteUrl(baseUrl, "/api/prize-strategy"),
+                  endpoint: absoluteUrl(baseUrl, "/prize-strategy"),
                   proof: `${usabilityLock.internalScore} internal usability / ${usabilityLock.readiness}`,
                   score: usabilityLock.internalScore
                 }
@@ -285,7 +304,7 @@ function proofMoves(input: {
             id: "criteria-lock",
             label: "Five-criterion proof lock",
             screen: "Prize Strategy Board",
-            endpoint: absoluteUrl(baseUrl, "/api/prize-strategy"),
+            endpoint: absoluteUrl(baseUrl, "/prize-strategy"),
             proof: `${criteriaLock.internalScore} internal criteria / ${criteriaLock.readiness}`,
             score: criteriaLock.internalScore
           }
@@ -572,6 +591,7 @@ function buildCriteriaLock(input: {
     ((row(acceptance, "release-drift")?.score ?? 0) >= 90 &&
       (row(acceptance, "live-public-proof")?.score ?? 0) >= 90 &&
       (row(acceptance, "security-boundary")?.score ?? 0) >= 88);
+  const releaseEvidenceScore = releaseDrift?.driftScore ?? row(acceptance, "release-drift")?.score;
   const checks = [
     criteriaLockCheck({
       id: "agent-centrality-proof",
@@ -615,7 +635,7 @@ function buildCriteriaLock(input: {
       proof: usabilityLock
         ? `${usabilityLock.internalScore} internal usability; ${usabilityLock.sealedCount} sealed / ${usabilityLock.watchCount} watch.`
         : "Prize Usability Lock has not been generated.",
-      evidenceUrl: absoluteUrl(normalizedBase, "/api/prize-strategy")
+      evidenceUrl: absoluteUrl(normalizedBase, "/prize-strategy")
     }),
     criteriaLockCheck({
       id: "practicality-proof",
@@ -629,7 +649,7 @@ function buildCriteriaLock(input: {
       id: "implementation-proof",
       criterionId: "implementation",
       label: "Public implementation can be rechecked",
-      status: implementationReady ? "sealed" : (releaseDrift?.driftScore ?? row(acceptance, "release-drift")?.score ?? 0) >= 84 ? "watch" : "missing",
+      status: implementationReady ? "sealed" : releaseEvidenceScore === undefined || releaseEvidenceScore >= 84 ? "watch" : "missing",
       proof: releaseDrift
         ? `${releaseDrift.driftScore} release drift / ${releaseDrift.verdict}; ${releaseDrift.observedSkillCount}/${releaseDrift.expectedSkillCount} skills visible.`
         : `${row(acceptance, "live-public-proof")?.score ?? 0} live proof; Release Drift Guard not checked.`,
@@ -904,7 +924,7 @@ export function buildPrizeStrategyBoard(input: {
           : "All five judging criteria have winner-ready proof; rerun Release Drift and seal the submission URLs before final submission.",
     a2aPayload: {
       method: "message/send",
-      skill: "prize.strategy",
+      skill: PRIZE_STRATEGY_SKILL_ID,
       prizeScore,
       readiness,
       criteria: criteria.map((item) => ({
@@ -968,6 +988,7 @@ export function buildPrizeStrategyBoard(input: {
       endpoints: {
         app: normalizedBase,
         prizeStrategy: absoluteUrl(normalizedBase, "/api/prize-strategy"),
+        prizeStrategyPage: absoluteUrl(normalizedBase, "/prize-strategy"),
         demoConcierge: absoluteUrl(normalizedBase, "/api/demo-concierge"),
         judgeCommand: absoluteUrl(normalizedBase, "/api/judge-command-center"),
         competitiveBattlecard: absoluteUrl(normalizedBase, "/api/competitive-battlecard"),
@@ -978,4 +999,177 @@ export function buildPrizeStrategyBoard(input: {
       }
     }
   };
+}
+
+export function renderPrizeStrategyHtml(board: PrizeStrategyBoard) {
+  const winnerReady = board.criteria.filter((criterion) => criterion.status === "winner-ready").length;
+  const finalistTrack = board.criteria.filter((criterion) => criterion.status === "finalist-track").length;
+  const needsProof = board.criteria.filter((criterion) => criterion.status === "needs-proof").length;
+  const metrics = [
+    { label: "Readiness", value: board.readiness, status: board.readiness },
+    { label: "Prize Score", value: board.prizeScore, status: board.readiness },
+    {
+      label: "Five Criteria",
+      value: `${winnerReady} ready / ${finalistTrack} watch / ${needsProof} proof`,
+      status: needsProof > 0 ? "needs-proof" : finalistTrack > 0 ? "finalist-track" : "winner-ready"
+    },
+    {
+      label: "Locks",
+      value: `${board.usabilityLock?.readiness ?? "none"} / ${board.criteriaLock?.readiness ?? "none"}`,
+      status:
+        board.usabilityLock?.readiness === "needs-usability-proof" || board.criteriaLock?.readiness === "needs-criteria-proof"
+          ? "needs-proof"
+          : board.usabilityLock?.readiness === "usability-locked" && board.criteriaLock?.readiness === "criteria-locked"
+            ? "winner-ready"
+            : "finalist-track"
+    }
+  ]
+    .map(
+      (metric) => `
+        <article class="metric ${tone(String(metric.status))}">
+          <span>${escapeHtml(metric.label)}</span>
+          <strong>${escapeHtml(metric.value)}</strong>
+        </article>`
+    )
+    .join("");
+  const criteria = board.criteria
+    .map(
+      (criterion) => `
+        <tr class="${tone(criterion.status)}">
+          <td><strong>${escapeHtml(criterion.label)}</strong><span>${escapeHtml(criterion.status)} / ${escapeHtml(criterion.currentScore)} of ${escapeHtml(criterion.targetScore)}</span></td>
+          <td>${escapeHtml(criterion.decisiveProof)}</td>
+          <td>${escapeHtml(criterion.demoMove)}</td>
+          <td>${escapeHtml(criterion.nextAction)}</td>
+        </tr>`
+    )
+    .join("");
+  const proofMoves = board.proofMoves
+    .map(
+      (move) => `
+        <a class="card ${tone(move.score >= 90 ? "winner-ready" : move.score >= 75 ? "finalist-track" : "needs-proof")}" href="${escapeHtml(move.endpoint)}">
+          <div><strong>${escapeHtml(move.label)}</strong><span>${escapeHtml(move.score)}</span></div>
+          <p>${escapeHtml(move.screen)}</p>
+          <small>${escapeHtml(move.proof)}</small>
+        </a>`
+    )
+    .join("");
+  const pitch = board.pitchOrder
+    .map(
+      (step) => `
+        <tr>
+          <td><strong>${escapeHtml(step.timeRange)}</strong><span>${escapeHtml(step.proofMoveId)}</span></td>
+          <td>${escapeHtml(step.screen)}</td>
+          <td>${escapeHtml(step.say)}</td>
+        </tr>`
+    )
+    .join("");
+  const usabilityChecks =
+    board.usabilityLock?.checks
+      .map(
+        (check) => `
+          <li>
+            <strong>${escapeHtml(check.label)}</strong>
+            <span>${escapeHtml(check.status)} / ${escapeHtml(check.score)}</span>
+            <small>${escapeHtml(check.proof)}</small>
+            <a href="${escapeHtml(check.evidenceUrl)}">${escapeHtml(check.evidenceUrl)}</a>
+          </li>`
+      )
+      .join("") ?? "<li>Prize Usability Lock has not been generated.</li>";
+  const criteriaChecks =
+    board.criteriaLock?.checks
+      .map(
+        (check) => `
+          <li>
+            <strong>${escapeHtml(check.label)}</strong>
+            <span>${escapeHtml(check.criterionId)} / ${escapeHtml(check.status)} / ${escapeHtml(check.score)}</span>
+            <small>${escapeHtml(check.proof)}</small>
+            <a href="${escapeHtml(check.evidenceUrl)}">${escapeHtml(check.evidenceUrl)}</a>
+          </li>`
+      )
+      .join("") ?? "<li>Prize Criteria Lock has not been generated.</li>";
+  const risks =
+    board.risks.length === 0
+      ? `<li>No prize risks remain. Re-run Release Drift before recording.</li>`
+      : board.risks
+          .map((risk) => `<li><strong>${escapeHtml(risk.owner)}</strong> ${escapeHtml(risk.action)} <small>${escapeHtml(risk.priority)} / ${escapeHtml(risk.proof)}</small></li>`)
+          .join("");
+
+  return `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prize Strategy Proof</title>
+    <style>
+      :root { color-scheme: light; --ink: #18201e; --muted: #5f6d68; --line: #d9e3dd; --paper: #fbfcfa; --panel: #fff; --green: #13715d; --mint: #e6f4ed; --amber: #8a620d; --amber-bg: #fff4d4; --coral: #b24735; --coral-bg: #fff0ec; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; }
+      a { color: inherit; overflow-wrap: anywhere; }
+      header, main, footer { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+      header { padding: 40px 0 20px; }
+      .eyebrow { color: var(--green); font-size: .78rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0; }
+      h1 { margin: 8px 0 10px; font-size: 3rem; line-height: 1; letter-spacing: 0; max-width: 980px; }
+      h2 { margin: 28px 0 10px; font-size: 1.12rem; }
+      p { color: var(--muted); }
+      .metrics, .grid { display: grid; gap: 12px; }
+      .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 22px; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metric, .card, .panel { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 16px; box-shadow: 0 10px 24px rgba(24, 32, 30, .06); min-width: 0; }
+      .metric span, .card span, td span, li span { color: var(--muted); font-size: .74rem; font-weight: 900; text-transform: uppercase; }
+      .metric strong { display: block; margin-top: 6px; font-size: 1.35rem; overflow-wrap: anywhere; }
+      .card { display: block; text-decoration: none; }
+      .card div { display: flex; gap: 12px; justify-content: space-between; align-items: start; }
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      th, td { text-align: left; border-bottom: 1px solid var(--line); padding: 10px 8px; vertical-align: top; overflow-wrap: anywhere; }
+      th { font-size: .78rem; text-transform: uppercase; color: var(--muted); }
+      td span, li span, li small, li a { display: block; margin-top: 4px; overflow-wrap: anywhere; }
+      tr.good td, .good { border-color: #a9d8c2; background: var(--mint); }
+      tr.watch td, .watch { border-color: #ead39a; background: var(--amber-bg); }
+      tr.bad td, .bad { border-color: #efb7aa; background: var(--coral-bg); }
+      ol { margin: 8px 0 0; padding-left: 20px; }
+      li { margin-bottom: 10px; overflow-wrap: anywhere; }
+      footer { padding: 20px 0 40px; color: var(--muted); }
+      @media (max-width: 900px) { h1 { font-size: 2rem; } .metrics, .grid { grid-template-columns: 1fr; } .card div, table, thead, tbody, tr, th, td { display: block; } thead { display: none; } tr { border-top: 1px solid var(--line); padding: 8px 0; } td { border-bottom: 0; padding: 8px; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="eyebrow">Prize Strategy Proof</div>
+      <h1>${escapeHtml(board.headline)}</h1>
+      <p><strong>${escapeHtml(board.winHypothesis)}</strong></p>
+      <p>${escapeHtml(board.hardTruth)}</p>
+      <section class="metrics">${metrics}</section>
+    </header>
+    <main>
+      <h2>Five-Criterion Score Plan</h2>
+      <section class="panel">
+        <table>
+          <thead><tr><th>Criterion</th><th>Decisive Proof</th><th>Demo Move</th><th>Next Action</th></tr></thead>
+          <tbody>${criteria}</tbody>
+        </table>
+      </section>
+      <h2>Proof Moves</h2>
+      <section class="grid">${proofMoves}</section>
+      <h2>Pitch Order</h2>
+      <section class="panel">
+        <table>
+          <thead><tr><th>Time</th><th>Screen</th><th>Say</th></tr></thead>
+          <tbody>${pitch}</tbody>
+        </table>
+      </section>
+      <h2>Prize Locks</h2>
+      <section class="panel">
+        <p><strong>${escapeHtml(board.usabilityLock?.operatorLine ?? "Prize Usability Lock unavailable.")}</strong></p>
+        <ol>${usabilityChecks}</ol>
+        <p><strong>${escapeHtml(board.criteriaLock?.operatorLine ?? "Prize Criteria Lock unavailable.")}</strong></p>
+        <ol>${criteriaChecks}</ol>
+      </section>
+      <h2>Risks</h2>
+      <section class="panel"><ol>${risks}</ol></section>
+      <h2>Judge Close</h2>
+      <section class="panel"><p>${escapeHtml(board.judgeClose)}</p></section>
+    </main>
+    <footer>${escapeHtml(board.id)} / A2A skill ${PRIZE_STRATEGY_SKILL_ID}</footer>
+  </body>
+</html>`;
 }

@@ -45,6 +45,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Judge Rehearsal Roomで、Final Pitch Defense Lock、90秒segments、想定質問、scorecard、録画チェックを固定する
 - Winner Proof Packetで、審査5項目ごとの主張、証拠URL、競合/SWOT反論、録画cue、提出copyを1枚に束ねる
 - Winner Proof Packetで、Winner Release Lockを同時に表示し、公開Cloud Run revisionが古い状態を勝ち証拠として扱わない
+- Prize Strategy Proofで、審査5項目のtarget score、Prize Usability Lock、Prize Criteria Lock、proof moves、pitch orderをGET証拠ページとして開き、優勝仮説をPOSTなしで確認できる
 - Final Submission Runwayで、2026/7/10 23:59 JSTから逆算し、動画、ProtoPedia、構成図、最終フォームを検収順にする
 - Judge Tourで、Judge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
 - User Pilot Labで、開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証する
@@ -221,6 +222,8 @@ curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/api/acceptance-matrix | jq '{v
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/acceptance-matrix \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/prize-strategy | rg 'Prize Strategy Proof|Five-Criterion Score Plan'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/api/prize-strategy | jq '{readiness, prizeScore, criteria: (.criteria | length), page: .a2aPayload.endpoints.prizeStrategyPage}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/autonomy-ledger \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
@@ -328,4 +331,5 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - Judge Command Center Page/API: `GET /judge-command-center`, `GET /api/judge-command-center`, `POST /api/judge-command-center`
 - External Evidence Page/API: `GET /external-evidence`, `GET /api/external-evidence`, `POST /api/external-evidence`
 - Acceptance Matrix Page/API: `GET /acceptance-matrix`, `GET /api/acceptance-matrix`, `POST /api/acceptance-matrix`
+- Prize Strategy Page/API: `GET /prize-strategy`, `GET /api/prize-strategy`, `POST /api/prize-strategy`
 - Required tag: `findy_hackathon`
