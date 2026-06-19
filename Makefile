@@ -31,8 +31,11 @@ q.check-architecture:
 	@test -d .claude/rules
 	@test -f .claude/settings.json
 	@test -f .github/workflows/deploy-cloud-run.yml
+	@test -f .github/workflows/verify-public-proof.yml
 	@grep -q "competitive-decision-matrix" .github/workflows/deploy-cloud-run.yml
 	@grep -q "first-click-smoke" .github/workflows/deploy-cloud-run.yml
 	@grep -q "submission.dossier" .github/workflows/deploy-cloud-run.yml
+	@grep -q "competitive-decision-matrix" .github/workflows/verify-public-proof.yml
+	@grep -q "deploy-recovery" .github/workflows/verify-public-proof.yml
 	@grep -q "Answer Grounding" AGENTS.md || grep -q "統治" AGENTS.md || (echo "[FAIL] AGENTS.md から統治セクションが失われています" && exit 1)
 	@echo "q.check-architecture PASS"

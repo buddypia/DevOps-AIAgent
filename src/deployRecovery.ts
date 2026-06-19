@@ -224,6 +224,14 @@ export function buildDeployRecoveryPlan(input: {
       blocking: readiness === "manual-auth-required"
     },
     {
+      id: "github-actions-public-proof",
+      label: "Verify public proof from GitHub Actions",
+      command: "gh workflow run verify-public-proof.yml --ref main -f target_url=https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app",
+      why: "Secretsやgcloud認証なしで、公開Cloud Runが最新のDecision Matrix、First-Click Smoke、Publisher/Dossier、A2A endpointsを返すかGitHub Actions上で検収します。",
+      copyGroup: "verify",
+      blocking: false
+    },
+    {
       id: "verify-agent-card",
       label: "Verify Agent Card count",
       command: `curl -s ${targetBaseUrl}/.well-known/agent-card.json | jq '.skills | length'`,
@@ -420,7 +428,7 @@ export function buildDeployRecoveryPlan(input: {
     `Release drift: ${input.releaseDrift.observedSkillCount}/${input.releaseDrift.expectedSkillCount} skills, ${input.releaseDrift.verdict}.`,
     `Agent Card signals: missing ${input.releaseDrift.missingAgentCardSignals.join(", ") || "none"}.`,
     `Auth: ${authBlocked ? "run GitHub Actions deploy workflow or refresh gcloud auth" : "no auth failure provided"}.`,
-    `After deploy: verify Agent Card count, /win-autopilot, /winner-sufficiency, /observability-oracle, /competitive-decision-matrix, /api/mvp-readiness, /api/autonomy-snapshot, /api/recording-script, /prize-strategy, /publisher, /dossier, /api/pilot-value, /deploy-recovery, /api/deploy-recovery, and A2A autonomySnapshot/competitiveDecisionMatrix/recordingScript/prizeStrategy/publisher/dossier/pilotValue/deployRecovery endpoints.`
+    `After deploy: run verify-public-proof.yml, then verify Agent Card count, /win-autopilot, /winner-sufficiency, /observability-oracle, /competitive-decision-matrix, /api/mvp-readiness, /api/autonomy-snapshot, /api/recording-script, /prize-strategy, /publisher, /dossier, /api/pilot-value, /deploy-recovery, /api/deploy-recovery, and A2A autonomySnapshot/competitiveDecisionMatrix/recordingScript/prizeStrategy/publisher/dossier/pilotValue/deployRecovery endpoints.`
   ];
 
   return {

@@ -224,6 +224,7 @@ describe("release drift guard", () => {
     ]);
     expect(guard.summary).toContain("0 required skills and 25 required Agent Card signals");
     expect(guard.runbook.join("\n")).toContain('select(.id=="judge.command"');
+    expect(guard.runbook.join("\n")).toContain("gh workflow run verify-public-proof.yml");
     expect(guard.runbook.join("\n")).toContain('or .id=="acceptance.matrix"');
     expect(guard.runbook.join("\n")).toContain('or .id=="autonomy.snapshot" or .id=="external.evidence"');
     expect(guard.runbook.join("\n")).toContain('or .id=="competitive.decision-matrix"');

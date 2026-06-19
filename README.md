@@ -577,6 +577,19 @@ gh workflow run deploy-cloud-run.yml --ref main \
   -f target_url=https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app
 ```
 
+## GitHub Actions Public Proof
+
+公開Cloud Runが古いかどうかを、Secretsやローカルgcloud認証に依存せずGitHub Actions上で検収するため、`.github/workflows/verify-public-proof.yml` を用意しています。Decision Matrix、First-Click Smoke、Publisher、Dossier、Deploy Recovery、A2A endpointsが公開URLから読めなければ失敗します。
+
+- Workflow: <https://github.com/buddypia/DevOps-AIAgent/actions/workflows/verify-public-proof.yml>
+- Required secrets: none
+- Trigger:
+
+```bash
+gh workflow run verify-public-proof.yml --ref main \
+  -f target_url=https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app
+```
+
 ## Local Development
 
 ```bash

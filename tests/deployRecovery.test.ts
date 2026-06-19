@@ -125,6 +125,8 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "bootstrap-github-actions-deploy")?.command).toContain("./scripts/bootstrap_github_actions_deploy.sh");
     expect(plan.commands.find((command) => command.id === "github-actions-deploy")).toMatchObject({ blocking: true, copyGroup: "deploy" });
     expect(plan.commands.find((command) => command.id === "github-actions-deploy")?.command).toContain("gh workflow run deploy-cloud-run.yml");
+    expect(plan.commands.find((command) => command.id === "github-actions-public-proof")).toMatchObject({ blocking: false, copyGroup: "verify" });
+    expect(plan.commands.find((command) => command.id === "github-actions-public-proof")?.command).toContain("gh workflow run verify-public-proof.yml");
     expect(plan.commands.find((command) => command.id === "verify-autonomy-snapshot")?.command).toContain("/api/autonomy-snapshot");
     expect(plan.commands.find((command) => command.id === "verify-recording-script")?.command).toContain("/api/recording-script");
     expect(plan.commands.find((command) => command.id === "verify-pilot-value")?.command).toContain("/api/pilot-value");
@@ -258,6 +260,7 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="submission.publish"');
     expect(plan.commands.find((command) => command.id === "verify-agent-card-signals")?.command).toContain('or .id=="submission.dossier"');
     expect(plan.commands.find((command) => command.id === "github-actions-deploy")?.command).toContain("deploy-cloud-run.yml");
+    expect(plan.commands.find((command) => command.id === "github-actions-public-proof")?.command).toContain("verify-public-proof.yml");
     expect(plan.commands.find((command) => command.id === "verify-mvp-readiness")?.command).toContain("/api/mvp-readiness");
     expect(plan.commands.find((command) => command.id === "verify-autonomy-snapshot")?.why).toContain("Autonomy Snapshot");
     expect(plan.commands.find((command) => command.id === "verify-recording-script")?.why).toContain("Recording Script");
@@ -277,6 +280,7 @@ describe("deploy recovery plan", () => {
     expect(plan.judgeScript.join("\n")).toContain("judge.command:tag:judge-command-lock");
     expect(plan.judgeScript.join("\n")).toContain("/observability-oracle");
     expect(plan.judgeScript.join("\n")).toContain("/competitive-decision-matrix");
+    expect(plan.judgeScript.join("\n")).toContain("verify-public-proof.yml");
     expect(plan.judgeScript.join("\n")).toContain("recording.script:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("pilot.value.snapshot:tag:get-proof");
     expect(plan.judgeScript.join("\n")).toContain("prize.strategy:tag:prize-strategy-lock");

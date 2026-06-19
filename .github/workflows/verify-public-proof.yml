@@ -1,0 +1,42 @@
+name: Verify Public Proof
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: "Public Cloud Run URL to verify"
+        required: true
+        default: "https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Public proof surface
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify public proof surface
+        run: |
+          set -euo pipefail
+          target="${{ inputs.target_url }}"
+          curl -fsSL "${target}/api/healthz"
+          curl -fsSL "${target}/.well-known/agent-card.json" | jq -e '
+            (.skills | length) >= 40 and
+            any(.skills[]; .id == "competitive.decision-matrix" and ((.tags // []) | index("decision-matrix-lock"))) and
+            any(.skills[]; .id == "judge.first-click" and ((.tags // []) | index("first-click-route-lock"))) and
+            any(.skills[]; .id == "judge.first-click-smoke" and ((.tags // []) | index("first-click-smoke-lock"))) and
+            any(.skills[]; .id == "submission.dossier" and ((.tags // []) | index("submission-dossier-lock"))) and
+            any(.skills[]; .id == "deploy.recover" and ((.tags // []) | index("get-proof")))
+          '
+          curl -fsSL "${target}/" | grep -E 'Judge first click|Start with proof, not feature hunting'
+          curl -fsSL "${target}/competitive-decision-matrix" | grep -E 'Competitive Decision Matrix|Head-to-Head Matrix'
+          curl -fsSL "${target}/first-click-smoke" | grep -E 'First-Click Smoke Lock'
+          curl -fsSL "${target}/api/first-click-smoke" | jq -e '.readiness == "smoke-passed" and .missingCount == 0 and .passedCount >= 14'
+          curl -fsSL "${target}/publisher" | grep -E 'Submission Publisher Proof|ProtoPedia Quality Lock'
+          curl -fsSL "${target}/dossier" | grep -E 'Submission Dossier Proof|Handoff Packet'
+          curl -fsSL "${target}/deploy-recovery" | grep -E 'Deploy Recovery|Copy/Paste Commands'
+          curl -fsSL -X POST "${target}/a2a" \
+            -H 'Content-Type: application/json' \
+            --data '{"method":"message/send","params":{"text":"A2A Cloud Run Gemini DevOps"}}' \
+            | jq -e '.result.artifacts[0].parts[0].data | .competitiveDecisionMatrixPageEndpoint and .firstClickSmokePageEndpoint and .publisherPageEndpoint and .dossierPageEndpoint and .deployRecoveryPageEndpoint'

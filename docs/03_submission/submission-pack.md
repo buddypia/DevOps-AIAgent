@@ -215,6 +215,8 @@ gh workflow run deploy-cloud-run.yml --ref main \
   -f repository=cloud-run-source-deploy \
   -f gemini_secret=gemini-api-key-a2a-marketplace \
   -f target_url=https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app
+gh workflow run verify-public-proof.yml --ref main \
+  -f target_url=https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/deploy-recovery \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"targetUrl":"https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app"}'
