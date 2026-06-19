@@ -10,7 +10,7 @@ import { buildSubmissionDossier } from "../src/dossier";
 import { buildFinalistSimulation } from "../src/finalist";
 import { buildImpactCase } from "../src/impact";
 import { buildJudgeBrief } from "../src/judgeBrief";
-import { buildJudgeCommandCenter } from "../src/judgeCommandCenter";
+import { buildJudgeCommandCenter, JUDGE_COMMAND_REQUIRED_SIGNAL, JUDGE_COMMAND_SKILL_ID, renderJudgeCommandCenterHtml } from "../src/judgeCommandCenter";
 import { buildJudgeDrill } from "../src/judgeDrill";
 import { DEFAULT_PROJECT_BRIEF } from "../src/market";
 import { buildMarketIntelReport } from "../src/marketIntel";
@@ -288,8 +288,11 @@ describe("judge command center", () => {
     });
     expect(command.a2aPayload).toMatchObject({
       method: "message/send",
-      skill: "judge.command",
-      readiness: "external-gaps"
+      skill: JUDGE_COMMAND_SKILL_ID,
+      readiness: "external-gaps",
+      endpoints: {
+        judgeCommandCenterPage: `${SUBMISSION_PROOF.deployedUrl}/judge-command-center`
+      }
     });
   });
 
@@ -301,5 +304,23 @@ describe("judge command center", () => {
     expect(command.proofButtons.find((button) => button.id === "release-drift")?.status).toBe("blocked");
     expect(command.blockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["agent-card-skill-surface", "acceptance-endpoint"]));
     expect(command.hardTruth).toContain("公開Cloud Run");
+  });
+
+  test("exports a release-drift signal for the direct command proof page", () => {
+    expect(JUDGE_COMMAND_REQUIRED_SIGNAL).toBe("judge.command:tag:judge-command-lock");
+  });
+
+  test("renders a human-readable command page without leaking raw HTML", () => {
+    const { command } = fixture();
+    const html = renderJudgeCommandCenterHtml({
+      ...command,
+      hardTruth: "<script>alert('judge')</script>"
+    });
+
+    expect(html).toContain("Judge Command Center Proof");
+    expect(html).toContain("90-Second Timeline");
+    expect(html).toContain("Proof Buttons");
+    expect(html).toContain("&lt;script&gt;alert(&#39;judge&#39;)&lt;/script&gt;");
+    expect(html).not.toContain("<script>alert('judge')</script>");
   });
 });

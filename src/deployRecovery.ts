@@ -280,6 +280,14 @@ export function buildDeployRecoveryPlan(input: {
       blocking: false
     },
     {
+      id: "verify-judge-command-page",
+      label: "Verify judge command proof page",
+      command: `curl -s ${targetBaseUrl}/judge-command-center | rg 'Judge Command Center Proof|90-Second Timeline'`,
+      why: "Judge Command CenterのGET証拠ページが公開revisionに載り、審査員の最初の90秒導線をPOSTなしで直接読めるか確認します。",
+      copyGroup: "verify",
+      blocking: false
+    },
+    {
       id: "verify-recovery-page",
       label: "Verify recovery proof page",
       command: `curl -s ${targetBaseUrl}/deploy-recovery | rg 'Deploy Recovery|Copy/Paste Commands'`,

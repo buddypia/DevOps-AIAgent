@@ -59,6 +59,10 @@ export type JudgeCommandCenter = {
   a2aPayload: Record<string, unknown>;
 };
 
+export const JUDGE_COMMAND_SKILL_ID = "judge.command";
+export const JUDGE_COMMAND_LOCK_TAG = "judge-command-lock";
+export const JUDGE_COMMAND_REQUIRED_SIGNAL = `${JUDGE_COMMAND_SKILL_ID}:tag:${JUDGE_COMMAND_LOCK_TAG}`;
+
 function clamp(value: number, min = 0, max = 100) {
   return Math.max(min, Math.min(max, value));
 }
@@ -110,6 +114,21 @@ function proofStatusForReadiness(readiness: string): CommandCenterStatus {
   if (readiness.includes("ready") || readiness === "optimized" || readiness === "investment-ready" || readiness === "release-current") return "ready";
   if (readiness.includes("gap") || readiness.includes("watch") || readiness.includes("needs")) return "watch";
   return "blocked";
+}
+
+function escapeHtml(value: unknown) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function tone(status: string) {
+  if (["pitch-ready", "ready"].includes(status)) return "good";
+  if (["blocked"].includes(status)) return "bad";
+  return "watch";
 }
 
 function blockerFromAcceptance(row: JudgeAcceptanceMatrix["rows"][number]): CommandCenterBlocker {
@@ -373,7 +392,7 @@ export function buildJudgeCommandCenter(input: {
     judgeScript,
     a2aPayload: {
       method: "message/send",
-      skill: "judge.command",
+      skill: JUDGE_COMMAND_SKILL_ID,
       commandScore,
       readiness,
       openingMove,
@@ -384,7 +403,122 @@ export function buildJudgeCommandCenter(input: {
         readiness: competitiveBattlecard.readiness,
         cards: competitiveBattlecard.cards.map((card) => ({ id: card.id, status: card.status, score: card.score }))
       },
-      blockers: blockers.map((blocker) => ({ id: blocker.id, priority: blocker.priority, action: blocker.action }))
+      blockers: blockers.map((blocker) => ({ id: blocker.id, priority: blocker.priority, action: blocker.action })),
+      endpoints: {
+        judgeCommandCenter: absoluteUrl(baseUrl, "/api/judge-command-center"),
+        judgeCommandCenterPage: absoluteUrl(baseUrl, "/judge-command-center"),
+        judgeSnapshot: absoluteUrl(baseUrl, "/judge-snapshot"),
+        winnerSufficiency: absoluteUrl(baseUrl, "/winner-sufficiency")
+      }
     }
   };
+}
+
+export function renderJudgeCommandCenterHtml(command: JudgeCommandCenter) {
+  const metrics = command.metrics
+    .map(
+      (metric) => `
+        <article class="metric ${tone(metric.status)}">
+          <span>${escapeHtml(metric.label)}</span>
+          <strong>${escapeHtml(metric.value)}</strong>
+          <small>${escapeHtml(metric.evidence)}</small>
+        </article>`
+    )
+    .join("");
+  const proofButtons = command.proofButtons
+    .map(
+      (button) => `
+        <a class="card ${tone(button.status)}" href="${escapeHtml(button.endpoint)}">
+          <div><strong>${escapeHtml(button.label)}</strong><span>${escapeHtml(button.status)} / ${escapeHtml(button.score)}</span></div>
+          <p>${escapeHtml(button.buttonLabel)}</p>
+          <small>${escapeHtml(button.reason)}</small>
+        </a>`
+    )
+    .join("");
+  const timeline = command.timeline
+    .map(
+      (step) => `
+        <tr>
+          <td><strong>${escapeHtml(step.timeRange)}</strong><span>${escapeHtml(step.status)}</span></td>
+          <td>${escapeHtml(step.screen)}</td>
+          <td>${escapeHtml(step.click)}</td>
+          <td>${escapeHtml(step.say)}</td>
+        </tr>`
+    )
+    .join("");
+  const blockers =
+    command.blockers.length === 0
+      ? `<li>No blockers. Keep the page open for the judge run.</li>`
+      : command.blockers
+          .map(
+            (blocker) =>
+              `<li><strong>${escapeHtml(blocker.owner)}</strong> ${escapeHtml(blocker.action)} <small>${escapeHtml(blocker.priority)} / ${escapeHtml(blocker.proof)}</small></li>`
+          )
+          .join("");
+  const script = command.judgeScript.map((line) => `<li>${escapeHtml(line)}</li>`).join("");
+
+  return `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Judge Command Center Proof</title>
+    <style>
+      :root { color-scheme: light; --ink: #18201e; --muted: #5f6d68; --line: #d9e3dd; --paper: #fbfcfa; --panel: #fff; --green: #13715d; --mint: #e6f4ed; --amber: #8a620d; --amber-bg: #fff4d4; --coral: #b24735; --coral-bg: #fff0ec; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.55; }
+      a { color: inherit; text-decoration: none; overflow-wrap: anywhere; }
+      header, main, footer { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
+      header { padding: 40px 0 20px; }
+      .eyebrow { color: var(--green); font-size: .78rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0; }
+      h1 { margin: 8px 0 10px; font-size: clamp(2rem, 5vw, 4rem); line-height: 1; letter-spacing: 0; max-width: 980px; }
+      h2 { margin: 28px 0 10px; font-size: 1.12rem; }
+      p { color: var(--muted); }
+      .metrics, .grid { display: grid; gap: 12px; }
+      .metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 22px; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metric, .card, .panel { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 16px; box-shadow: 0 10px 24px rgba(24, 32, 30, .06); min-width: 0; }
+      .metric span, .card span { color: var(--muted); font-size: .74rem; font-weight: 900; text-transform: uppercase; }
+      .metric strong { display: block; margin-top: 6px; font-size: 1.45rem; overflow-wrap: anywhere; }
+      .metric small, .card small, li, td { overflow-wrap: anywhere; }
+      .card { display: block; }
+      .card div { display: flex; gap: 12px; justify-content: space-between; align-items: start; }
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      th, td { text-align: left; border-bottom: 1px solid var(--line); padding: 10px 8px; vertical-align: top; }
+      th { font-size: .78rem; text-transform: uppercase; color: var(--muted); }
+      td span { display: block; color: var(--muted); font-size: .78rem; }
+      .good { border-color: #a9d8c2; background: var(--mint); }
+      .watch { border-color: #ead39a; background: var(--amber-bg); }
+      .bad { border-color: #efb7aa; background: var(--coral-bg); }
+      ol { margin: 8px 0 0; padding-left: 20px; }
+      footer { padding: 20px 0 40px; color: var(--muted); }
+      @media (max-width: 860px) { .metrics, .grid { grid-template-columns: 1fr; } .card div, table, thead, tbody, tr, th, td { display: block; } thead { display: none; } tr { border-top: 1px solid var(--line); padding: 8px 0; } td { border-bottom: 0; padding: 8px 0; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="eyebrow">Judge Command Center Proof</div>
+      <h1>${escapeHtml(command.headline)}</h1>
+      <p><strong>${escapeHtml(command.openingMove)}</strong></p>
+      <p>${escapeHtml(command.hardTruth)}</p>
+      <section class="metrics">${metrics}</section>
+    </header>
+    <main>
+      <h2>Proof Buttons</h2>
+      <section class="grid">${proofButtons}</section>
+      <h2>90-Second Timeline</h2>
+      <section class="panel">
+        <table>
+          <thead><tr><th>Time</th><th>Screen</th><th>Click</th><th>Say</th></tr></thead>
+          <tbody>${timeline}</tbody>
+        </table>
+      </section>
+      <h2>Blockers</h2>
+      <section class="panel"><ol>${blockers}</ol></section>
+      <h2>Judge Script</h2>
+      <section class="panel"><ol>${script}</ol></section>
+    </main>
+    <footer>${escapeHtml(command.id)} / A2A skill ${JUDGE_COMMAND_SKILL_ID}</footer>
+  </body>
+</html>`;
 }

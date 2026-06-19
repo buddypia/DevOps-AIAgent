@@ -171,6 +171,8 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/mvp-audit \
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/judge-brief \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/judge-command-center | rg 'Judge Command Center Proof|90-Second Timeline'
+curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/api/judge-command-center | jq '{readiness, commandScore, buttons: (.proofButtons | length), blockers: (.blockers | length)}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/judge-command-center \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"]}'
@@ -321,5 +323,6 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - Final Submission Runway API: `POST /api/submission-runway`
 - Autonomy Snapshot Page: `GET /autonomy-snapshot`
 - Agent Task Board API: `POST /api/task-board`
+- Judge Command Center Page/API: `GET /judge-command-center`, `GET /api/judge-command-center`, `POST /api/judge-command-center`
 - External Evidence Page/API: `GET /external-evidence`, `GET /api/external-evidence`, `POST /api/external-evidence`
 - Required tag: `findy_hackathon`

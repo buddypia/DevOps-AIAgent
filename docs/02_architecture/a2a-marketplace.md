@@ -172,10 +172,12 @@
 
 ## Judge Command Center Surface
 
+- `GET /judge-command-center`: Judge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを初回審査導線のHTML証拠ページに束ねる
+- `GET /api/judge-command-center`: 同じ司令塔をデフォルト入力のJSONで返す。`?live=1`または`targetUrl`指定時だけRelease Driftを実行する
 - `POST /api/judge-command-center`: Judge Tour、Competitive Battlecard、Acceptance Matrix、Release Drift、Pilot Economics、Win Autopilotを初回審査導線の司令塔に束ねる
 - Proof buttons: 90秒導線、競合回答、MVP受入表、公開revision、導入採算、勝ち筋判定の6証拠へ移動できる
 - Blockers: 公開Cloud Runのrevision drift、受入表blocked、外部提出URLwatchをowner付きの次アクションへ変換する
-- A2A payload: `judge.command` skillとしてcommand score、readiness、metrics、proof buttons、blockersを返す
+- A2A payload: `judge.command` skillとしてcommand score、readiness、metrics、proof buttons、blockers、`judgeCommandPageEndpoint`を返す
 
 ## Demo Concierge Surface
 
@@ -428,7 +430,7 @@
 - `POST /api/mvp-audit`: MVPハードゲート、審査lane、提出blockerを評価する
 - `GET /mvp-readiness`: MVP本体、公開revision、外部提出gapをGETで確認する
 - `GET /api/mvp-readiness`: MVP readinessをA2A/自動検証用JSONとして返す
-- `POST /api/judge-command-center`: 初回審査用の証拠ボタン、90秒timeline、残ブロッカーを評価する
+- `GET /judge-command-center` / `GET /api/judge-command-center` / `POST /api/judge-command-center`: 初回審査用の証拠ボタン、90秒timeline、残ブロッカーを評価する
 - `POST /api/demo-concierge`: persona別のfirst click、台詞、証拠URL、成功条件を返す
 - `POST /api/judge-rehearsal`: Final Pitch Defense Lock、Judge Recording Lock、90秒segments、想定質問、scorecard、録画チェックを返す
 - `GET /winner-packet`: 審査5項目の勝ち証拠packetをHTMLで直接開く
@@ -539,7 +541,7 @@
 - MVP audit: `/api/mvp-audit`
 - MVP readiness snapshot: `/api/mvp-readiness` and `/mvp-readiness`
 - Judge brief: `/api/judge-brief`
-- Judge command center: `/api/judge-command-center`
+- Judge command center: `/judge-command-center`, `/api/judge-command-center`
 - Judge rehearsal: `/api/judge-rehearsal`
 - Winner proof packet: `/winner-packet` and `/api/winner-packet`
 - Winner sufficiency: `/winner-sufficiency` and `/api/winner-sufficiency`
