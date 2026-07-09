@@ -5,6 +5,13 @@ import type { PitchRun } from "./pitch.js";
 import { SUBMISSION_PROOF, hasSubmissionUrl } from "./submission.js";
 import type { WinningStrategy } from "./strategy.js";
 import type { Recommendation } from "./types.js";
+import type { BuyerShareGateProofVerificationSummary } from "./buyerShareGate.js";
+import { PUBLIC_PROOF_INPUT_PLACEHOLDERS } from "./publicProofUrl.js";
+import {
+  buildWorkflowLiveProofAudit,
+  type WorkflowLiveProofAudit
+} from "./workflowLiveProofAudit.js";
+import type { WorkflowIntakeProofSlot } from "./workflowIntakeShareGate.js";
 
 export type PublisherStatus = "ready" | "watch";
 export type PublisherReadiness = "ready-to-register" | "needs-external-urls";
@@ -31,6 +38,39 @@ export type PublisherStep = {
   status: PublisherStatus;
   action: string;
   proof: string;
+};
+
+export type ProtoPediaSubmissionCopyTrayReadiness = "ready-to-submit" | "copy-ready-needs-external-urls" | "needs-copy-repair";
+
+export type ProtoPediaSubmissionCopyItem = {
+  id: string;
+  label: string;
+  value: string;
+  status: PublisherStatus;
+  copyHint: string;
+  required: boolean;
+  order: number;
+};
+
+export type ProtoPediaSubmissionCopyTray = {
+  id: string;
+  readiness: ProtoPediaSubmissionCopyTrayReadiness;
+  readyCount: number;
+  totalCount: number;
+  requiredReadyCount: number;
+  requiredTotalCount: number;
+  requiredGaps: string[];
+  pasteOrder: string[];
+  items: ProtoPediaSubmissionCopyItem[];
+  exportMarkdown: string;
+};
+
+type SubmissionProofSnapshot = {
+  publicGitHubUrl: string;
+  ciWorkflowUrl: string;
+  deployedUrl: string;
+  protopediaUrl: string;
+  videoUrl: string;
 };
 
 export type ProtoPediaQualityLockReadiness = "submit-page-ready" | "copy-locked" | "needs-copy-repair";
@@ -88,6 +128,7 @@ export type ProtoPediaPublisher = {
   readiness: PublisherReadiness;
   summary: string;
   pasteFields: PublisherField[];
+  copyTray: ProtoPediaSubmissionCopyTray;
   qualityLock: ProtoPediaQualityLock;
   policyLock: ProtoPediaPolicyLock;
   assets: PublisherAsset[];
@@ -95,6 +136,26 @@ export type ProtoPediaPublisher = {
   missingExternal: PublisherStep[];
   recordingScript: string;
   a2aPayload: Record<string, unknown>;
+};
+
+export type ProtoPediaPublisherLiveReadiness = "live-ready" | "needs-live-repair" | "not-run";
+
+export type ProtoPediaPublisherLiveAudit = WorkflowLiveProofAudit & {
+  source: "submission-publisher";
+  publisherId: string;
+  liveReadiness: ProtoPediaPublisherLiveReadiness;
+  assetReadyCount: number;
+  assetTotalCount: number;
+  requiredCopyReadyCount: number;
+  requiredCopyTotalCount: number;
+  verificationDeskHref: string;
+};
+
+export type ProtoPediaPublisherHtmlOptions = {
+  projectBrief?: string;
+  selectedAgentIds?: string[];
+  publisherApiPath?: string;
+  liveAuditApiPath?: string;
 };
 
 const PROTOPEDIA_POLICY_SOURCE_URLS = [
@@ -137,6 +198,15 @@ function escapeHtml(value: unknown) {
     .replace(/'/g, "&#39;");
 }
 
+function escapeScriptJson(value: string) {
+  return value
+    .replace(/&/g, "\\u0026")
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
 function tone(status: string) {
   if (["ready", "ready-to-register", "submit-page-ready", "publication-ready"].includes(status)) return "good";
   if (["needs-copy-repair", "needs-prototype-repair"].includes(status)) return "bad";
@@ -161,6 +231,135 @@ function asset(id: string, label: string, url: string, proof: string): Publisher
     status,
     url: status === "ready" ? url : undefined,
     proof
+  };
+}
+
+export function publisherProofLinks(publisher: ProtoPediaPublisher): WorkflowIntakeProofSlot[] {
+  return publisher.assets.map((assetItem) => ({
+    id: assetItem.id,
+    label: assetItem.label,
+    value: assetItem.url ?? "",
+    href: assetItem.url ?? "#"
+  }));
+}
+
+function publisherLiveReadinessFor(publisher: ProtoPediaPublisher, audit: WorkflowLiveProofAudit): ProtoPediaPublisherLiveReadiness {
+  if (audit.status === "verified" && publisher.readiness === "ready-to-register") return "live-ready";
+  if (audit.status === "not-run") return "not-run";
+  return "needs-live-repair";
+}
+
+export function publisherLiveAuditVerificationDeskHref(verificationRequestJson: string) {
+  const params = new URLSearchParams({
+    request: verificationRequestJson,
+    verify: "1"
+  });
+  return `/receipt-verifier?${params.toString()}`;
+}
+
+export function buildProtoPediaPublisherLiveAudit(input: {
+  publisher: ProtoPediaPublisher;
+  proofVerification?: BuyerShareGateProofVerificationSummary | null;
+  proofVerifyError?: string;
+}): ProtoPediaPublisherLiveAudit {
+  const audit = buildWorkflowLiveProofAudit({
+    proofLinks: publisherProofLinks(input.publisher),
+    proofVerification: input.proofVerification,
+    proofVerifyError: input.proofVerifyError
+  });
+
+  return {
+    ...audit,
+    source: "submission-publisher",
+    publisherId: input.publisher.id,
+    liveReadiness: publisherLiveReadinessFor(input.publisher, audit),
+    assetReadyCount: input.publisher.assets.filter((assetItem) => assetItem.status === "ready").length,
+    assetTotalCount: input.publisher.assets.length,
+    requiredCopyReadyCount: input.publisher.copyTray.requiredReadyCount,
+    requiredCopyTotalCount: input.publisher.copyTray.requiredTotalCount,
+    verificationDeskHref: publisherLiveAuditVerificationDeskHref(audit.verificationRequestJson)
+  };
+}
+
+function copyItem(input: Omit<ProtoPediaSubmissionCopyItem, "status"> & { status?: PublisherStatus }): ProtoPediaSubmissionCopyItem {
+  return {
+    ...input,
+    status: input.status ?? (input.value.trim().length > 0 ? "ready" : "watch")
+  };
+}
+
+function buildCopyTrayMarkdown(tray: Omit<ProtoPediaSubmissionCopyTray, "exportMarkdown">) {
+  return [
+    "# ProtoPedia submission copy tray",
+    "",
+    `Readiness: ${tray.readiness}`,
+    `Ready: ${tray.readyCount}/${tray.totalCount}`,
+    `Required ready: ${tray.requiredReadyCount}/${tray.requiredTotalCount}`,
+    `Required gaps: ${tray.requiredGaps.join(", ") || "none"}`,
+    "",
+    "## Paste order",
+    ...tray.items
+      .slice()
+      .sort((left, right) => left.order - right.order)
+      .map((item) => [`### ${item.order}. ${item.label}`, `Status: ${item.status}`, `Hint: ${item.copyHint}`, "", item.value || "(pending)", ""].join("\n"))
+  ].join("\n");
+}
+
+function buildSubmissionCopyTray(input: {
+  pasteFields: PublisherField[];
+  assets: PublisherAsset[];
+  appUrl: string;
+  submissionProof: SubmissionProofSnapshot;
+}): ProtoPediaSubmissionCopyTray {
+  const fieldById = new Map(input.pasteFields.map((fieldItem) => [fieldItem.id, fieldItem]));
+  const assetById = new Map(input.assets.map((assetItem) => [assetItem.id, assetItem]));
+  const architectureUrl = assetById.get("architecture")?.url ?? "";
+  const storyUrl = assetById.get("story")?.url ?? "";
+  const items: ProtoPediaSubmissionCopyItem[] = [
+    copyItem({ id: "title", label: "作品タイトル", value: fieldById.get("title")?.value ?? "", copyHint: "ProtoPedia title field", required: true, order: 1 }),
+    copyItem({ id: "one-liner", label: "一言説明", value: fieldById.get("one-liner")?.value ?? "", copyHint: "ProtoPedia summary field", required: true, order: 2 }),
+    copyItem({ id: "problem", label: "課題", value: fieldById.get("problem")?.value ?? "", copyHint: "Problem/story field", required: true, order: 3 }),
+    copyItem({ id: "users", label: "対象ユーザー", value: fieldById.get("users")?.value ?? "", copyHint: "Target users field", required: true, order: 4 }),
+    copyItem({ id: "features", label: "特徴", value: fieldById.get("features")?.value ?? "", copyHint: "Feature bullets", required: true, order: 5 }),
+    copyItem({ id: "technology", label: "技術構成", value: fieldById.get("technology")?.value ?? "", copyHint: "Technology stack field", required: true, order: 6 }),
+    copyItem({ id: "demo-flow", label: "デモの見どころ", value: fieldById.get("demo-flow")?.value ?? "", copyHint: "Video description field", required: true, order: 7 }),
+    copyItem({ id: "judge-proof", label: "審査向け証拠", value: fieldById.get("judge-proof")?.value ?? "", copyHint: "Appeal / judging proof field", required: true, order: 8 }),
+    copyItem({ id: "tags", label: "タグ", value: fieldById.get("tags")?.value ?? "", copyHint: "Include findy_hackathon", required: true, order: 9 }),
+    copyItem({ id: "github-url", label: "公開GitHub URL", value: input.submissionProof.publicGitHubUrl, copyHint: "Final submission form", required: true, order: 10 }),
+    copyItem({ id: "deployed-url", label: "デプロイ済みURL", value: input.submissionProof.deployedUrl || input.appUrl, copyHint: "Final submission form", required: true, order: 11 }),
+    copyItem({ id: "architecture-url", label: "構成図URL", value: architectureUrl, copyHint: "ProtoPedia architecture attachment", required: true, order: 12 }),
+    copyItem({ id: "story-url", label: "提出ストーリーURL", value: storyUrl, copyHint: "Long-form story backup", required: true, order: 13 }),
+    copyItem({ id: "video-url", label: "動画URL", value: input.submissionProof.videoUrl, copyHint: "ProtoPedia media field", required: true, order: 14 }),
+    copyItem({ id: "protopedia-url", label: "ProtoPedia作品URL", value: input.submissionProof.protopediaUrl, copyHint: "Final submission form after publishing", required: true, order: 15 })
+  ];
+  const readyCount = items.filter((item) => item.status === "ready").length;
+  const requiredItems = items.filter((item) => item.required);
+  const requiredReadyCount = requiredItems.filter((item) => item.status === "ready").length;
+  const requiredGaps = requiredItems.filter((item) => item.status !== "ready").map((item) => item.label);
+  const externalOnlyGaps = requiredGaps.every((gap) => gap === "動画URL" || gap === "ProtoPedia作品URL");
+  const partial: Omit<ProtoPediaSubmissionCopyTray, "exportMarkdown"> = {
+    id: `protopedia-copy-tray-${requiredReadyCount}-${requiredItems.length}`,
+    readiness:
+      requiredReadyCount === requiredItems.length
+        ? "ready-to-submit"
+        : externalOnlyGaps
+          ? "copy-ready-needs-external-urls"
+          : "needs-copy-repair",
+    readyCount,
+    totalCount: items.length,
+    requiredReadyCount,
+    requiredTotalCount: requiredItems.length,
+    requiredGaps,
+    pasteOrder: items
+      .slice()
+      .sort((left, right) => left.order - right.order)
+      .map((item) => item.id),
+    items
+  };
+
+  return {
+    ...partial,
+    exportMarkdown: buildCopyTrayMarkdown(partial)
   };
 }
 
@@ -399,10 +598,17 @@ export function buildProtoPediaPublisher(input: {
   opsDrill: OpsDrill;
   pitch: PitchRun;
   finalist: FinalistSimulation;
+  submissionUrls?: Partial<Pick<SubmissionProofSnapshot, "deployedUrl" | "protopediaUrl" | "videoUrl">>;
 }): ProtoPediaPublisher {
   const { baseUrl, recommendation, strategy, mission, opsDrill, pitch, finalist } = input;
   const selectedAgents = recommendation.selected.map((agent) => agent.name).join(" / ") || "A2A Market Broker";
-  const appUrl = mission.submissionPack.deployedUrl || baseUrl;
+  const submissionProof: SubmissionProofSnapshot = {
+    ...SUBMISSION_PROOF,
+    deployedUrl: input.submissionUrls?.deployedUrl?.trim() || mission.submissionPack.deployedUrl || SUBMISSION_PROOF.deployedUrl,
+    protopediaUrl: input.submissionUrls?.protopediaUrl?.trim() || SUBMISSION_PROOF.protopediaUrl,
+    videoUrl: input.submissionUrls?.videoUrl?.trim() || SUBMISSION_PROOF.videoUrl
+  };
+  const appUrl = submissionProof.deployedUrl || baseUrl;
   const topCompetitor = strategy.competitors[0]?.name ?? "Google ADK";
   const tags = mission.submissionPack.tags.join(", ");
   const featureBullets = [
@@ -454,13 +660,13 @@ export function buildProtoPediaPublisher(input: {
     field("tags", "タグ", tags, "タグ欄へ貼る")
   ];
   const assets: PublisherAsset[] = [
-    asset("github", "公開GitHub", SUBMISSION_PROOF.publicGitHubUrl, "README、実装、テスト、Cloud Run構成、提出資料を公開"),
-    asset("cloud-run", "デプロイ済みURL", SUBMISSION_PROOF.deployedUrl, "審査員が動作確認できるCloud Run URL"),
-    asset("ci", "GitHub Actions CI", SUBMISSION_PROOF.ciWorkflowUrl, "品質ゲートの公開証跡"),
+    asset("github", "公開GitHub", submissionProof.publicGitHubUrl, "README、実装、テスト、Cloud Run構成、提出資料を公開"),
+    asset("cloud-run", "デプロイ済みURL", submissionProof.deployedUrl, "審査員が動作確認できるCloud Run URL"),
+    asset("ci", "GitHub Actions CI", submissionProof.ciWorkflowUrl, "品質ゲートの公開証跡"),
     asset("architecture", "システム構成図", `${baseUrl.replace(/\/$/, "")}${mission.submissionPack.architectureDiagramUrl}`, "ProtoPediaに貼れる構成図"),
     asset("story", "提出ストーリーMarkdown", `${baseUrl.replace(/\/$/, "")}${mission.submissionPack.storyMarkdownPath}`, "ProtoPedia本文の下書き"),
-    asset("protopedia", "ProtoPedia作品URL", SUBMISSION_PROOF.protopediaUrl, "外部登録後に提出フォームへ貼る"),
-    asset("video", "動画URL", SUBMISSION_PROOF.videoUrl, "Demo Runwayの30秒構成を録画して貼る")
+    asset("protopedia", "ProtoPedia作品URL", submissionProof.protopediaUrl, "外部登録後に提出フォームへ貼る"),
+    asset("video", "動画URL", submissionProof.videoUrl, "Demo Runwayの30秒構成を録画して貼る")
   ];
   const finalChecklist: PublisherStep[] = [
     {
@@ -480,14 +686,14 @@ export function buildProtoPediaPublisher(input: {
     {
       id: "record-video",
       label: "30秒動画を録画する",
-      status: statusFromUrl(SUBMISSION_PROOF.videoUrl),
+      status: statusFromUrl(submissionProof.videoUrl),
       action: "Demo Runwayの順番で Judge Proof -> Finalist Simulator -> Submission Publisher -> Marketplace -> Strategy -> Contract/Mission -> Ops を録画する",
       proof: pitch.voiceoverScript
     },
     {
       id: "publish-protopedia",
       label: "ProtoPedia作品URLを発行する",
-      status: statusFromUrl(SUBMISSION_PROOF.protopediaUrl),
+      status: statusFromUrl(submissionProof.protopediaUrl),
       action: "作品ページを公開し、提出フォームへ作品URLを貼る",
       proof: "Required tag: findy_hackathon"
     },
@@ -500,6 +706,7 @@ export function buildProtoPediaPublisher(input: {
     }
   ];
   const missingExternal = finalChecklist.filter((item) => item.status === "watch");
+  const copyTray = buildSubmissionCopyTray({ pasteFields, assets, appUrl, submissionProof });
   const qualityLock = buildQualityLock({ pasteFields, assets, finalChecklist, strategy, pitch, finalist, topCompetitor });
   const policyLock = buildPolicyLock({ pasteFields, assets, finalChecklist });
   const publishScore = Math.round(
@@ -526,6 +733,7 @@ export function buildProtoPediaPublisher(input: {
         ? "ProtoPedia登録に必要な本文、URL、動画、構成図が揃っています。"
         : "本文、構成図、公開URL、CI証跡は揃っています。残りはProtoPedia作品URLと動画URLの外部登録です。",
     pasteFields,
+    copyTray,
     qualityLock,
     policyLock,
     assets,
@@ -550,6 +758,13 @@ export function buildProtoPediaPublisher(input: {
         checks: policyLock.checks.map((check) => ({ id: check.id, status: check.status, sourceUrl: check.sourceUrl }))
       },
       pasteFields: pasteFields.map((item) => ({ id: item.id, label: item.label, status: item.status })),
+      copyTray: {
+        readiness: copyTray.readiness,
+        requiredReadyCount: copyTray.requiredReadyCount,
+        requiredTotalCount: copyTray.requiredTotalCount,
+        requiredGaps: copyTray.requiredGaps,
+        pasteOrder: copyTray.pasteOrder
+      },
       assets: assets.map((item) => ({ id: item.id, status: item.status, url: item.url ?? null })),
       missingExternal: missingExternal.map((item) => ({ id: item.id, action: item.action })),
       appUrl,
@@ -564,7 +779,163 @@ export function buildProtoPediaPublisher(input: {
   };
 }
 
-export function renderProtoPediaPublisherHtml(publisher: ProtoPediaPublisher) {
+export function renderProtoPediaPublisherHtml(publisher: ProtoPediaPublisher, options: ProtoPediaPublisherHtmlOptions = {}) {
+  const publicUrlAssets = ["cloud-run", "protopedia", "video"]
+    .map((id) => publisher.assets.find((assetItem) => assetItem.id === id))
+    .filter((assetItem): assetItem is PublisherAsset => !!assetItem);
+  const publicUrlReadyCount = publicUrlAssets.filter((assetItem) => assetItem.status === "ready").length;
+  const publicUrlDesk = `
+      <section class="panel url-desk" aria-label="Public submission URL desk">
+        <div>
+          <div class="eyebrow">Public URL desk</div>
+          <h2>Live submission proof</h2>
+          <p>Deployed product, ProtoPedia page, and demo media become an auditable package before the final handoff.</p>
+          <strong>${escapeHtml(`${publicUrlReadyCount}/${publicUrlAssets.length}`)} URLs ready</strong>
+        </div>
+        <form class="url-form" method="get" action="/publisher">
+          <label>
+            <span>Deployed URL <em class="${tone(publisher.assets.find((assetItem) => assetItem.id === "cloud-run")?.status ?? "watch")}">${escapeHtml(publisher.assets.find((assetItem) => assetItem.id === "cloud-run")?.status ?? "watch")}</em></span>
+            <input name="targetUrl" value="${escapeHtml(publisher.assets.find((assetItem) => assetItem.id === "cloud-run")?.url ?? "")}" placeholder="${escapeHtml(PUBLIC_PROOF_INPUT_PLACEHOLDERS.targetUrl)}" inputmode="url" autocapitalize="none" spellcheck="false" />
+          </label>
+          <label>
+            <span>ProtoPedia URL <em class="${tone(publisher.assets.find((assetItem) => assetItem.id === "protopedia")?.status ?? "watch")}">${escapeHtml(publisher.assets.find((assetItem) => assetItem.id === "protopedia")?.status ?? "watch")}</em></span>
+            <input name="protopediaUrl" value="${escapeHtml(publisher.assets.find((assetItem) => assetItem.id === "protopedia")?.url ?? "")}" placeholder="${escapeHtml(PUBLIC_PROOF_INPUT_PLACEHOLDERS.protopediaUrl)}" inputmode="url" autocapitalize="none" spellcheck="false" />
+          </label>
+          <label>
+            <span>Walkthrough video URL <em class="${tone(publisher.assets.find((assetItem) => assetItem.id === "video")?.status ?? "watch")}">${escapeHtml(publisher.assets.find((assetItem) => assetItem.id === "video")?.status ?? "watch")}</em></span>
+            <input name="videoUrl" value="${escapeHtml(publisher.assets.find((assetItem) => assetItem.id === "video")?.url ?? "")}" placeholder="${escapeHtml(PUBLIC_PROOF_INPUT_PLACEHOLDERS.videoUrl)}" inputmode="url" autocapitalize="none" spellcheck="false" />
+          </label>
+          <div class="url-actions">
+            <button type="submit">Refresh package</button>
+            <button type="button" class="secondary" id="publisher-live-audit-run">Run live audit</button>
+          </div>
+          <small id="publisher-live-audit-status">Live audit has not run on this page yet.</small>
+        </form>
+      </section>
+      <section class="panel live-audit-panel" id="publisher-live-audit-result" data-open="false" aria-live="polite">
+        <div>
+          <div class="eyebrow" id="publisher-live-audit-kicker">Live audit</div>
+          <h2 id="publisher-live-audit-title">Run live audit to verify public proof links</h2>
+          <p id="publisher-live-audit-summary">The result will include a checksum receipt and a Receipt Verification Desk link.</p>
+        </div>
+        <aside>
+          <strong id="publisher-live-audit-score">--</strong>
+          <span id="publisher-live-audit-count">0/0 URLs verified</span>
+        </aside>
+        <div class="audit-actions" id="publisher-live-audit-actions"></div>
+        <div class="audit-rows" id="publisher-live-audit-rows"></div>
+      </section>`;
+  const liveAuditPayload = JSON.stringify({
+    projectBrief: options.projectBrief ?? "",
+    selectedAgentIds: options.selectedAgentIds ?? [],
+    targetUrl: publisher.assets.find((assetItem) => assetItem.id === "cloud-run")?.url ?? "",
+    protopediaUrl: publisher.assets.find((assetItem) => assetItem.id === "protopedia")?.url ?? "",
+    videoUrl: publisher.assets.find((assetItem) => assetItem.id === "video")?.url ?? ""
+  });
+  const publisherScript = `
+    <script type="application/json" id="publisher-live-audit-payload">${escapeScriptJson(liveAuditPayload)}</script>
+    <script>
+      (() => {
+        const apiPath = ${JSON.stringify(options.liveAuditApiPath ?? "/api/publisher/live-audit")};
+        const payloadNode = document.getElementById("publisher-live-audit-payload");
+        const form = document.querySelector(".url-form");
+        const button = document.getElementById("publisher-live-audit-run");
+        const status = document.getElementById("publisher-live-audit-status");
+        const result = document.getElementById("publisher-live-audit-result");
+        const kicker = document.getElementById("publisher-live-audit-kicker");
+        const title = document.getElementById("publisher-live-audit-title");
+        const summary = document.getElementById("publisher-live-audit-summary");
+        const score = document.getElementById("publisher-live-audit-score");
+        const count = document.getElementById("publisher-live-audit-count");
+        const rows = document.getElementById("publisher-live-audit-rows");
+        const actions = document.getElementById("publisher-live-audit-actions");
+        if (!payloadNode || !form || !button || !status || !result || !kicker || !title || !summary || !score || !count || !rows || !actions) return;
+        const basePayload = JSON.parse(payloadNode.textContent || "{}");
+
+        function text(value) {
+          return String(value ?? "");
+        }
+
+        function fieldValue(name) {
+          const field = form.querySelector("[name='" + name + "']");
+          return field && "value" in field ? String(field.value).trim() : "";
+        }
+
+        function addLink(label, href, download) {
+          const link = document.createElement("a");
+          link.textContent = label;
+          link.href = href;
+          if (download) link.download = download;
+          if (!download) {
+            link.target = "_blank";
+            link.rel = "noreferrer";
+          }
+          actions.appendChild(link);
+        }
+
+        function renderAudit(audit) {
+          result.dataset.open = "true";
+          result.dataset.status = audit.liveReadiness || audit.status || "not-run";
+          kicker.textContent = text(audit.liveReadiness || audit.status || "live-audit");
+          title.textContent = text(audit.headline || "Live audit result");
+          summary.textContent = text(audit.summary || "No summary returned.");
+          score.textContent = text(audit.score ?? "--");
+          count.textContent = text(audit.verifiedCount ?? 0) + "/" + text(audit.totalCount ?? 0) + " URLs verified";
+          rows.textContent = "";
+          actions.textContent = "";
+          if (audit.verificationRequestHref) addLink("Download receipt", audit.verificationRequestHref, (audit.receiptId || "publisher-live-audit") + ".json");
+          if (audit.verificationDeskHref) addLink("Verify audit", audit.verificationDeskHref);
+          for (const row of audit.rows || []) {
+            const article = document.createElement("article");
+            article.className = text(row.status);
+            const heading = document.createElement("strong");
+            heading.textContent = text(row.label) + " / " + text(row.status);
+            const evidence = document.createElement("p");
+            evidence.textContent = text(row.evidence);
+            const action = document.createElement("small");
+            action.textContent = text(row.action);
+            const url = document.createElement("code");
+            url.textContent = text(row.url || "Missing public URL");
+            article.append(heading, evidence, action, url);
+            rows.appendChild(article);
+          }
+        }
+
+        button.addEventListener("click", async () => {
+          button.setAttribute("disabled", "true");
+          status.textContent = "Running live audit...";
+          try {
+            const response = await fetch(apiPath, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                ...basePayload,
+                targetUrl: fieldValue("targetUrl"),
+                protopediaUrl: fieldValue("protopediaUrl"),
+                videoUrl: fieldValue("videoUrl")
+              })
+            });
+            const body = await response.json();
+            if (!response.ok) throw new Error(body?.error || "HTTP " + response.status);
+            renderAudit(body);
+            status.textContent = "Live audit complete.";
+          } catch (error) {
+            result.dataset.open = "true";
+            result.dataset.status = "failed";
+            kicker.textContent = "Live audit failed";
+            title.textContent = "Live audit could not run";
+            summary.textContent = error instanceof Error ? error.message : "Unknown error";
+            score.textContent = "--";
+            count.textContent = "0/0 URLs verified";
+            rows.textContent = "";
+            actions.textContent = "";
+            status.textContent = "Live audit failed.";
+          } finally {
+            button.removeAttribute("disabled");
+          }
+        });
+      })();
+    </script>`;
   const metrics = [
     { label: "Readiness", value: publisher.readiness, status: publisher.readiness },
     { label: "Publish Score", value: publisher.publishScore, status: publisher.readiness },
@@ -586,6 +957,18 @@ export function renderProtoPediaPublisherHtml(publisher: ProtoPediaPublisher) {
           <div><strong>${escapeHtml(fieldItem.label)}</strong><span>${escapeHtml(fieldItem.status)}</span></div>
           <small>${escapeHtml(fieldItem.copyHint)}</small>
           <pre>${escapeHtml(fieldItem.value)}</pre>
+        </article>`
+    )
+    .join("");
+  const copyTray = publisher.copyTray.items
+    .slice()
+    .sort((left, right) => left.order - right.order)
+    .map(
+      (item) => `
+        <article class="card ${tone(item.status)}">
+          <div><strong>${escapeHtml(item.order)}. ${escapeHtml(item.label)}</strong><span>${escapeHtml(item.status)}</span></div>
+          <small>${escapeHtml(item.copyHint)}${item.required ? " / required" : ""}</small>
+          <pre>${escapeHtml(item.value || "Pending external URL")}</pre>
         </article>`
     )
     .join("");
@@ -657,6 +1040,33 @@ export function renderProtoPediaPublisherHtml(publisher: ProtoPediaPublisher) {
       .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 22px; }
       .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .metric, .card, .panel { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 16px; box-shadow: 0 10px 24px rgba(24, 32, 30, .06); min-width: 0; }
+      .url-desk, .live-audit-panel { display: grid; grid-template-columns: minmax(250px, .34fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+      .url-desk strong { display: inline-flex; width: fit-content; margin-top: 8px; border-radius: 999px; padding: 5px 10px; color: #0e4f41; background: #d7f1e2; font-size: .8rem; }
+      .url-form, .url-form label { display: grid; gap: 8px; min-width: 0; }
+      .url-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .url-form label span { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--ink); font-size: .74rem; font-weight: 900; text-transform: uppercase; }
+      .url-form label em { border-radius: 999px; padding: 3px 8px; font-style: normal; background: #d7f1e2; }
+      .url-form label em.watch { background: var(--amber-bg); }
+      .url-form input { width: 100%; min-height: 40px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; color: var(--ink); background: #fff; font: inherit; }
+      .url-form input:focus-visible, button:focus-visible, .audit-actions a:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+      .url-actions, .url-form small { grid-column: 1 / -1; }
+      .url-actions, .audit-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+      button, .audit-actions a { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #0f5e4e; border-radius: 999px; padding: 8px 12px; color: #fff; background: var(--green); font: inherit; font-weight: 900; text-decoration: none; cursor: pointer; }
+      button.secondary, .audit-actions a:nth-child(2) { color: var(--green); background: #fff; }
+      button:disabled { cursor: wait; opacity: .65; }
+      .live-audit-panel { display: none; border-left: 6px solid #ead39a; }
+      .live-audit-panel[data-open="true"] { display: grid; }
+      .live-audit-panel[data-status="live-ready"], .live-audit-panel[data-status="verified"] { border-left-color: var(--green); background: #f2fbf5; }
+      .live-audit-panel[data-status="needs-live-repair"], .live-audit-panel[data-status="action-required"], .live-audit-panel[data-status="failed"] { border-left-color: #b55a38; background: #fff7f4; }
+      .live-audit-panel aside { display: grid; place-items: center; gap: 4px; min-height: 120px; border-radius: 8px; color: #fff; background: #18352e; }
+      .live-audit-panel aside strong { font-size: 3rem; line-height: 1; }
+      .audit-actions, .audit-rows { grid-column: 1 / -1; }
+      .audit-rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .audit-rows article { display: grid; gap: 6px; border: 1px solid var(--line); border-left: 4px solid var(--green); border-radius: 8px; padding: 10px; background: #fff; min-width: 0; }
+      .audit-rows article.block, .audit-rows article.missing { border-left-color: #b55a38; background: #fff0ec; }
+      .audit-rows article.watch { border-left-color: #c18a16; background: var(--amber-bg); }
+      .audit-rows code { overflow-wrap: anywhere; color: var(--muted); }
+      .copy-tray { border-color: #13715d; background: #f5fbf7; }
       .metric span, .card span, li span { color: var(--muted); font-size: .74rem; font-weight: 900; text-transform: uppercase; }
       .metric strong { display: block; margin-top: 6px; font-size: 1.35rem; overflow-wrap: anywhere; }
       .card div { display: flex; gap: 12px; justify-content: space-between; align-items: start; }
@@ -668,7 +1078,7 @@ export function renderProtoPediaPublisherHtml(publisher: ProtoPediaPublisher) {
       .watch { border-color: #ead39a; background: var(--amber-bg); }
       .bad { border-color: #efb7aa; background: var(--coral-bg); }
       footer { padding: 20px 0 40px; color: var(--muted); }
-      @media (max-width: 900px) { h1 { font-size: 2rem; } .metrics, .grid { grid-template-columns: 1fr; } .card div { display: block; } }
+      @media (max-width: 900px) { h1 { font-size: 2rem; } .metrics, .grid, .url-desk, .url-form, .live-audit-panel, .audit-rows { grid-template-columns: 1fr; } .url-actions, .url-form small, .audit-actions, .audit-rows { grid-column: auto; } .card div { display: block; } }
     </style>
   </head>
   <body>
@@ -680,6 +1090,12 @@ export function renderProtoPediaPublisherHtml(publisher: ProtoPediaPublisher) {
       <section class="metrics">${metrics}</section>
     </header>
     <main>
+      ${publicUrlDesk}
+      <h2>Submission Copy Tray</h2>
+      <section class="panel copy-tray">
+        <p>${escapeHtml(publisher.copyTray.readiness)} / ${escapeHtml(`${publisher.copyTray.requiredReadyCount}/${publisher.copyTray.requiredTotalCount}`)} required ready. Gaps: ${escapeHtml(publisher.copyTray.requiredGaps.join(", ") || "none")}.</p>
+        <div class="grid">${copyTray}</div>
+      </section>
       <h2>Paste Fields</h2>
       <section class="grid">${pasteFields}</section>
       <h2>ProtoPedia Quality Lock</h2>
@@ -696,6 +1112,7 @@ export function renderProtoPediaPublisherHtml(publisher: ProtoPediaPublisher) {
       <section class="panel"><pre>${escapeHtml(publisher.recordingScript)}</pre></section>
     </main>
     <footer>${escapeHtml(publisher.id)} / A2A skill ${SUBMISSION_PUBLISH_SKILL_ID}</footer>
+    ${publisherScript}
   </body>
 </html>`;
 }

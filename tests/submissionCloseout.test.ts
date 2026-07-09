@@ -208,6 +208,60 @@ describe("submission closeout workbench", () => {
         expect.objectContaining({ id: "external-url-slots", status: "watch" })
       ])
     });
+    expect(closeout.finalSubmitHandoff).toMatchObject({
+      status: "watch",
+      readiness: "external-url-watch",
+      headline: "Final form is ready except published URLs",
+      readyCount: 6,
+      openCount: 2,
+      invalidCount: 0,
+      deadline: "2026-07-10 23:59 JST"
+    });
+    expect(closeout.finalSubmitHandoff.fields.map((field) => field.id)).toEqual([
+      "github-url",
+      "deployed-url",
+      "protopedia-url",
+      "video-url",
+      "findy-tag",
+      "work-status",
+      "proof-receipt",
+      "deadline"
+    ]);
+    expect(closeout.finalSubmitHandoff.fields.find((field) => field.id === "protopedia-url")).toMatchObject({
+      status: "watch",
+      target: "Findy final submission form",
+      value: ""
+    });
+    expect(closeout.finalSubmitHandoff.fields.find((field) => field.id === "deadline")).toMatchObject({
+      status: "ready",
+      value: "2026-07-10 23:59 JST"
+    });
+    expect(closeout.finalSubmitHandoff.verifyApiPath).toBe("/api/proof-links/verify");
+    expect(closeout.finalSubmitHandoff.liveProofLinks).toEqual([
+      {
+        id: "github-url",
+        label: "Public GitHub repository URL",
+        value: SUBMISSION_PROOF.publicGitHubUrl
+      },
+      {
+        id: "deployed-url",
+        label: "Deployed Cloud Run URL",
+        value: SUBMISSION_PROOF.deployedUrl
+      },
+      {
+        id: "protopedia-url",
+        label: "ProtoPedia work URL",
+        value: ""
+      },
+      {
+        id: "video-url",
+        label: "Video URL",
+        value: ""
+      }
+    ]);
+    expect(closeout.finalSubmitHandoff.exportMarkdown).toContain("# Findy final submission handoff");
+    expect(closeout.finalSubmitHandoff.exportMarkdown).toContain("ProtoPedia: Pending external URL");
+    expect(closeout.finalSubmitHandoff.exportHref).toMatch(/^data:text\/markdown;charset=utf-8,/);
     expect(closeout.a2aPayload).toMatchObject({
       method: "message/send",
       skill: "submission.closeout",
@@ -240,6 +294,20 @@ describe("submission closeout workbench", () => {
         ]),
         checks: expect.arrayContaining([expect.objectContaining({ id: "external-url-slots", status: "watch" })])
       },
+      finalSubmitHandoff: {
+        readiness: "external-url-watch",
+        status: "watch",
+        deadline: "2026-07-10 23:59 JST",
+        openCount: 2,
+        invalidCount: 0,
+        liveProofLinks: expect.arrayContaining([
+          expect.objectContaining({ id: "github-url", attached: true }),
+          expect.objectContaining({ id: "deployed-url", attached: true }),
+          expect.objectContaining({ id: "protopedia-url", attached: false }),
+          expect.objectContaining({ id: "video-url", attached: false })
+        ]),
+        verifyApiPath: "/api/proof-links/verify"
+      },
       endpoints: {
         closeout: `${SUBMISSION_PROOF.deployedUrl}/api/submission-closeout`,
         launchGate: `${SUBMISSION_PROOF.deployedUrl}/api/submission-launch`
@@ -264,6 +332,14 @@ describe("submission closeout workbench", () => {
     expect(closeout.dryRunLock.readiness).toBe("submit-dry-run-sealed");
     expect(closeout.assetLock.readiness).toBe("assets-publish-ready");
     expect(closeout.assetLock.checks.every((check) => check.status === "ready")).toBe(true);
+    expect(closeout.finalSubmitHandoff).toMatchObject({
+      status: "ready",
+      readiness: "findy-form-sealed",
+      openCount: 0,
+      invalidCount: 0
+    });
+    expect(closeout.finalSubmitHandoff.exportMarkdown).toContain("ProtoPedia: https://protopedia.net/prototype/999999");
+    expect(closeout.finalSubmitHandoff.exportMarkdown).toContain("Video: https://youtu.be/demo1234567");
     expect(closeout.dryRunLock.lockScore).toBe(100);
     expect(closeout.dryRunLock.checks.every((check) => check.status === "ready")).toBe(true);
     expect(closeout.submitPacket).toMatchObject({
@@ -290,5 +366,15 @@ describe("submission closeout workbench", () => {
     expect(closeout.assetLock.readiness).toBe("needs-asset-fix");
     expect(closeout.assetLock.checks.find((check) => check.id === "external-url-slots")?.status).toBe("blocked");
     expect(closeout.dryRunLock.checks.find((check) => check.id === "external-url-handoff")?.status).toBe("blocked");
+    expect(closeout.finalSubmitHandoff).toMatchObject({
+      status: "blocked",
+      readiness: "needs-form-fix",
+      headline: "Final form is blocked by malformed evidence",
+      invalidCount: 2
+    });
+    expect(closeout.finalSubmitHandoff.fields.find((field) => field.id === "video-url")).toMatchObject({
+      status: "blocked",
+      value: "nope"
+    });
   });
 });

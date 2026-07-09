@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "A2A agent marketplace for the DevOps x AI Agent Hackathon.",
+  "description": "A2A agent marketplace for buyer workflow proof, public receipts, and deployable agent operations.",
   "scripts": {
     "dev": "tsx watch server/index.ts",
-    "build": "vite build && tsc -p tsconfig.server.json",
+    "build": "vite build && node scripts/check_build_assets.mjs && tsc -p tsconfig.server.json",
     "start": "node dist-server/server/index.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.server.json --noEmit"
@@ -15,6 +15,7 @@
     "@google/genai": "^2.3.0",
     "express": "^5.2.1",
     "lucide-react": "^0.560.0",
+    "lz-string": "^1.5.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "zod": "^4.3.0"

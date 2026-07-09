@@ -27,9 +27,34 @@ jobs:
             any(.skills[]; .id == "judge.first-click" and ((.tags // []) | index("first-click-route-lock"))) and
             any(.skills[]; .id == "judge.first-click-smoke" and ((.tags // []) | index("first-click-smoke-lock"))) and
             any(.skills[]; .id == "submission.dossier" and ((.tags // []) | index("submission-dossier-lock"))) and
-            any(.skills[]; .id == "deploy.recover" and ((.tags // []) | index("get-proof")))
+            any(.skills[]; .id == "deploy.recover" and ((.tags // []) | index("get-proof"))) and
+            any(.skills[]; .id == "agent-card.shortlist" and ((.tags // []) | index("get-proof"))) and
+            any(.skills[]; .id == "agent-card.trial-plan" and ((.tags // []) | index("get-proof"))) and
+            any(.skills[]; .id == "agent-card.trial-verification" and ((.tags // []) | index("get-proof"))) and
+            any(.skills[]; .id == "agent-card.trial-handoff" and ((.tags // []) | index("get-proof")))
           '
-          curl -fsSL "${target}/" | grep -E 'Judge first click|Start with proof, not feature hunting'
+          home="$(curl -fsSL "${target}/")"
+          printf '%s' "${home}" | grep -E 'Agent-To-Agent Marketplace'
+          homepage_asset="$(printf '%s' "${home}" | sed -n 's|.*src="/assets/\(index-[^"]*\.js\)".*|\1|p' | head -1)"
+          test -n "${homepage_asset}"
+          homepage_bundle="$(curl -fsSL "${target}/assets/${homepage_asset}")"
+          for homepage_copy in 'AI Agent Value Blueprint' 'A buyer decision packet' 'Proof before sharing' 'Start own packet' 'Make the first pilot concrete' 'Do not share this packet externally' 'Load proof-backed sample' 'First action route lock'; do
+            printf '%s' "${homepage_bundle}" | grep -F "${homepage_copy}"
+          done
+          curl -fsSL "${target}/sample/buyer-outcome-brief" | grep -E 'Buyer Outcome Brief'
+          curl -fsSL "${target}/api/sample/buyer-outcome-brief" | jq -e '.decision == "repair-before-share" and any(.metrics[]; .id == "live-proof" and .value == "3/5")'
+          curl -fsSL "${target}/sample/pilot-run-receipt" | grep -E 'Pilot Receipt|Pilot Run Receipt'
+          curl -fsSL "${target}/sample/work-order-brief" | grep -E 'Buyer Work Order Brief'
+          curl -fsSL "${target}/buyer-proof-monitor" | grep -E 'Proof monitor|Buyer proof monitor'
+          curl -fsSL "${target}/buyer-proof-recovery" | grep -E 'Recovery desk|buyer proof recovery desk'
+          curl -fsSL "${target}/sample/agent-card-shortlist" | grep -E 'Agent Card Shortlist|Start with'
+          curl -fsSL "${target}/api/sample/agent-card-shortlist" | jq -e '.verdict == "trial-ready" and .candidateCount >= 3 and .leadCandidate.recommendation == "lead-trial"'
+          curl -fsSL "${target}/sample/agent-card-trial-plan" | grep -E 'Agent Card Trial Plan|JSON-RPC trial payload'
+          curl -fsSL "${target}/api/sample/agent-card-trial-plan" | jq -e '.readiness == "ready-to-run" and .jsonRpcPayload.method == "message/send" and (.evidenceContract | length) >= 5'
+          curl -fsSL "${target}/sample/agent-card-trial-verification" | grep -E 'Agent Card Trial Verification|accepted'
+          curl -fsSL "${target}/api/sample/agent-card-trial-verification" | jq -e '.status == "accepted" and .score >= 90 and any(.checks[]; .id == "artifact-url" and .status == "pass")'
+          curl -fsSL "${target}/sample/agent-card-trial-handoff" | grep -E 'Agent Card Trial Handoff|workspace-ready|Workspace evidence record'
+          curl -fsSL "${target}/api/sample/agent-card-trial-handoff" | jq -e '.status == "workspace-ready" and .evidenceRecord.status == "accepted" and (.links | length) >= 4'
           curl -fsSL "${target}/competitive-decision-matrix" | grep -E 'Competitive Decision Matrix|Head-to-Head Matrix'
           curl -fsSL "${target}/first-click-smoke" | grep -E 'First-Click Smoke Lock'
           curl -fsSL "${target}/api/first-click-smoke" | jq -e '.readiness == "smoke-passed" and .missingCount == 0 and .passedCount >= 14'
@@ -39,4 +64,4 @@ jobs:
           curl -fsSL -X POST "${target}/a2a" \
             -H 'Content-Type: application/json' \
             --data '{"method":"message/send","params":{"text":"A2A Cloud Run Gemini DevOps"}}' \
-            | jq -e '.result.artifacts[0].parts[0].data | .competitiveDecisionMatrixPageEndpoint and .firstClickSmokePageEndpoint and .publisherPageEndpoint and .dossierPageEndpoint and .deployRecoveryPageEndpoint'
+            | jq -e '.result.artifacts[0].parts[0].data | .competitiveDecisionMatrixPageEndpoint and .firstClickSmokePageEndpoint and .publisherPageEndpoint and .dossierPageEndpoint and .deployRecoveryPageEndpoint and .sampleAgentCardShortlistEndpoint and .agentCardShortlistEndpoint and .sampleAgentCardTrialPlanEndpoint and .agentCardTrialPlanEndpoint and .sampleAgentCardTrialVerificationEndpoint and .agentCardTrialVerificationJsonEndpoint and .sampleAgentCardTrialHandoffEndpoint and .agentCardTrialHandoffJsonEndpoint'

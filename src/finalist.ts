@@ -197,7 +197,7 @@ function submissionUrlGap(id: "protopedia" | "video", state: ExternalUrlState): 
       owner: "Submission owner",
       action:
         state === "invalid"
-          ? "https://protopedia.net/prototype/... の作品URLを入力する"
+          ? "公開済みの protopedia.net 作品URLを入力する"
           : "競合/SWOT/審査スコア画面を構成図とストーリーに入れる",
       proof: state === "invalid" ? "ProtoPedia URL is not a valid protopedia.net https URL." : "作品ページ、動画、構成図、タグ findy_hackathon は提出直前作業。"
     };

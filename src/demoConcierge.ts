@@ -167,7 +167,7 @@ function buildFocusLock(input: {
     {
       id: "show-command-first",
       action: "show",
-      target: "Judge Command Center",
+      target: "Reviewer Command Center",
       timeRange: "0-18s",
       instruction: "Start on the command center and say the opening move before showing any feature list.",
       proof: proofFor("judge-command", input.command.proofButtons[0]?.endpoint ?? "/api/judge-command-center"),
@@ -257,7 +257,7 @@ function buildFocusLock(input: {
     deferredCount,
     watchCount,
     blockedCount,
-    firstScreen: "Judge Command Center",
+    firstScreen: "Reviewer Command Center",
     oneMinutePath: rules.filter((rule) => rule.action === "show").slice(0, 4).map((rule) => rule.target),
     rules,
     operatorScript: shortText(
@@ -305,7 +305,7 @@ export function buildDemoConcierge(input: {
     },
     {
       id: "three-persona-lanes",
-      label: "Judge, buyer, and submitter lanes exist",
+      label: "Reviewer, buyer, and submitter lanes exist",
       status: userPilot.paths.length >= 3 ? "ready" : "blocked",
       proof: userPilot.paths.map((path) => path.persona).join(" / ")
     },
@@ -327,7 +327,7 @@ export function buildDemoConcierge(input: {
   const lanes: DemoConciergeLane[] = [
     {
       id: "judge",
-      persona: "初見審査員",
+      persona: "初見レビュー担当者",
       entryQuestion: "この作品の価値を90秒でどう判断すればよいですか？",
       firstClick: "Build command center",
       valueMoment: "Acceptance MatrixとRelease Driftで、MVPの核と外部URL不足を同時に確認できる。",
@@ -336,7 +336,7 @@ export function buildDemoConcierge(input: {
         {
           id: "judge-command",
           timeRange: "0-30s",
-          screen: "Judge Command Center",
+          screen: "Reviewer Command Center",
           click: "Build command center",
           say: command.openingMove,
           endpoint: absoluteUrl(normalizedBase, "/api/judge-command-center"),
@@ -420,7 +420,7 @@ export function buildDemoConcierge(input: {
   const frictionCuts = [
     {
       id: "feature-overload",
-      before: "機能一覧を上から説明し、初見審査員が価値判断の入口を失う。",
+      before: "機能一覧を上から説明し、初見レビュー担当者が価値判断の入口を失う。",
       after: "persona別のfirst clickを1つだけ提示し、次の証拠URLまで固定する。",
       proof: lanes.map((lane) => `${lane.persona}:${lane.firstClick}`).join(" / ")
     },
@@ -479,11 +479,11 @@ export function buildDemoConcierge(input: {
       {
         id: "feature-tour",
         cut: "機能一覧を順番に説明しない",
-        reason: "Judge Command Center、Acceptance Matrix、Battlecard、buyer proofだけを90秒に固定する。"
+        reason: "Reviewer Command Center、Acceptance Matrix、Battlecard、buyer proofだけを90秒に固定する。"
       },
       {
         id: "free-navigation",
-        cut: "審査員に自由探索させない",
+        cut: "レビュー担当者に自由探索させない",
         reason: "各stepがproof URL、成功シグナル、話す台詞を持つため、迷いを発生させない。"
       },
       {
@@ -507,8 +507,8 @@ export function buildDemoConcierge(input: {
     readiness === "needs-focus"
       ? successCriteria.find((item) => item.status === "blocked")?.label ?? "Fix blocked concierge criterion"
       : readiness === "external-watch"
-        ? "Open Demo Concierge, then show external URL watch rows honestly"
-        : "Open Demo Concierge and follow the judge lane";
+        ? "Open Reviewer Concierge, then show external URL watch rows honestly"
+        : "Open Reviewer Concierge and follow the reviewer lane";
 
   return {
     id: `demo-concierge-${conciergeScore}-${readiness}`,
@@ -519,9 +519,9 @@ export function buildDemoConcierge(input: {
         ? "最初の3分をpersona別の1クリック導線に固定できています。"
         : readiness === "external-watch"
           ? "価値導線は固定できています。外部提出URLだけwatchとして残します。"
-          : "初回導線にblocked証拠があります。先に審査員の最初のクリックを絞ります。",
+          : "初回導線にblocked証拠があります。先にレビュー担当者の最初のクリックを絞ります。",
     hardTruth:
-      "機能を増やすほど、審査員には迷いが増えます。勝つには、誰が来ても最初の1クリック、言う台詞、見る証拠URLを固定する必要があります。",
+      "機能を増やすほど、レビュー担当者には迷いが増えます。勝つには、誰が来ても最初の1クリック、言う台詞、見る証拠URLを固定する必要があります。",
     singleNextClick,
     routeLock,
     focusLock,

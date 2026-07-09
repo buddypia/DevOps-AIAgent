@@ -1,0 +1,14 @@
+export const SAMPLE_PILOT_RECEIPT_PATH = "/sample/pilot-run-receipt";
+export const SAMPLE_WORK_ORDER_PATH = "/sample/work-order-brief";
+export const SAMPLE_BUYER_BRIEF_PATH = "/sample/buyer-outcome-brief";
+export const SAMPLE_BUYER_TRACE_PATH = "/sample/buyer-evidence-trace";
+export const SAMPLE_PROCUREMENT_DECISION_PATH = "/sample/procurement-decision";
+export const SAMPLE_BUYER_PROOF_AUDIT_PATH = "/sample/buyer-proof-audit";
+export const SAMPLE_PROTOPEDIA_STORY_PATH = "/sample/protopedia-story";
+export const SAMPLE_WALKTHROUGH_VIDEO_PATH = "/sample/walkthrough-video";
+export const SAMPLE_AGENT_CARD_SHORTLIST_PATH = "/sample/agent-card-shortlist";
+export const SAMPLE_AGENT_CARD_TRIAL_PLAN_PATH = "/sample/agent-card-trial-plan";
+export const SAMPLE_AGENT_CARD_TRIAL_VERIFICATION_PATH = "/sample/agent-card-trial-verification";
+export const SAMPLE_AGENT_CARD_TRIAL_HANDOFF_PATH = "/sample/agent-card-trial-handoff";
+export const SAMPLE_AGENT_CARD_RELEASE_STEWARD_PATH = "/sample/agent-cards/release-steward.json";
+export const SAMPLE_AGENT_CARD_THIN_AGENT_PATH = "/sample/agent-cards/thin-agent.json";

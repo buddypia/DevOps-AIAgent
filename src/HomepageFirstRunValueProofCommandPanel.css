@@ -1,0 +1,2983 @@
+.homepage-first-run-value-proof {
+  width: min(780px, 100%);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(118px, 0.22fr);
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-left: 5px solid #b56576;
+  border-radius: 8px;
+  color: #fffdf7;
+  background:
+    linear-gradient(135deg, rgba(131, 182, 217, 0.16), rgba(184, 239, 212, 0.08)),
+    rgba(10, 19, 24, 0.74);
+  backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 rgba(255, 253, 247, 0.12);
+}
+
+.homepage-first-run-value-proof.is-ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-value-proof.is-attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-value-proof-main,
+.homepage-first-run-value-proof-score,
+.homepage-first-run-repair-summary,
+.homepage-first-run-critical-path,
+.homepage-first-run-critical-path-score,
+.homepage-first-run-critical-path-current,
+.homepage-first-run-critical-path-steps article,
+.homepage-first-run-external-verification,
+.homepage-first-run-external-verification-score,
+.homepage-first-run-external-verification-current,
+.homepage-first-run-external-verification-checks article,
+.homepage-first-run-meeting-brief,
+.homepage-first-run-meeting-brief-score,
+.homepage-first-run-meeting-brief-rule,
+.homepage-first-run-meeting-brief-agenda article,
+.homepage-first-run-question-board,
+.homepage-first-run-question-board-score,
+.homepage-first-run-question-board-current,
+.homepage-first-run-question-board-questions article,
+.homepage-first-run-approval-checklist,
+.homepage-first-run-approval-checklist-score,
+.homepage-first-run-approval-checklist-current,
+.homepage-first-run-approval-checklist-items article,
+.homepage-first-run-follow-up,
+.homepage-first-run-follow-up-score,
+.homepage-first-run-follow-up-subject,
+.homepage-first-run-follow-up-rule,
+.homepage-first-run-follow-up-steps article,
+.homepage-first-run-proof-closeout,
+.homepage-first-run-proof-closeout-score,
+.homepage-first-run-proof-closeout-target,
+.homepage-first-run-proof-closeout-rule,
+.homepage-first-run-proof-closeout-steps article,
+.homepage-first-run-value-proof-rules article,
+.homepage-first-run-live-proof-audit,
+.homepage-first-run-live-proof-audit-score,
+.homepage-first-run-live-proof-audit-rows article,
+.homepage-first-run-proof-repair-inputs,
+.homepage-first-run-proof-repair-inputs-fields label,
+.homepage-first-run-public-value-release,
+.homepage-first-run-public-value-release-score,
+.homepage-first-run-public-value-release-checks a,
+.homepage-first-run-reviewer-packet,
+.homepage-first-run-reviewer-packet-score,
+.homepage-first-run-reviewer-packet-copy,
+.homepage-first-run-reviewer-packet-proofs article,
+.homepage-first-run-repair-runbook,
+.homepage-first-run-repair-runbook-score,
+.homepage-first-run-repair-runbook-orders article,
+.homepage-first-run-submission-manifest,
+.homepage-first-run-submission-manifest-score,
+.homepage-first-run-submission-manifest-freshness,
+.homepage-first-run-submission-manifest-checks article,
+.homepage-first-run-decision-packet,
+.homepage-first-run-decision-packet-score,
+.homepage-first-run-decision-packet-claim,
+.homepage-first-run-decision-packet-blockers article,
+.homepage-first-run-public-repair-payoff,
+.homepage-first-run-public-repair-payoff-score,
+.homepage-first-run-public-repair-payoff-claim,
+.homepage-first-run-public-repair-payoff-actions-list article,
+.homepage-first-run-repair-impact-simulation,
+.homepage-first-run-repair-impact-simulation-score,
+.homepage-first-run-repair-impact-simulation-value,
+.homepage-first-run-repair-impact-simulation-rule,
+.homepage-first-run-repair-impact-simulation-checks article,
+.homepage-first-run-decision-rehearsal,
+.homepage-first-run-decision-rehearsal-score,
+.homepage-first-run-decision-rehearsal-rule,
+.homepage-first-run-decision-rehearsal-routes article,
+.homepage-first-run-repair-guide,
+.homepage-first-run-repair-guide-owner,
+.homepage-first-run-repair-guide-tasks article,
+.homepage-first-run-value-proof-receipts a,
+.homepage-first-run-value-proof-receipts button,
+.homepage-first-run-value-proof-checks a {
+  min-width: 0;
+}
+
+.homepage-first-run-value-proof-main {
+  display: grid;
+  gap: 6px;
+}
+
+.homepage-first-run-value-proof-main > span,
+.homepage-first-run-value-proof-score span,
+.homepage-first-run-repair-summary span,
+.homepage-first-run-critical-path span,
+.homepage-first-run-external-verification span,
+.homepage-first-run-meeting-brief span,
+.homepage-first-run-question-board span,
+.homepage-first-run-approval-checklist span,
+.homepage-first-run-follow-up span,
+.homepage-first-run-proof-closeout span,
+.homepage-first-run-value-proof-rules span,
+.homepage-first-run-live-proof-audit span,
+.homepage-first-run-proof-repair-inputs span,
+.homepage-first-run-public-value-release span,
+.homepage-first-run-reviewer-packet span,
+.homepage-first-run-repair-runbook span,
+.homepage-first-run-submission-manifest span,
+.homepage-first-run-submission-manifest-freshness span,
+.homepage-first-run-decision-packet span,
+.homepage-first-run-public-repair-payoff span,
+.homepage-first-run-repair-impact-simulation span,
+.homepage-first-run-decision-rehearsal span,
+.homepage-first-run-repair-guide span,
+.homepage-first-run-value-proof-receipts span,
+.homepage-first-run-value-proof-checks span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #b8efd4;
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.homepage-first-run-value-proof-main strong {
+  color: #fffdf7;
+  font-size: 1rem;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-repair-summary {
+  display: grid;
+  gap: 1px;
+  padding: 4px 7px;
+  border: 1px solid rgba(242, 184, 75, 0.3);
+  border-left: 4px solid #f2b84b;
+  border-radius: 8px;
+  background: rgba(242, 184, 75, 0.1);
+}
+
+.homepage-first-run-repair-summary strong {
+  color: #fffdf7;
+  font-size: 0.72rem;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-value-proof-main p,
+.homepage-first-run-value-proof-score small,
+.homepage-first-run-repair-summary small,
+.homepage-first-run-critical-path p,
+.homepage-first-run-critical-path small,
+.homepage-first-run-external-verification p,
+.homepage-first-run-external-verification small,
+.homepage-first-run-meeting-brief p,
+.homepage-first-run-meeting-brief small,
+.homepage-first-run-question-board p,
+.homepage-first-run-question-board small,
+.homepage-first-run-approval-checklist p,
+.homepage-first-run-approval-checklist small,
+.homepage-first-run-follow-up p,
+.homepage-first-run-follow-up small,
+.homepage-first-run-proof-closeout p,
+.homepage-first-run-proof-closeout small,
+.homepage-first-run-value-proof-rules p,
+.homepage-first-run-live-proof-audit p,
+.homepage-first-run-live-proof-audit small,
+.homepage-first-run-proof-repair-inputs p,
+.homepage-first-run-proof-repair-inputs small,
+.homepage-first-run-public-value-release p,
+.homepage-first-run-public-value-release small,
+.homepage-first-run-reviewer-packet p,
+.homepage-first-run-reviewer-packet small,
+.homepage-first-run-repair-runbook p,
+.homepage-first-run-repair-runbook small,
+.homepage-first-run-submission-manifest p,
+.homepage-first-run-submission-manifest small,
+.homepage-first-run-submission-manifest-freshness p,
+.homepage-first-run-submission-manifest-freshness small,
+.homepage-first-run-decision-packet p,
+.homepage-first-run-decision-packet small,
+.homepage-first-run-public-repair-payoff p,
+.homepage-first-run-public-repair-payoff small,
+.homepage-first-run-repair-impact-simulation p,
+.homepage-first-run-repair-impact-simulation small,
+.homepage-first-run-decision-rehearsal p,
+.homepage-first-run-decision-rehearsal small,
+.homepage-first-run-repair-guide p,
+.homepage-first-run-repair-guide small,
+.homepage-first-run-value-proof-receipts small,
+.homepage-first-run-value-proof-checks small {
+  margin: 0;
+  color: rgba(255, 253, 247, 0.68);
+  font-size: 0.7rem;
+  line-height: 1.24;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-value-proof-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-value-proof-primary,
+.homepage-first-run-value-proof-link {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.26);
+  border-radius: 999px;
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.homepage-first-run-value-proof-primary {
+  color: #102226;
+  background: #b8efd4;
+}
+
+.homepage-first-run-value-proof-link {
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.12);
+}
+
+.homepage-first-run-value-proof-link.is-confirmed {
+  border-color: rgba(184, 239, 212, 0.72);
+  background: rgba(184, 239, 212, 0.18);
+}
+
+.homepage-first-run-value-proof-link.is-risk {
+  border-color: rgba(181, 101, 118, 0.72);
+  background: rgba(181, 101, 118, 0.22);
+}
+
+.homepage-first-run-value-proof-primary:hover,
+.homepage-first-run-value-proof-primary:focus-visible,
+.homepage-first-run-value-proof-link:hover,
+.homepage-first-run-value-proof-link:focus-visible,
+.homepage-first-run-critical-path-actions button:hover,
+.homepage-first-run-critical-path-actions button:focus-visible,
+.homepage-first-run-critical-path-actions a:hover,
+.homepage-first-run-critical-path-actions a:focus-visible,
+.homepage-first-run-critical-path-steps a:hover,
+.homepage-first-run-critical-path-steps a:focus-visible,
+.homepage-first-run-external-verification-actions button:hover,
+.homepage-first-run-external-verification-actions button:focus-visible,
+.homepage-first-run-external-verification-actions a:hover,
+.homepage-first-run-external-verification-actions a:focus-visible,
+.homepage-first-run-external-verification-checks a:hover,
+.homepage-first-run-external-verification-checks a:focus-visible,
+.homepage-first-run-meeting-brief-actions button:hover,
+.homepage-first-run-meeting-brief-actions button:focus-visible,
+.homepage-first-run-meeting-brief-actions a:hover,
+.homepage-first-run-meeting-brief-actions a:focus-visible,
+.homepage-first-run-meeting-brief-agenda a:hover,
+.homepage-first-run-meeting-brief-agenda a:focus-visible,
+.homepage-first-run-question-board-actions button:hover,
+.homepage-first-run-question-board-actions button:focus-visible,
+.homepage-first-run-question-board-actions a:hover,
+.homepage-first-run-question-board-actions a:focus-visible,
+.homepage-first-run-question-board-questions a:hover,
+.homepage-first-run-question-board-questions a:focus-visible,
+.homepage-first-run-follow-up-actions button:hover,
+.homepage-first-run-follow-up-actions button:focus-visible,
+.homepage-first-run-follow-up-actions a:hover,
+.homepage-first-run-follow-up-actions a:focus-visible,
+.homepage-first-run-follow-up-steps a:hover,
+.homepage-first-run-follow-up-steps a:focus-visible,
+.homepage-first-run-proof-closeout-actions button:hover,
+.homepage-first-run-proof-closeout-actions button:focus-visible,
+.homepage-first-run-proof-closeout-actions a:hover,
+.homepage-first-run-proof-closeout-actions a:focus-visible,
+.homepage-first-run-proof-closeout-steps a:hover,
+.homepage-first-run-proof-closeout-steps a:focus-visible,
+.homepage-first-run-live-proof-audit-actions button:hover,
+.homepage-first-run-live-proof-audit-actions button:focus-visible,
+.homepage-first-run-live-proof-audit-actions a:hover,
+.homepage-first-run-live-proof-audit-actions a:focus-visible,
+.homepage-first-run-live-proof-audit-rows a:hover,
+.homepage-first-run-live-proof-audit-rows a:focus-visible,
+.homepage-first-run-public-value-release-actions button:hover,
+.homepage-first-run-public-value-release-actions button:focus-visible,
+.homepage-first-run-public-value-release-actions a:hover,
+.homepage-first-run-public-value-release-actions a:focus-visible,
+.homepage-first-run-public-value-release-checks a:hover,
+.homepage-first-run-public-value-release-checks a:focus-visible,
+.homepage-first-run-reviewer-packet-actions button:hover,
+.homepage-first-run-reviewer-packet-actions button:focus-visible,
+.homepage-first-run-reviewer-packet-actions a:hover,
+.homepage-first-run-reviewer-packet-actions a:focus-visible,
+.homepage-first-run-repair-runbook-actions button:hover,
+.homepage-first-run-repair-runbook-actions button:focus-visible,
+.homepage-first-run-repair-runbook-actions a:hover,
+.homepage-first-run-repair-runbook-actions a:focus-visible,
+.homepage-first-run-repair-runbook-orders a:hover,
+.homepage-first-run-repair-runbook-orders a:focus-visible,
+.homepage-first-run-submission-manifest-actions button:hover,
+.homepage-first-run-submission-manifest-actions button:focus-visible,
+.homepage-first-run-submission-manifest-actions a:hover,
+.homepage-first-run-submission-manifest-actions a:focus-visible,
+.homepage-first-run-submission-manifest-checks a:hover,
+.homepage-first-run-submission-manifest-checks a:focus-visible,
+.homepage-first-run-decision-packet-actions button:hover,
+.homepage-first-run-decision-packet-actions button:focus-visible,
+.homepage-first-run-decision-packet-actions a:hover,
+.homepage-first-run-decision-packet-actions a:focus-visible,
+.homepage-first-run-decision-packet-blockers a:hover,
+.homepage-first-run-decision-packet-blockers a:focus-visible,
+.homepage-first-run-public-repair-payoff-actions button:hover,
+.homepage-first-run-public-repair-payoff-actions button:focus-visible,
+.homepage-first-run-public-repair-payoff-actions a:hover,
+.homepage-first-run-public-repair-payoff-actions a:focus-visible,
+.homepage-first-run-public-repair-payoff-actions-list a:hover,
+.homepage-first-run-public-repair-payoff-actions-list a:focus-visible,
+.homepage-first-run-repair-impact-simulation-actions button:hover,
+.homepage-first-run-repair-impact-simulation-actions button:focus-visible,
+.homepage-first-run-repair-impact-simulation-actions a:hover,
+.homepage-first-run-repair-impact-simulation-actions a:focus-visible,
+.homepage-first-run-repair-impact-simulation-checks a:hover,
+.homepage-first-run-repair-impact-simulation-checks a:focus-visible,
+.homepage-first-run-decision-rehearsal-actions button:hover,
+.homepage-first-run-decision-rehearsal-actions button:focus-visible,
+.homepage-first-run-decision-rehearsal-actions a:hover,
+.homepage-first-run-decision-rehearsal-actions a:focus-visible,
+.homepage-first-run-decision-rehearsal-routes a:hover,
+.homepage-first-run-decision-rehearsal-routes a:focus-visible,
+.homepage-first-run-repair-guide-owner a:hover,
+.homepage-first-run-repair-guide-owner a:focus-visible,
+.homepage-first-run-repair-guide-actions a:hover,
+.homepage-first-run-repair-guide-actions a:focus-visible,
+.homepage-first-run-repair-guide-actions button:hover,
+.homepage-first-run-repair-guide-actions button:focus-visible,
+.homepage-first-run-repair-guide-tasks a:hover,
+.homepage-first-run-repair-guide-tasks a:focus-visible,
+.homepage-first-run-value-proof-receipts a:hover,
+.homepage-first-run-value-proof-receipts a:focus-visible,
+.homepage-first-run-value-proof-receipts button:hover,
+.homepage-first-run-value-proof-receipts button:focus-visible,
+.homepage-first-run-value-proof-checks a:hover,
+.homepage-first-run-value-proof-checks a:focus-visible {
+  outline: 2px solid rgba(255, 253, 247, 0.86);
+  outline-offset: 3px;
+}
+
+.homepage-first-run-value-proof-score {
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  padding: 9px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-value-proof-score strong {
+  color: #fffdf7;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.homepage-first-run-critical-path {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(134px, 0.24fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #b56576;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(184, 239, 212, 0.12), rgba(131, 182, 217, 0.08)),
+    rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-critical-path.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-critical-path.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-critical-path-head,
+.homepage-first-run-critical-path-score,
+.homepage-first-run-critical-path-current,
+.homepage-first-run-critical-path-steps article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-critical-path-head strong,
+.homepage-first-run-critical-path-score strong,
+.homepage-first-run-critical-path-current strong,
+.homepage-first-run-critical-path-steps strong {
+  color: #fffdf7;
+  font-size: 0.84rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-critical-path-score,
+.homepage-first-run-critical-path-current,
+.homepage-first-run-critical-path-steps article {
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-critical-path-score strong {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.homepage-first-run-critical-path-current,
+.homepage-first-run-critical-path-actions,
+.homepage-first-run-critical-path-steps {
+  grid-column: 1 / -1;
+}
+
+.homepage-first-run-critical-path-current {
+  border-left: 4px solid #b56576;
+}
+
+.homepage-first-run-critical-path.ready .homepage-first-run-critical-path-current {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-critical-path.attention .homepage-first-run-critical-path-current {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-critical-path-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-critical-path-actions button,
+.homepage-first-run-critical-path-actions a,
+.homepage-first-run-critical-path-steps a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.homepage-first-run-critical-path-actions button.is-confirmed {
+  border-color: rgba(184, 239, 212, 0.72);
+  background: rgba(184, 239, 212, 0.18);
+}
+
+.homepage-first-run-critical-path-actions button.is-risk {
+  border-color: rgba(181, 101, 118, 0.72);
+  background: rgba(181, 101, 118, 0.22);
+}
+
+.homepage-first-run-critical-path-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-critical-path-steps article {
+  border-top: 4px solid #b56576;
+}
+
+.homepage-first-run-critical-path-steps article.ready {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-critical-path-steps article.attention {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-external-verification {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(138px, 0.24fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #b56576;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(131, 182, 217, 0.14), rgba(184, 239, 212, 0.06)),
+    rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-external-verification.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-external-verification.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-external-verification-head,
+.homepage-first-run-external-verification-score,
+.homepage-first-run-external-verification-current,
+.homepage-first-run-external-verification-checks article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-external-verification-head strong,
+.homepage-first-run-external-verification-score strong,
+.homepage-first-run-external-verification-current strong,
+.homepage-first-run-external-verification-checks strong {
+  color: #fffdf7;
+  font-size: 0.84rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-external-verification-score,
+.homepage-first-run-external-verification-current,
+.homepage-first-run-external-verification-checks article {
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-external-verification-score strong {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.homepage-first-run-external-verification-current,
+.homepage-first-run-external-verification-rule,
+.homepage-first-run-external-verification-actions,
+.homepage-first-run-external-verification-checks {
+  grid-column: 1 / -1;
+}
+
+.homepage-first-run-external-verification-current {
+  border-left: 4px solid #b56576;
+}
+
+.homepage-first-run-external-verification.ready .homepage-first-run-external-verification-current {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-external-verification.attention .homepage-first-run-external-verification-current {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-external-verification-rule {
+  margin: 0;
+  padding: 7px 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  color: rgba(255, 253, 247, 0.78);
+  background: rgba(255, 253, 247, 0.08);
+  font-size: 0.7rem;
+  font-weight: 850;
+  line-height: 1.24;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-external-verification-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-external-verification-actions button,
+.homepage-first-run-external-verification-actions a,
+.homepage-first-run-external-verification-checks a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.homepage-first-run-external-verification-actions button.is-confirmed {
+  border-color: rgba(184, 239, 212, 0.72);
+  background: rgba(184, 239, 212, 0.18);
+}
+
+.homepage-first-run-external-verification-actions button.is-risk {
+  border-color: rgba(181, 101, 118, 0.72);
+  background: rgba(181, 101, 118, 0.22);
+}
+
+.homepage-first-run-external-verification-checks {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-external-verification-checks article {
+  border-top: 4px solid #b56576;
+}
+
+.homepage-first-run-external-verification-checks article.ready {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-external-verification-checks article.attention {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-meeting-brief {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(130px, 0.26fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-meeting-brief.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-meeting-brief.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-meeting-brief-head,
+.homepage-first-run-meeting-brief-score,
+.homepage-first-run-meeting-brief-rule,
+.homepage-first-run-meeting-brief-agenda article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-meeting-brief-head strong,
+.homepage-first-run-meeting-brief-score strong,
+.homepage-first-run-meeting-brief-rule strong,
+.homepage-first-run-meeting-brief-agenda strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-meeting-brief-score,
+.homepage-first-run-meeting-brief-rule,
+.homepage-first-run-meeting-brief-agenda article {
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-meeting-brief-score strong {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.homepage-first-run-meeting-brief-rule,
+.homepage-first-run-meeting-brief-actions,
+.homepage-first-run-meeting-brief-agenda {
+  grid-column: 1 / -1;
+}
+
+.homepage-first-run-meeting-brief-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-meeting-brief-actions button,
+.homepage-first-run-meeting-brief-actions a,
+.homepage-first-run-meeting-brief-agenda a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-decoration: none;
+}
+
+.homepage-first-run-meeting-brief-actions button.is-confirmed {
+  border-color: rgba(184, 239, 212, 0.72);
+  background: rgba(184, 239, 212, 0.18);
+}
+
+.homepage-first-run-meeting-brief-actions button.is-risk {
+  border-color: rgba(181, 101, 118, 0.72);
+  background: rgba(181, 101, 118, 0.22);
+}
+
+.homepage-first-run-meeting-brief-agenda {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-meeting-brief-agenda article {
+  border-top: 4px solid #b56576;
+}
+
+.homepage-first-run-meeting-brief-agenda article.ready {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-meeting-brief-agenda article.attention {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-question-board {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(130px, 0.26fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #b56576;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(131, 182, 217, 0.12), rgba(242, 184, 75, 0.07)),
+    rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-question-board.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-question-board.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-question-board-head,
+.homepage-first-run-question-board-score,
+.homepage-first-run-question-board-current,
+.homepage-first-run-question-board-questions article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-question-board-head strong,
+.homepage-first-run-question-board-score strong,
+.homepage-first-run-question-board-current strong,
+.homepage-first-run-question-board-questions strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-question-board-score,
+.homepage-first-run-question-board-current,
+.homepage-first-run-question-board-questions article {
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-question-board-score strong {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.homepage-first-run-question-board-current,
+.homepage-first-run-question-board-rule,
+.homepage-first-run-question-board-actions,
+.homepage-first-run-question-board-questions {
+  grid-column: 1 / -1;
+}
+
+.homepage-first-run-question-board-current {
+  border-left: 4px solid #b56576;
+}
+
+.homepage-first-run-question-board.ready .homepage-first-run-question-board-current {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-question-board.attention .homepage-first-run-question-board-current {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-question-board-rule {
+  margin: 0;
+  padding: 7px 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  color: rgba(255, 253, 247, 0.78);
+  background: rgba(255, 253, 247, 0.08);
+  font-size: 0.7rem;
+  font-weight: 850;
+  line-height: 1.24;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-question-board-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-question-board-actions button,
+.homepage-first-run-question-board-actions a,
+.homepage-first-run-question-board-questions a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.homepage-first-run-question-board-actions button.is-confirmed {
+  border-color: rgba(184, 239, 212, 0.72);
+  background: rgba(184, 239, 212, 0.18);
+}
+
+.homepage-first-run-question-board-actions button.is-risk {
+  border-color: rgba(181, 101, 118, 0.72);
+  background: rgba(181, 101, 118, 0.22);
+}
+
+.homepage-first-run-question-board-questions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-question-board-questions article {
+  border-top: 4px solid #b56576;
+}
+
+.homepage-first-run-question-board-questions article.ready {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-question-board-questions article.attention {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-approval-checklist {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(130px, 0.26fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #83b6d9;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(131, 182, 217, 0.14), rgba(184, 239, 212, 0.07)),
+    rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-approval-checklist.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-approval-checklist.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-approval-checklist-head,
+.homepage-first-run-approval-checklist-score,
+.homepage-first-run-approval-checklist-current,
+.homepage-first-run-approval-checklist-items article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-approval-checklist-head strong,
+.homepage-first-run-approval-checklist-score strong,
+.homepage-first-run-approval-checklist-current strong,
+.homepage-first-run-approval-checklist-items strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-approval-checklist-score,
+.homepage-first-run-approval-checklist-current,
+.homepage-first-run-approval-checklist-items article {
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-approval-checklist-score strong {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.homepage-first-run-approval-checklist-current,
+.homepage-first-run-approval-checklist-gate,
+.homepage-first-run-approval-checklist-actions,
+.homepage-first-run-approval-checklist-items {
+  grid-column: 1 / -1;
+}
+
+.homepage-first-run-approval-checklist-current {
+  border-left: 4px solid #b56576;
+}
+
+.homepage-first-run-approval-checklist.ready .homepage-first-run-approval-checklist-current {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-approval-checklist.attention .homepage-first-run-approval-checklist-current {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-approval-checklist-gate {
+  margin: 0;
+  padding: 7px 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  color: rgba(255, 253, 247, 0.78);
+  background: rgba(255, 253, 247, 0.08);
+  font-size: 0.7rem;
+  font-weight: 850;
+  line-height: 1.24;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-approval-checklist-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-approval-checklist-actions button,
+.homepage-first-run-approval-checklist-items a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.homepage-first-run-approval-checklist-actions button.is-confirmed {
+  border-color: rgba(184, 239, 212, 0.72);
+  background: rgba(184, 239, 212, 0.18);
+}
+
+.homepage-first-run-approval-checklist-actions button.is-risk {
+  border-color: rgba(181, 101, 118, 0.72);
+  background: rgba(181, 101, 118, 0.22);
+}
+
+.homepage-first-run-approval-checklist-items {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-approval-checklist-items article {
+  border-top: 4px solid #b56576;
+}
+
+.homepage-first-run-approval-checklist-items article.ready {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-approval-checklist-items article.attention {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-follow-up {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(130px, 0.26fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #b56576;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(184, 239, 212, 0.1), rgba(131, 182, 217, 0.07)),
+    rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-follow-up.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-follow-up.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-follow-up-head,
+.homepage-first-run-follow-up-score,
+.homepage-first-run-follow-up-subject,
+.homepage-first-run-follow-up-rule,
+.homepage-first-run-follow-up-attachments,
+.homepage-first-run-follow-up-attachments article,
+.homepage-first-run-follow-up-steps article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-follow-up-head strong,
+.homepage-first-run-follow-up-score strong,
+.homepage-first-run-follow-up-subject strong,
+.homepage-first-run-follow-up-rule strong,
+.homepage-first-run-follow-up-attachments strong,
+.homepage-first-run-follow-up-steps strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-follow-up-score,
+.homepage-first-run-follow-up-subject,
+.homepage-first-run-follow-up-rule,
+.homepage-first-run-follow-up-attachments,
+.homepage-first-run-follow-up-steps article {
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-follow-up-score strong {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.homepage-first-run-follow-up-subject,
+.homepage-first-run-follow-up-rule,
+.homepage-first-run-follow-up-attachments,
+.homepage-first-run-follow-up-actions,
+.homepage-first-run-follow-up-steps {
+  grid-column: 1 / -1;
+}
+
+.homepage-first-run-follow-up-attachments {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.homepage-first-run-follow-up-attachments > div {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 5px;
+}
+
+.homepage-first-run-follow-up-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-follow-up-actions button,
+.homepage-first-run-follow-up-actions a,
+.homepage-first-run-follow-up-attachments a,
+.homepage-first-run-follow-up-steps a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.homepage-first-run-follow-up-actions button.is-confirmed {
+  border-color: rgba(184, 239, 212, 0.72);
+  background: rgba(184, 239, 212, 0.18);
+}
+
+.homepage-first-run-follow-up-actions button.is-risk {
+  border-color: rgba(181, 101, 118, 0.72);
+  background: rgba(181, 101, 118, 0.22);
+}
+
+.homepage-first-run-follow-up-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-follow-up-steps article {
+  border-top: 4px solid #b56576;
+}
+
+.homepage-first-run-follow-up-attachments article {
+  border-top: 4px solid #b56576;
+}
+
+.homepage-first-run-follow-up-steps article.ready {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-follow-up-attachments article.ready {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-follow-up-steps article.attention {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-follow-up-attachments article.attention {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-proof-closeout {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(130px, 0.26fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #b56576;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(131, 182, 217, 0.12), rgba(184, 239, 212, 0.06)),
+    rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-proof-closeout.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-proof-closeout.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-proof-closeout-head,
+.homepage-first-run-proof-closeout-score,
+.homepage-first-run-proof-closeout-target,
+.homepage-first-run-proof-closeout-rule,
+.homepage-first-run-proof-closeout-steps article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-proof-closeout-head strong,
+.homepage-first-run-proof-closeout-score strong,
+.homepage-first-run-proof-closeout-target strong,
+.homepage-first-run-proof-closeout-rule strong,
+.homepage-first-run-proof-closeout-steps strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-proof-closeout-score,
+.homepage-first-run-proof-closeout-target,
+.homepage-first-run-proof-closeout-rule,
+.homepage-first-run-proof-closeout-steps article {
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-proof-closeout-score strong {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.homepage-first-run-proof-closeout-target,
+.homepage-first-run-proof-closeout-rule,
+.homepage-first-run-proof-closeout-actions,
+.homepage-first-run-proof-closeout-steps {
+  grid-column: 1 / -1;
+}
+
+.homepage-first-run-proof-closeout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-proof-closeout-actions button,
+.homepage-first-run-proof-closeout-actions a,
+.homepage-first-run-proof-closeout-steps a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.homepage-first-run-proof-closeout-actions button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.homepage-first-run-proof-closeout-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-proof-closeout-steps article {
+  border-top: 4px solid #b56576;
+}
+
+.homepage-first-run-proof-closeout-steps article.ready {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-proof-closeout-steps article.attention {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-value-proof-rules {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 6px;
+}
+
+.homepage-first-run-value-proof-rules article {
+  display: grid;
+  gap: 5px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-live-proof-audit {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(118px, 0.28fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-live-proof-audit.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-live-proof-audit.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-live-proof-audit-head,
+.homepage-first-run-live-proof-audit-score,
+.homepage-first-run-live-proof-audit-rows article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-live-proof-audit-head strong,
+.homepage-first-run-live-proof-audit-score strong,
+.homepage-first-run-live-proof-audit-rows strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-live-proof-audit-score {
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-live-proof-audit-score strong {
+  font-size: 1.16rem;
+  line-height: 1;
+}
+
+.homepage-first-run-live-proof-audit-next {
+  grid-column: 1 / -1;
+  padding: 7px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-live-proof-audit-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-live-proof-audit-actions button,
+.homepage-first-run-live-proof-audit-actions a,
+.homepage-first-run-live-proof-audit-rows a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.homepage-first-run-live-proof-audit-actions button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.homepage-first-run-live-proof-audit-rows {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-live-proof-audit-rows article {
+  padding: 7px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-top: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-live-proof-audit-rows article.pass {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-live-proof-audit-rows article.watch {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-proof-repair-inputs {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 7px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #83b6d9;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-proof-repair-inputs-head,
+.homepage-first-run-proof-repair-inputs-fields label {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-proof-repair-inputs-head strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-proof-repair-inputs-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-proof-repair-inputs-fields label {
+  padding: 7px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-top: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-proof-repair-inputs-fields label.pass {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-proof-repair-inputs-fields label.watch {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-proof-repair-inputs-fields input {
+  width: 100%;
+  min-width: 0;
+  min-height: 30px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 8px;
+  padding: 5px 7px;
+  color: #fffdf7;
+  background: rgba(10, 19, 24, 0.5);
+  font: inherit;
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+.homepage-first-run-proof-repair-inputs-fields input::placeholder {
+  color: rgba(255, 253, 247, 0.42);
+}
+
+.homepage-first-run-proof-repair-inputs-fields input:focus-visible {
+  border-color: rgba(184, 239, 212, 0.76);
+  outline: 2px solid rgba(184, 239, 212, 0.32);
+  outline-offset: 2px;
+}
+
+.homepage-first-run-public-value-release {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(126px, 0.3fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-public-value-release.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-public-value-release.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-public-value-release-head,
+.homepage-first-run-public-value-release-score,
+.homepage-first-run-public-value-release-checks a {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-public-value-release-head strong,
+.homepage-first-run-public-value-release-score strong,
+.homepage-first-run-public-value-release-checks strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-public-value-release-score {
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-public-value-release-score strong {
+  font-size: 1.14rem;
+  line-height: 1;
+}
+
+.homepage-first-run-public-value-release-rule {
+  grid-column: 1 / -1;
+  padding: 7px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-public-value-release-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-public-value-release-actions button,
+.homepage-first-run-public-value-release-actions a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.homepage-first-run-public-value-release-actions button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.homepage-first-run-public-value-release-checks {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-public-value-release-checks a {
+  min-height: 112px;
+  padding: 7px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-top: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+  text-decoration: none;
+}
+
+.homepage-first-run-public-value-release-checks a.ready {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-public-value-release-checks a.attention {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-reviewer-packet {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(132px, 0.28fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-reviewer-packet.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-reviewer-packet.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-reviewer-packet-head,
+.homepage-first-run-reviewer-packet-score,
+.homepage-first-run-reviewer-packet-copy,
+.homepage-first-run-reviewer-packet-proofs article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-reviewer-packet-head strong,
+.homepage-first-run-reviewer-packet-score strong,
+.homepage-first-run-reviewer-packet-copy strong,
+.homepage-first-run-reviewer-packet-proofs strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-reviewer-packet-score,
+.homepage-first-run-reviewer-packet-copy {
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-reviewer-packet-score strong {
+  font-size: 1.02rem;
+  line-height: 1;
+}
+
+.homepage-first-run-reviewer-packet-copy {
+  grid-column: 1 / -1;
+}
+
+.homepage-first-run-reviewer-packet-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-reviewer-packet-actions button,
+.homepage-first-run-reviewer-packet-actions a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.homepage-first-run-reviewer-packet-actions button.is-confirmed {
+  border-color: rgba(184, 239, 212, 0.72);
+  background: rgba(184, 239, 212, 0.18);
+}
+
+.homepage-first-run-reviewer-packet-actions button.is-risk {
+  border-color: rgba(181, 101, 118, 0.72);
+  background: rgba(181, 101, 118, 0.22);
+}
+
+.homepage-first-run-reviewer-packet-proofs {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-reviewer-packet-proofs article {
+  min-height: 112px;
+  padding: 7px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-top: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-reviewer-packet-proofs article.pass {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-reviewer-packet-proofs article.watch {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-repair-runbook {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(132px, 0.28fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-repair-runbook.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-repair-runbook.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-repair-runbook-head,
+.homepage-first-run-repair-runbook-score,
+.homepage-first-run-repair-runbook-orders article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-repair-runbook-head strong,
+.homepage-first-run-repair-runbook-score strong,
+.homepage-first-run-repair-runbook-orders strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-repair-runbook-score {
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-repair-runbook-score strong {
+  font-size: 1.14rem;
+  line-height: 1;
+}
+
+.homepage-first-run-repair-runbook-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-repair-runbook-actions button,
+.homepage-first-run-repair-runbook-actions a,
+.homepage-first-run-repair-runbook-orders a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.homepage-first-run-repair-runbook-actions button.is-confirmed {
+  border-color: rgba(184, 239, 212, 0.72);
+  background: rgba(184, 239, 212, 0.18);
+}
+
+.homepage-first-run-repair-runbook-actions button.is-risk {
+  border-color: rgba(181, 101, 118, 0.72);
+  background: rgba(181, 101, 118, 0.22);
+}
+
+.homepage-first-run-repair-runbook-orders {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-repair-runbook-orders article {
+  min-height: 142px;
+  padding: 7px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-top: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-repair-runbook-orders article.next {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-repair-runbook-orders article.monitor {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-submission-manifest {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(132px, 0.28fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-submission-manifest.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-submission-manifest.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-submission-manifest-head,
+.homepage-first-run-submission-manifest-score,
+.homepage-first-run-submission-manifest-checks article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-submission-manifest-head strong,
+.homepage-first-run-submission-manifest-score strong,
+.homepage-first-run-submission-manifest-checks strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-submission-manifest-score {
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-submission-manifest-score strong {
+  font-size: 1.14rem;
+  line-height: 1;
+}
+
+.homepage-first-run-submission-manifest-next {
+  grid-column: 1 / -1;
+  padding: 7px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.07);
+}
+
+.homepage-first-run-submission-manifest-freshness {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(150px, 0.45fr) repeat(3, minmax(0, 1fr));
+  gap: 5px 8px;
+  align-items: start;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-left: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-submission-manifest-freshness.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-submission-manifest-freshness.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-submission-manifest-freshness strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-submission-manifest-freshness p {
+  grid-column: 1 / -1;
+}
+
+.homepage-first-run-submission-manifest-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-submission-manifest-actions button,
+.homepage-first-run-submission-manifest-actions a,
+.homepage-first-run-submission-manifest-checks a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.homepage-first-run-submission-manifest-actions button.is-confirmed {
+  border-color: rgba(184, 239, 212, 0.72);
+  background: rgba(184, 239, 212, 0.18);
+}
+
+.homepage-first-run-submission-manifest-actions button.is-risk {
+  border-color: rgba(181, 101, 118, 0.72);
+  background: rgba(181, 101, 118, 0.22);
+}
+
+.homepage-first-run-submission-manifest-checks {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-submission-manifest-checks article {
+  min-height: 148px;
+  padding: 7px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-top: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-submission-manifest-checks article.ready {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-submission-manifest-checks article.attention {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-decision-packet {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(132px, 0.28fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-decision-packet.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-decision-packet.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-decision-packet-head,
+.homepage-first-run-decision-packet-score,
+.homepage-first-run-decision-packet-claim,
+.homepage-first-run-decision-packet-blockers article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-decision-packet-head strong,
+.homepage-first-run-decision-packet-score strong,
+.homepage-first-run-decision-packet-claim strong,
+.homepage-first-run-decision-packet-blockers strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-decision-packet-score,
+.homepage-first-run-decision-packet-claim {
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-decision-packet-score strong {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.homepage-first-run-decision-packet-claim {
+  grid-column: 1 / -1;
+}
+
+.homepage-first-run-decision-packet-next {
+  grid-column: 1 / -1;
+  padding: 7px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.07);
+}
+
+.homepage-first-run-decision-packet-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-decision-packet-actions button,
+.homepage-first-run-decision-packet-actions a,
+.homepage-first-run-decision-packet-blockers a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.homepage-first-run-decision-packet-actions button.is-confirmed {
+  border-color: rgba(184, 239, 212, 0.72);
+  background: rgba(184, 239, 212, 0.18);
+}
+
+.homepage-first-run-decision-packet-actions button.is-risk {
+  border-color: rgba(181, 101, 118, 0.72);
+  background: rgba(181, 101, 118, 0.22);
+}
+
+.homepage-first-run-decision-packet-blockers {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-decision-packet-blockers article {
+  min-height: 118px;
+  padding: 7px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-top: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-decision-packet-blockers article.ready {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-decision-packet-blockers article.attention {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-public-repair-payoff {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(142px, 0.3fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-public-repair-payoff.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-public-repair-payoff.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-public-repair-payoff-head,
+.homepage-first-run-public-repair-payoff-score,
+.homepage-first-run-public-repair-payoff-claim,
+.homepage-first-run-public-repair-payoff-actions-list article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-public-repair-payoff-head strong,
+.homepage-first-run-public-repair-payoff-score strong,
+.homepage-first-run-public-repair-payoff-claim strong,
+.homepage-first-run-public-repair-payoff-actions-list strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-public-repair-payoff-score,
+.homepage-first-run-public-repair-payoff-claim {
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-public-repair-payoff-score strong {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.homepage-first-run-public-repair-payoff-claim {
+  grid-column: 1 / -1;
+}
+
+.homepage-first-run-public-repair-payoff-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-public-repair-payoff-actions button,
+.homepage-first-run-public-repair-payoff-actions a,
+.homepage-first-run-public-repair-payoff-actions-list a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.homepage-first-run-public-repair-payoff-actions button.is-confirmed {
+  border-color: rgba(184, 239, 212, 0.72);
+  background: rgba(184, 239, 212, 0.18);
+}
+
+.homepage-first-run-public-repair-payoff-actions button.is-risk {
+  border-color: rgba(181, 101, 118, 0.72);
+  background: rgba(181, 101, 118, 0.22);
+}
+
+.homepage-first-run-public-repair-payoff-actions-list {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-public-repair-payoff-actions-list article {
+  min-height: 132px;
+  padding: 7px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-top: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-public-repair-payoff-actions-list article.ready {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-public-repair-payoff-actions-list article.attention {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-repair-impact-simulation {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(142px, 0.3fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-repair-impact-simulation.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-repair-impact-simulation.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-repair-impact-simulation-head,
+.homepage-first-run-repair-impact-simulation-score,
+.homepage-first-run-repair-impact-simulation-value,
+.homepage-first-run-repair-impact-simulation-rule,
+.homepage-first-run-repair-impact-simulation-acceptance,
+.homepage-first-run-repair-impact-simulation-acceptance li,
+.homepage-first-run-repair-impact-simulation-checks article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-repair-impact-simulation-head strong,
+.homepage-first-run-repair-impact-simulation-score strong,
+.homepage-first-run-repair-impact-simulation-value strong,
+.homepage-first-run-repair-impact-simulation-rule strong,
+.homepage-first-run-repair-impact-simulation-acceptance strong,
+.homepage-first-run-repair-impact-simulation-checks strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-repair-impact-simulation-score,
+.homepage-first-run-repair-impact-simulation-value,
+.homepage-first-run-repair-impact-simulation-rule,
+.homepage-first-run-repair-impact-simulation-acceptance {
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-repair-impact-simulation-score strong {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.homepage-first-run-repair-impact-simulation-acceptance {
+  grid-column: 1 / -1;
+}
+
+.homepage-first-run-repair-impact-simulation-acceptance > div {
+  display: grid;
+  gap: 5px;
+}
+
+.homepage-first-run-repair-impact-simulation-acceptance > div span,
+.homepage-first-run-repair-impact-simulation-acceptance li span {
+  width: fit-content;
+  max-width: 100%;
+  color: #b8efd4;
+  font-size: 0.6rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.homepage-first-run-repair-impact-simulation-acceptance ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.homepage-first-run-repair-impact-simulation-acceptance li {
+  min-height: 132px;
+  padding: 7px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-top: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-repair-impact-simulation-acceptance li.attention {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-repair-impact-simulation-acceptance li.ready,
+.homepage-first-run-repair-impact-simulation-acceptance li.selected {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-repair-impact-simulation-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-repair-impact-simulation-actions button,
+.homepage-first-run-repair-impact-simulation-actions a,
+.homepage-first-run-repair-impact-simulation-acceptance a,
+.homepage-first-run-repair-impact-simulation-checks a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.homepage-first-run-repair-impact-simulation-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+.homepage-first-run-repair-impact-simulation-actions button.is-confirmed {
+  border-color: rgba(184, 239, 212, 0.72);
+  background: rgba(184, 239, 212, 0.18);
+}
+
+.homepage-first-run-repair-impact-simulation-actions button.is-risk {
+  border-color: rgba(181, 101, 118, 0.72);
+  background: rgba(181, 101, 118, 0.22);
+}
+
+.homepage-first-run-repair-impact-simulation-checks {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-repair-impact-simulation-checks article {
+  min-height: 138px;
+  padding: 7px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-top: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-repair-impact-simulation-checks article.ready,
+.homepage-first-run-repair-impact-simulation-checks article.selected {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-repair-impact-simulation-checks article.attention {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-repair-impact-simulation-checks label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px 7px;
+  cursor: pointer;
+}
+
+.homepage-first-run-repair-impact-simulation-checks input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: #b8efd4;
+}
+
+.homepage-first-run-repair-impact-simulation-checks label strong {
+  flex-basis: 100%;
+}
+
+.homepage-first-run-decision-rehearsal {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(142px, 0.3fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-decision-rehearsal.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-decision-rehearsal.attention {
+  border-left-color: #f2b84b;
+}
+
+.homepage-first-run-decision-rehearsal-head,
+.homepage-first-run-decision-rehearsal-score,
+.homepage-first-run-decision-rehearsal-rule,
+.homepage-first-run-decision-rehearsal-routes article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-decision-rehearsal-head strong,
+.homepage-first-run-decision-rehearsal-score strong,
+.homepage-first-run-decision-rehearsal-rule strong,
+.homepage-first-run-decision-rehearsal-routes strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-decision-rehearsal-score,
+.homepage-first-run-decision-rehearsal-rule {
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-decision-rehearsal-score strong {
+  font-size: 1rem;
+  line-height: 1;
+  text-transform: capitalize;
+}
+
+.homepage-first-run-decision-rehearsal-rule {
+  grid-column: 1 / -1;
+}
+
+.homepage-first-run-decision-rehearsal-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-decision-rehearsal-actions button,
+.homepage-first-run-decision-rehearsal-actions a,
+.homepage-first-run-decision-rehearsal-routes a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.homepage-first-run-decision-rehearsal-actions button.is-confirmed {
+  border-color: rgba(184, 239, 212, 0.72);
+  background: rgba(184, 239, 212, 0.18);
+}
+
+.homepage-first-run-decision-rehearsal-actions button.is-risk {
+  border-color: rgba(181, 101, 118, 0.72);
+  background: rgba(181, 101, 118, 0.22);
+}
+
+.homepage-first-run-decision-rehearsal-routes {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-decision-rehearsal-routes article {
+  min-height: 128px;
+  padding: 7px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-top: 4px solid #b56576;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-decision-rehearsal-routes article.ready {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-decision-rehearsal-routes article.attention {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-repair-guide {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(150px, 0.65fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.16);
+  border-left: 4px solid #f2b84b;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-repair-guide.blocked {
+  border-left-color: #b56576;
+}
+
+.homepage-first-run-repair-guide.ready {
+  border-left-color: #77a06a;
+}
+
+.homepage-first-run-repair-guide-head,
+.homepage-first-run-repair-guide-owner {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+}
+
+.homepage-first-run-repair-guide-head strong,
+.homepage-first-run-repair-guide-owner strong,
+.homepage-first-run-repair-guide-tasks strong {
+  color: #fffdf7;
+  font-size: 0.82rem;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.homepage-first-run-repair-guide-owner a,
+.homepage-first-run-repair-guide-actions a,
+.homepage-first-run-repair-guide-actions button,
+.homepage-first-run-repair-guide-tasks a {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 247, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.1);
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.homepage-first-run-repair-guide-owner a {
+  color: #102226;
+  background: #f2b84b;
+}
+
+.homepage-first-run-repair-guide-stats {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-repair-guide-stats b {
+  display: block;
+  color: #fffdf7;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.homepage-first-run-repair-guide-rule {
+  grid-column: 1 / -1;
+  padding: 7px;
+  border: 1px solid rgba(242, 184, 75, 0.3);
+  border-radius: 8px;
+  background: rgba(242, 184, 75, 0.1);
+}
+
+.homepage-first-run-repair-guide-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.homepage-first-run-repair-guide-tasks {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.homepage-first-run-repair-guide-tasks article {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  padding: 7px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-top: 4px solid #f2b84b;
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.08);
+}
+
+.homepage-first-run-repair-guide-tasks article.now {
+  border-top-color: #b56576;
+}
+
+.homepage-first-run-value-proof-receipts,
+.homepage-first-run-value-proof-checks {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
+}
+
+.homepage-first-run-value-proof-receipts {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.homepage-first-run-value-proof-checks {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.homepage-first-run-value-proof-receipts a,
+.homepage-first-run-value-proof-receipts button,
+.homepage-first-run-value-proof-checks a {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid rgba(255, 253, 247, 0.14);
+  border-top: 4px solid #b56576;
+  border-radius: 8px;
+  color: inherit;
+  background: rgba(255, 253, 247, 0.08);
+  text-decoration: none;
+}
+
+.homepage-first-run-value-proof-receipts a,
+.homepage-first-run-value-proof-receipts button {
+  border-top-color: #83b6d9;
+}
+
+.homepage-first-run-value-proof-checks a.ready {
+  border-top-color: #77a06a;
+}
+
+.homepage-first-run-value-proof-checks a.attention {
+  border-top-color: #f2b84b;
+}
+
+.homepage-first-run-value-proof-receipts strong,
+.homepage-first-run-value-proof-checks strong {
+  color: #fffdf7;
+  font-size: 0.78rem;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+.homepage-first-run-value-proof {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-critical-path {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-external-verification {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-meeting-brief {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-question-board {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-approval-checklist {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-follow-up {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-proof-closeout {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-live-proof-audit {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-public-value-release {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-reviewer-packet {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-repair-runbook {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-submission-manifest {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-submission-manifest-freshness {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .homepage-first-run-decision-packet {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-public-repair-payoff {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-repair-impact-simulation {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-decision-rehearsal {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-repair-guide {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-value-proof-rules,
+  .homepage-first-run-value-proof-receipts,
+  .homepage-first-run-critical-path-steps,
+  .homepage-first-run-external-verification-checks,
+  .homepage-first-run-meeting-brief-agenda,
+  .homepage-first-run-question-board-questions,
+  .homepage-first-run-approval-checklist-items,
+  .homepage-first-run-follow-up-attachments,
+  .homepage-first-run-follow-up-steps,
+  .homepage-first-run-proof-closeout-steps,
+  .homepage-first-run-live-proof-audit-rows,
+  .homepage-first-run-proof-repair-inputs-fields,
+  .homepage-first-run-public-value-release-checks,
+  .homepage-first-run-reviewer-packet-proofs,
+  .homepage-first-run-repair-runbook-orders,
+  .homepage-first-run-submission-manifest-checks,
+  .homepage-first-run-decision-packet-blockers,
+  .homepage-first-run-public-repair-payoff-actions-list,
+  .homepage-first-run-repair-impact-simulation-acceptance ol,
+  .homepage-first-run-repair-impact-simulation-checks,
+  .homepage-first-run-decision-rehearsal-routes,
+  .homepage-first-run-repair-guide-tasks,
+  .homepage-first-run-value-proof-checks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+.homepage-first-run-value-proof {
+    padding: 9px;
+  }
+
+  .homepage-first-run-value-proof-actions,
+  .homepage-first-run-value-proof-rules,
+  .homepage-first-run-value-proof-receipts,
+  .homepage-first-run-critical-path-actions,
+  .homepage-first-run-critical-path-steps,
+  .homepage-first-run-external-verification-actions,
+  .homepage-first-run-external-verification-checks,
+  .homepage-first-run-meeting-brief-actions,
+  .homepage-first-run-meeting-brief-agenda,
+  .homepage-first-run-question-board-actions,
+  .homepage-first-run-question-board-questions,
+  .homepage-first-run-approval-checklist-actions,
+  .homepage-first-run-approval-checklist-items,
+  .homepage-first-run-follow-up-actions,
+  .homepage-first-run-follow-up-attachments,
+  .homepage-first-run-follow-up-steps,
+  .homepage-first-run-proof-closeout-actions,
+  .homepage-first-run-proof-closeout-steps,
+  .homepage-first-run-live-proof-audit-actions,
+  .homepage-first-run-live-proof-audit-rows,
+  .homepage-first-run-proof-repair-inputs-fields,
+  .homepage-first-run-public-value-release-actions,
+  .homepage-first-run-public-value-release-checks,
+  .homepage-first-run-reviewer-packet-actions,
+  .homepage-first-run-reviewer-packet-proofs,
+  .homepage-first-run-repair-runbook-actions,
+  .homepage-first-run-repair-runbook-orders,
+  .homepage-first-run-submission-manifest-actions,
+  .homepage-first-run-submission-manifest-checks,
+  .homepage-first-run-decision-packet-actions,
+  .homepage-first-run-decision-packet-blockers,
+  .homepage-first-run-public-repair-payoff-actions,
+  .homepage-first-run-public-repair-payoff-actions-list,
+  .homepage-first-run-repair-impact-simulation-actions,
+  .homepage-first-run-repair-impact-simulation-acceptance ol,
+  .homepage-first-run-repair-impact-simulation-checks,
+  .homepage-first-run-decision-rehearsal-actions,
+  .homepage-first-run-decision-rehearsal-routes,
+  .homepage-first-run-repair-guide-actions,
+  .homepage-first-run-repair-guide-stats,
+  .homepage-first-run-repair-guide-tasks,
+  .homepage-first-run-value-proof-checks {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-submission-manifest-freshness {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-first-run-value-proof-primary,
+  .homepage-first-run-value-proof-link,
+  .homepage-first-run-critical-path-actions button,
+  .homepage-first-run-critical-path-actions a,
+  .homepage-first-run-critical-path-steps a,
+  .homepage-first-run-external-verification-actions button,
+  .homepage-first-run-external-verification-actions a,
+  .homepage-first-run-external-verification-checks a,
+  .homepage-first-run-meeting-brief-actions button,
+  .homepage-first-run-meeting-brief-actions a,
+  .homepage-first-run-meeting-brief-agenda a,
+  .homepage-first-run-question-board-actions button,
+  .homepage-first-run-question-board-actions a,
+  .homepage-first-run-question-board-questions a,
+  .homepage-first-run-approval-checklist-actions button,
+  .homepage-first-run-approval-checklist-items a,
+  .homepage-first-run-follow-up-actions button,
+  .homepage-first-run-follow-up-actions a,
+  .homepage-first-run-follow-up-attachments a,
+  .homepage-first-run-follow-up-steps a,
+  .homepage-first-run-proof-closeout-actions button,
+  .homepage-first-run-proof-closeout-actions a,
+  .homepage-first-run-proof-closeout-steps a,
+  .homepage-first-run-live-proof-audit-actions button,
+  .homepage-first-run-live-proof-audit-actions a,
+  .homepage-first-run-live-proof-audit-rows a,
+  .homepage-first-run-public-value-release-actions button,
+  .homepage-first-run-public-value-release-actions a,
+  .homepage-first-run-reviewer-packet-actions button,
+  .homepage-first-run-reviewer-packet-actions a,
+  .homepage-first-run-repair-runbook-actions button,
+  .homepage-first-run-repair-runbook-actions a,
+  .homepage-first-run-repair-runbook-orders a,
+  .homepage-first-run-submission-manifest-actions button,
+  .homepage-first-run-submission-manifest-actions a,
+  .homepage-first-run-submission-manifest-checks a,
+  .homepage-first-run-decision-packet-actions button,
+  .homepage-first-run-decision-packet-actions a,
+  .homepage-first-run-decision-packet-blockers a,
+  .homepage-first-run-public-repair-payoff-actions button,
+  .homepage-first-run-public-repair-payoff-actions a,
+  .homepage-first-run-public-repair-payoff-actions-list a,
+  .homepage-first-run-repair-impact-simulation-actions button,
+  .homepage-first-run-repair-impact-simulation-actions a,
+  .homepage-first-run-repair-impact-simulation-checks a,
+  .homepage-first-run-decision-rehearsal-actions button,
+  .homepage-first-run-decision-rehearsal-actions a,
+  .homepage-first-run-decision-rehearsal-routes a,
+  .homepage-first-run-repair-guide-owner a,
+  .homepage-first-run-repair-guide-actions a,
+  .homepage-first-run-repair-guide-actions button,
+  .homepage-first-run-repair-guide-tasks a {
+    width: 100%;
+    white-space: normal;
+  }
+}

@@ -920,7 +920,7 @@ export function buildPrizeStrategyBoard(input: {
       weakest && weakest.delta > 0
         ? `${weakest.label} is the next scoring lever: ${weakest.nextAction}`
         : criteriaLock.readiness === "criteria-external-watch"
-          ? "All five judging criteria have winner-ready proof; only ProtoPedia and demo video URLs remain external watch rows."
+          ? "All five judging criteria have winner-ready proof; only ProtoPedia and walkthrough video URLs remain external watch rows."
           : "All five judging criteria have winner-ready proof; rerun Release Drift and seal the submission URLs before final submission.",
     a2aPayload: {
       method: "message/send",

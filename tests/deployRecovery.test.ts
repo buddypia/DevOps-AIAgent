@@ -144,6 +144,7 @@ describe("deploy recovery plan", () => {
     expect(plan.commands.find((command) => command.id === "verify-a2a-artifact")?.command).toContain("publisherPageEndpoint");
     expect(plan.commands.find((command) => command.id === "verify-a2a-artifact")?.command).toContain("dossierPageEndpoint");
     expect(plan.commands.find((command) => command.id === "verify-a2a-artifact")?.command).toContain("competitiveDecisionMatrixPageEndpoint");
+    expect(plan.commands.find((command) => command.id === "verify-a2a-artifact")?.command).toContain("submissionAssetsJsonEndpoint");
     expect(plan.blockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["gcloud-auth", "agent-card-skill-surface"]));
     expect(plan.blockers.find((blocker) => blocker.id === "gcloud-auth")?.action).toContain("bootstrap script");
     expect(plan.judgeScript.join("\n")).toContain("GitHub Actions deploy workflow");
@@ -192,6 +193,40 @@ describe("deploy recovery plan", () => {
     expect(plan.recoveryScore).toBe(100);
     expect(plan.checks.find((check) => check.id === "skill-surface")?.status).toBe("ready");
     expect(plan.blockers).toHaveLength(0);
+  });
+
+  test("labels the fast first-click proof mode without pretending it ran live drift", () => {
+    const releaseDrift = buildReleaseDriftGuard({
+      currentBaseUrl: "http://localhost:8080",
+      targetBaseUrl: SUBMISSION_PROOF.deployedUrl,
+      expectedSkillIds,
+      observedSkillIds: expectedSkillIds,
+      requiredSkillIds: expectedSkillIds,
+      requiredAgentCardSignals,
+      observedAgentCardSignals: requiredAgentCardSignals,
+      generatedAt: "2026-06-18T00:00:00.000Z",
+      probes: [
+        passedProbe("target-health"),
+        passedProbe("agent-card-skill-surface"),
+        passedProbe("deploy-recovery-page"),
+        passedProbe("ci-main")
+      ]
+    });
+
+    const plan = buildDeployRecoveryPlan({
+      baseUrl: "http://localhost:8080",
+      releaseDrift,
+      mode: "fast-proof"
+    });
+
+    expect(plan.mode).toBe("fast-proof");
+    expect(plan.headline).toContain("proof page");
+    expect(plan.hardTruth).toContain("?live=1");
+    expect(plan.primaryAction).toContain("/deploy-recovery?live=1");
+    expect(plan.a2aPayload).toMatchObject({
+      skill: "deploy.recover",
+      mode: "fast-proof"
+    });
   });
 
   test("surfaces missing Agent Card signals as deploy blockers", () => {

@@ -268,7 +268,7 @@ export function buildFinalSubmissionRunway(input: {
 
   const videoTrack = track({
     id: "demo-video",
-    label: "Demo video",
+    label: "Walkthrough video",
     summary: "録画順、証拠URL、想定質問を固定し、動画URLを発行する。",
     milestones: [
       milestone({

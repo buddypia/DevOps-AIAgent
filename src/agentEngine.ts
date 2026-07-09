@@ -116,10 +116,10 @@ function synergyScore(agent: MarketAgent, selected: MarketAgent[], profile: Proj
   return clamp(tagOverlap * 5 + termOverlap * 7 + agent.a2aSkillIds.length * 1.5, 0, 24);
 }
 
-export function rankAgents(brief: string, selectedIds: string[] = []): AgentFit[] {
+export function rankAgents(brief: string, selectedIds: string[] = [], agentCatalog: MarketAgent[] = MARKET_AGENTS): AgentFit[] {
   const profile = profileProject(brief);
-  const selected = MARKET_AGENTS.filter((agent) => selectedIds.includes(agent.id));
-  return MARKET_AGENTS.map((agent) => {
+  const selected = agentCatalog.filter((agent) => selectedIds.includes(agent.id));
+  return agentCatalog.map((agent) => {
     const fitScore = agentBaseFit(agent, profile);
     const synergy = synergyScore(agent, selected, profile);
     const matchedSkills = skillMatches(agent, profile);
@@ -233,10 +233,10 @@ export function createA2ATimeline(selected: MarketAgent[]): A2ATimelineItem[] {
   ];
 }
 
-export function recommendSquad(brief: string, selectedIds: string[] = [], budget = 140): Recommendation {
+export function recommendSquad(brief: string, selectedIds: string[] = [], budget = 140, agentCatalog: MarketAgent[] = MARKET_AGENTS): Recommendation {
   const profile = profileProject(brief);
-  const ranked = rankAgents(brief, selectedIds);
-  const explicitSelection = MARKET_AGENTS.filter((agent) => selectedIds.includes(agent.id));
+  const ranked = rankAgents(brief, selectedIds, agentCatalog);
+  const explicitSelection = agentCatalog.filter((agent) => selectedIds.includes(agent.id));
   const selected = explicitSelection.length > 0 ? explicitSelection : selectWithinBudget(ranked, budget);
   const budgetUsed = selected.reduce((sum, agent) => sum + agent.price, 0);
   const before = emptyScore();

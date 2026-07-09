@@ -48,30 +48,30 @@ export const FIRST_CLICK_PROOF_LINKS: FirstClickProofLink[] = [
     label: "Win Autopilot",
     href: "/win-autopilot",
     signal: "agentic-win-run",
-    judgeValue: "競合/SWOT、証拠、運用、提出、残アクションをAIが一括判定する入口。",
+    judgeValue: "競合/SWOT、証拠、運用、公開準備、残アクションをAIが一括判定する入口。",
     tone: "primary"
   },
   {
     id: "judge-snapshot",
-    label: "Judge Snapshot",
+    label: "Reviewer Snapshot",
     href: "/judge-snapshot",
     signal: "first-click-ready",
-    judgeValue: "初見審査員の入口。競合、MVP、AI中心性、実用性、提出証拠へ分岐する。",
+    judgeValue: "初見レビュー担当者の入口。競合、MVP、AI中心性、実用性、公開証拠へ分岐する。",
     tone: "primary"
   },
   {
     id: "winner-packet",
-    label: "Winner Packet",
+    label: "Decision Packet",
     href: "/winner-packet",
     signal: "five-criteria-proof",
-    judgeValue: "審査5項目ごとの主張、証拠URL、反論、録画cueを1枚で読む。",
+    judgeValue: "評価5項目ごとの主張、証拠URL、反論、録画cueを1枚で読む。",
     tone: "primary"
   },
   {
     id: "objection-arena",
-    label: "Objection Arena",
+    label: "Review Q&A",
     href: "/objection-arena",
-    signal: "judge-qa-lock",
+    signal: "review-qa-lock",
     judgeValue: "ADKで十分では、AI中心性は本物か、公開URLは最新かを証拠URL付きで即答する。",
     tone: "primary"
   },
@@ -88,7 +88,7 @@ export const FIRST_CLICK_PROOF_LINKS: FirstClickProofLink[] = [
     label: "Decision Matrix",
     href: "/competitive-decision-matrix",
     signal: "head-to-head-proof",
-    judgeValue: "5審査項目 x 主要競合の勝敗、SWOT signal、開く証拠URLを一画面で確認する。",
+    judgeValue: "5評価項目 x 主要競合の勝敗、SWOT signal、開く証拠URLを一画面で確認する。",
     tone: "ready"
   },
   {
@@ -96,7 +96,7 @@ export const FIRST_CLICK_PROOF_LINKS: FirstClickProofLink[] = [
     label: "MVP Readiness",
     href: "/mvp-readiness",
     signal: "mvp-gate",
-    judgeValue: "必須技術、公開revision、外部提出gapをwatch/readyで確認する。",
+    judgeValue: "必須技術、公開revision、外部公開gapをwatch/readyで確認する。",
     tone: "ready"
   },
   {
@@ -112,7 +112,7 @@ export const FIRST_CLICK_PROOF_LINKS: FirstClickProofLink[] = [
     label: "Autonomy Snapshot",
     href: "/autonomy-snapshot",
     signal: "agent-centrality",
-    judgeValue: "AIが探索、判断、契約、A2A委任、検証、運用、提出を進める連鎖を見る。",
+    judgeValue: "AIが探索、判断、契約、A2A委任、検証、運用、公開準備を進める連鎖を見る。",
     tone: "ready"
   },
   {
@@ -136,23 +136,23 @@ export const FIRST_CLICK_PROOF_LINKS: FirstClickProofLink[] = [
     label: "Architecture Pack",
     href: "/architecture-pack",
     signal: "architecture-proof",
-    judgeValue: "ProtoPedia必須の構成図、Mermaid、Cloud Run/Gemini/A2A/CI/提出物の対応表を見る。",
+    judgeValue: "公開ストーリーに必要な構成図、Mermaid、Cloud Run/Gemini/A2A/CI/証拠の対応表を見る。",
     tone: "watch"
   },
   {
     id: "submission-launch",
-    label: "Submission Launch",
+    label: "Public Proof Launch",
     href: "/submission-launch",
-    signal: "submit-form-lock",
-    judgeValue: "Findy最終提出フォームへ貼る3URL、動画、タグ、完成ステータス、締切をFinal Submit Lockで確認する。",
+    signal: "publication-lock",
+    judgeValue: "公開ページへ貼るURL、動画、証拠リンク、完成ステータス、期限をPublication Lockで確認する。",
     tone: "watch"
   },
   {
     id: "submission-assets",
-    label: "Submission Assets",
+    label: "Publication Assets",
     href: "/submission-assets",
     signal: "protopedia-assets",
-    judgeValue: "ProtoPedia本文、構成図、タグ、提出URLの作業面を確認する。",
+    judgeValue: "公開ストーリー本文、構成図、証拠URL、動画リンクの作業面を確認する。",
     tone: "watch"
   }
 ];
@@ -162,13 +162,13 @@ export const FIRST_CLICK_SCORECARDS: FirstClickScorecard[] = [
     id: "no-post-first",
     label: "No POST required",
     value: "14 GET links",
-    proof: "初回審査はcurlやJSONを知らなくても主要証拠に到達できる。"
+    proof: "初回レビューはcurlやJSONを知らなくても主要証拠に到達できる。"
   },
   {
     id: "criteria-covered",
-    label: "Judge criteria",
+    label: "Reviewer criteria",
     value: "5/5 covered",
-    proof: "AI中心性、課題、UX、実用性、実装力をWinner Packetへ集約する。"
+    proof: "AI中心性、課題、UX、実用性、実装力をDecision Packetへ集約する。"
   },
   {
     id: "drift-honesty",

@@ -241,14 +241,14 @@ describe("demo concierge", () => {
     expect(concierge.routeLock.bypassedDistractions.map((item) => item.id)).toEqual(["feature-tour", "free-navigation", "external-gap-hiding"]);
     expect(concierge.focusLock).toMatchObject({
       readiness: "focus-external-watch",
-      firstScreen: "Judge Command Center",
+      firstScreen: "Reviewer Command Center",
       visibleCount: 6,
       deferredCount: 2,
       blockedCount: 0
     });
     expect(concierge.focusLock.focusScore).toBeGreaterThanOrEqual(92);
     expect(concierge.focusLock.oneMinutePath).toEqual([
-      "Judge Command Center",
+      "Reviewer Command Center",
       "Acceptance Matrix",
       "Competitive Battlecard",
       "Pilot Economics"
@@ -289,7 +289,7 @@ describe("demo concierge", () => {
       },
       focusLock: {
         readiness: "focus-external-watch",
-        firstScreen: "Judge Command Center",
+        firstScreen: "Reviewer Command Center",
         deferredCount: 2
       },
       endpoints: {

@@ -317,7 +317,7 @@ describe("judge command center", () => {
       hardTruth: "<script>alert('judge')</script>"
     });
 
-    expect(html).toContain("Judge Command Center Proof");
+    expect(html).toContain("Reviewer Command Center Proof");
     expect(html).toContain("90-Second Timeline");
     expect(html).toContain("Proof Buttons");
     expect(html).toContain("&lt;script&gt;alert(&#39;judge&#39;)&lt;/script&gt;");

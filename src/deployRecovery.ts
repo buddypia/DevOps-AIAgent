@@ -1,6 +1,7 @@
 import type { ReleaseDriftGuard } from "./releaseDrift.js";
 
 export type DeployRecoveryReadiness = "recovered" | "manual-auth-required" | "redeploy-required" | "blocked";
+export type DeployRecoveryMode = "live-drift" | "fast-proof";
 export type DeployRecoveryStatus = "ready" | "watch" | "blocked";
 
 export type DeployRecoveryCheck = {
@@ -38,6 +39,7 @@ export type DeployRecoveryBlocker = {
 
 export type DeployRecoveryPlan = {
   id: string;
+  mode: DeployRecoveryMode;
   recoveryScore: number;
   readiness: DeployRecoveryReadiness;
   headline: string;
@@ -87,9 +89,12 @@ export function buildDeployRecoveryPlan(input: {
   baseUrl: string;
   releaseDrift: ReleaseDriftGuard;
   lastDeployError?: string;
+  mode?: DeployRecoveryMode;
 }): DeployRecoveryPlan {
   const baseUrl = normalizeBase(input.baseUrl);
   const targetBaseUrl = normalizeBase(input.releaseDrift.targetBaseUrl);
+  const mode = input.mode ?? "live-drift";
+  const fastProof = mode === "fast-proof";
   const authBlocked = detectAuthBlocker(input.lastDeployError);
   const readiness: DeployRecoveryReadiness =
     input.releaseDrift.verdict === "release-current"
@@ -101,7 +106,9 @@ export function buildDeployRecoveryPlan(input: {
           : "redeploy-required";
   const recoveryScore = scoreFor(readiness, input.releaseDrift);
   const headline =
-    readiness === "recovered"
+    fastProof
+      ? "Deploy Recovery proof page is published for first-click review."
+      : readiness === "recovered"
       ? "公開Cloud Runは最新の審査証拠を返しています。"
       : readiness === "manual-auth-required"
         ? "コードではなくgcloud認証が再デプロイを止めています。"
@@ -109,7 +116,9 @@ export function buildDeployRecoveryPlan(input: {
           ? "Cloud Buildで最新mainを公開Cloud Runへ出せばdriftを解消できます。"
           : "公開URLまたはCIの復旧が先です。";
   const hardTruth =
-    readiness === "recovered"
+    fastProof
+      ? "This fast GET page avoids recursive release-drift probes during first-click smoke. Add ?live=1, or POST /api/deploy-recovery, when you need the full operational recovery audit."
+      : readiness === "recovered"
       ? "Judge Command Center、Agent Card、A2A artifactを公開URLでそのまま見せられます。"
       : readiness === "manual-auth-required"
         ? "非対話環境ではgcloudがログイン画面を出せないため、ローカルCloud Build submitは成功しません。GitHub Actionsの手動deploy laneか、人間のgcloud認証更新が必要です。"
@@ -117,7 +126,9 @@ export function buildDeployRecoveryPlan(input: {
           ? "CIが緑でも、Cloud Runの公開revisionが古ければ審査員には新機能が存在しないように見えます。"
           : "healthまたはCIが欠けていると、再デプロイしても提出証拠として弱いままです。";
   const primaryAction =
-    readiness === "recovered"
+    fastProof
+      ? "Use this as the public first-click recovery artifact; run /deploy-recovery?live=1 before a final recording if drift is suspected"
+      : readiness === "recovered"
       ? "Release Drift Guardを録画前に再実行し、release-currentを検収票に残す"
       : readiness === "manual-auth-required"
         ? "GitHub ActionsのDeploy Cloud Run workflowを手動実行する。未設定ならローカルでgcloud auth loginを実行する"
@@ -354,8 +365,8 @@ export function buildDeployRecoveryPlan(input: {
     {
       id: "verify-a2a-artifact",
       label: "Verify A2A endpoint",
-      command: `curl -s -X POST ${targetBaseUrl}/a2a -H 'Content-Type: application/json' --data '{"method":"message/send","params":{"text":"A2A Cloud Run Gemini DevOps"}}' | jq '.result.artifacts[0].parts[0].data | {deployRecoveryEndpoint, deployRecoveryPageEndpoint, prizeStrategyPageEndpoint, publisherPageEndpoint, dossierPageEndpoint, competitiveDecisionMatrixPageEndpoint}'`,
-      why: "A2A artifactがDeploy Recovery API/GET証拠ページ、Prize Strategy GET証拠ページ、Publisher/Dossier/Decision Matrix GET証拠ページを公開しているかを確認します。",
+      command: `curl -s -X POST ${targetBaseUrl}/a2a -H 'Content-Type: application/json' --data '{"method":"message/send","params":{"text":"A2A Cloud Run Gemini DevOps"}}' | jq '.result.artifacts[0].parts[0].data | {deployRecoveryEndpoint, deployRecoveryPageEndpoint, prizeStrategyPageEndpoint, publisherPageEndpoint, dossierPageEndpoint, competitiveDecisionMatrixPageEndpoint, submissionAssetsJsonEndpoint}'`,
+      why: "A2A artifactがDeploy Recovery API/GET証拠ページ、Prize Strategy GET証拠ページ、Publisher/Dossier/Decision Matrix GET証拠ページ、Submission Assets JSONを公開しているかを確認します。",
       copyGroup: "verify",
       blocking: false
     }
@@ -433,6 +444,7 @@ export function buildDeployRecoveryPlan(input: {
 
   return {
     id: `deploy-recovery-${recoveryScore}-${readiness}`,
+    mode,
     recoveryScore,
     readiness,
     headline,
@@ -448,6 +460,7 @@ export function buildDeployRecoveryPlan(input: {
       skill: "deploy.recover",
       recoveryScore,
       readiness,
+      mode,
       primaryAction,
       releaseDrift: {
         verdict: input.releaseDrift.verdict,

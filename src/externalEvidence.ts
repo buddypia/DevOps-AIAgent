@@ -1,3 +1,5 @@
+import { PUBLIC_PROOF_INPUT_PLACEHOLDERS } from "./publicProofUrl.js";
+
 export type ExternalEvidenceStatus = "passed" | "watch" | "missing";
 export type ExternalEvidenceReadiness = "external-ready" | "needs-external-urls" | "blocked";
 
@@ -129,9 +131,9 @@ export function buildExternalEvidenceRun(input: {
       `curl -s ${base}/api/external-evidence | jq '{readiness, evidenceScore, finalUrlsReady: .a2aPayload.finalUrlsReady}'`,
       `curl -I ${normalized.find((probe) => probe.id === "github-url")?.url || "https://github.com/buddypia/DevOps-AIAgent"}`,
       `curl -s ${normalized.find((probe) => probe.id === "deployed-url")?.url || base}/api/healthz`,
-      `curl -I ${normalized.find((probe) => probe.id === "protopedia-url")?.url || "https://protopedia.net/prototype/..."}`,
-      `curl -I ${normalized.find((probe) => probe.id === "video-url")?.url || "https://youtu.be/..."}`,
-      `curl -s -X POST ${base}/api/external-evidence -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"protopediaUrl":"https://protopedia.net/prototype/...","videoUrl":"https://youtu.be/..."}'`
+      `curl -I "${normalized.find((probe) => probe.id === "protopedia-url")?.url || PUBLIC_PROOF_INPUT_PLACEHOLDERS.protopediaUrl}"`,
+      `curl -I "${normalized.find((probe) => probe.id === "video-url")?.url || PUBLIC_PROOF_INPUT_PLACEHOLDERS.videoUrl}"`,
+      `curl -s -X POST ${base}/api/external-evidence -H 'Content-Type: application/json' --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"protopediaUrl":"${PUBLIC_PROOF_INPUT_PLACEHOLDERS.protopediaUrl}","videoUrl":"${PUBLIC_PROOF_INPUT_PLACEHOLDERS.videoUrl}"}'`
     ],
     a2aPayload: {
       method: "message/send",

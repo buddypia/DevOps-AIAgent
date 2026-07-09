@@ -2,7 +2,7 @@ import type { DemoRunway } from "./demoRunway.js";
 import type { SubmissionDossier } from "./dossier.js";
 import type { JudgeProof } from "./proof.js";
 import type { ProtoPediaPolicyLock, ProtoPediaPublisher, ProtoPediaQualityLock, PublisherStatus } from "./publisher.js";
-import type { LaunchItemStatus, SubmissionLaunchGate } from "./submissionLaunch.js";
+import type { FinalSubmitCheck, FinalSubmitReadiness, LaunchItemStatus, SubmissionLaunchGate } from "./submissionLaunch.js";
 
 export type CloseoutReadiness = "ready-to-submit" | "needs-closeout" | "invalid-evidence";
 export type CloseoutStatus = "ready" | "watch" | "blocked";
@@ -109,6 +109,41 @@ export type CloseoutAssetLock = {
   checks: CloseoutAssetLockCheck[];
 };
 
+export type CloseoutFinalSubmitField = {
+  id: FinalSubmitCheck["id"];
+  label: string;
+  target: string;
+  status: CloseoutStatus;
+  value: string;
+  proof: string;
+  acceptance: string;
+};
+
+export type CloseoutFinalSubmitProofLink = {
+  id: Extract<FinalSubmitCheck["id"], "github-url" | "deployed-url" | "protopedia-url" | "video-url">;
+  label: string;
+  value: string;
+};
+
+export type CloseoutFinalSubmitHandoff = {
+  id: string;
+  status: CloseoutStatus;
+  readiness: FinalSubmitReadiness;
+  lockScore: number;
+  headline: string;
+  summary: string;
+  deadline: string;
+  readyCount: number;
+  openCount: number;
+  invalidCount: number;
+  fields: CloseoutFinalSubmitField[];
+  liveProofLinks: CloseoutFinalSubmitProofLink[];
+  verifyApiPath: "/api/proof-links/verify";
+  pasteOrder: string[];
+  exportMarkdown: string;
+  exportHref: string;
+};
+
 export type SubmissionCloseoutWorkbench = {
   id: string;
   closeoutScore: number;
@@ -125,6 +160,7 @@ export type SubmissionCloseoutWorkbench = {
   videoProofLock: CloseoutVideoProofLock;
   dryRunLock: CloseoutDryRunLock;
   assetLock: CloseoutAssetLock;
+  finalSubmitHandoff: CloseoutFinalSubmitHandoff;
   submitPacket: SubmissionLaunchGate["submitPacket"];
   proofScript: string[];
   a2aPayload: Record<string, unknown>;
@@ -200,6 +236,17 @@ function assetLockCheckScore(item: CloseoutAssetLockCheck) {
   if (item.status === "ready") return 100;
   if (item.status === "watch") return 88;
   return 20;
+}
+
+function closeoutStatusScore(status: CloseoutStatus) {
+  if (status === "ready") return 100;
+  if (status === "watch") return 68;
+  return 20;
+}
+
+function submissionDeadlineLabel(value: string) {
+  if (value === "2026-07-10T23:59:00+09:00") return "2026-07-10 23:59 JST";
+  return value;
 }
 
 function policyCheckScore(status: PublisherStatus) {
@@ -627,6 +674,94 @@ function buildAssetLock(input: {
   };
 }
 
+function buildFinalSubmitHandoff(launchGate: SubmissionLaunchGate): CloseoutFinalSubmitHandoff {
+  const deadline = submissionDeadlineLabel(launchGate.finalSubmitLock.deadline);
+  const fields = launchGate.finalSubmitLock.checks.map((check) => ({
+    id: check.id,
+    label: check.label,
+    target: check.target,
+    status: statusFromLaunch(check.status),
+    value: check.id === "deadline" ? deadline : check.value,
+    proof: check.proof,
+    acceptance: check.acceptance
+  }));
+  const liveProofLinks = fields
+    .filter((field): field is CloseoutFinalSubmitField & { id: CloseoutFinalSubmitProofLink["id"] } =>
+      field.id === "github-url" || field.id === "deployed-url" || field.id === "protopedia-url" || field.id === "video-url"
+    )
+    .map((field) => ({
+      id: field.id,
+      label: field.label,
+      value: field.value
+    }));
+  const status: CloseoutStatus =
+    launchGate.finalSubmitLock.invalidCount > 0 ? "blocked" : launchGate.finalSubmitLock.missingCount > 0 ? "watch" : "ready";
+  const openCount = fields.filter((field) => field.status !== "ready").length;
+  const headline =
+    launchGate.finalSubmitLock.readiness === "findy-form-sealed"
+      ? "Findy final form is ready to submit"
+      : launchGate.finalSubmitLock.readiness === "external-url-watch"
+        ? "Final form is ready except published URLs"
+        : "Final form is blocked by malformed evidence";
+  const summary =
+    status === "ready"
+      ? "Public GitHub, Cloud Run, ProtoPedia, video, tag, status, receipt, and deadline are sealed for final submission."
+      : status === "watch"
+        ? `${openCount} external submission field${openCount === 1 ? "" : "s"} still need a published URL before final submit.`
+        : `${launchGate.finalSubmitLock.invalidCount} final submission field${launchGate.finalSubmitLock.invalidCount === 1 ? "" : "s"} contain malformed evidence and must be corrected.`;
+  const exportMarkdown = [
+    "# Findy final submission handoff",
+    "",
+    `Readiness: ${launchGate.finalSubmitLock.readiness}`,
+    `Status: ${status}`,
+    `Score: ${launchGate.finalSubmitLock.lockScore}`,
+    `Deadline: ${deadline}`,
+    `Ready: ${launchGate.finalSubmitLock.readyCount}`,
+    `Open: ${openCount}`,
+    `Invalid: ${launchGate.finalSubmitLock.invalidCount}`,
+    "",
+    "## Required fields",
+    ...fields.map((field) => [
+      `- [${field.status}] ${field.label}`,
+      `  Target: ${field.target}`,
+      `  Value: ${field.value || "Pending external URL"}`,
+      `  Proof: ${field.proof}`,
+      `  Acceptance: ${field.acceptance}`
+    ].join("\n")),
+    "",
+    "## Paste order",
+    ...launchGate.finalSubmitLock.pasteOrder.map((step) => `- ${step}`),
+    "",
+    "## Submit packet",
+    `GitHub: ${launchGate.submitPacket.githubUrl}`,
+    `Cloud Run: ${launchGate.submitPacket.deployedUrl}`,
+    `ProtoPedia: ${launchGate.submitPacket.protopediaUrl || "Pending external URL"}`,
+    `Video: ${launchGate.submitPacket.videoUrl || "Pending external URL"}`,
+    `Tag: ${launchGate.submitPacket.protoPediaTag}`,
+    `Status: ${launchGate.submitPacket.protoPediaStatus}`,
+    `Memo: ${launchGate.submitPacket.submitterMemo}`
+  ].join("\n");
+
+  return {
+    id: `final-submit-handoff-${launchGate.finalSubmitLock.lockScore}-${launchGate.finalSubmitLock.readiness}`,
+    status,
+    readiness: launchGate.finalSubmitLock.readiness,
+    lockScore: launchGate.finalSubmitLock.lockScore,
+    headline,
+    summary,
+    deadline,
+    readyCount: launchGate.finalSubmitLock.readyCount,
+    openCount,
+    invalidCount: launchGate.finalSubmitLock.invalidCount,
+    fields,
+    liveProofLinks,
+    verifyApiPath: "/api/proof-links/verify",
+    pasteOrder: launchGate.finalSubmitLock.pasteOrder,
+    exportMarkdown,
+    exportHref: `data:text/markdown;charset=utf-8,${encodeURIComponent(exportMarkdown)}`
+  };
+}
+
 export function buildSubmissionCloseoutWorkbench(input: {
   baseUrl: string;
   publisher: ProtoPediaPublisher;
@@ -667,7 +802,7 @@ export function buildSubmissionCloseoutWorkbench(input: {
     }),
     item({
       id: "record-video",
-      label: "Record and publish demo video",
+      label: "Record and publish walkthrough video",
       status: videoStatus,
       action: video?.action ?? "Demo Runwayの順番で30秒動画を公開する。",
       proof: video?.proof ?? "動画URLが未入力です。",
@@ -752,6 +887,7 @@ export function buildSubmissionCloseoutWorkbench(input: {
     launchGate: input.launchGate,
     proof: input.proof
   });
+  const finalSubmitHandoff = buildFinalSubmitHandoff(input.launchGate);
   const blocked = workItems.some((entry) => entry.status === "blocked");
   const openItems = workItems.filter((entry) => entry.status !== "ready");
   const readiness: CloseoutReadiness = blocked ? "invalid-evidence" : openItems.length === 0 ? "ready-to-submit" : "needs-closeout";
@@ -767,6 +903,7 @@ export function buildSubmissionCloseoutWorkbench(input: {
         input.proof.overallScore,
         dryRunLock.lockScore,
         assetLock.lockScore,
+        finalSubmitHandoff.lockScore,
         average(workItems.map(workScore))
       ])
     )
@@ -798,6 +935,7 @@ export function buildSubmissionCloseoutWorkbench(input: {
     videoProofLock,
     dryRunLock,
     assetLock,
+    finalSubmitHandoff,
     submitPacket: input.launchGate.submitPacket,
     proofScript: [
       "Submission Closeout Workbenchで残作業をnow/watch/readyに分ける。",
@@ -859,6 +997,18 @@ export function buildSubmissionCloseoutWorkbench(input: {
         blockedCount: assetLock.blockedCount,
         pasteOrder: assetLock.pasteOrder,
         checks: assetLock.checks.map((check) => ({ id: check.id, status: check.status, evidenceUrl: check.evidenceUrl }))
+      },
+      finalSubmitHandoff: {
+        lockScore: finalSubmitHandoff.lockScore,
+        readiness: finalSubmitHandoff.readiness,
+        status: finalSubmitHandoff.status,
+        deadline: finalSubmitHandoff.deadline,
+        readyCount: finalSubmitHandoff.readyCount,
+        openCount: finalSubmitHandoff.openCount,
+        invalidCount: finalSubmitHandoff.invalidCount,
+        fields: finalSubmitHandoff.fields.map((field) => ({ id: field.id, status: field.status, target: field.target })),
+        liveProofLinks: finalSubmitHandoff.liveProofLinks.map((link) => ({ id: link.id, label: link.label, attached: Boolean(link.value) })),
+        verifyApiPath: finalSubmitHandoff.verifyApiPath
       },
       urls: input.launchGate.urlStatuses.map((status) => ({
         id: status.id,

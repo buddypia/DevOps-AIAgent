@@ -323,7 +323,7 @@ export function buildSubmissionLaunchGate(input: {
       valid: validProtoPediaUrl(protopediaUrl),
       validProof: "ProtoPediaドメインのhttps URLとして形式確認済み。",
       missingAction: "Submission Dossierのcopy blocksを貼り、findy_hackathonタグ付きで作品ページを公開する",
-      invalidAction: "https://protopedia.net/prototype/... の形式で作品URLを入力する"
+      invalidAction: "公開済みの protopedia.net 作品URLを入力する"
     }),
     videoStatus
   ];

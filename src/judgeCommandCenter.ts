@@ -191,7 +191,7 @@ export function buildJudgeCommandCenter(input: {
   const firstNow = blockers.find((blocker) => blocker.priority === "now");
   const openingMove =
     readiness === "blocked"
-      ? (firstNow?.action ?? "blockedの受入行を先に直し、Judge Command Centerを再実行する")
+      ? (firstNow?.action ?? "blockedの受入行を先に直し、Reviewer Command Centerを再実行する")
       : readiness === "external-gaps"
         ? "Judge Tourで価値を見せ、Competitive Battlecardで競合質問へ答え、Submission Launch Gateで外部URLをwatchとして正直に示す"
         : "Judge Tourを開き、Competitive Battlecard、Acceptance Matrix、Pilot Economics、Win Autopilotの順で証拠を見せる";
@@ -316,7 +316,7 @@ export function buildJudgeCommandCenter(input: {
     {
       id: "open",
       timeRange: "0-12s",
-      screen: "Judge Command Center",
+      screen: "Reviewer Command Center",
       click: "Build command center",
       say: headline,
       proofButtonId: "judge-tour",
@@ -462,7 +462,7 @@ export function renderJudgeCommandCenterHtml(command: JudgeCommandCenter) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Judge Command Center Proof</title>
+    <title>Reviewer Command Center Proof</title>
     <style>
       :root { color-scheme: light; --ink: #18201e; --muted: #5f6d68; --line: #d9e3dd; --paper: #fbfcfa; --panel: #fff; --green: #13715d; --mint: #e6f4ed; --amber: #8a620d; --amber-bg: #fff4d4; --coral: #b24735; --coral-bg: #fff0ec; }
       * { box-sizing: border-box; }
@@ -497,7 +497,7 @@ export function renderJudgeCommandCenterHtml(command: JudgeCommandCenter) {
   </head>
   <body>
     <header>
-      <div class="eyebrow">Judge Command Center Proof</div>
+      <div class="eyebrow">Reviewer Command Center Proof</div>
       <h1>${escapeHtml(command.headline)}</h1>
       <p><strong>${escapeHtml(command.openingMove)}</strong></p>
       <p>${escapeHtml(command.hardTruth)}</p>

@@ -199,9 +199,21 @@ function combinations<T>(items: T[], maxSize: number) {
   return result;
 }
 
-function coverageFor(agentIds: string[]): SquadCoverageGate[] {
+function customCoverageMatch(gateId: string, agent: MarketAgent) {
+  if (gateId === "a2a-market") return agent.capabilities.a2a >= 90 && agent.capabilities.mcp >= 76;
+  if (gateId === "google-ai") return /gemini|google/i.test([agent.name, agent.headline, agent.outcome, agent.a2aSkillIds.join(" ")].join(" "));
+  if (gateId === "cloud-run") return agent.capabilities.cloudRun >= 80;
+  if (gateId === "first-run-ux") return agent.capabilities.ux >= 88 || (agent.capabilities.planning >= 88 && agent.capabilities.ux >= 70);
+  if (gateId === "devops-feedback") {
+    return average([agent.capabilities.cloudRun, agent.capabilities.testing, agent.capabilities.security, agent.capabilities.observability]) >= 82;
+  }
+  return false;
+}
+
+function coverageFor(selectedAgents: MarketAgent[]): SquadCoverageGate[] {
+  const agentIds = selectedAgents.map((agent) => agent.id);
   return COVERAGE_GATES.map((gate) => {
-    const met = gate.agentIds.some((id) => agentIds.includes(id));
+    const met = gate.agentIds.some((id) => agentIds.includes(id)) || selectedAgents.some((agent) => agent.id.startsWith("custom-") && customCoverageMatch(gate.id, agent));
     return {
       id: gate.id,
       label: gate.label,
@@ -250,12 +262,12 @@ function candidateTradeoffs(input: {
   return tradeoffs.length > 0 ? tradeoffs.slice(0, 4) : ["No major tradeoff under the current scoring model."];
 }
 
-function buildCandidate(projectBrief: string, agentIds: string[], budget: number, rank = 0): OptimizedSquadCandidate {
-  const recommendation = recommendSquad(projectBrief, agentIds, budget);
+function buildCandidate(projectBrief: string, agentIds: string[], budget: number, rank = 0, agentCatalog: MarketAgent[] = MARKET_AGENTS): OptimizedSquadCandidate {
+  const recommendation = recommendSquad(projectBrief, agentIds, budget, agentCatalog);
   const strategy = buildWinningStrategy(recommendation);
   const sortedCriteria = [...strategy.judgeCriteria].sort((left, right) => left.score - right.score);
   const weakestCriterion = sortedCriteria[0];
-  const coverage = coverageFor(recommendation.selected.map((agent) => agent.id));
+  const coverage = coverageFor(recommendation.selected);
   const coverageScore = Math.round((coverage.filter((gate) => gate.met).length / coverage.length) * 100);
   const totalPrice = recommendation.selected.reduce((sum, agent) => sum + agent.price, 0);
   const budgetFitScore = totalPrice <= budget && budget > 0 ? Math.round(clamp((1 - totalPrice / budget) * 100)) : 0;
@@ -331,9 +343,9 @@ function rankCandidates(candidates: OptimizedSquadCandidate[]) {
     .map((candidate, index) => ({ ...candidate, rank: index + 1 }));
 }
 
-function selectedOrDefaultIds(projectBrief: string, selectedAgentIds: string[], budget: number) {
+function selectedOrDefaultIds(projectBrief: string, selectedAgentIds: string[], budget: number, agentCatalog: MarketAgent[] = MARKET_AGENTS) {
   if (selectedAgentIds.length > 0) return selectedAgentIds;
-  return recommendSquad(projectBrief, [], budget).selected.map((agent) => agent.id);
+  return recommendSquad(projectBrief, [], budget, agentCatalog).selected.map((agent) => agent.id);
 }
 
 function computeDelta(current: OptimizedSquadCandidate, recommended: OptimizedSquadCandidate): SquadOptimizerDelta {
@@ -442,22 +454,26 @@ export function buildSquadOptimizer(input: {
   selectedAgentIds?: string[];
   budget?: number;
   maxSquadSize?: number;
+  agentCatalog?: MarketAgent[];
 }): SquadOptimizerRun {
   const budget = Math.round(input.budget ?? 140);
   const maxSquadSize = Math.max(1, Math.min(6, Math.round(input.maxSquadSize ?? 4)));
-  const currentIds = selectedOrDefaultIds(input.projectBrief, input.selectedAgentIds ?? [], budget);
-  const allCandidates = combinations(MARKET_AGENTS, maxSquadSize).map((agents) =>
+  const agentCatalog = input.agentCatalog ?? MARKET_AGENTS;
+  const currentIds = selectedOrDefaultIds(input.projectBrief, input.selectedAgentIds ?? [], budget, agentCatalog);
+  const allCandidates = combinations(agentCatalog, maxSquadSize).map((agents) =>
     buildCandidate(
       input.projectBrief,
       agents.map((agent) => agent.id),
-      budget
+      budget,
+      0,
+      agentCatalog
     )
   );
   const ranked = rankCandidates(allCandidates.filter((candidate) => candidate.totalPrice <= budget));
-  const recommended = ranked[0] ?? buildCandidate(input.projectBrief, currentIds, budget, 1);
+  const recommended = ranked[0] ?? buildCandidate(input.projectBrief, currentIds, budget, 1, agentCatalog);
   const currentRank = ranked.find((candidate) => sameIds(candidate.agentIds, currentIds))?.rank ?? ranked.length + 1;
   const current = {
-    ...buildCandidate(input.projectBrief, currentIds, budget, currentRank),
+    ...buildCandidate(input.projectBrief, currentIds, budget, currentRank, agentCatalog),
     rank: currentRank
   };
   const stretch = rankCandidates(
