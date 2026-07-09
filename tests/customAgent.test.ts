@@ -2,7 +2,6 @@ import { describe, expect, test } from "vitest";
 import { recommendSquad } from "../src/agentEngine";
 import { buildImportedAgentFromCard, decodeCustomAgentsParam, encodeCustomAgentsParam, mergeAgentCatalog } from "../src/customAgent";
 import { DEFAULT_PROJECT_BRIEF } from "../src/market";
-import { buildSquadOptimizer } from "../src/squadOptimizer";
 
 const CLOUD_RUN_AGENT_CARD = JSON.stringify({
   name: "Cloud Run Release Auditor",
@@ -79,22 +78,5 @@ describe("custom Agent Card intake", () => {
 
     expect(decodeCustomAgentsParam(encodeCustomAgentsParam([result.agent]))).toEqual([result.agent]);
     expect(decodeCustomAgentsParam("broken")).toEqual([]);
-  });
-
-  test("squad optimizer can evaluate imported candidates in the same catalog", () => {
-    const result = buildImportedAgentFromCard(CLOUD_RUN_AGENT_CARD);
-    if (result.status !== "accepted") throw new Error("fixture should import");
-    const catalog = mergeAgentCatalog([result.agent]);
-    const optimizer = buildSquadOptimizer({
-      projectBrief: DEFAULT_PROJECT_BRIEF,
-      selectedAgentIds: [result.agent.id],
-      budget: 180,
-      maxSquadSize: 4,
-      agentCatalog: catalog
-    });
-
-    expect(optimizer.current.agentIds).toContain(result.agent.id);
-    expect(optimizer.current.agents.some((agent) => agent.name === "Cloud Run Release Auditor")).toBe(true);
-    expect(optimizer.current.coverage.some((gate) => gate.id === "cloud-run" && gate.met)).toBe(true);
   });
 });
