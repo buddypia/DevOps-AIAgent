@@ -574,7 +574,7 @@ gh workflow run deploy-cloud-run.yml --ref main \
   -f service=a2a-agent-marketplace \
   -f repository=cloud-run-source-deploy \
   -f gemini_secret=gemini-api-key-a2a-marketplace \
-  -f target_url=https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app
+  -f target_url=https://a2a-agent-marketplace-rfyriohodq-an.a.run.app
 ```
 
 ## GitHub Actions Public Proof
@@ -587,7 +587,7 @@ gh workflow run deploy-cloud-run.yml --ref main \
 
 ```bash
 gh workflow run verify-public-proof.yml --ref main \
-  -f target_url=https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app
+  -f target_url=https://a2a-agent-marketplace-rfyriohodq-an.a.run.app
 ```
 
 公開提出では、審査員とGitHub Actionsから開けることを優先するため、アプリ内IP allowlistは既定で `monitor` modeです。非公開デモとしてアクセス制限を有効化したい場合だけ、Cloud Runに `IP_ALLOWLIST_MODE=strict` を設定します。
@@ -716,7 +716,7 @@ The service only accepts requests from the supplied fixed IP addresses and Rakut
 
 Deployed URL:
 
-<https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app>
+<https://a2a-agent-marketplace-rfyriohodq-an.a.run.app>
 
 Public GitHub:
 
@@ -742,4 +742,4 @@ The deployed Cloud Run service reads `GEMINI_API_KEY` from Secret Manager secret
 
 ## Submission Notes
 
-ProtoPediaには、公開GitHubリポジトリURL、Cloud Run URL、作品URLを提出します。GitHubは <https://github.com/buddypia/DevOps-AIAgent>、Cloud Runは <https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app>。公開CIは <https://github.com/buddypia/DevOps-AIAgent/actions/workflows/ci.yml>。タグは `findy_hackathon`。提出本文はSubmission Publisherのpaste fieldsを貼り、最初にDemo Conciergeで審査員/買い手/提出者のfirst clickを固定し、Judge Command Centerで90秒導線、MVP受入状態、公開revision drift、pilot economics、win scoreを1画面で確認し、Judge Tourで話す順番と外部URL不足を確認し、Judge RehearsalのFinal Pitch Defense LockでAI必然性、競合反論、買い手価値、公開実装、60秒回答パスを確認し、Squad Optimizerで140予算内の最適編成と+22のUX追加ギャップを確認し、Moat Stress Testで「既存ツールでよくない？」への証拠付き反論を確認し、Competitive Battlecardで公式ソース、SWOT根拠、Criteria Duel、短い審査回答、録画で開く証拠routeを競合別に確認し、Live Evidence Monitorで公開Cloud Run/A2A/CIのライブ証拠を確認し、External Evidence VerifierでGitHub・Cloud Run・ProtoPedia・動画URLの外部到達性を確認し、Release Drift Guardで提出用Cloud Runが最新skill surfaceを返すか確認し、Deploy Recoveryでgcloud認証、Cloud Build、公開再検証の復旧手順を確認し、Judge Demo Receiptでsha256 digestと外部URL状態を控え、Judge Acceptance Matrixで必須技術、審査5項目、公開証拠、提出物がaccepted/watch/blockedのどれかを確認し、User Pilot Labで対象ユーザー別の初回価値到達を確認し、Winner Sufficiency Lockで機能十分性、公開drift、外部closeoutを最終確認し、Win Autopilotでwin scoreと残アクションを確認します。動画ではDemo Runwayの「Demo Concierge → Judge Command Center → Judge Tour → Squad Optimizer → Moat Stress Test → Competitive Battlecard → Live Evidence Monitor → Release Drift Guard → Deploy Recovery → Winner Sufficiency Lock → Judge Demo Receipt → Judge Acceptance Matrix → User Pilot Lab → Judge Brief → Autonomy Ledger → Security Sentinel Review → Impact Case → Pilot Economics → Submission Launch Gate → Judge Proof → Finalist Simulator → Submission Publisher → Marketplace → Winning Strategy → Contract/Mission → Ops Drill → Submission links」の30秒リールを録画します。質疑ではDemo Conciergeのfirst click/persona lanes、Judge Command Centerのreadiness/blockers、Judge RehearsalのDefense Lock checks、Competitive BattlecardのCriteria Duel/source-backed answers/SWOT receipts、Deploy Recoveryのmanual auth/redeploy commands、Winner Sufficiencyのyes-no判定、Release Drift Guardのmissing skills/redeploy runbook、Acceptance Matrixのwatch rows、Moat Stress Testのcompetitor objections、Judge Drillのhardest question、Live Evidence Monitorの5 probes、External Evidence Verifierのfinal URL probes、Judge Demo Receiptのsha256 digest、Squad Optimizerのbudget gap/swap plan、User Pilot Labのfrictions/next clicks、Impact Caseのユーザー別KPI、Pilot Economicsのpayback days/pricing lanes/buyer objections、Security Sentinel Reviewのtrust boundary、Finalist Simulatorのtop concern/evidence linksを使います。
+ProtoPediaには、公開GitHubリポジトリURL、Cloud Run URL、作品URLを提出します。GitHubは <https://github.com/buddypia/DevOps-AIAgent>、Cloud Runは <https://a2a-agent-marketplace-rfyriohodq-an.a.run.app>。公開CIは <https://github.com/buddypia/DevOps-AIAgent/actions/workflows/ci.yml>。タグは `findy_hackathon`。提出本文はSubmission Publisherのpaste fieldsを貼り、最初にDemo Conciergeで審査員/買い手/提出者のfirst clickを固定し、Judge Command Centerで90秒導線、MVP受入状態、公開revision drift、pilot economics、win scoreを1画面で確認し、Judge Tourで話す順番と外部URL不足を確認し、Judge RehearsalのFinal Pitch Defense LockでAI必然性、競合反論、買い手価値、公開実装、60秒回答パスを確認し、Squad Optimizerで140予算内の最適編成と+22のUX追加ギャップを確認し、Moat Stress Testで「既存ツールでよくない？」への証拠付き反論を確認し、Competitive Battlecardで公式ソース、SWOT根拠、Criteria Duel、短い審査回答、録画で開く証拠routeを競合別に確認し、Live Evidence Monitorで公開Cloud Run/A2A/CIのライブ証拠を確認し、External Evidence VerifierでGitHub・Cloud Run・ProtoPedia・動画URLの外部到達性を確認し、Release Drift Guardで提出用Cloud Runが最新skill surfaceを返すか確認し、Deploy Recoveryでgcloud認証、Cloud Build、公開再検証の復旧手順を確認し、Judge Demo Receiptでsha256 digestと外部URL状態を控え、Judge Acceptance Matrixで必須技術、審査5項目、公開証拠、提出物がaccepted/watch/blockedのどれかを確認し、User Pilot Labで対象ユーザー別の初回価値到達を確認し、Winner Sufficiency Lockで機能十分性、公開drift、外部closeoutを最終確認し、Win Autopilotでwin scoreと残アクションを確認します。動画ではDemo Runwayの「Demo Concierge → Judge Command Center → Judge Tour → Squad Optimizer → Moat Stress Test → Competitive Battlecard → Live Evidence Monitor → Release Drift Guard → Deploy Recovery → Winner Sufficiency Lock → Judge Demo Receipt → Judge Acceptance Matrix → User Pilot Lab → Judge Brief → Autonomy Ledger → Security Sentinel Review → Impact Case → Pilot Economics → Submission Launch Gate → Judge Proof → Finalist Simulator → Submission Publisher → Marketplace → Winning Strategy → Contract/Mission → Ops Drill → Submission links」の30秒リールを録画します。質疑ではDemo Conciergeのfirst click/persona lanes、Judge Command Centerのreadiness/blockers、Judge RehearsalのDefense Lock checks、Competitive BattlecardのCriteria Duel/source-backed answers/SWOT receipts、Deploy Recoveryのmanual auth/redeploy commands、Winner Sufficiencyのyes-no判定、Release Drift Guardのmissing skills/redeploy runbook、Acceptance Matrixのwatch rows、Moat Stress Testのcompetitor objections、Judge Drillのhardest question、Live Evidence Monitorの5 probes、External Evidence Verifierのfinal URL probes、Judge Demo Receiptのsha256 digest、Squad Optimizerのbudget gap/swap plan、User Pilot Labのfrictions/next clicks、Impact Caseのユーザー別KPI、Pilot Economicsのpayback days/pricing lanes/buyer objections、Security Sentinel Reviewのtrust boundary、Finalist Simulatorのtop concern/evidence linksを使います。

@@ -2,7 +2,7 @@ substitutions:
   _REGION: asia-northeast1
   _SERVICE: a2a-agent-marketplace
   _REPOSITORY: cloud-run-source-deploy
-  _GEMINI_SECRET: gemini-api-key-a2a-marketplace
+  _RUNTIME_SA: agent-market-runtime
 
 steps:
   - name: gcr.io/cloud-builders/docker
@@ -25,8 +25,14 @@ steps:
       - --region=${_REGION}
       - --platform=managed
       - --allow-unauthenticated
-      - --set-env-vars=GEMINI_MODEL=gemini-3.5-flash
-      - --set-secrets=GEMINI_API_KEY=${_GEMINI_SECRET}:latest
+      # Vertex AI + ADC で動作するためAPIキーSecretは不要 (最小権限SAで実行)
+      - --service-account=${_RUNTIME_SA}@$PROJECT_ID.iam.gserviceaccount.com
+      - --set-env-vars=GEMINI_MODEL=gemini-3.5-flash,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=${_REGION},OPS_TARGET_SERVICE=${_SERVICE}
+      # コスパガード: scale-to-zero + 上限2インスタンス
+      - --min-instances=0
+      - --max-instances=2
+      - --memory=512Mi
+      - --cpu=1
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE}:$BUILD_ID

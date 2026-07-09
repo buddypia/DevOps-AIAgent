@@ -6,7 +6,7 @@ on:
       target_url:
         description: "Public Cloud Run URL to verify"
         required: true
-        default: "https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app"
+        default: "https://a2a-agent-marketplace-rfyriohodq-an.a.run.app"
 
 permissions:
   contents: read

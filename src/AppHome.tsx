@@ -6,6 +6,7 @@ import { MAX_CUSTOM_AGENTS, mergeAgentCatalog, type AgentCardImportResult } from
 import { DEFAULT_PROJECT_BRIEF } from "./market.js";
 import MissionControl from "./MissionControl.js";
 import { ONBOARDING_TEMPLATES } from "./onboardingTemplates.js";
+import OpsAgentConsole from "./OpsAgentConsole.js";
 import OpsDrillPanel from "./OpsDrillPanel.js";
 import StrategyWarRoom from "./StrategyWarRoom.js";
 import { buildWinningStrategy } from "./strategy.js";
@@ -228,6 +229,17 @@ export default function AppHome() {
 
         <li className="flow-step">
           <div className="flow-badge">6</div>
+          <div className="flow-body">
+            <h2>雇ったSREエージェントが本物のDevOps運用を実行</h2>
+            <p className="flow-desc">
+              デモではなく実実行 — 実Cloud Loggingを取得し、Geminiが自律判断し、独立checkerの検証を経てFirestoreへ記録する。
+            </p>
+            <OpsAgentConsole />
+          </div>
+        </li>
+
+        <li className="flow-step">
+          <div className="flow-badge">7</div>
           <div className="flow-body">
             <h2>Gemini 3.5 Flash が戦略をまとめる</h2>
             <p className="flow-desc">APIキー未設定でもローカル推論でフォールバックする。</p>
