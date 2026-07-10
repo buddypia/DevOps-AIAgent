@@ -105,14 +105,10 @@ make q.check-architecture  # SSOT ファイル + workflow 検証項目の存在�
 - **Verify Public Proof** (`verify-public-proof.yml`): 手動実行。Secrets 不要で公開URLの実サーフェスだけを検証
 
 ```bash
-# GSM = Secret Manager 上のシークレット名 (キーの値ではない)
-GSM=gemini-api-key-a2a-marketplace
-
 gh workflow run deploy-cloud-run.yml --ref main \
   -f region=asia-northeast1 \
   -f service=a2a-agent-marketplace \
   -f repository=cloud-run-source-deploy \
-  -f gemini_secret="$GSM" \
   -f target_url=https://a2a-agent-marketplace-nxbw7of6cq-an.a.run.app
 
 gh workflow run verify-public-proof.yml --ref main \
@@ -126,9 +122,9 @@ Deploy 用 secrets（`GCP_PROJECT_ID` / `GCP_WORKLOAD_IDENTITY_PROVIDER` / `GCP_
 Deployed URL: <https://a2a-agent-marketplace-nxbw7of6cq-an.a.run.app>
 
 ```bash
-GSM=gemini-api-key-a2a-marketplace
 gcloud builds submit --config cloudbuild.yaml \
-  --substitutions _REGION=asia-northeast1,_SERVICE=a2a-agent-marketplace,_REPOSITORY=cloud-run-source-deploy,_GEMINI_SECRET="$GSM"
+  --project sixth-oath-502008-u3 \
+  --substitutions _REGION=asia-northeast1,_SERVICE=a2a-agent-marketplace,_REPOSITORY=cloud-run-source-deploy
 ```
 
 またはローカル Docker（`GEMINI_API_KEY` をシェルに export してから）:
@@ -138,7 +134,7 @@ docker build -t a2a-agent-marketplace .
 docker run --rm -p 8080:8080 --env GEMINI_API_KEY a2a-agent-marketplace
 ```
 
-本番は Secret Manager のシークレット（既定名は上記 `GSM`）から Gemini APIキーを読み込みます（`cloudbuild.yaml`）。インフラ構成・IAM・移行手順は [docs/infra.md](docs/infra.md) を参照。
+本番は APIキーを使わず、Cloud Run の実行サービスアカウント（`agent-market-runtime`）+ Vertex AI で認証します（`cloudbuild.yaml` — シークレット不要）。インフラ構成・IAM・移行手順は [docs/infra.md](docs/infra.md) を参照。
 
 ## IP Allowlist
 

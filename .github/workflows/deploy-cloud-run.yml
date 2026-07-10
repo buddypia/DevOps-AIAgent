@@ -15,10 +15,6 @@ on:
         description: "Artifact Registry repository"
         required: true
         default: "cloud-run-source-deploy"
-      gemini_secret:
-        description: "Secret Manager secret name for GEMINI_API_KEY"
-        required: true
-        default: "gemini-api-key-a2a-marketplace"
       target_url:
         description: "Public Cloud Run URL to verify after deploy"
         required: true
@@ -67,7 +63,7 @@ jobs:
         run: |
           gcloud builds submit \
             --config cloudbuild.yaml \
-            --substitutions _REGION=${{ inputs.region }},_SERVICE=${{ inputs.service }},_REPOSITORY=${{ inputs.repository }},_GEMINI_SECRET=${{ inputs.gemini_secret }}
+            --substitutions _REGION=${{ inputs.region }},_SERVICE=${{ inputs.service }},_REPOSITORY=${{ inputs.repository }}
 
       - name: Verify live surface
         run: |
