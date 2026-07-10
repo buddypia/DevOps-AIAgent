@@ -278,9 +278,6 @@ export function buildPostApprovalCompletionReport({
   const branchCleanup = result.merged
     ? 'remote delete requested; local cleanup handled by cleanup-worktree when enabled'
     : 'not performed';
-  const stashStatus = cr.active_stash
-    ? `active stash remains: ${cr.active_stash}`
-    : 'no active stash reported';
   const mainStatus = cr.sync_status || (cleanup ? 'not reported' : 'not run');
   const changedTree = result.changed_files_tree || buildFileTree(result.changed_files || []);
 
@@ -297,8 +294,6 @@ export function buildPostApprovalCompletionReport({
     `- Branch cleanup: ${branchCleanup}`,
     `- Remote branch cleanup: ${result.merged ? 'delete requested when auto-merge ran' : 'not performed'}`,
     `- main으로의 ff(Fast-Forward) 상황: ${mainStatus}`,
-    `- stash 복원 상황: ${stashStatus}`,
-    `- active stash: ${valueOrDash(cr.active_stash)}`,
     '',
     '## 3. 반영된 파일',
     '```text',

@@ -11,14 +11,14 @@
  *   성공: { ok: true,  mode, command, ... }                   (exit 0)
  *   실패: { ok: false, mode, command, error, hint?, details? } (exit 1)
  *
- *   sync_status 값: synced | fetch_failed | stash_failed | ff_failed | synced_with_stash_conflict
+ *   sync_status 값: synced | fetch_failed | local_changes | ff_failed
  *
  * Config: .claude/skills/create-pr/config.json
  *   { github_account, base_branch, enforce_ssh_remote? }  (base_branch 기본 main)
  *
  * 철칙: unstaged/untracked 파일은 실행 전후로 정확히 동일해야 한다.
  *   - worktree 격리: 원본 HEAD 불변
- *   - stash-based sync: main pull 시 원본 변경을 stash push/pop
+ *   - dirty main 시 sync abort: 원본 변경을 건드리지 않고 동기화만 중단 (자동 stash 미사용)
  *
  * 보안: 모든 외부 명령은 execFileSync 배열 인자 → shell 미경유.
  *
@@ -886,27 +886,23 @@ function cmdFinalize() {
     return {
       ok: false, error: `동기화용 fetch 실패: ${e.message}`,
       hint: 'remote 확인 (git remote -v). 네트워크 복구 후 git fetch + git merge --ff-only 수동 실행.',
-      worktree_cleaned: true, sync_status: 'fetch_failed', active_stash: null,
+      worktree_cleaned: true, sync_status: 'fetch_failed',
     };
   }
 
+  // dirty main 은 동기화하지 않고 중단한다 (자동 stash 미사용 — 원본 working tree 미접촉).
+  // 사용자가 수동으로 commit/stash 한 뒤 재시도한다. main 로컬 sync 만 skip 되며
+  // 다음 worktree-new 의 fetch + ff 가 self-heal 한다.
   const hasChanges = git(['status', '--porcelain']).trim().length > 0;
-  const stashMsg = `create-pr-sync-backup-${Date.now()}`;
-  let stashed = false;
-  let active_stash = null;
   if (hasChanges) {
-    try {
-      git(['stash', 'push', '--include-untracked', '-m', stashMsg]);
-      stashed = true;
-      active_stash = stashMsg;
-    } catch (e) {
-      cleanupState();
-      return {
-        ok: false, error: `stash 실패: ${e.message}`,
-        hint: '데이터 안전 우선 — 동기화 중단. 원본 working tree 보존됨.',
-        worktree_cleaned: true, sync_status: 'stash_failed', active_stash: null,
-      };
-    }
+    cleanupState();
+    return {
+      ok: false,
+      error: '로컬 uncommitted 변경사항이 존재하여 동기화를 진행할 수 없습니다.',
+      hint: '변경사항을 수동으로 commit 하거나 stash 한 뒤 다시 동기화하십시오.',
+      worktree_cleaned: true,
+      sync_status: 'local_changes',
+    };
   }
 
   let ffFailed = null;
@@ -917,32 +913,16 @@ function cmdFinalize() {
     ffFailed = `${BASE_BRANCH} ff-only 실패: ${e.message}`;
   }
 
-  let popConflict = false;
-  if (stashed) {
-    try {
-      git(['stash', 'pop']);
-      active_stash = null;
-    } catch {
-      popConflict = true;
-    }
-  }
-
   cleanupState();
 
   if (ffFailed) {
     return {
       ok: false, error: ffFailed,
       hint: '원격 main이 로컬 main의 선조가 아님 (non-fast-forward). git log + 수동 rebase 필요.',
-      sync_status: 'ff_failed', active_stash,
+      sync_status: 'ff_failed',
     };
   }
-  if (popConflict) {
-    return {
-      ok: true, sync_status: 'synced_with_stash_conflict', active_stash,
-      hint: `stash pop 충돌 — 백업 유지. 수동: git stash list | grep "${stashMsg}"`,
-    };
-  }
-  return { ok: true, sync_status: 'synced', active_stash: null };
+  return { ok: true, sync_status: 'synced' };
 }
 
 // ═ Mode B: Worktree ═
@@ -1187,7 +1167,6 @@ export function composeShipResponse({
     warnings: mergedWarnings,
     cleanedUp,
     cleanup_sync_status: cr.sync_status ?? null,
-    active_stash: cr.active_stash ?? null,
     cleanup_hint,
     post_merge_main_status: postMergeMainStatus,
     run_bundle: runBundle,
@@ -1524,7 +1503,6 @@ function cmdCleanupWorktree(args) {
   const wtPath = requireArg(args, 'worktree');
   const absWtPath = resolveWorktreeAbsPath(wtPath);
   const warnings = [];
-  let active_stash = null;
 
   // 해당 worktree 마커 + stale (>1h) 마커 GC (R-CM-030 라이프사이클).
   // ship-worktree 가 이미 unlink 했어도 멱등 — cancelled 흐름 누적 방지가 주 목적.
@@ -1553,32 +1531,29 @@ function cmdCleanupWorktree(args) {
     }
   }
 
-  // Stash-based main 동기화 (finalize Part B 와 동일 의미론, fail-loud)
+  // main 동기화 (finalize 와 동일 의미론, fail-loud). dirty main 은 stash 하지 않고 abort.
   try {
     git(['fetch', 'origin', BASE_BRANCH], { cwd: PROJECT_DIR, timeout: 60_000, retry: 3 });
   } catch (e) {
     return {
       ok: false, error: `${BASE_BRANCH} fetch 실패: ${e.message}`,
       hint: 'remote 확인 후 수동 동기화', sync_status: 'fetch_failed',
-      worktree_cleaned: true, warnings, active_stash: null,
+      worktree_cleaned: true, warnings,
     };
   }
 
+  // dirty main 은 동기화하지 않고 중단한다 (자동 stash 미사용 — 원본 working tree 미접촉).
+  // PR 은 이미 머지됐으므로 유효하며, main 로컬 sync 만 skip 된다 (다음 worktree-new self-heal).
   const hasChanges = git(['status', '--porcelain'], { cwd: PROJECT_DIR }).trim().length > 0;
-  const stashMsg = `worktree-sync-backup-${Date.now()}`;
-  let stashed = false;
   if (hasChanges) {
-    try {
-      git(['stash', 'push', '--include-untracked', '-m', stashMsg], { cwd: PROJECT_DIR });
-      stashed = true;
-      active_stash = stashMsg;
-    } catch (e) {
-      return {
-        ok: false, error: `stash 실패: ${e.message}`,
-        hint: '데이터 안전 우선 — 동기화 중단', sync_status: 'stash_failed',
-        worktree_cleaned: true, warnings, active_stash: null,
-      };
-    }
+    return {
+      ok: false,
+      error: '로컬 uncommitted 변경사항이 존재하여 동기화를 진행할 수 없습니다.',
+      hint: '변경사항을 수동으로 commit 하거나 stash 한 뒤 다시 동기화하십시오.',
+      worktree_cleaned: true,
+      warnings,
+      sync_status: 'local_changes',
+    };
   }
 
   let ffFailed = null;
@@ -1589,31 +1564,14 @@ function cmdCleanupWorktree(args) {
     ffFailed = `${BASE_BRANCH} ff-only 실패: ${e.message}`;
   }
 
-  let popConflict = false;
-  if (stashed) {
-    try {
-      git(['stash', 'pop'], { cwd: PROJECT_DIR });
-      active_stash = null;
-    } catch {
-      popConflict = true;
-    }
-  }
-
   if (ffFailed) {
     return {
       ok: false, error: ffFailed,
       hint: '원격 main이 로컬 선조 아님. 수동 rebase 필요',
-      sync_status: 'ff_failed', worktree_cleaned: true, warnings, active_stash,
+      sync_status: 'ff_failed', worktree_cleaned: true, warnings,
     };
   }
-  if (popConflict) {
-    return {
-      ok: true, sync_status: 'synced_with_stash_conflict',
-      hint: `stash pop 충돌 — 백업 유지. 수동: git stash list | grep "${stashMsg}"`,
-      worktree_cleaned: true, warnings, active_stash,
-    };
-  }
-  return { ok: true, sync_status: 'synced', worktree_cleaned: true, warnings, active_stash: null };
+  return { ok: true, sync_status: 'synced', worktree_cleaned: true, warnings };
 }
 
 // ═ Dispatch ═

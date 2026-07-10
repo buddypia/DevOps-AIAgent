@@ -8,9 +8,9 @@
       "bundle_version": "1.0",
       "source": {
         "repo": "brief2dev",
-        "commit": "d3e3c6162f9731fb482495d1e4aa1a5774af8602"
+        "commit": "63d139238f42d48f6a8fb43d876ac6a42db143d3"
       },
-      "transplanted_at": "2026-07-09T14:53:06.121Z",
+      "transplanted_at": "2026-07-10T09:15:16.452Z",
       "reapply_command": "node /Users/a13973/dev/buddypia/brief2dev/.claude/scripts/transplant-bundle.mjs --bundle git-worktree-isolation --target /Users/a13973/dev/buddypia/hackathon/DevOps×AIAgent --json",
       "files": [
         {
@@ -33,7 +33,7 @@
         {
           "path": ".claude/scripts/create-pr/ops.mjs",
           "role": "managed",
-          "sha256": "bd1bd85c9d708959e231b19b256cabaa24d1b30a3a0948318a3b255ffeccc55a"
+          "sha256": "0d739400435edecf1d6a86ba2094e47bdd82c78beaac6c5e554a8582275327f1"
         },
         {
           "path": ".claude/scripts/lib/worktree-plan-template.mjs",
@@ -43,7 +43,7 @@
         {
           "path": ".claude/scripts/mark-pre-ship-confirmed.mjs",
           "role": "managed",
-          "sha256": "49a4ad9931e7c50776a79053851ed29fde9d3ffe63d1fc4d524ea36c2cae3434"
+          "sha256": "047cf63bc4a87d5f15f9ea77d80c26994bade69514518f2d3d1cfcbfdfa73623"
         },
         {
           "path": ".claude/scripts/worktree-init.mjs",
@@ -67,7 +67,7 @@
         {
           "path": ".claude/skills/create-pr/MANIFEST.json",
           "role": "managed",
-          "sha256": "9ea73e5b5a317a72b0aa14013f8f3ae8a110bdb42d2092a7a6c4810176ccf880"
+          "sha256": "13fb921a3c87f64b3063897b63e66b75b049e70181a9e935cd7ba62eb5e9823c"
         },
         {
           "path": ".claude/skills/create-pr/references/superpowers-branch-completion-options.md",
@@ -77,7 +77,7 @@
         {
           "path": ".claude/skills/create-pr/SKILL.md",
           "role": "managed",
-          "sha256": "cec92a017ad769e447e2fff778a83cb6699479fec9767877c889bd779b6e48ec"
+          "sha256": "883fa525341ece97cfec1894ef99b2a9c2fceac7c8d479f89a5d330e24907469"
         },
         {
           "path": ".cli/_cli-dispatch.mjs",
@@ -197,7 +197,7 @@
         {
           "path": ".cli/lib/worktree-ship-report.mjs",
           "role": "managed",
-          "sha256": "7c070447def16472569476b2b4a9d53e76441c3b75246a6ed1c2f4092d7de3a3"
+          "sha256": "9c0fbbd460a52f134a18ea13b136e04379c71aeff804d74b264fc2138f5e3814"
         },
         {
           "path": ".codex/hooks.json",

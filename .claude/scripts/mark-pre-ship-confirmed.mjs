@@ -39,6 +39,7 @@
 import { execSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, utimesSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import {
   inferBranchFromWorktreePath,
   preShipMarkerPath,
@@ -288,7 +289,24 @@ function main(argv) {
   process.stdout.write(`${path}\n`);
 }
 
+/**
+ * "이 모듈이 CLI 로 직접 실행됐는가" 판정 — non-ASCII 경로 안전.
+ *
+ * 회고 2026-07-10: repo 경로에 non-ASCII 문자(예: "×", U+00D7)가 있으면
+ * `import.meta.url === \`file://${argv1}\`` 수동 concat 비교가 항상 false 다.
+ * import.meta.url 은 non-ASCII 를 percent-encode 하지만 concat 은 raw 문자열
+ * 그대로이기 때문. pathToFileURL 로 양쪽을 동일하게 정규화해 비교한다.
+ *
+ * @param {string} moduleUrl — import.meta.url
+ * @param {string|undefined} argv1 — process.argv[1]
+ * @returns {boolean}
+ */
+export function isMainModule(moduleUrl, argv1) {
+  if (!argv1) return false;
+  return moduleUrl === pathToFileURL(argv1).href;
+}
+
 // CLI entry (import 시 미실행)
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url, process.argv[1])) {
   main(process.argv);
 }
