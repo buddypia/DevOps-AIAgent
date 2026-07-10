@@ -3,21 +3,21 @@
 /**
  * pre-ship-review-guard.mjs - PreToolUse Bash Hook
  *
- * `/create-pr ship-worktree` / `ship-feature` 호출 직전에 Pre-Ship Human Review Panel
- * 컨펌 마커가 신선한지 검증. 부재 시 deny + 패널 의무 안내.
+ * `/create-pr ship-worktree` / `ship-feature` 呼び出し直前に Pre-Ship Human Review Panel
+ * 確認マーカーが新鮮であるかを検証。不在時は deny + パネル義務案内。
  *
- * 정책 SSOT: R-CM-030 "Pre-Ship Human Review Panel" 절
+ * ポリシー SSOT: R-CM-030 "Pre-Ship Human Review Panel" 節
  *
- * 동작:
+ * 動作:
  *   - tool_name != Bash → passthrough
- *   - command 가 ops.mjs ship-worktree / ship-feature 패턴 아님 → passthrough
- *   - 마커 (.tmp/pre-ship-review-confirmed-<branch>) 신선 (10분) → passthrough (allow)
- *   - 마커 부재/stale → deny + AI 에게 Human Review Panel + 사용자 컨펌 + 마커 생성 안내
+ *   - command が ops.mjs ship-worktree / ship-feature パターンではない → passthrough
+ *   - マーカー (.tmp/pre-ship-review-confirmed-<branch>) 新鮮 (10分) → passthrough (allow)
+ *   - マーカー不在/stale → deny + AI に Human Review Panel + ユーザー確認 + マーカー生成案内
  *   - error → passthrough (R-CM-006 Rule 2 fail-open)
  *
- * 마커 생성 책임:
- *   AI 가 11섹션 Human Review Panel + 사용자 "승인하고 진행" 컨펌 받은 직후
- *   `node .claude/scripts/mark-pre-ship-confirmed.mjs <branch> --quality <label>` 실행.
+ * マーカー生成責任:
+ *   AI が 11セクションの Human Review Panel + ユーザーの「承認して進行」確認を受けた直後、
+ *   `node .claude/scripts/mark-pre-ship-confirmed.mjs <branch> --quality <label>` を実行する。
  */
 
 import { existsSync, readFileSync, statSync } from 'node:fs';
@@ -31,28 +31,28 @@ import {
 import { HookOutput } from '../lib/hook-output.mjs';
 import { VALID_QUALITY_LABELS } from '../lib/quality-gate-labels.mjs';
 
-const MARKER_TTL_MS = 10 * 60 * 1000; // 10분 — 사용자 컨펌 후 ship 호출까지 충분
+const MARKER_TTL_MS = 10 * 60 * 1000; // 10分 — ユーザー確認後から ship 呼び出しまで十分
 import { CMD_ANCHOR_SRC } from '../lib/hook-anchors.mjs';
 
-// command 첫 토큰 (또는 chain operator 직후) 의 `node ... ops.mjs ship-...` 만 매칭.
-// 단순 word boundary `\bops\.mjs\b` 는 quoted string / 진단 코드 / grep / echo 안의
-// "ops.mjs ship-worktree" string 까지 false-positive 매칭하여 사용자 일반 명령을 차단했음
-// (사용자 보고 "shell 자꾸 멈춤" root cause F1, PR #493).
-// anchor (명령 시작 / chain operator / newline 직후만 매칭) 는 hook-anchors.mjs SSOT.
+// コマンドの最初のトークン (または chain operator 直後) の `node ... ops.mjs ship-...` のみマッチ。
+// 単純な word boundary `\bops\.mjs\b` は quoted string / 診断コード / grep / echo 内の
+// "ops.mjs ship-worktree" 文字列まで false-positive マッチしてユーザーの一般コマンドを遮断していた
+// (ユーザー報告 "shell がよく停止する" root cause F1, PR #493)。
+// anchor (コマンド開始 / chain operator / newline 直後のみマッチ) は hook-anchors.mjs SSOT。
 const SHIP_PATTERN = new RegExp(
   CMD_ANCHOR_SRC + '(?:cd\\s+\\S+\\s+&&\\s+)?\\s*node\\s+\\S*ops\\.mjs\\s+ship-(?:worktree|feature)\\b',
 );
 const WORKTREE_ARG = /--worktree[\s=]+["']?([^"'\s]+)["']?/;
-// chain operator: && / || / ; — 명령 chain 만 검출. standalone pipe `|` 는 제외
-// (output filtering — `cmd 2>&1 | tail` — marker touch (file write) 와 무관).
-// `&` background 도 제외 — ship 호출은 foreground 의도라 background 사용은 비정상.
-// chain 만 검출하는 이유: marker touch + ship 호출이 같은 chain 안에 있으면 hook 평가
-// 시점 marker 미반영 위험 — pipe 는 stdout transfer 라 marker file write 와 무관.
+// chain operator: && / || / ; — コマンドの chain のみ検出。standalone pipe `|` は除外
+// (output filtering — `cmd 2>&1 | tail` — marker touch (file write) とは無関係)。
+// `&` background も除外 — ship 呼び出しは foreground 意図なため background 使用は非正常。
+// chain のみ検出する理由: marker touch + ship 呼び出しが同一 chain 内にあると、hook 評価
+// 時点で marker 未反映の危険性があるため — pipe は stdout 転送なため marker file の書き込みとは無関係。
 const CHAIN_PATTERN = /&&|\|\||;/;
 
-// Bash heredoc body 제거 — `<<EOF...EOF` 안 텍스트는 *데이터* 이지 *호출 컨텍스트* 가
-// 아니므로 SHIP_PATTERN / CHAIN_PATTERN 검사 대상에서 제외해야 한다.
-// lib SSOT — destructive-git-guard 등 다른 hook 도 동일 lib 직접 import.
+// Bash heredoc body 除去 — `<<EOF...EOF` 内のテキストは *データ* であり *呼び出しコンテキスト* ではないため、
+// SHIP_PATTERN / CHAIN_PATTERN 検査の対象から除外すべきである。
+// lib SSOT — destructive-git-guard など他の hook も同一の lib を直接 import。
 import { stripHeredocBodies } from '../lib/heredoc-strip.mjs';
 
 export function isShipCommand(command) {
@@ -63,10 +63,10 @@ export function isChainedCommand(command) {
   return typeof command === 'string' && CHAIN_PATTERN.test(stripHeredocBodies(command));
 }
 
-// SSOT: branch parsing + escape 변형 정규화 + 마커 경로는 worktree-plan-path.mjs.
-// 본 hook 은 marker key 산출에 같은 정규화 결과를 사용해야 worktree-shipping-guard +
-// create-pr/ops.mjs#resolveWorktreePlanPath + mark-pre-ship-confirmed.mjs (CLI) 와
-// 일관된 branch 식별자 + 마커 경로가 보장된다 (R-CM-024).
+// SSOT: branch parsing + escape 変形正規化 + マーカーパスは worktree-plan-path.mjs。
+// 本 hook は marker key 算出に同一の正規化結果を使用しなければ、worktree-shipping-guard +
+// create-pr/ops.mjs#resolveWorktreePlanPath + mark-pre-ship-confirmed.mjs (CLI) との
+// 一貫した branch 識別子 + マーカーパスが保証されない (R-CM-024)。
 import {
   safeBranchKey,
   inferBranchFromWorktreePath,
@@ -78,7 +78,7 @@ export { safeBranchKey, inferBranchFromWorktreePath };
 
 export function extractBranch(command) {
   const m = command.match(WORKTREE_ARG);
-  if (!m) return null; // ship-feature 모드 (worktree 인자 없음)
+  if (!m) return null; // ship-feature モード (worktree 引数なし)
   return inferBranchFromWorktreePath(m[1]);
 }
 
@@ -93,47 +93,47 @@ export function isFresh(absPath, ttlMs) {
   }
 }
 
-// Quality Gate label enum SSOT: `scripts/lib/quality-gate-labels.mjs` (import 위).
-// mark-pre-ship-confirmed.mjs (발행자) + 본 hook (검증자) 가 같은 Set 인스턴스 공유 →
-// 새 라벨 추가 시 양쪽 동시 반영 (R-CM-024 회귀 차단).
-// 회고 #1 회귀 차단: marker 파일에 quality_gate 라벨 영속화 → hook 검증 → silent skip 차단.
+// Quality Gate label enum SSOT: `scripts/lib/quality-gate-labels.mjs` (import の上)。
+// mark-pre-ship-confirmed.mjs (発行側) + 本 hook (検証側) が同一の Set インスタンスを共有 →
+// 新規ラベル追加時に両方同時に反映 (R-CM-024 デグレード遮断)。
+// 振り返り #1 デグレード遮断: marker ファイルに quality_gate ラベルを永続化 → hook 検証 → silent skip 遮断。
 
 /**
- * marker 파일에서 quality_gate 라벨 추출. JSON parse + enum 검증.
+ * marker ファイルから quality_gate ラベルを抽出。JSON parse + enum 検証。
  *
- * Fail-open 정책 (R-CM-006 Rule 2): ENOENT (부재) 만 null 반환. readFileSync 의
- * I/O 오류 (EACCES / ENFILE 등) 는 throw — caller (run()) 의 외부 try/catch 가
- * 잡아 passthrough 반환. invalid JSON / enum 외 / empty 는 의도된 deny 사유.
+ * Fail-open ポリシー (R-CM-006 Rule 2): ENOENT (不在) のみ null 返却。readFileSync の
+ * I/O エラー (EACCES / ENFILE など) は throw — caller (run()) の外部 try/catch が
+ * 捕捉して passthrough を返却。invalid JSON / enum 外 / empty は意図された deny 事由。
  *
  * @param {string} absPath
- * @returns {string|null} 유효 label 또는 null (부재 / empty / invalid JSON / enum 외)
- * @throws I/O 오류 (호출자 fail-open 처리 의무)
+ * @returns {string|null} 有効な label または null (不在 / empty / invalid JSON / enum 外)
+ * @throws I/O エラー (呼び出し側の fail-open 処理義務)
  */
 export function readMarkerQualityLabel(absPath) {
-  if (!existsSync(absPath)) return null; // ENOENT — 정상 부재
-  const content = readFileSync(absPath, 'utf-8').trim(); // I/O 오류 시 throw → 외부 catch passthrough
-  if (!content) return null; // empty marker (legacy) — deny 의도
+  if (!existsSync(absPath)) return null; // ENOENT — 正常な不在
+  const content = readFileSync(absPath, 'utf-8').trim(); // I/O エラー時は throw → 外部 catch passthrough
+  if (!content) return null; // empty marker (legacy) — deny 意図
   try {
     const parsed = JSON.parse(content);
     const label = parsed?.quality_gate;
     return typeof label === 'string' && VALID_QUALITY_LABELS.has(label) ? label : null;
   } catch {
-    return null; // invalid JSON — deny 의도
+    return null; // invalid JSON — deny 意図
   }
 }
 
 /**
- * helper script (mark-pre-ship-confirmed.mjs) 의 적절한 절대 경로 산출.
+ * helper script (mark-pre-ship-confirmed.mjs) の適切な絶対パスを算出。
  *
- * Why: helper 자체가 새 feature branch 의 PR 진행 중일 수 있어 main 에는 아직 없고
- * worktree 안에만 존재할 수 있음. 그 시나리오에서 deny 메시지가 main 경로만 안내하면
- * AI 가 "Cannot find module" 에러를 만남 (2026-05-15 세션 실측). main → worktree
- * 순서로 fs.existsSync 검사 후 가장 적절한 경로 반환.
+ * Why: helper 自体が新しい feature branch の PR 進行中である可能性があり、main にはまだ存在せず
+ * worktree 内にのみ存在する可能性がある。そのシナリオで deny メッセージが main のパスのみを案内すると、
+ * AI が "Cannot find module" エラーに遭遇する (2026-05-15 セッション実測)。main → worktree
+ * の順序で fs.existsSync を検査した後に最も適切なパスを返却。
  *
- * Fail-soft: fs 접근 실패 시 main 경로 default (helper 없으면 fallback 명령 안내가 별도로 존재).
+ * Fail-soft: fs アクセス失敗時は main パスを default とします (helper がなければ fallback コマンドの案内が別途存在)。
  *
- * Export 사유 (test coverage): real-fs 단위 테스트 (mkdtempSync 격리) 로 4 분기
- * (main 존재 / 2-seg worktree / 1-seg worktree / fallback) 직접 검증.
+ * Export 事由 (test coverage): real-fs ユニットテスト (mkdtempSync 隔離) で 4つの分岐
+ * (main 存在 / 2-seg worktree / 1-seg worktree / fallback) を直接検証。
  */
 export function resolveHelperPath(projectDir, cwd) {
   const HELPER_REL = '.claude/scripts/mark-pre-ship-confirmed.mjs';
@@ -143,15 +143,15 @@ export function resolveHelperPath(projectDir, cwd) {
   } catch {
     return mainPath;
   }
-  // main 부재 → cwd 가 worktree 안이면 worktree 경로 시도.
-  // worktree path 컨벤션 2가지 모두 지원:
+  // main 不在 → cwd が worktree 内であれば worktree のパスを試行。
+  // worktree path コンベンション2種類ともにサポート:
   //   - 2 segment: .worktrees/feature/foo (GitHub Flow prefix/name)
   //   - 1 segment: .worktrees/hotfix-123 (single-segment branch)
   if (cwd && cwd.includes('/.worktrees/')) {
     const idx = cwd.indexOf('/.worktrees/');
     const after = cwd.substring(idx + '/.worktrees/'.length);
     const segments = after.split('/').filter(Boolean);
-    // 2 segment 우선 시도 (GitHub Flow)
+    // 2 segment を優先試行 (GitHub Flow)
     for (const len of [2, 1]) {
       if (segments.length >= len) {
         const worktreeRoot =
@@ -177,75 +177,75 @@ function buildDenyMessage(branch, safeKey, projectDir, cwd, chained, reason = 'm
   });
   const header =
     reason === 'quality_label_missing'
-      ? '[pre-ship-review-guard] ship 호출 차단: marker 의 quality_gate 라벨 부재/무효'
-      : '[pre-ship-review-guard] ship 호출 차단: Pre-Ship Human Review Panel 미컨펌';
+      ? '[pre-ship-review-guard] ship 呼び出し遮断: marker の quality_gate ラベル不在/無効'
+      : '[pre-ship-review-guard] ship 呼び出し遮断: Pre-Ship Human Review Panel 未確認';
   const lines = [
     header,
     '',
     ...(reason === 'quality_label_missing'
       ? [
-          'R-CM-030 Rule 8 Pre-Ship Quality Gate: marker 파일에 quality_gate 라벨 영속화 필수.',
-          'silent skip 차단 (회고 #1 — 당시 명칭 simplify agent 누락 누적 2회. 2026-05-27 사용자 결정으로 /simplify 완전 폐기 + simplifit 스킬 deprecate 후 /code-review 단일 진입점).',
+          'R-CM-030 Rule 8 Pre-Ship Quality Gate: marker ファイルに quality_gate ラベルの永続化が必須。',
+          'silent skip 遮断 (振り返り #1 — 当時の名称 simplify agent 漏れの累積2回。2026-05-27 ユーザーの決定により /simplify を完全廃棄 + simplifit スキル deprecate 後に /code-review 単一エントリーポイント)。',
           '',
-          'helper CLI 의 --quality <label> 인자 누락 시 발생합니다.',
-          '  label 종류:',
-          '    agent_go         — /code-review --fix + code-reviewer agent 둘 다 Go',
-          '    self_review_pass — agent 호출 실패/skip 시 자가 점검 통과 (Panel Decisions 사유 명시)',
-          '    trivial_skip     — R-CM-030 Rule 10 trivial (≤2 파일 + ≤20 LOC + non-substantive)',
+          'helper CLI の --quality <label> 引数が欠落した場合に発生します。',
+          '  label の種類:',
+          '    agent_go         — /code-review --fix + code-reviewer agent 両方とも Go',
+          '    self_review_pass — agent 呼び出し失敗/skip 時に自己点検通過 (Panel Decisions 理由を明示)',
+          '    trivial_skip     — R-CM-030 Rule 10 trivial (≤2 ファイル + ≤20 LOC + non-substantive)',
           '',
-          '재시도:',
+          '再試行:',
           `  node ${helperPath} ${branch || '--staged'} --quality <label>`,
           '',
         ]
       : []),
     ...(chained
       ? [
-          '⚠️ chained command 감지 (&& / || / ;). hook 은 명령 *시작 시점* 에 평가하므로,',
-          '   같은 chain 안 marker touch 가 실행돼도 hook 평가에 반영되지 않습니다.',
-          '   → marker 생성 (touch 또는 mark-pre-ship-confirmed.mjs CLI) 과 ship 호출을',
-          '   **별도 Bash call 로 분리** 후 재시도하세요.',
+          '⚠️ chained command 検知 (&& / || / ;)。hook はコマンドの *開始時点* で評価されるため、',
+          '   同一の chain 内で marker touch が実行されても hook 評価に反映されません。',
+          '   → marker 生成 (touch または mark-pre-ship-confirmed.mjs CLI) と ship 呼び出しを',
+          '   **別の Bash コールに分離** して再試行してください。',
           '',
         ]
       : []),
-    // marker_absent 시: Human Review Panel + 마커 생성 절차 안내 (정상 신규 진입)
-    // quality_label_missing 시: 위 quality_label_missing 섹션 만으로 충분 — touch fallback /
-    //   `--quality` 없는 helper 명령어 노출은 무한 deny 루프 회피용 차단 (HIGH #1)
+    // marker_absent 時: Human Review Panel + マーカー生成手順案内 (正常な新規進入)
+    // quality_label_missing 時: 上記の quality_label_missing セクションのみで十分 — touch fallback /
+    //   `--quality` のない helper コマンドの露出は無限 deny ループ回避のための遮断 (HIGH #1)
     ...(reason !== 'quality_label_missing'
       ? [
-          'R-CM-030 "Pre-Ship Human Review Panel" 절에 따라 ship-worktree / ship-feature 호출 직전에는',
-          '사람이 merge 여부를 판단할 수 있는 11섹션 의사결정 브리프를 먼저 제공해야 합니다.',
-          '단독 질문("ship으로 PR을 머지하겠습니까?")만으로는 컨펌을 받은 것으로 보지 않습니다.',
+          'R-CM-030 "Pre-Ship Human Review Panel" 節に基づき、ship-worktree / ship-feature 呼び出しの直前には、',
+          '人間が merge の可否を判断できる 11セクションの意思決定ブリーフを先に提示する必要があります。',
+          '単発の質問 (「ship で PR をマージしますか？」) のみでは、確認を受けたとは見なしません。',
           '',
-          '진행 절차:',
-          '  1. 아래 11섹션 Review 를 실제 값으로 채워 사용자에게 제공:',
+          '進行手順:',
+          '  1. 以下の 11セクションの Review を実際の値で埋めてユーザーに提供:',
           '',
           ...reviewTemplate.split('\n').map((line) => `     ${line}`),
           '',
-          '     권장 수집 명령:',
+          '     推奨収集コマンド:',
           '       git log --oneline origin/main..HEAD',
           '       git diff origin/main...HEAD --stat',
           '       git diff origin/main...HEAD --name-status',
           '       git diff origin/main...HEAD --numstat',
-          '  2. 사용자 컨펌 받기:',
-          '     - Claude Code native: AskUserQuestion 으로 "승인하고 진행" / "수정 필요" / "중단" 선택',
-          '     - Codex/Gemini/file mode: Decision Exchange 또는 일반 채팅으로 같은 3선택 확인',
-          '  3. "승인하고 진행" 선택 시 다음 마커 생성 (10분 freshness):',
+          '  2. ユーザー確認の取得:',
+          '     - Claude Code native: AskUserQuestion で「承認して進行」/「修正必要」/「中断」を選択',
+          '     - Codex/Gemini/file mode: Decision Exchange または一般的なチャットで同様の3つの選択肢を確認',
+          '  3. 「承認して進行」選択時に以下のマーカーを生成 (10分 freshness):',
           `     node ${helperPath} ${branch || '--staged'} --quality <label>`,
-          `     (cwd 어디서 호출해도 main root 의 .tmp/ 에 마커 생성. helper 경로는 fs 검사로 자동 선택)`,
-          `     label 종류: agent_go / self_review_pass / trivial_skip (helper --help 또는 본 PR Decisions 섹션 참조)`,
-          '  4. 그 다음 ship 명령 재실행',
-          '  5. ship-worktree JSON 응답의 completion_report_markdown 을 사용자에게 출력',
+          `     (cwd のどこで呼び出しても main root の .tmp/ にマーカー作成。helper パスは fs 検査で自動選択)`,
+          `     label の種類: agent_go / self_review_pass / trivial_skip (helper --help または本 PR Decisions セクションを参照)`,`,StartLine:234,TargetContent:
+          '  4. その後に ship コマンドを再実行',
+          '  5. ship-worktree JSON 応答の completion_report_markdown をユーザーに出力',
           '',
         ]
       : []),
     branch
-      ? `대상 branch: ${branch}`
-      : '주의: --worktree 인자가 누락되었거나 ship-feature 모드 (branch=staged 로 처리)',
+      ? `対象 branch: ${branch}`
+      : '注意: --worktree 引数が欠落しているか、または ship-feature モード (branch=staged として処理)',
     '',
     `marker key: ${safeKey}`,
-    'trivial 변경 (≤3 파일 / ≤50 LOC / 코드 무영향) 도 11섹션 헤더는 유지 — 내용만 축약.',
-    '한계: 본 hook 은 마커 존재 + label 검증만. AI 가 패널 없이 마커 생성 후 호출 시 우회 가능.',
-    '       → 사용자 retroactive 발견 시 R-CM-030 위반 보고.',
+    'trivial 変更 (≤3 ファイル / ≤50 LOC / コード無影響) も 11セクションのヘッダーは維持 — 内容のみ縮小。',
+    '限界: 本 hook はマーカー存在 + label 検証のみ。AI がパネルなしでマーカー生成後に呼び出す場合の迂回は可能。',
+    '       → ユーザーが retroactive に発見した場合は R-CM-030 違反を報告。',
   ];
   return lines.join('\n');
 }
@@ -254,7 +254,7 @@ export async function run(data) {
   try {
     if (data?.tool_name !== 'Bash') return HookOutput.passthrough();
     const command = data?.tool_input?.command || '';
-    // strip 1회 후 두 패턴 직접 검사 (isShipCommand + isChainedCommand 중복 strip 회피).
+    // strip 1回した後に両パターンを直接検査 (isShipCommand + isChainedCommand の重複 strip を回避)。
     const stripped = stripHeredocBodies(command);
     if (!SHIP_PATTERN.test(stripped)) return HookOutput.passthrough();
 
@@ -265,7 +265,7 @@ export async function run(data) {
 
     const chained = CHAIN_PATTERN.test(stripped);
     if (isFresh(path, MARKER_TTL_MS)) {
-      // marker 신선 + 라벨 검증 (회고 #1 회귀 차단)
+      // marker 新鮮 + ラベル検証 (振り返り #1 デグレード遮断)
       const label = readMarkerQualityLabel(path);
       if (label) return HookOutput.passthrough();
       return HookOutput.deny(

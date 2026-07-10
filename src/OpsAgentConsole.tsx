@@ -1,7 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Activity, ShieldCheck, Siren } from "lucide-react";
 
-const OPS_AGENT_ID = "cloud-run-sre";
+type AgentJobMeta = {
+  agentId: string;
+  name: string;
+  handle: string;
+  color: string;
+  title: string;
+  skillId: string;
+  inputKind: "none" | "text" | "url" | "service";
+  inputLabel: string;
+  inputPlaceholder: string;
+  findingNoun: string;
+};
 
 type RunPhase = { phase: string; status: "done" | "error"; detail: string; at: string };
 
@@ -18,7 +29,9 @@ type RunFinding = {
 
 type OpsRun = {
   id: string;
+  agentId: string;
   targetService: string;
+  input?: string;
   trigger: "web" | "a2a";
   status: "queued" | "running" | "completed" | "failed";
   phases: RunPhase[];
@@ -39,7 +52,7 @@ type OpsRun = {
 
 const PHASE_LABELS: Record<string, string> = {
   evidence: "①証拠収集",
-  triage: "②makerトリアージ",
+  triage: "②maker分析",
   gate: "③引用ゲート",
   review: "④独立checker",
   decide: "⑤判定・記録",
@@ -47,8 +60,8 @@ const PHASE_LABELS: Record<string, string> = {
 };
 
 const HEALTH_LABELS: Record<string, string> = {
-  healthy: "健全",
-  degraded: "劣化",
+  healthy: "良好",
+  degraded: "要改善",
   critical: "重大",
   unknown: "不明"
 };
@@ -58,32 +71,51 @@ function StatusBadge({ status }: { status: OpsRun["status"] }) {
   return <span className={`ops-status ops-status-${status}`}>{label}</span>;
 }
 
-export default function OpsAgentConsole() {
-  const [hired, setHired] = useState(false);
-  const [hiredLoaded, setHiredLoaded] = useState(false);
+interface OpsAgentConsoleProps {
+  projectBrief: string;
+}
+
+export default function OpsAgentConsole({ projectBrief }: OpsAgentConsoleProps) {
+  const [jobs, setJobs] = useState<AgentJobMeta[]>([]);
+  const [hiredIds, setHiredIds] = useState<Set<string>>(new Set());
   const [runs, setRuns] = useState<OpsRun[]>([]);
-  const [selectedRunId, setSelectedRunId] = useState<string>("");
+  const [selectedAgentId, setSelectedAgentId] = useState("cloud-run-sre");
+  const [selectedRunId, setSelectedRunId] = useState("");
+  const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
+  const selectedJob = useMemo(() => jobs.find((job) => job.agentId === selectedAgentId) ?? jobs[0] ?? null, [jobs, selectedAgentId]);
+  const jobByAgent = useMemo(() => new Map(jobs.map((job) => [job.agentId, job])), [jobs]);
   const selectedRun = useMemo(() => runs.find((run) => run.id === selectedRunId) ?? runs[0] ?? null, [runs, selectedRunId]);
   const hasActiveRun = runs.some((run) => run.status === "queued" || run.status === "running");
+  const hired = selectedJob ? hiredIds.has(selectedJob.agentId) : false;
+
+  const inputValue = selectedJob ? (inputValues[selectedJob.agentId] ?? (selectedJob.inputKind === "text" ? projectBrief : "")) : "";
 
   const refresh = useCallback(async () => {
     try {
-      const [hiresRes, runsRes] = await Promise.all([fetch("/api/hires"), fetch("/api/agent-runs?limit=10")]);
+      const [hiresRes, runsRes] = await Promise.all([fetch("/api/hires"), fetch("/api/agent-runs?limit=12")]);
       const hires = (await hiresRes.json()) as { hires?: Array<{ agentId: string }> };
       const runsBody = (await runsRes.json()) as { runs?: OpsRun[] };
-      setHired(Boolean(hires.hires?.some((hire) => hire.agentId === OPS_AGENT_ID)));
+      setHiredIds(new Set((hires.hires ?? []).map((hire) => hire.agentId)));
       setRuns(runsBody.runs ?? []);
-      setHiredLoaded(true);
     } catch {
       setMessage("モニタリングAPIへの接続に失敗しました。");
     }
   }, []);
 
   useEffect(() => {
-    void refresh();
+    void (async () => {
+      try {
+        const response = await fetch("/api/agent-jobs");
+        const body = (await response.json()) as { jobs?: AgentJobMeta[] };
+        setJobs(body.jobs ?? []);
+      } catch {
+        setMessage("エージェントカタログの取得に失敗しました。");
+      }
+      await refresh();
+    })();
   }, [refresh]);
 
   useEffect(() => {
@@ -95,16 +127,17 @@ export default function OpsAgentConsole() {
   }, [hasActiveRun, refresh]);
 
   async function handleToggleHire() {
+    if (!selectedJob) return;
     setBusy(true);
     setMessage("");
     try {
       if (hired) {
-        await fetch(`/api/hires/${OPS_AGENT_ID}`, { method: "DELETE" });
+        await fetch(`/api/hires/${selectedJob.agentId}`, { method: "DELETE" });
       } else {
         await fetch("/api/hires", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ agentId: OPS_AGENT_ID })
+          body: JSON.stringify({ agentId: selectedJob.agentId })
         });
       }
       await refresh();
@@ -114,13 +147,14 @@ export default function OpsAgentConsole() {
   }
 
   async function handleExecute() {
+    if (!selectedJob) return;
     setBusy(true);
     setMessage("");
     try {
       const response = await fetch("/api/agent-runs", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ agentId: OPS_AGENT_ID })
+        body: JSON.stringify({ agentId: selectedJob.agentId, input: selectedJob.inputKind === "none" ? undefined : inputValue })
       });
       const body = (await response.json()) as { runId?: string; error?: string; message?: string };
       if (!response.ok) {
@@ -148,32 +182,78 @@ export default function OpsAgentConsole() {
   const acceptedTotal = runs.reduce((sum, run) => sum + run.findings.filter((f) => f.accepted).length, 0);
   const costTotal = runs.reduce((sum, run) => sum + (run.usage?.estimatedCostUsd ?? 0), 0);
   const costPerAccepted = acceptedTotal > 0 ? costTotal / acceptedTotal : null;
+  const selectedRunJob = selectedRun ? jobByAgent.get(selectedRun.agentId) : null;
+  const findingNoun = selectedRunJob?.findingNoun ?? "所見";
 
   return (
     <div className="ops-console">
       <div className="ops-console-head">
         <div>
           <h3>
-            <Activity size={16} /> Cloud Run SRE — 実運用コンソール
+            <Activity size={16} /> エージェント実行コンソール — 8体すべて本物の実行
           </h3>
           <p className="ops-console-sub">
-            実Cloud Loggingの取得 → Gemini maker → 引用ゲート(実ログID照合) → 独立checker → Firestore記録。実行はレート制限・時間予算のハードストップ付き。
+            全エージェント共通の実パイプライン: 実証拠の収集 → Gemini maker → 引用ゲート(証拠ID照合) → 独立checker → Firestore記録。レート制限・時間予算のハードストップ付き。
           </p>
-        </div>
-        <div className="ops-console-actions">
-          <button type="button" className={`btn-hire${hired ? " is-active" : ""}`} onClick={handleToggleHire} disabled={busy || !hiredLoaded}>
-            {hired ? "解雇" : "雇う (契約を保存)"}
-          </button>
-          <button type="button" className="btn-primary" onClick={handleExecute} disabled={busy || !hired}>
-            {hasActiveRun ? "実行中…" : "実行する"}
-          </button>
-          <button type="button" className="btn-secondary" onClick={handleDrill} disabled={busy} title="実ログとしてERROR/WARNINGを注入するSREドリル">
-            模擬インシデント注入
-          </button>
         </div>
       </div>
 
-      {!hired && hiredLoaded ? <p className="ops-console-hint">「雇う」で契約がサーバーに保存され、実行が解放されます。</p> : null}
+      <div className="ops-agent-picker">
+        {jobs.map((job) => (
+          <button
+            key={job.agentId}
+            type="button"
+            className={`ops-agent-chip${selectedAgentId === job.agentId ? " is-active" : ""}`}
+            style={{ borderColor: selectedAgentId === job.agentId ? job.color : undefined }}
+            onClick={() => setSelectedAgentId(job.agentId)}
+          >
+            <span className="ops-agent-dot" style={{ background: hiredIds.has(job.agentId) ? job.color : "transparent", borderColor: job.color }} />
+            {job.name}
+          </button>
+        ))}
+      </div>
+
+      {selectedJob ? (
+        <div className="ops-job-panel">
+          <p className="ops-job-title">
+            <strong>{selectedJob.name}</strong>（{selectedJob.handle}） — {selectedJob.title}
+          </p>
+          {selectedJob.inputKind !== "none" ? (
+            <label className="ops-job-input">
+              <span>{selectedJob.inputLabel}</span>
+              {selectedJob.inputKind === "text" ? (
+                <textarea
+                  rows={3}
+                  value={inputValue}
+                  placeholder={selectedJob.inputPlaceholder}
+                  onChange={(event) => setInputValues((prev) => ({ ...prev, [selectedJob.agentId]: event.target.value }))}
+                />
+              ) : (
+                <input
+                  value={inputValue}
+                  placeholder={selectedJob.inputPlaceholder}
+                  onChange={(event) => setInputValues((prev) => ({ ...prev, [selectedJob.agentId]: event.target.value }))}
+                />
+              )}
+            </label>
+          ) : null}
+          <div className="ops-console-actions">
+            <button type="button" className={`btn-hire${hired ? " is-active" : ""}`} onClick={handleToggleHire} disabled={busy}>
+              {hired ? "解雇" : "雇う (契約を保存)"}
+            </button>
+            <button type="button" className="btn-primary" onClick={handleExecute} disabled={busy || !hired}>
+              実行する
+            </button>
+            {selectedJob.agentId === "cloud-run-sre" ? (
+              <button type="button" className="btn-secondary" onClick={handleDrill} disabled={busy} title="実ログとしてERROR/WARNINGを注入するSREドリル">
+                模擬インシデント注入
+              </button>
+            ) : null}
+          </div>
+          {!hired ? <p className="ops-console-hint">「雇う」で契約がサーバーに保存され、実行が解放されます。</p> : null}
+        </div>
+      ) : null}
+
       {message ? <p className="ops-console-message">{message}</p> : null}
 
       <div className="ops-metrics">
@@ -183,7 +263,7 @@ export default function OpsAgentConsole() {
         </div>
         <div className="ops-metric">
           <span className="ops-metric-value">{acceptedTotal}</span>
-          <span className="ops-metric-label">受入findings</span>
+          <span className="ops-metric-label">受入所見</span>
         </div>
         <div className="ops-metric">
           <span className="ops-metric-value">${costTotal.toFixed(4)}</span>
@@ -205,15 +285,16 @@ export default function OpsAgentConsole() {
               onClick={() => setSelectedRunId(run.id)}
             >
               <StatusBadge status={run.status} />
-              <span>{new Date(run.startedAt).toLocaleTimeString("ja-JP")}</span>
+              <span>{jobByAgent.get(run.agentId)?.name ?? run.agentId}</span>
               <span className="ops-run-chip-meta">
-                {run.trigger === "a2a" ? "A2A" : "Web"}・{run.findings.filter((f) => f.accepted).length}件受入
+                {new Date(run.startedAt).toLocaleTimeString("ja-JP")}・{run.trigger === "a2a" ? "A2A" : "Web"}・{run.findings.filter((f) => f.accepted).length}
+                件受入
               </span>
             </button>
           ))}
         </div>
       ) : (
-        <p className="ops-console-hint">まだランがありません。雇用して「実行する」を押すと、実ログのトリアージが始まります。</p>
+        <p className="ops-console-hint">まだランがありません。エージェントを雇用して「実行する」を押すと、実証拠の収集が始まります。</p>
       )}
 
       {selectedRun ? (
@@ -221,11 +302,11 @@ export default function OpsAgentConsole() {
           <div className="ops-run-summary">
             <StatusBadge status={selectedRun.status} />
             <span className={`ops-health ops-health-${selectedRun.serviceHealth}`}>
-              対象 {selectedRun.targetService}: {HEALTH_LABELS[selectedRun.serviceHealth]}
+              {selectedRunJob?.name ?? selectedRun.agentId} / 対象 {selectedRun.targetService}: {HEALTH_LABELS[selectedRun.serviceHealth]}
             </span>
             <span className="ops-run-meta">
-              実ログ {selectedRun.evidenceCount} 件 / {selectedRun.evidenceWindowMinutes} 分窓 / {selectedRun.model} ({selectedRun.mode}) / トークン{" "}
-              {selectedRun.usage.totalTokens} (~${selectedRun.usage.estimatedCostUsd})
+              実証拠 {selectedRun.evidenceCount} 件 / {selectedRun.model} ({selectedRun.mode}) / トークン {selectedRun.usage.totalTokens} (~$
+              {selectedRun.usage.estimatedCostUsd})
             </span>
           </div>
           {selectedRun.summary ? <p className="ops-run-text">{selectedRun.summary}</p> : null}
@@ -251,12 +332,12 @@ export default function OpsAgentConsole() {
                       <ShieldCheck size={12} /> checker: {finding.checker.verdict}
                     </span>
                     {finding.gate.citationsValid ? null : <span className="ops-verdict ops-verdict-refuted">引用ゲート棄却</span>}
-                    <span className="ops-accepted">{finding.accepted ? "受入" : "棄却"}</span>
+                    <span className="ops-accepted">{finding.accepted ? `${findingNoun}受入` : "棄却"}</span>
                   </div>
-                  <p className="ops-run-text">仮説: {finding.hypothesis}</p>
+                  <p className="ops-run-text">根拠: {finding.hypothesis}</p>
                   <p className="ops-run-text">推奨: {finding.recommendedAction}</p>
                   <p className="ops-citations">
-                    引用実ログ: {finding.citedLogIds.map((logId) => (
+                    引用証拠: {finding.citedLogIds.map((logId) => (
                       <code key={logId}>{logId}</code>
                     ))}
                   </p>
@@ -280,7 +361,7 @@ export default function OpsAgentConsole() {
 
           {selectedRun.evidenceSample.length > 0 ? (
             <details className="ops-evidence">
-              <summary>証拠ログサンプル（redaction適用済み・{selectedRun.evidenceSample.length}件表示）</summary>
+              <summary>証拠サンプル（redaction適用済み・{selectedRun.evidenceSample.length}件表示）</summary>
               {selectedRun.evidenceSample.map((evidence) => (
                 <p key={evidence.id} className="ops-evidence-row">
                   <code>{evidence.id}</code> {evidence.severity} {evidence.message}

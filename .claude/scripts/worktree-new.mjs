@@ -2,34 +2,34 @@
 /**
  * worktree-new.mjs — Worktree freshness enforcement standard entry point (Layer 1).
  *
- * 목적: 새 worktree 가 항상 최신 `origin/<base>` 기준으로 시작되도록 강제. raw
- * `git worktree add ... -b ...` 가 stale local main 위에서 분기하는 함정을 차단한다.
- * Claude Code / Codex / Gemini CLI 모두 같은 진입점을 사용 (CLI agnostic).
+ * 目的: 新しい worktree が常に最新の `origin/<base>` 基準で開始されるように強制。生の
+ * `git worktree add ... -b ...` が stale なローカル main の上で分岐する罠を遮断する。
+ * Claude Code / Codex / Gemini CLI ともに同一のエントリーポイントを使用 (CLI agnostic)。
  *
- * 흐름:
- *   1) `git fetch origin <base>` (network 실패 → fail-loud + hint)
- *   2) main worktree 이고 base 가 origin/<base> 의 FF 가능 → `git merge --ff-only` 시도
- *      (이미 동일하거나 ahead 면 SKIP). non-FF → STOP + 수동 reconcile 안내.
- *   3) `git worktree add <path> -b <branch> origin/<base>` (이미 같은 path/branch
- *      가 등록되어 있고 동일하면 멱등 SKIP; 다른 branch/path 충돌은 STOP)
+ * フロー:
+ *   1) `git fetch origin <base>` (ネットワーク失敗 → fail-loud + hint)
+ *   2) main worktree であり、かつ base が origin/<base> の FF 可能 → `git merge --ff-only` を試行
+ *      (すでに同一または ahead なら SKIP)。non-FF → STOP + 手動 reconcile 案内。
+ *   3) `git worktree add <path> -b <branch> origin/<base>` (すでに同一の path/branch
+ *      が登録されていて同一であればべき等 SKIP、別の branch/path 衝突は STOP)
  *   4) `node .claude/scripts/worktree-init.mjs --worktree <path>` chain
  *      (symlink + PLAN.md)
- *   5) JSON 보고: { ok, branch, base, base_sha, worktree_path, plan_path,
+ *   5) JSON 報告: { ok, branch, base, base_sha, worktree_path, plan_path,
  *                   actions: [...], warnings: [...] }
  *
- * 사용:
+ * 使用:
  *   node .claude/scripts/worktree-new.mjs --branch feature/<task>
  *   node .claude/scripts/worktree-new.mjs --branch fix/<bug> --base main
  *   node .claude/scripts/worktree-new.mjs --branch feature/<task> --dry-run
  *
  * exit code:
- *   0 — 성공 (생성 또는 멱등 SKIP)
- *   1 — git 실패 (fetch / non-FF / 충돌)
- *   2 — 사용자/인자 오류
+ *   0 — 成功 (生成またはべき等 SKIP)
+ *   1 — git 失敗 (fetch / non-FF / 衝突)
+ *   2 — ユーザー/引数エラー
  *
- * 본 스크립트는 R-CM-008 Rule 4-6 + worktree freshness 요구사항의 단일 진입점이다.
- * 직접 `git worktree add` 호출을 대체한다. 가이드 문서 (CLAUDE.md / commit-guard /
- * worktree-policy-guard) 가 본 스크립트를 가리킨다.
+ * 本スクリプトは R-CM-008 Rule 4-6 + worktree freshness 要求事項の単一エントリーポイントである。
+ * 直接の `git worktree add` 呼び出しを代替する。ガイド文書 (CLAUDE.md / commit-guard /
+ * worktree-policy-guard) が本スクリプトを指す。
  */
 
 import { execFileSync } from 'node:child_process';
@@ -48,8 +48,8 @@ const KNOWN_BRANCH_PREFIXES = ['feature', 'fix', 'hotfix', 'chore', 'refactor', 
  * ============================================================ */
 
 function parseArgs(argv) {
-  // base=null → CLI 진입점이 detectDefaultBase() 로 자동 감지 (master 기본 repo 호환).
-  // 명시 --base 는 그대로 사용. runWorktreeNew 직접 호출(테스트/프로그램)은 기본 'main'.
+  // base=null → CLI エントリーポイントが detectDefaultBase() により自動検知 (master 基本 repo 互換)。
+  // 明示的な --base はそのまま使用。runWorktreeNew 直接呼び出し (テスト/プログラム) はデフォルト 'main'。
   const args = { branch: null, base: null, dryRun: false, path: null, json: true };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -72,16 +72,16 @@ Usage:
   node .claude/scripts/worktree-new.mjs --branch <name> [--base main] [--path <dir>] [--dry-run]
 
 Options:
-  --branch, -b <name>   브랜치명 (필수). feature/<task> / fix/<bug> 형식 권장.
-  --base <name>         base 브랜치 (default: 자동 감지 — origin/HEAD → main → master).
-                        fetch + worktree base. origin 없으면 local <base> 사용.
-  --path, -p <dir>      worktree 경로 (default: .worktrees/<branch>).
-  --dry-run             실행하지 않고 계획만 출력.
-  --no-json             보고 JSON 대신 사람-읽기 텍스트만 stderr 로.
-  --help, -h            본 메시지 출력.
+  --branch, -b <name>   ブランチ名 (必須)。feature/<task> / fix/<bug> 形式を推奨。
+  --base <name>         base ブランチ (default: 自動検知 — origin/HEAD → main → master)。
+                        fetch + worktree base。origin がなければ local <base> を使用。
+  --path, -p <dir>      worktree パス (default: .worktrees/<branch>)。
+  --dry-run             実行せずに計画のみ出力。
+  --no-json             報告 JSON の代わりに人読みテキストのみを stderr に。
+  --help, -h            本メッセージを出力。
 
-흐름: (origin 있으면) fetch origin <base> → ff base (가능 시) → git worktree add
-<baseRef> 기준 → worktree-init.mjs chain. origin 없으면 fetch/ff skip + local <base>.
+フロー: (origin があれば) fetch origin <base> → ff base (可能な場合) → git worktree add
+<baseRef> 基準 → worktree-init.mjs chain。origin がなければ fetch/ff skip + local <base>。
 `;
 
 /* ============================================================
@@ -198,7 +198,7 @@ export function isAncestor(a, b, cwd, gitFn = defaultGitFn) {
 
 /**
  * Whether a named remote (default `origin`) is configured.
- * 외부 이식: origin 없는 순수 로컬 repo 에서 graceful degrade 의 핵심 판정.
+ * 外部移植: origin がない純粋なローカル repo ででの graceful degrade の中核判定。
  */
 export function remoteExists(remote = 'origin', cwd, gitFn = defaultGitFn) {
   try {
@@ -214,12 +214,12 @@ export function remoteExists(remote = 'origin', cwd, gitFn = defaultGitFn) {
 
 /**
  * Detect the repository's default base branch when `--base` is not given.
- * 우선순위:
- *   1) origin/HEAD symbolic-ref (origin 있고 default 설정 시 가장 권위적)
- *   2) 로컬 main → master 존재 순
- *   3) 현재 branch (detached HEAD 제외)
- *   4) 'main' (최종 fallback)
- * 외부 이식: master 기본 repo 에서 --base 없이도 정상 동작하게 한다.
+ * 優先順位:
+ *   1) origin/HEAD symbolic-ref (origin があり default 設定時に最も権威的)
+ *   2) ローカルの main → master の存在順
+ *   3) 現在の branch (detached HEAD を除く)
+ *   4) 'main' (最終 fallback)
+ * 外部移植: master 基本 repo で --base がなくても正常に動作するようにする。
  */
 export function detectDefaultBase(cwd, gitFn = defaultGitFn) {
   try {
@@ -229,7 +229,7 @@ export function detectDefaultBase(cwd, gitFn = defaultGitFn) {
       if (name) return name;
     }
   } catch {
-    // origin/HEAD 미설정 → 다음 단계
+    // origin/HEAD 未設定 → 次の段階
   }
   for (const cand of ['main', 'master']) {
     if (localBranchExists(cand, cwd, gitFn)) return cand;
@@ -238,7 +238,7 @@ export function detectDefaultBase(cwd, gitFn = defaultGitFn) {
     const cur = (gitFn(['rev-parse', '--abbrev-ref', 'HEAD'], { cwd }) || '').trim();
     if (cur && cur !== 'HEAD') return cur;
   } catch {
-    // detached / git 외부 → 최종 fallback
+    // detached / git 外部 → 最終 fallback
   }
   return 'main';
 }
@@ -267,17 +267,17 @@ export function validateBranch(branch) {
 }
 
 /**
- * Step 2 helper: main worktree + checked-out base 인 경우 local base 를 origin/<base>
- * 로 fast-forward 한다. origin 부재 시 FF 대상이 없으므로 SKIP (local 이 authoritative).
+ * Step 2 helper: main worktree + checked-out base の場合、local base を origin/<base>
+ * に fast-forward する。origin 不在時は FF 対象がないため SKIP (local が authoritative)。
  * non-FF divergent / FF 실패는 STOP (result.errors push + false 반환).
  *
- * @returns {boolean} true=계속 진행, false=STOP (호출측이 result 반환)
+ * @returns {boolean} true=継続進行、false=STOP (呼び出し側が result を返却)
  */
 export function ffLocalBaseIfPossible({ base, originExists, cwd, gitFn, dryRun, result }) {
   if (!isMainWorktree(cwd, gitFn)) {
     result.warnings.push(
       'invoked from a linked worktree (not main); skipped ff of local main. ' +
-        `worktree 는 ${originExists ? `origin/${base}` : `local ${base}`} 기준으로 생성됩니다.`,
+        `worktree は ${originExists ? `origin/${base}` : `local ${base}`} 기준으로 생성됩니다.`,
     );
     return true;
   }
@@ -331,18 +331,18 @@ export function ffLocalBaseIfPossible({ base, originExists, cwd, gitFn, dryRun, 
     }
   }
 
-  // local 이 unique commits 를 가짐 — divergent. STOP (silent rebase 회피).
+  // local が unique commits を所持 — divergent。STOP (silent rebase 回避)。
   result.errors.push(
-    `local ${base} diverged from origin/${base} (ahead ${localAhead}, behind ${localBehind}). ` +
-      `silent rebase 위험 회피를 위해 STOP. 수동 reconcile 후 재시도하세요.`,
+    `local ${base} diverged from origin/${base} (ahead ${localAhead}, behind ${localBehind})。` +
+      `silent rebase の危険回避のため STOP。手動で reconcile させた後に再度お試しください。`,
   );
   result.errors.push(
-    `hint (brief2dev R-CM-008 정합 복구 — rebase/merge 는 destructive-git-guard 차단 + main 직접 흐름이라 비권장): ` +
-      `1) git format-patch origin/${base}..HEAD -o .tmp/git-backup/ (로컬 unique commits patch 백업) ` +
-      `2) git reset --hard origin/${base} (사용자 직접 실행 — destructive-git-guard 가 AI 차단) ` +
-      `3) make wt.new BR=feature/<task> 재시도 (diverge 해소 후 성공) ` +
-      `4) worktree 안에서 git am <main>/.tmp/git-backup/*.patch (원본 author/message/timestamp 보존) ` +
-      `5) /create-pr ship-worktree.`,
+    `hint (brief2dev R-CM-008 整合復旧 — rebase/merge は destructive-git-guard 遮断 + main 直接フローのため非推奨): ` +
+      `1) git format-patch origin/${base}..HEAD -o .tmp/git-backup/ (ローカルの unique commits patch バックアップ) ` +
+      `2) git reset --hard origin/${base} (ユーザーが直接実行 — destructive-git-guard が AI を遮断) ` +
+      `3) make wt.new BR=feature/<task> 再試行 (diverge 解消後に成功) ` +
+      `4) worktree 内で git am <main>/.tmp/git-backup/*.patch (オリジナル author/message/timestamp 保存) ` +
+      `5) /create-pr ship-worktree。`,
   );
   return false;
 }
@@ -386,23 +386,23 @@ export function runWorktreeNew(opts) {
   const wtPathAbs = resolve(cwd, wtPathRel);
   result.worktree_path = wtPathAbs;
 
-  // origin 원격 유무 → graceful degrade. 없으면 fetch/FF 를 skip 하고 local <base> 를
-  // worktree base 로 사용한다 (외부 순수 로컬 repo 호환). origin 있으면 기존 freshness 흐름.
+  // origin リモートの有無 → graceful degrade。なければ fetch/FF を skip し local <base> を
+  // worktree base として使用する (外部の純粋なローカル repo 互換)。origin があれば従来の freshness フロー。
   const originExists = remoteExists('origin', cwd, gitFn);
   const baseRef = originExists ? `origin/${base}` : base;
 
-  // origin 부재 + local base 브랜치도 부재 → 진행 불가 (base 지정 안내).
-  // dry-run 도 검사한다 (show-ref 는 read-only) — 실패할 계획을 ok 로 표시하지 않도록
-  // 정확히 preview (code-review LOW: misleading dry-run plan 해소).
+  // origin 不在 + local base ブランチも不在 → 進行不可 (base 指定案内)。
+  // dry-run も検査する (show-ref は read-only) — 失敗する計画を ok と表示しないように
+  // 正確に preview (code-review LOW: misleading dry-run plan 解消)。
   if (!originExists && !localBranchExists(base, cwd, gitFn)) {
     result.errors.push(
-      `no 'origin' remote 이고 local branch "${base}" 도 없습니다. ` +
-        `--base <기존 branch> 로 지정하거나 origin 을 설정하세요. (git remote -v)`,
+      `no 'origin' remote であり、かつ local branch "${base}" もありません。` +
+        `--base <既存の branch> で指定するか、origin を設定してください。(git remote -v)`,
     );
     return result;
   }
 
-  // Step 1: fetch origin <base> (origin 있을 때만)
+  // Step 1: fetch origin <base> (origin がある場合のみ)
   if (originExists) {
     const cacheDir = join(cwd, '.brief2dev', 'system'); // @layout-resolver-allow
     const cacheFile = join(cacheDir, `fetch-cache-${base}.json`);
@@ -439,7 +439,7 @@ export function runWorktreeNew(opts) {
           result.errors.push(
             `fetch origin ${base} failed: ${(e.stderr || e.message || '').toString().trim()}`,
           );
-          result.errors.push('hint: 네트워크 / origin 설정 확인 후 재시도. (git remote -v)');
+          result.errors.push('hint: ネットワーク / origin 設定を確認のうえ再試行してください。(git remote -v)');
           return result;
         }
       }
@@ -448,7 +448,7 @@ export function runWorktreeNew(opts) {
     result.actions.push(`no 'origin' remote — skipped fetch; using local ${base} as base`);
   }
 
-  // Resolve base SHA for reporting + base for worktree add (baseRef = origin/<base> 또는 local <base>)
+  // Resolve base SHA for reporting + base for worktree add (baseRef = origin/<base> または local <base>)
   if (!dryRun) {
     try {
       result.base_sha = gitFn(['rev-parse', baseRef], { cwd }).trim();
@@ -458,7 +458,7 @@ export function runWorktreeNew(opts) {
     }
   }
 
-  // Step 2: FF local base to origin/<base> when in main worktree (origin 있을 때만)
+  // Step 2: FF local base to origin/<base> when in main worktree (origin がある場合のみ)
   if (!ffLocalBaseIfPossible({ base, originExists, cwd, gitFn, dryRun, result })) {
     return result;
   }
@@ -471,29 +471,29 @@ export function runWorktreeNew(opts) {
   const matchingWtForBranch = existingWorktrees.find((w) => w.branch === branch);
 
   if (matchingWtForPath && matchingWtForPath.branch === branch) {
-    // 멱등: 동일 path + 동일 branch — 이미 등록된 worktree, skip add 그대로 init 으로.
+    // べき等: 同一 path + 同一 branch — すでに登録された worktree、skip add でそのまま init へ。
     result.warnings.push(
       `worktree already registered at ${wtPathRel} on branch ${branch} (skipped add — idempotent).`,
     );
     result.actions.push('skip git worktree add (idempotent)');
   } else if (matchingWtForPath) {
     result.errors.push(
-      `path ${wtPathRel} 가 다른 branch (${matchingWtForPath.branch}) worktree 로 등록되어 있습니다. ` +
-        `먼저 git worktree remove ${wtPathRel} 후 재시도.`,
+      `path ${wtPathRel} が別の branch (${matchingWtForPath.branch}) の worktree として登録されています。` +
+        `先に git worktree remove ${wtPathRel} の後に再試行してください。`,
     );
     return result;
   } else if (matchingWtForBranch) {
     result.errors.push(
-      `branch ${branch} 는 이미 다른 worktree (${matchingWtForBranch.path}) 에 체크아웃되어 있습니다. ` +
-        `같은 branch 는 1 worktree 만 허용 — 다른 path 사용 또는 기존 worktree 정리.`,
+      `branch ${branch} はすでに別の worktree (${matchingWtForBranch.path}) にチェックアウトされています。` +
+        `同一の branch は 1 worktree のみ許容 — 別の path を使用するか、既存の worktree を整理してください。`,
     );
     return result;
   } else if (localBranchExists(branch, cwd, gitFn)) {
-    // 이미 로컬 branch 가 존재 — base 와의 FF 가능성 확인 후 add.
+    // すでにローカル branch が存在 — base との FF 可能性を確認後に add。
     if (!isAncestor(baseRef, branch, cwd, gitFn)) {
       result.warnings.push(
-        `local branch "${branch}" 가 이미 존재하고 ${baseRef} 의 후손이 아닙니다. ` +
-          `기존 branch 그대로 worktree 추가 (base 강제 안 함) — stale 가능성 있음.`,
+        `local branch "${branch}" がすでに存在し、かつ ${baseRef} の後継ではありません。` +
+          `既存の branch そのままで worktree 追加 (base 強制しない) — stale の可能性あり。`,
       );
     }
     result.actions.push(`git worktree add ${wtPathRel} (existing branch ${branch})`);
@@ -538,7 +538,7 @@ export function runWorktreeNew(opts) {
       try {
         const out = nodeFn([initScript, '--worktree', wtPathAbs], { cwd, timeout: 30_000 });
         // worktree-init prints PLAN.md path on creation — parse for reporting.
-        const planMatch = out.match(/PLAN\.md (?:자동 생성|이미 존재[^:]*): (.+)/);
+        const planMatch = out.match(/PLAN\.md (?:自動生成|すでに存在[^:]*): (.+)/);
         if (planMatch) {
           result.plan_path = resolve(wtPathAbs, planMatch[1].trim());
         }
@@ -560,10 +560,10 @@ export function runWorktreeNew(opts) {
  * ============================================================ */
 
 /**
- * 두 경로가 (symlink 해석 후) 같은 파일을 가리키는지 판정.
- * import.meta.url 은 realpath 를 반환하지만 process.argv[1] 은 symlink 경로일 수 있어
- * (예: /tmp → /private/var 심볼릭, 또는 symlink 로 노출된 스크립트) 단순 비교 시 mismatch
- * → CLI 진입이 silently SKIP 된다. 양쪽에 realpath 를 적용해 symlink 경로 실행도 감지.
+ * 2つのパスが (symlink 解釈後) 同一のファイルを指すか判定。
+ * import.meta.url は realpath を返却するが、process.argv[1] は symlink パスの場合があり、
+ * (例: /tmp → /private/var シンボリック、または symlink で露出されたスクリプト) 単純比較時に mismatch
+ * → CLI 進入が silently に SKIP される。両方に realpath を適用して symlink パス実行も検知。
  */
 export function isSamePath(p1, p2, realpathFn = realpathSync) {
   if (!p1 || !p2) return false;
@@ -602,12 +602,12 @@ if (isMain()) {
     process.exit(2);
   }
 
-  // Always operate from main worktree root so .worktrees/ 하위가 일관된다.
-  // (worktree 안에서 호출해도 main repo 의 .worktrees/<branch> 로 생성됨)
+  // Always operate from main worktree root so .worktrees/ 配下が一致する。
+  // (worktree 内で呼び出しても main repo の .worktrees/<branch> として生成される)
   const invocationCwd = process.cwd();
   const mainRoot = resolveMainRoot(invocationCwd) || invocationCwd;
 
-  // --base 미지정 시 repo 의 default branch 자동 감지 (master 기본 repo 호환).
+  // --base 未指定時は repo の default branch を自動検知 (master 基本 repo 互換)。
   const base = args.base || detectDefaultBase(mainRoot);
 
   const result = runWorktreeNew({

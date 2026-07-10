@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   applyCitationGate,
   createRun,
-  executeOpsAgentRun,
+  executeAgentRun,
   getOpsConfig,
   parseModelJson,
   redactSensitiveText,
@@ -11,7 +11,7 @@ import {
   summarizeLogEntry
 } from "../server/opsAgent.js";
 import { createMemoryRunStore } from "../server/runStore.js";
-import type { GenAIClient, LogEvidence, OpsConfig } from "../server/opsAgent.js";
+import type { AgentJobRuntime, GenAIClient, LogEvidence, OpsConfig } from "../server/opsAgent.js";
 
 function makeConfig(overrides: Partial<OpsConfig> = {}): OpsConfig {
   return { ...getOpsConfig({} as NodeJS.ProcessEnv), project: "test-project", ...overrides };
@@ -41,6 +41,16 @@ function makeGenAiStub(outputs: string[]): { genAi: { client: GenAIClient; mode:
     }
   };
   return { genAi: { client, mode: "vertex" }, calls: () => calls };
+}
+
+function makeJob(evidence: LogEvidence[], overrides: Partial<AgentJobRuntime> = {}): AgentJobRuntime {
+  return {
+    makerRole: "You are a test agent.",
+    checkerRole: "You are a test reviewer.",
+    emptyNote: "証拠がないため対象なし",
+    collectEvidence: async () => ({ evidence }),
+    ...overrides
+  };
 }
 
 function makerJson(citedLogIds: string[], severity = "high") {
@@ -132,17 +142,17 @@ describe("parseModelJson", () => {
   });
 });
 
-describe("executeOpsAgentRun", () => {
+describe("executeAgentRun", () => {
   const config = makeConfig();
 
   it("completes the full loop: evidence -> maker -> gate -> checker -> decide", async () => {
     const { genAi, calls } = makeGenAiStub([makerJson(["log-1"]), CHECKER_CONFIRM]);
     const store = createMemoryRunStore();
     const run = createRun("cloud-run-sre", "a2a-agent-marketplace", "web", { config, genAi });
-    const result = await executeOpsAgentRun(run, {
+    const result = await executeAgentRun(run, {
       config,
       genAi,
-      fetchEvidence: async () => [makeEvidence("log-1"), makeEvidence("log-2", { severity: "WARNING" })],
+      job: makeJob([makeEvidence("log-1"), makeEvidence("log-2", { severity: "WARNING" })]),
       store
     });
 
@@ -164,10 +174,10 @@ describe("executeOpsAgentRun", () => {
   it("rejects findings with fabricated citations via the objective gate", async () => {
     const { genAi } = makeGenAiStub([makerJson(["fake-id"]), CHECKER_CONFIRM]);
     const run = createRun("cloud-run-sre", "a2a-agent-marketplace", "web", { config, genAi });
-    const result = await executeOpsAgentRun(run, {
+    const result = await executeAgentRun(run, {
       config,
       genAi,
-      fetchEvidence: async () => [makeEvidence("log-1")],
+      job: makeJob([makeEvidence("log-1")]),
       store: createMemoryRunStore()
     });
 
@@ -180,10 +190,10 @@ describe("executeOpsAgentRun", () => {
   it("drops findings the independent checker refutes (maker != checker)", async () => {
     const { genAi } = makeGenAiStub([makerJson(["log-1"]), CHECKER_REFUTE]);
     const run = createRun("cloud-run-sre", "a2a-agent-marketplace", "web", { config, genAi });
-    const result = await executeOpsAgentRun(run, {
+    const result = await executeAgentRun(run, {
       config,
       genAi,
-      fetchEvidence: async () => [makeEvidence("log-1")],
+      job: makeJob([makeEvidence("log-1")]),
       store: createMemoryRunStore()
     });
 
@@ -195,15 +205,15 @@ describe("executeOpsAgentRun", () => {
   it("completes without calling Gemini when no evidence exists (cost 0)", async () => {
     const { genAi, calls } = makeGenAiStub([makerJson(["log-1"])]);
     const run = createRun("cloud-run-sre", "a2a-agent-marketplace", "web", { config, genAi });
-    const result = await executeOpsAgentRun(run, {
+    const result = await executeAgentRun(run, {
       config,
       genAi,
-      fetchEvidence: async () => [],
+      job: makeJob([]),
       store: createMemoryRunStore()
     });
 
     expect(result.status).toBe("completed");
-    expect(result.evidenceWindowMinutes).toBe(1440);
+    expect(result.summary).toBe("証拠がないため対象なし");
     expect(result.findings).toHaveLength(0);
     expect(result.usage.totalTokens).toBe(0);
     expect(calls()).toBe(0);
@@ -212,10 +222,10 @@ describe("executeOpsAgentRun", () => {
   it("fails with a hard stop when the time budget is exceeded", async () => {
     const { genAi } = makeGenAiStub([makerJson(["log-1"])]);
     const run = createRun("cloud-run-sre", "a2a-agent-marketplace", "web", { config, genAi });
-    const result = await executeOpsAgentRun(run, {
+    const result = await executeAgentRun(run, {
       config,
       genAi,
-      fetchEvidence: async () => [makeEvidence("log-1")],
+      job: makeJob([makeEvidence("log-1")]),
       store: createMemoryRunStore(),
       timeBudgetMs: -1
     });
@@ -224,32 +234,14 @@ describe("executeOpsAgentRun", () => {
     expect(result.error).toContain("hard stop");
   });
 
-  it("fetches evidence from the per-target project when the allowlist maps one", async () => {
-    const crossConfig = makeConfig({ targetAllowlist: ["a2a-agent-marketplace", "aitech-good-a13973/vibementor-ai"] });
-    const { genAi } = makeGenAiStub([makerJson(["log-1"]), CHECKER_CONFIRM]);
-    const seenProjects: Array<string | undefined> = [];
-    const run = createRun("cloud-run-sre", "vibementor-ai", "web", { config: crossConfig, genAi });
-    const result = await executeOpsAgentRun(run, {
-      config: crossConfig,
-      genAi,
-      fetchEvidence: async ({ project }) => {
-        seenProjects.push(project);
-        return [makeEvidence("log-1", { service: "vibementor-ai" })];
-      },
-      store: createMemoryRunStore()
-    });
-
-    expect(result.status).toBe("completed");
-    expect(seenProjects).toEqual(["aitech-good-a13973"]);
-  });
 
   it("marks findings uncertain instead of crashing when the checker call fails", async () => {
     const { genAi } = makeGenAiStub([makerJson(["log-1"]), "__THROW__"]);
     const run = createRun("cloud-run-sre", "a2a-agent-marketplace", "web", { config, genAi });
-    const result = await executeOpsAgentRun(run, {
+    const result = await executeAgentRun(run, {
       config,
       genAi,
-      fetchEvidence: async () => [makeEvidence("log-1")],
+      job: makeJob([makeEvidence("log-1")]),
       store: createMemoryRunStore()
     });
 

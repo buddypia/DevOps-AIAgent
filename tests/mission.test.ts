@@ -23,7 +23,7 @@ describe("autonomous mission engine", () => {
     expect(mission.submissionPack.storyMarkdownPath).toBe("/docs/03_submission/submission-pack.md");
     expect(mission.submissionPack.publicGitHubUrl).toBe("https://github.com/buddypia/DevOps-AIAgent");
     expect(mission.submissionPack.ciWorkflowUrl).toBe("https://github.com/buddypia/DevOps-AIAgent/actions/workflows/ci.yml");
-    expect(mission.submissionPack.deployedUrl).toBe("https://a2a-agent-marketplace-rfyriohodq-an.a.run.app");
+    expect(mission.submissionPack.deployedUrl).toBe("https://a2a-agent-marketplace-nxbw7of6cq-an.a.run.app");
     expect(mission.submissionPack.videoStoryboard.length).toBeGreaterThanOrEqual(6);
     expect(mission.submissionPack.requirements.map((item) => item.id)).toEqual(
       expect.arrayContaining(["github", "deployed-url", "github-ci", "protopedia", "video", "architecture", "tag"])

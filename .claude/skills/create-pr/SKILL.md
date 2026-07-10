@@ -2,52 +2,52 @@
 name: create-pr
 model: sonnet
 effort: low
-description: "Worktree 격리 GitHub Flow (8 명령, v2 응답 계약). Mode A (staged 격리 → Feature PR → main 동기화) + Mode B (PLAN.md 기반 worktree 배포). unstaged/untracked는 stash 백업으로 100% 보전."
-argument-hint: "[추가 지시사항 (선택)]"
+description: "Worktree 隔離 GitHub Flow (8 コマンド, v2 応答契約)。Mode A (staged 隔離 → Feature PR → main 同期) + Mode B (PLAN.md 基準の worktree 配備)。unstaged/untracked は stash バックアップで 100% 保存。"
+argument-hint: "[追加指示事項 (選択)]"
 ---
 
-## `/create-pr` — Worktree 격리 GitHub Flow
+## `/create-pr` — Worktree 隔離 GitHub Flow
 
-AI가 병렬로 변경한 결과를 Feature PR → main 동기화까지 자동 수행. 두 가지 모드 지원, 질문 없이 자동 진행.
+AI が並行して変更した結果を Feature PR → main 同期まで自動実行。2つのモードをサポート、質問なしで自動進行。
 
-> **권고 (강제 X)**: 본 스킬 호출 직전, 변경 size 에 따라 `/pre-ship-quality-advisor` 실행을 권장한다. `/code-review --fix` (Claude Code, simplification + correctness 1순위) / `code-standards-aligner` (포터블 fallback) / final-review (모든 PR) / `/code-review high` (substantial 변경의 review-only correctness verdict 옵션) 도구 우선순위와 매뉴얼 체크리스트를 제안. 다른 CLI (Gemini CLI, Codex 등) 환경에서도 매뉴얼 체크리스트로 fallback 동작.
+> **推奨 (強制ではない)**: 本スキル呼び出しの直前、変更 size に応じて `/pre-ship-quality-advisor` の実行を推奨する。`/code-review --fix` (Claude Code, simplification + correctness が最優先) / `code-standards-aligner` (ポータブルな fallback) / final-review (すべての PR) / `/code-review high` (実質的な変更の review-only correctness verdict オプション) ツールの優先順位とマニュアルチェックリストを提案。他の CLI (Gemini CLI, Codex など) 環境でもマニュアルチェックリストに fallback して動作。
 
 ### 핵심 불변식 + 금지 사항
 
-**불변식**: unstaged/untracked는 실행 전후로 정확히 동일하다.
-- Mode A Phase 1: worktree 격리 → 원본 HEAD 불변
-- Mode A Phase 2: dirty main 은 자동 stash 하지 않고 sync 를 중단(`sync_status: local_changes`)한다. 원본 working tree 를 건드리지 않으며, 사용자가 수동으로 commit/stash 후 재시도한다.
+**불변식**: unstaged/untracked는 실행 전후로 정확히 동일해야 한다.
+- Mode A Phase 1: worktree 隔離 → オリジナル HEAD 不変
+- Mode A Phase 2: dirty main は自動 stash せずに sync を中断 (`sync_status: local_changes`) する。オリジナル working tree に手を加えず、ユーザーが手動で commit/stash させた後に再試行する。
 
-**Worktree Commit Requirement**: Mode B `ship-worktree` 는 dirty worktree 를 배포하지 않는다.
-- PR 생성/머지 전에 `git status --porcelain --untracked-files=all` 이 clean 이어야 한다.
-- uncommitted tracked/untracked 변경이 있으면 `code: "commit_required"` 로 실패한다.
-- AI 는 본인이 만든 파일만 stage/commit 한 뒤 `ship-worktree` 를 다시 실행한다.
-- 사용자가 명시적으로 WIP 보존/커밋 금지를 요청한 경우에는 `ship-worktree` 대신 작업 상태를 보고하고 중단한다.
+**Worktree Commit Requirement**: Mode B `ship-worktree` は dirty worktree を配備しない。
+- PR 生成/マージ前に `git status --porcelain --untracked-files=all` が clean である必要がある。
+- uncommitted tracked/untracked 変更がある場合は `code: "commit_required"` で失敗する。
+- AI は自身が作成したファイルのみを stage/commit させた後に `ship-worktree` を再実行する。
+- ユーザーが明示的に WIP 保存/コミット禁止を要求した場合は、`ship-worktree` の代わりに作業状態を報告して中断する。
 
-**금지**: 원본 working tree 수정 · `git reset --hard` · `git checkout .` · `git restore .` · `git clean -f` · `git stash clear` (R-CM-008 Rule 7 — clear 만 차단, 그 외 stash 허용) · `--force` push · main 삭제 · 충돌 자동 해결
+**禁止**: オリジナル working tree の修正 · `git reset --hard` · `git checkout .` · `git restore .` · `git clean -f` · `git stash clear` (R-CM-008 Rule 7 — clear のみ遮断、その他 stash 許容) · `--force` push · main 削除 · 衝突の自動解決
 
 ### v2 응답 계약 (모든 명령 공통)
 
 ```jsonc
 {
   "ok": true | false,
-  "mode": "staged" | "worktree" | null,    // AI 분기 지표
+  "mode": "staged" | "worktree" | null,    // AI 分岐指標
   "command": "init" | "verify-plan" ...,
   "sync_status"?: "synced" | "fetch_failed" | "local_changes" | "ff_failed",
-  "changed_files"?: ["a.md", "b/c.mjs"],   // ship-feature/ship-worktree 머지 성공 시
-  "changed_files_tree"?: "└── ...",         // 사람용 markdown box-drawing 트리
-  "completion_report_markdown"?: "# PR 승인 후 완료 보고\n...", // ship-worktree 승인 후 사용자 보고 템플릿
+  "changed_files"?: ["a.md", "b/c.mjs"],   // ship-feature/ship-worktree マージ成功時
+  "changed_files_tree"?: "└── ...",         // 人用の markdown box-drawing ツリー
+  "completion_report_markdown"?: "# PR 承認後の完了報告\n...", // ship-worktree 承認後のユーザー報告テンプレート
   "warnings"?: ["..."],
-  "error"?: "...",     // ok:false 시
-  "hint"?: "..."       // ok:false 시 회복 안내
+  "error"?: "...",     // ok:false 時
+  "hint"?: "..."       // ok:false 時の回復案内
 }
 ```
 
-**fail-loud 의미론** (R-CM-010 정합): `finalize`/`cleanup-worktree`의 fetch/local_changes/ff 실패는 `ok:false` + `sync_status`. silent warning 아님. dirty main 은 `sync_status: local_changes` 로 중단하며 원본 working tree 를 건드리지 않는다.
+**fail-loud セマンティクス** (R-CM-010 整合): `finalize`/`cleanup-worktree` の fetch/local_changes/ff 失敗は `ok:false` + `sync_status`。silent warning ではない。dirty main は `sync_status: local_changes` で中断し、オリジナル working tree に手を加えない。
 
-**Post-merge 트리 보고 의무 (`changed_files_tree`)**: `ship-feature` / `ship-worktree` 가 `merged: true` 응답 시 `changed_files` (path 배열) + `changed_files_tree` (markdown box-drawing 트리) 두 필드를 포함한다. AI 는 머지 보고 직후 `changed_files_tree` 필드 값을 **사용자에게 그대로 출력**하여 어떤 파일이 머지됐는지 인지 가능하게 한다. gh 호출 실패 시 `changed_files: []` + `changed_files_tree: "(no files)"` (silent fail-open — 핵심 머지 결과 영향 없음).
+**Post-merge ツリー報告義務 (`changed_files_tree`)**: `ship-feature` / `ship-worktree` が `merged: true` 応答時に `changed_files` (path 配列) + `changed_files_tree` (markdown box-drawing ツリー) の2つのフィールドを包含する。AI はマージ報告の直後、`changed_files_tree` フィールドの値を**ユーザーにそのまま出力**し、どのファイルがマージされたかを認知できるようにする。gh 呼び出し失敗時は `changed_files: []` + `changed_files_tree: "(no files)"` (silent fail-open — 中核のマージ結果に影響なし)。
 
-**승인 후 완료 보고 의무 (`completion_report_markdown`)**: `ship-worktree` 는 PR/cleanup 후 `completion_report_markdown` 필드를 포함한다. AI 는 사용자 승인 후 ship 을 실행했다면 이 필드를 사용자에게 출력해야 한다. 생성 SSOT 는 `.cli/lib/worktree-ship-report.mjs#buildPostApprovalCompletionReport` 이며, PR URL/merge commit/CI status, cleanup 상황, 반영 파일 tree, 남은 대응, 문제/개선 메모를 포함한다.
+**承認後の完了報告義務 (`completion_report_markdown`)**: `ship-worktree` は PR/cleanup 後に `completion_report_markdown` フィールドを包含する。AI はユーザー承認後に ship を実行したならば、このフィールドをユーザーに出力しなければならない。生成 SSOT は `.cli/lib/worktree-ship-report.mjs#buildPostApprovalCompletionReport` であり、PR URL/merge commit/CI status、cleanup 状況、反映ファイル tree、残りの対応、問題/改善メモを包含する。
 
 ### ops.mjs 사용
 
@@ -55,40 +55,40 @@ AI가 병렬로 변경한 결과를 Feature PR → main 동기화까지 자동 �
 node .claude/scripts/create-pr/ops.mjs <command> [--key value ...]
 ```
 
-설정: `.claude/skills/create-pr/config.json` — `github_account`, `base_branch`(기본 `main`), `enforce_ssh_remote`(기본 false). ops.mjs가 `gh auth token -u`로 `GH_TOKEN` 자동 주입.
+設定: `.claude/skills/create-pr/config.json` — `github_account`、`base_branch` (基本 `main`)、`enforce_ssh_remote` (基本 false)。ops.mjs が `gh auth token -u` で `GH_TOKEN` を自動注入。
 
 | 명령 | Mode | 인자 | 역할 |
 |---|---|---|---|
-| `init` | staged | — | base 확인 + 동시 실행 보호(30min mtime) + CI Mirror Gate(60min stamp) + staged 추출 + 기밀 차단 + gh auth |
-| `isolate` | staged | `--branch <b>` | worktree + feature 브랜치 생성 + staged `apply --index` |
-| `commit` | staged | `--message <m> [--files <f1,f2>]` | worktree 내 커밋 |
-| `ship-feature` | staged | `--title <t> [--body <b>] [--no-merge]` | push → 멱등 PR → squash merge → remote branch 삭제 |
-| `finalize` | staged | — | worktree 제거 + 원본 main 동기화 (dirty 시 abort, fail-loud) |
-| `verify-plan` | worktree | `--worktree <p> [--force]` | PLAN.md 미완료 체크박스 검증 (코드블록/HTML주석 strip, 취소 마커 인식) |
-| `ship-worktree` | worktree | `--worktree <p> --title <t> [--body <b>] [--force-plan] [--no-merge] [--no-cleanup]` | PLAN.md 검증 + committed/clean worktree 검증 + push + 멱등 PR + auto full cleanup (기본값 — `cleanup-worktree` 위임: worktree·branch 제거 + auto-checkpoint stash drop + CONTEXT.json 정리 + main 동기화) |
-| `cleanup-worktree` | worktree | `--worktree <p>` | worktree 제거 + branch 삭제 + auto-checkpoint stash drop + CONTEXT.json 정리 + main 동기화 (fail-loud). `--no-cleanup` 으로 ship 한 경우 별도 호출 |
+| `init` | staged | — | base 確認 + 同時実行保護 (30min mtime) + CI Mirror Gate (60min stamp) + staged 抽出 + 機密遮断 + gh auth |
+| `isolate` | staged | `--branch <b>` | worktree + feature ブランチ生成 + staged `apply --index` |
+| `commit` | staged | `--message <m> [--files <f1,f2>]` | worktree 内のコミット |
+| `ship-feature` | staged | `--title <t> [--body <b>] [--no-merge]` | push → べき等 PR → squash merge → remote branch 削除 |
+| `finalize` | staged | — | worktree 除去 + オリジナル main 同期 (dirty 時は abort、fail-loud) |
+| `verify-plan` | worktree | `--worktree <p> [--force]` | PLAN.md 未完了チェックボックス検証 (コードブロック/HTML コメントのストリップ、キャンセルマーカーの認識) |
+| `ship-worktree` | worktree | `--worktree <p> --title <t> [--body <b>] [--force-plan] [--no-merge] [--no-cleanup]` | PLAN.md 検証 + committed/clean worktree 検証 + push + べき等 PR + auto full cleanup (デフォルト値 — `cleanup-worktree` に委譲: worktree・branch 除去 + auto-checkpoint stash drop + CONTEXT.json 整理 + main 同期) |
+| `cleanup-worktree` | worktree | `--worktree <p>` | worktree 除去 + branch 削除 + auto-checkpoint stash drop + CONTEXT.json 整理 + main 同期 (fail-loud)。`--no-cleanup` で ship した場合に別途呼び出し |
 
-### AI 실행 시퀀스 — Mode A (Staged 격리)
+### AI 실행 시퀀스 — Mode A (Staged 隔離)
 
-각 응답이 `ok: false`면 즉시 중단 + 오류 보고 + `finalize` 호출.
+各応答が `ok: false` ならば即時中断 + エラー報告 + `finalize` 呼び出し。
 
 ```bash
 OPS="node .claude/scripts/create-pr/ops.mjs"
 
 $OPS init                                             # Step 1
-$OPS isolate --branch "$BRANCH"                       # Step 2 (AI가 BRANCH 결정)
-$OPS commit --message "$MSG"                          # Step 3 (필요 시 --files로 여러 번)
-$OPS ship-feature --title "$FT" --body "$FB"          # Step 4 (CI 완료까지 최대 5분 대기)
+$OPS isolate --branch "$BRANCH"                       # Step 2 (AI が BRANCH を決定)
+$OPS commit --message "$MSG"                          # Step 3 (必要時に --files で複数回)
+$OPS ship-feature --title "$FT" --body "$FB"          # Step 4 (CI 完了まで最大 5分待機)
 $OPS finalize                                         # Step 5
-# → finalize의 sync_status !== 'synced' 이면 추가 조치 필요
-#   (local_changes: dirty main → 수동 commit/stash 후 재시도)
+# → finalize の sync_status !== 'synced' の場合は追加措置が必要
+#   (local_changes: dirty main → 手動で commit/stash させた後に再試行)
 ```
 
-### AI 실행 시퀀스 — Mode B (Worktree, feature-pilot 연동)
+### AI 실행 시퀀스 — Mode B (Worktree, feature-pilot 連動)
 
-`.worktrees/<branch>` 에서 작업한 기능을 PR로 내고 정리할 때 사용. PLAN.md 체크박스 검증 후 진행.
+`.worktrees/<branch>` で作業した機能を PR に出して整理する際に使用。PLAN.md チェックボックス検証の後に進行。
 
-> **PLAN.md 취소 항목 처리**: 빈 체크박스(`- [ ]`)에 `(취소됨)` / `(dropped)` / `~~취소선~~` 마커가 있으면 무시하고 통과. 코드 블록(```` ``` ````)과 HTML 주석(`<!-- -->`) 안의 체크리스트는 자동 strip되어 false positive 방지. `--force` / `--force-plan` 으로 강제 우회 가능.
+> **PLAN.md キャンセル項目の処理**: 空のチェックボックス (`- [ ]`) に `(キャンセル済み)` / `(dropped)` / `~~取り消し線~~` マーカーがあれば無視して通過。コードブロック (```` ``` ````) と HTML コメント (`<!-- -->`) 内のチェックリストは自動的に strip され、false positive を防止。`--force` / `--force-plan` で強制的に迂回可能。
 
 ```bash
 OPS="node .claude/scripts/create-pr/ops.mjs"
@@ -97,74 +97,74 @@ WT_PATH=".worktrees/feature/add-login"
 # 1. PLAN.md 검증 (선택, ship-worktree 내부에서도 자동 검증)
 $OPS verify-plan --worktree "$WT_PATH"
 
-# 2. 품질 검사 및 커밋 (필수: ship-worktree는 uncommitted 변경 있으면 commit_required 에러)
+# 2. 品質検査およびコミット (必須: ship-worktree は uncommitted 変更があれば commit_required エラー)
 # cd $WT_PATH && $QUALITY_GATE_CMD && git add . && git commit -m "..." && cd -
-#   ($QUALITY_GATE_CMD = project-config.json#commands.quality_gate, null이면 스킵 — R-CM-009 Rule 3)
+#   ($QUALITY_GATE_CMD = project-config.json#commands.quality_gate, null ならスキップ — R-CM-009 Rule 3)
 
-# 3. Push 및 PR 생성 (squash merge, 기존 PR 있으면 멱등 재사용)
+# 3. Push および PR 生成 (squash merge、既存の PR があればべき等再利用)
 # 옵션: --force-plan (PLAN 미완료 우회), --no-merge (PR만 생성), --no-cleanup (자동 full cleanup opt-out)
-# 기본값: 머지 성공 시 cleanup-worktree 에 위임하여 worktree·branch 제거 +
-#         auto-checkpoint stash drop + CONTEXT.json 정리 + main 동기화까지 일괄 수행
+# デフォルト値: マージ成功時に cleanup-worktree に委譲し、worktree・branch 除去 +
+#         auto-checkpoint stash drop + CONTEXT.json 整理 + main 同期まで一括遂行
 $OPS ship-worktree --worktree "$WT_PATH" --title "$FT" --body "$FB"
 
-# 4. (--no-cleanup 으로 ship 한 경우에만 별도 호출) Worktree·branch·stash 정리 + CONTEXT.json + main 동기화
+# 4. (--no-cleanup で ship した場合にのみ別途呼び出し) Worktree・branch・stash 整理 + CONTEXT.json + main 同期
 $OPS cleanup-worktree --worktree "$WT_PATH"
 ```
 
-AI 판단 영역: BRANCH(Conventional Commits, 30자 이내), 커밋 메시지, PR 제목/본문, PLAN.md 취소 항목 명시 판단.
+AI 판단 영역: BRANCH (Conventional Commits, 30文字以内)、コミットメッセージ、PR タイトル/本文、PLAN.md キャンセル項目の明示判断。
 
 ## 훅 연동 (commit-guard / destructive-git-guard)
 
-`init` / `isolate` / `commit` 이 갱신하는 `.tmp/create-pr-active` 플래그 (mtime 기준 30분 freshness — ship-feature 5min polling + finalize 1min 커버)로 두 훅이 자동 완화:
-- **commit-guard**: `/create-pr` 외 직접 `git commit` / 브랜치 생성 차단 → 플래그 freshness 시 통과
-- **destructive-git-guard**: `git merge --ff-only` 및 `git worktree remove` 만 추가 허용 (그 외 파괴 명령은 플래그 무관 차단)
-- `finalize` / `cleanup-worktree` 종료 시 플래그 자동 제거
+`init` / `isolate` / `commit` が更新する `.tmp/create-pr-active` フラグ (mtime 基準 30分 freshness — ship-feature 5min polling + finalize 1min カバー) により、2つのフックが自動緩和:
+- **commit-guard**: `/create-pr` 以外の直接の `git commit` / ブランチ生成を遮断 → フラグ freshness 時に通過
+- **destructive-git-guard**: `git merge --ff-only` および `git worktree remove` のみ追加許容 (その他の破壊コマンドはフラグに関係なく遮断)
+- `finalize` / `cleanup-worktree` 終了時にフラグを自動除去
 
-**동시 실행 보호**: `init` 호출 시 30초 이내 active flag 가 있으면 거부. 이전 세션이 완료되지 않은 상태에서 새 세션 진입을 차단해 데이터 손실 방지.
+**同時実行保護**: `init` 呼び出し時に 30秒以内に active flag があれば拒否。以前のセッションが完了していない状態での新規セッション進入を遮断してデータ損失を防止。
 
 ## Branch Completion Options
 
-worktree 작업이 끝났지만 PR, 보관, 폐기 중 어떤 종료 경로를 선택할지 정해야 할 때는 `references/superpowers-branch-completion-options.md`를 참조한다. 이 reference는 Superpowers의 branch finishing UX를 brief2dev Mode B와 destructive guard 정책에 맞춰 재작성한 것이다.
+worktree 作業が終わったが PR、保管、廃棄のうちどの終了経路を選択すべきか決定する必要がある場合は `references/superpowers-branch-completion-options.md` を参照する。この reference は Superpowers の branch finishing UX を brief2dev Mode B と destructive guard ポリシーに合わせて再作成したものである。
 
 ## Not For / Boundaries
 
 | 상황 | 처리 |
 |---|---|
-| feature 브랜치에서 `init` 실행 | 에러 (main만 허용) |
-| 로컬 main이 origin/main보다 **앞섬** | 에러 (자동 push는 의도치 않은 commit 전파 위험으로 비활성) |
-| 로컬 main이 origin/main보다 **뒤쳐짐** | 경고, finalize가 ff-merge로 동기화 |
-| `gh` CLI 미인증 | 에러 |
-| `git fetch` 실패 (오프라인) | 경고, 플로우 진행 |
-| ship-worktree 시 PLAN.md 미완료 | 에러 (`--force-plan` 또는 취소 마커로 우회) |
-| ship-worktree 시 worktree 에 uncommitted 변경 | 에러 (`code: "commit_required"`; 먼저 본인 변경만 commit) |
-| PR 재생성 | 멱등 (open PR 재사용 + title/body 업데이트) |
-| BLOCKED/BEHIND mergeStateStatus | `pending: true` 반환 (graceful — 에러 아님) |
-| 다른 create-pr 세션 진행 중 | `init` 거부 (30분 mtime 체크 — ship-feature 5min polling + finalize 1min 안전) |
+| feature ブランチで `init` 実行 | エラー (main のみ許容) |
+| ローカル main が origin/main より **先行** | エラー (自動 push は意図しないコミット伝播の危険のため非活性) |
+| ローカル main が origin/main より **遅延** | 警告、finalize が ff-merge で同期 |
+| `gh` CLI 未認証 | エラー |
+| `git fetch` 失敗 (オフライン) | 警告、フロー進行 |
+| ship-worktree 時 PLAN.md 未完了 | エラー (`--force-plan` またはキャンセルマーカーで迂回) |
+| ship-worktree 時 worktree に uncommitted 変更 | エラー (`code: "commit_required"`; 先に自身が作成した変更のみ commit) |
+| PR 再生成 | べき等 (open PR 再利用 + title/body アップデート) |
+| BLOCKED/BEHIND mergeStateStatus | `pending: true` 返却 (graceful — エラーではない) |
+| 他の create-pr セッション進行中 | `init` 拒否 (30分 mtime チェック — ship-feature 5min polling + finalize 1min 安全) |
 
-**다루지 않는 범위**: 품질 게이트(CI 담당, brief2dev는 `init`이 q.ci-mirror 자동 실행) · hotfix · rebase 플로우(squash 고정) · 충돌 자동 해결 · multi-repo·서브모듈 · 다중 버전 릴리즈(GitHub Flow 단일 브랜치) · 원본 unstaged/untracked의 worktree 이주
+**扱わない範囲**: 品質ゲート (CI 担当、brief2dev は `init` が q.ci-mirror 自動実行) · hotfix · rebase フロー (squash 固定) · 衝突自動解決 · multi-repo・サブモジュール · マルチバージョンリリース (GitHub Flow 単一ブランチ) · オリジナル unstaged/untracked の worktree 移住
 
 ## Pre-flight Checklist
 
 | ID | 항목 | 필수 | 담당 |
 |----|------|------|------|
-| PF-001 | init: main 최신성 + staged 존재 + 기밀 파일 차단 + gh auth + 동시 실행 보호 (30min flag mtime) | ✅ | ops.mjs |
+| PF-001 | init: main 最新性 + staged 存在 + 機密ファイル遮断 + gh auth + 同時実行保護 (30min flag mtime) | ✅ | ops.mjs |
 | PF-002 | init: CI Mirror Gate (make q.ci-mirror, 60min stamp freshness) | ✅ | ops.mjs |
-| PF-003 | ship-worktree: PLAN.md 검증 + committed/clean worktree 검사 (`commit_required`) | ✅ | ops.mjs |
+| PF-003 | ship-worktree: PLAN.md 検証 + committed/clean worktree 検査 (`commit_required`) | ✅ | ops.mjs |
 
 ## Post-flight Checklist
 
 | ID | 항목 | 필수 |
 |----|------|------|
-| POF-001 | ship-feature 완료 (`merged === true` 또는 `pending === true` graceful) | ✅ |
-| POF-002 | finalize 완료 (`sync_status === 'synced'` 또는 의도된 fail-loud 응답) | ✅ |
-| POF-003 | cleanup-worktree 완료 시 `sync_status === 'synced'` 또는 의도된 fail-loud 응답 (`local_changes`/`ff_failed`/`fetch_failed`) | ✅ |
+| POF-001 | ship-feature 完了 (`merged === true` または `pending === true` graceful) | ✅ |
+| POF-002 | finalize 完了 (`sync_status === 'synced'` または意図された fail-loud 応答) | ✅ |
+| POF-003 | cleanup-worktree 完了時に `sync_status === 'synced'` または意図された fail-loud 応答 (`local_changes`/`ff_failed`/`fetch_failed`) | ✅ |
 
 ## Maintenance
 
-- **Boundary (R-CM-028)**: boundary-uniform — 본 스킬은 관점 1 (brief2dev 자체 거버넌스/룰/스킬/hook 변경) + 관점 2 (scaffold 내부 feature/bug-fix) 양쪽에서 동일 의미로 사용. main + worktree-aware 분기는 코드 레벨 (commit-guard / destructive-git-guard) 에서 자동 처리되며, 두 관점 모두 같은 흐름 (init/isolate/commit/ship/finalize) 을 따름. 분기 메커니즘 불필요.
-- **Sources**: R-CM-008 (git-workflow), R-CM-010 (verification-before-completion, fail-loud 의미론), R-CM-028 (two-perspective-boundary), `git-worktree(1)`, GitHub REST `PUT /repos/{owner}/{repo}/pulls/{n}/merge`
-- **관련 스크립트**: `.claude/scripts/create-pr/ops.mjs` — 8명령 통합 실행 엔진
-- **관련 훅**: `.cli/hooks/commit-guard.mjs`, `.cli/hooks/destructive-git-guard.mjs`
-- **테스트**: `tests/unit/create-pr-ops.test.mjs` (verify-plan + 응답 계약), `tests/unit/create-pr-spec.test.mjs` (PLAN.md 파서 + parseArgs + finalize 상태 머신 + scope-aware gate + 동시 실행 보호 등 fragile 영역 격리 검증)
-- **Known limits**: `git merge --ff-only`는 실행 중 remote 변경 시 실패 (`sync_status: ff_failed`) · dirty main 은 동기화하지 않고 중단 (`sync_status: local_changes`) — 사용자가 수동 commit/stash 후 재시도 (다음 worktree-new 의 fetch+ff 가 self-heal) · BLOCKED/BEHIND mergeStateStatus 시 `pending` 반환 — AI 가 CI 통과 후 재시도 또는 수동 머지 · multi-commit은 `commit --files` 수동 분할 · `--key=value` 형식 미지원 (모든 명령 `--key value` 형식 사용)
+- **Boundary (R-CM-028)**: boundary-uniform — 本スキルは観点 1 (brief2dev 自体のガバナンス/ルール/スキル/hook 変更) + 観点 2 (scaffold 内部の feature/bug-fix) の両方で同一の意味で使用。main + worktree-aware 分岐はコードレベル (commit-guard / destructive-git-guard) で自動処理され、両観点ともに同一のフロー (init/isolate/commit/ship/finalize) に従う。分岐メカニズムは不要。
+- **Sources**: R-CM-008 (git-workflow), R-CM-010 (verification-before-completion, fail-loud セマンティクス), R-CM-028 (two-perspective-boundary), `git-worktree(1)`, GitHub REST `PUT /repos/{owner}/{repo}/pulls/{n}/merge`
+- **関連スクリプト**: `.claude/scripts/create-pr/ops.mjs` — 8コマンド統合実行エンジン
+- **関連フック**: `.cli/hooks/commit-guard.mjs`, `.cli/hooks/destructive-git-guard.mjs`
+- **テスト**: `tests/unit/create-pr-ops.test.mjs` (verify-plan + 応答契約), `tests/unit/create-pr-spec.test.mjs` (PLAN.md パーサー + parseArgs + finalize 状態マシン + scope-aware gate + 同時実行保護などの fragile 領域の隔離検証)
+- **Known limits**: `git merge --ff-only` は実行中の remote 変更時に失敗 (`sync_status: ff_failed`) · dirty main は同期せずに中断 (`sync_status: local_changes`) — ユーザーが手動で commit/stash させた後に再試行 (次の worktree-new の fetch+ff が self-heal) · BLOCKED/BEHIND mergeStateStatus 時に `pending` 返却 — AI が CI 通過後に再試行または手動マージ · multi-commit は `commit --files` 手動分割 · `--key=value` 形式は未サポート (すべてのコマンドで `--key value` 形式を使用)
 - **Last updated**: 2026-05-14

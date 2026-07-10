@@ -230,11 +230,11 @@ export default function AppHome() {
         <li className="flow-step">
           <div className="flow-badge">6</div>
           <div className="flow-body">
-            <h2>雇ったSREエージェントが本物のDevOps運用を実行</h2>
+            <h2>雇ったエージェントが本物の仕事を実行 — 8体すべて実データで動く</h2>
             <p className="flow-desc">
-              デモではなく実実行 — 実Cloud Loggingを取得し、Geminiが自律判断し、独立checkerの検証を経てFirestoreへ記録する。
+              デモではなく実実行 — 実ログ/実CI/実脆弱性DB/実HTML/実A2A委任を証拠に、Geminiが自律判断し、独立checkerの検証を経てFirestoreへ記録する。
             </p>
-            <OpsAgentConsole />
+            <OpsAgentConsole projectBrief={brief} />
           </div>
         </li>
 

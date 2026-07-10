@@ -3,35 +3,35 @@
 /**
  * worktree-shipping-guard.mjs - Stop Hook
  *
- * worktree 안에 uncommitted 변경 또는 unmerged commit 이 있으면 Stop 을 BLOCK 한다.
- * uncommitted 변경은 먼저 commit 하도록, unmerged commit 은 사용자에게 PR/merge 진행 여부를
- * 확인한 뒤 명시 컨펌이 있을 때만 `/create-pr ship-worktree` 실행을 유도한다.
+ * worktree 内に uncommitted な変更または unmerged な commit があれば Stop を BLOCK する。
+ * uncommitted な変更は先に commit するように促し、unmerged な commit はユーザーに PR/merge の進行可否を
+ * 確認した上で、明示的な確認がある場合のみ `/create-pr ship-worktree` の実行を誘導する。
  *
- * 정책 SSOT: R-CM-030 (worktree-auto-ship.md) + R-CM-036 (worktree-session-ownership.md)
+ * ポリシー SSOT: R-CM-030 (worktree-auto-ship.md) + R-CM-036 (worktree-session-ownership.md)
  *
- * 동작:
- *   - user abort / context limit → passthrough (사용자 명시 중단 존중)
- *   - .tmp/create-pr-active 신선 (30min) → passthrough (/create-pr 진행 중)
- *   - 모든 worktree 가 다음 중 하나면 → passthrough
- *       · main 브랜치 (worktree list 의 첫 entry)
- *       · hotfix/* / hotfix-* 브랜치 (escape hatch, R-CM-008 정합)
- *       · 본 세션 소유가 아닌 worktree (타 세션 / orphan — R-CM-036 세션 소유권 필터)
- *       · 시도 마커 신선 (5min) — 이미 한 번 ship 시도한 clean worktree
- *       · origin/main..HEAD 가 비어있고 uncommitted 변경도 없음
- *   - 본 세션 소유 (owned) + uncommitted 변경 있는 worktree 1+ → BLOCK (시도 마커 생성 안 함)
- *   - 위 외에 owned + unmerged commit 있는 worktree 1+ → 시도 마커 생성 + BLOCK
+ * 動作:
+ *   - user abort / context limit → passthrough (ユーザーの明示的な中断を尊重)
+ *   - .tmp/create-pr-active 新鮮 (30分) → passthrough (/create-pr 進行中)
+ *   - すべての worktree が以下のいずれかであれば → passthrough
+ *       · main ブランチ (worktree list の最初のエントリー)
+ *       · hotfix/* / hotfix-* ブランチ (escape hatch、R-CM-008 整合)
+ *       · 本セッション所有ではない worktree (他セッション / orphan — R-CM-036 セッション所有権フィルター)
+ *       · 試行マーカー新鮮 (5分) — すでに1度 ship 試行した clean worktree
+ *       · origin/main..HEAD が空で、uncommitted な変更もなし
+ *   - 本セッション所有 (owned) + uncommitted な変更がある worktree 1+ → BLOCK (試行マーカーは生成しない)
+ *   - 上記以外で owned + unmerged な commit がある worktree 1+ → 試行マーカー生成 + BLOCK
  *   - error → passthrough (R-CM-006 Rule 2 fail-open)
  *
- * 세션 소유권 (R-CM-036, 2-Layer): Stop stdin 의 session_id + cwd 로 소유 worktree 만 차단 대상에
- *   포함한다. Layer 1 = cwd 가 worktree 내부 (Codex/Antigravity), Layer 2 = `.session-owner`
- *   사이드카 === session_id (Claude Code, cwd=main). 타 세션/orphan 은 stderr 알림 후 passthrough.
+ * セッション所有権 (R-CM-036, 2-Layer): Stop stdin の session_id + cwd で所有 worktree のみを遮断対象に
+ *   含める。Layer 1 = cwd が worktree 内部 (Codex/Antigravity)、Layer 2 = `.session-owner`
+ *   サイドカー === session_id (Claude Code、cwd=main)。他セッション/orphan は stderr での通知後 passthrough。
  *
- * 사용자 결정 (2026-05-10):
- *   - 트리거: uncommitted 변경 또는 commit + unmerged 시 BLOCK
- *   - 실패 정책: 한 번 시도 후 다음 Stop 통과 (사용자에게 보고하고 멈춤)
- *     단, uncommitted 변경은 작업 완료로 볼 수 없으므로 마커로 통과시키지 않음.
+ * ユーザー決定 (2026-05-10):
+ *   - トリガー: uncommitted な変更または commit + unmerged 時に BLOCK
+ *   - 失敗ポリシー: 1回試行後は次の Stop は通過 (ユーザーに報告して停止)
+ *     ただし、uncommitted な変更は作業完了と見なせないため、マーカーによる通過はさせない。
  *
- * Reference 패턴: worktree-policy-guard.mjs, quality-gate-stop-guard.mjs
+ * Reference パターン: worktree-policy-guard.mjs, quality-gate-stop-guard.mjs
  */
 
 import { existsSync, statSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
@@ -60,24 +60,24 @@ import {
   buildPreShipApprovalReview,
   parseNameStatusRows,
 } from '../lib/worktree-ship-report.mjs';
-// worktree 루트 판정 = 단일 SSOT (R-CM-037). 세션축 무관 순수함수.
+// worktree ルート判定 = 単一の SSOT (R-CM-037)。セッション軸無関係の純粋関数。
 import { resolveWorktreeRoot } from '../lib/worktree-path.mjs';
-// parseWorktreeList SSOT 는 worktree-plan-path.mjs (R-CM-036 worktree-owner-tracker 와 공유).
-// 기존 import 계약(테스트 + 외부 import) 보존을 위해 로컬 바인딩 re-export.
+// parseWorktreeList SSOT は worktree-plan-path.mjs (R-CM-036 worktree-owner-tracker と共有)。
+// 既存の import 契約 (テスト + 外部 import) の保存のためローカルバインディングを re-export。
 export { parseWorktreeList };
 
-const CREATE_PR_ACTIVE_TTL_MS = 30 * 60 * 1000; // 30 min — /create-pr 진행 중 마커
-const ATTEMPT_MARKER_TTL_MS = 5 * 60 * 1000; // 5 min — 한 번 시도 후 사용자 보고/멈춤
+const CREATE_PR_ACTIVE_TTL_MS = 30 * 60 * 1000; // 30 分 — /create-pr 進行中マーカー
+const ATTEMPT_MARKER_TTL_MS = 5 * 60 * 1000; // 5 分 — 1回試行後にユーザー報告/停止
 const ESCAPE_HATCH_PATTERNS = [/^hotfix\//, /^hotfix-/];
 
-// Layer 2 staleness 임계 (사용자 결정 부재 — AI default; R-CM-033 #6 패턴, 운영 후 조정).
-// 측정은 **이미 fetch 된 origin/main** 기준 (네트워크 호출 X — Stop hook 비용 회피).
-// worktree-new.mjs 가 첫 진입 시 fetch 하므로 baseline 신선. 시간 경과로 stale 가시화.
+// Layer 2 staleness 閾値 (ユーザー決定不在 — AI デフォルト; R-CM-033 #6 パターン、運用後に調整)。
+// 測定は **すでに fetch された origin/main** 基準 (ネットワーク呼び出しなし — Stop hook コストの回避)。
+// worktree-new.mjs が最初の進入時に fetch するため baseline は新鮮。時間の経過により stale が可視化される。
 export const STALENESS_BEHIND_THRESHOLD = 20;
 export const STALENESS_AGE_DAYS_THRESHOLD = 7;
 
 /**
- * 파일 mtime freshness 검사. 부재 / stat 실패 → false.
+ * ファイルの mtime freshness 検査。不在 / stat 失敗 → false。
  */
 export function isFresh(absPath, ttlMs) {
   if (!existsSync(absPath)) return false;
@@ -95,9 +95,9 @@ export function isEscapeHatchBranch(branch) {
 }
 
 /**
- * worktree 의 unmerged commit 수.
- *   - origin/main 우선, 부재 시 main fallback.
- *   - git rev-list 실패 → 0 (보수적, fail-open 으로 false negative).
+ * worktree の unmerged な commit 数。
+ *   - origin/main を優先、不在時は main を fallback。
+ *   - git rev-list 失敗 → 0 (保守的、fail-open により false negative)。
  */
 export function countUnmergedCommits(worktreePath) {
   for (const base of ['origin/main', 'main']) {
@@ -108,9 +108,9 @@ export function countUnmergedCommits(worktreePath) {
 }
 
 /**
- * worktree 의 uncommitted 변경 수.
- *   - tracked 수정 + untracked 파일 포함
- *   - git status 실패 → 0 (fail-open)
+ * worktree の uncommitted な変更数。
+ *   - tracked の修正 + untracked ファイルを含む
+ *   - git status 失敗 → 0 (fail-open)
  */
 export function countUncommittedChanges(worktreePath) {
   const out = safeGit('status --porcelain --untracked-files=all', worktreePath, { timeout: 3000 });
@@ -120,11 +120,11 @@ export function countUncommittedChanges(worktreePath) {
 }
 
 /**
- * worktree base freshness 측정 (Layer 2 — 측정만, 차단 추가 X).
- *   - behind: HEAD 가 origin/main 에서 얼마나 뒤쳐졌나 (commit 개수)
- *   - merge_base_age_days: merge-base(HEAD, origin/main) commit 의 경과 일수
- *   - origin/main 없으면 main fallback. 둘 다 없으면 null (측정 불가 — fail-open).
- *   - 네트워크 호출 안 함 — 이미 fetch 된 ref 기준. Stop hook 비용 회피.
+ * worktree base freshness 測定 (Layer 2 — 測定のみ、遮断追加なし)。
+ *   - behind: HEAD が origin/main からどれくらい遅れているか (commit 数)
+ *   - merge_base_age_days: merge-base (HEAD, origin/main) commit の経過日数
+ *   - origin/main がなければ main を fallback。両方なければ null (測定不可 — fail-open)。
+ *   - ネットワーク呼び出しなし — すでに fetch された ref 基準。Stop hook コストの回避。
  */
 export function measureStaleness(worktreePath, opts = {}) {
   const _safeGit = opts._safeGit || safeGit;
@@ -150,7 +150,7 @@ export function measureStaleness(worktreePath, opts = {}) {
 }
 
 /**
- * staleness 측정 결과를 임계와 비교. 임계 초과 시 reason 배열 반환, 아니면 [].
+ * staleness 測定結果を閾値と比較。閾値超過時は reason 配列を返却、そうでなければ []。
  */
 export function evaluateStaleness(staleness) {
   if (!staleness) return [];
@@ -167,7 +167,7 @@ export function evaluateStaleness(staleness) {
 }
 
 /**
- * 시도 마커 경로. branch 의 슬래시는 `__` 로 치환 (filename safe).
+ * 試行マーカーパス。branch のスラッシュは `__` に置換 (filename safe)。
  */
 export function attemptMarkerPath(projectDir, branch) {
   const safe = (branch || 'unknown').replace(/[\/\\]/g, '__');
@@ -186,19 +186,19 @@ export function touchAttemptMarker(projectDir, branch) {
 }
 
 /**
- * Stop hook 핵심 판정.
+ * Stop hook コア判定。
  *   @param {string} projectDir - main repo path
  *   @returns {{ block: boolean, candidates: Array<{path, branch, commits, uncommitted, commit_required?: boolean}>, reason: string }}
  */
 /**
- * worktree 안에 PLAN.md 가 존재하는지 검사 (M1 — stop loop 회피용 사전 안내).
- *   ship-worktree 는 PLAN.md 미존재 시 거부 → 5분 마커 후 재차단 무한 반복 위험.
- *   본 검사는 BLOCK 메시지에 plan_missing 정보를 실어 AI 가 자동 작성하도록 유도.
+ * worktree 内に PLAN.md が存在するか検査 (M1 — stop loop 回避のための事前案内)。
+ *   ship-worktree は PLAN.md 不在時に拒否 → 5分マーカー後に再遮断の無限ループの危険性。
+ *   本検査は BLOCK メッセージに plan_missing 情報を載せ、AI が自動で作成するように誘導する。
  */
 export function isPlanPresent(worktreePath, opts = {}) {
   const _existsSync = opts._existsSync || existsSync;
-  // PLAN.md 위치: .tmp/worktree-<safeBranch>/PLAN.md (worktree-plan-path.mjs SSOT).
-  // 기존 worktree 루트 PLAN.md 는 머지 누출 차단 위해 폐기.
+  // PLAN.md の位置: .tmp/worktree-<safeBranch>/PLAN.md (worktree-plan-path.mjs SSOT)。
+  // 既存の worktree ルートの PLAN.md は、マージ漏洩防止のために廃棄。
   return _existsSync(resolveWorktreePlanPath(worktreePath));
 }
 
@@ -251,10 +251,10 @@ export function collectReviewSnapshot(worktreePath, opts = {}) {
 }
 
 /**
- * worktree 의 `.session-owner` 사이드카 첫 줄(session_id). 부재/실패/빈 파일 → null.
- *   R-CM-036 의 worktree-session-owner-guard.readSessionOwner 와 동일 의미. 사이드카 경로 SSOT 는
- *   worktree-plan-path.mjs#worktreeOwnerPath — hook 간 직접 import 금지(R-CM-006)라 lib 만 공유한다.
- *   `worktree-owner-tracker` (PostToolUse) 가 worktree 생성 시 1줄 기록.
+ * worktree の `.session-owner` サイドカー 1行目 (session_id)。不在/失敗/空ファイル → null。
+ *   R-CM-036 の worktree-session-owner-guard.readSessionOwner と同一の意味。サイドカーパスの SSOT は
+ *   worktree-plan-path.mjs#worktreeOwnerPath — hook 間での直接 import 禁止 (R-CM-006) なため lib のみを共有する。
+ *   `worktree-owner-tracker` (PostToolUse) が worktree 生成時に 1行記録する。
  */
 export function readSessionOwner(worktreePath, branch = null) {
   try {
@@ -266,21 +266,21 @@ export function readSessionOwner(worktreePath, branch = null) {
 }
 
 /**
- * 본 Stop 세션이 worktree 를 소유하는지 판정 (R-CM-036 2-Layer 모델을 Stop 시점에 정합 적용).
- *   Layer 1 — cwd-confinement (session_id 무관, 결정론적): 현재 cwd 가 이 worktree 내부면 'owned'.
- *     Codex/Antigravity 는 worktree 로 cd 하여 작업하므로(cwd=worktree) 이 축으로 자기 worktree 를
- *     판정한다. session_id 가 stdin 에 없는 CLI 에서도 shipping nag 가 유지되는 핵심.
- *   Layer 2 — session_id 사이드카: `.session-owner` === 현재 session_id 면 'owned'.
- *     brief2dev Claude Code 는 cwd=main 고정(learnings bash-cwd-reset-worktree)이라 사이드카가
- *     유일한 소유 신호다. `make wt.new` 가 항상 사이드카를 남기므로 단일 세션은 정상 'owned'.
- *   사이드카 owner 가 존재하나 현재 session_id 와 불일치 → 'other' (타 세션 소유).
- *   둘 다 미확정(사이드카 부재 + cwd 불일치, 또는 session_id 부재) → 'orphan'.
+ * 本 Stop セッションが worktree を所有するか判定 (R-CM-036 2-Layer モデルを Stop 時点で整合適用)。
+ *   Layer 1 — cwd-confinement (session_id 無関係、決定論的): 現在の cwd がこの worktree 内部であれば 'owned'。
+ *     Codex/Antigravity は worktree に cd して作業するため (cwd=worktree)、この軸で自身の worktree を
+ *     判定する。session_id が stdin にない CLI でも shipping nag が維持される核心。
+ *   Layer 2 — session_id サイドカー: `.session-owner` === 現在の session_id であれば 'owned'。
+ *     brief2dev Claude Code は cwd=main 固定 (learnings bash-cwd-reset-worktree) のため、サイドカーが
+ *     唯一の所有シグナルである。`make wt.new` が常にサイドカーを残すため、単一セッションは正常に 'owned'。
+ *   サイドカー owner が存在するが現在の session_id と不一致 → 'other' (他セッション所有)。
+ *   どちらも未確定 (サイドカー不在 + cwd 不一致、または session_id 不在) → 'orphan'。
  *
- *   판정의 목적: 타 세션/orphan worktree 의 미완료 작업으로 본 세션 Stop 을 차단하지 않는다.
- *   R-CM-036 Anti-Pattern "모든 worktree 검사 Stop hook" 의 cross-session 오차단 회피.
+ *   判定の目的: 他セッション/orphan worktree の未完了作業により本セッションの Stop を遮断しないこと。
+ *   R-CM-036 アンチパターン「すべての worktree を検査する Stop hook」の cross-session 誤遮断を回避。
  *
- *   @param {string} wtPath - worktree 루트 절대 경로 (git worktree list porcelain 기준)
- *   @param {string|null} branch - branch 명 (사이드카 경로 추론용)
+ *   @param {string} wtPath - worktree ルートの絶対パス (git worktree list porcelain 基準)
+ *   @param {string|null} branch - branch 名 (サイドカーパス推論用)
  *   @param {{sessionId?: string, cwd?: string, _resolveWorktreeRoot?: Function, _readSessionOwner?: Function}} opts
  *   @returns {'owned'|'other'|'orphan'}
  */
@@ -289,16 +289,16 @@ export function classifyOwnership(wtPath, branch, opts = {}) {
   const _readSessionOwner = opts._readSessionOwner || readSessionOwner;
   const sessionId = opts.sessionId;
 
-  // Layer 1 — cwd-confinement (결정론적, session_id 무관)
+  // Layer 1 — cwd-confinement (決定論的, session_id 無関係)
   const cwdWt = _resolveWorktreeRoot(opts.cwd || '');
   if (cwdWt && cwdWt === wtPath) return 'owned';
 
-  // Layer 2 — session_id 사이드카
+  // Layer 2 — session_id サイドカー
   const owner = _readSessionOwner(wtPath, branch);
   if (owner && sessionId) {
     return owner === sessionId ? 'owned' : 'other';
   }
-  // 사이드카 부재(orphan) 또는 session_id 부재 → 소유 미확정
+  // サイドカー不在 (orphan) または session_id 不在 → 所有未確定
   return 'orphan';
 }
 
@@ -330,40 +330,40 @@ export function evaluate(projectDir, opts = {}) {
     ((wtPath, branch) => collectReviewSnapshot(wtPath, { _safeGit, branch }));
   const _measureStaleness =
     opts._measureStaleness || ((p) => measureStaleness(p, { _safeGit, _now }));
-  // R-CM-036 세션 소유권 필터 — 본 Stop 세션이 소유하지 않는 worktree 는 차단 대상에서 제외.
+  // R-CM-036 セッション所有権フィルター — 本 Stop セッションが所有しない worktree は遮断対象から除外。
   const _classifyOwnership =
     opts._classifyOwnership ||
     ((wtPath, branch) => classifyOwnership(wtPath, branch, { sessionId: opts.sessionId, cwd: opts.cwd }));
 
-  // /create-pr 진행 중 → 통과
+  // /create-pr 進行中 → 通過
   const activeFlag = join(projectDir, '.tmp', 'create-pr-active');
   if (_isFresh(activeFlag, CREATE_PR_ACTIVE_TTL_MS)) {
-    return { block: false, candidates: [], skipped_attempt: [], not_owned: [], reason: 'create-pr-active 신선' };
+    return { block: false, candidates: [], skipped_attempt: [], not_owned: [], reason: 'create-pr-active 新鮮' };
   }
 
-  // worktree 목록
+  // worktree リスト
   const wtOut = _safeGit('worktree list --porcelain', projectDir, { timeout: 3000 });
   if (wtOut === null) {
-    return { block: false, candidates: [], skipped_attempt: [], not_owned: [], reason: 'worktree list 실패' };
+    return { block: false, candidates: [], skipped_attempt: [], not_owned: [], reason: 'worktree list 失敗' };
   }
 
   const worktrees = parseWorktreeList(wtOut);
   const candidates = [];
-  const skipped_attempt = []; // M3 — 마커 신선으로 인해 skip된 worktree (사용자 인지용)
-  const not_owned = []; // R-CM-036 — 타 세션/orphan 소유라 차단하지 않은 worktree (사용자 인지용)
+  const skipped_attempt = []; // M3 — マーカー新鮮により skip された worktree (ユーザー認知用)
+  const not_owned = []; // R-CM-036 — 他セッション/orphan 所有のため遮断しなかった worktree (ユーザー認知用)
 
   for (const wt of worktrees) {
-    if (!wt.branch) continue; // detached HEAD 무시
-    if (wt.branch === 'main') continue; // main 자체 worktree 는 본 hook 대상 아님
+    if (!wt.branch) continue; // detached HEAD 無視
+    if (wt.branch === 'main') continue; // main 自体の worktree は本 hook 対象外
     if (isEscapeHatchBranch(wt.branch)) continue; // escape hatch
-    if (wt.path === projectDir) continue; // main repo 자체
+    if (wt.path === projectDir) continue; // main repo 自体
 
     const uncommitted = _countUncommitted(wt.path);
     const commits = _countUnmerged(wt.path);
     if (commits === 0 && uncommitted === 0) continue;
 
-    // R-CM-036 세션 소유권 — 본 세션이 소유하지 않는 worktree(타 세션/orphan)는 차단하지 않는다.
-    // (멀티세션 cross-session 오차단 회피. owned 만 candidate 진입.)
+    // R-CM-036 セッション所有権 — 本セッションが所有しない worktree (他セッション/orphan) は遮断しない。
+    // (マルチセッション cross-session 誤遮断を回避。owned のみ candidate に進入。)
     const ownership = _classifyOwnership(wt.path, wt.branch);
     if (ownership !== 'owned') {
       not_owned.push({ path: wt.path, branch: wt.branch, commits, uncommitted, ownership });
@@ -392,7 +392,7 @@ export function evaluate(projectDir, opts = {}) {
 
     const marker = attemptMarkerPath(projectDir, wt.branch);
     if (_isFresh(marker, ATTEMPT_MARKER_TTL_MS)) {
-      // 이미 한 번 시도 — passthrough but 사용자 인지 위해 누적 (M3)
+      // すでに1回試行 — passthrough だがユーザー認知のために累積 (M3)
       skipped_attempt.push({
         path: wt.path,
         branch: wt.branch,
@@ -436,7 +436,7 @@ export function evaluate(projectDir, opts = {}) {
 }
 
 /**
- * worktree path 를 projectDir 기준 상대 경로로 변환. 외부 경로면 절대 그대로.
+ * worktree path を projectDir 基準の相対パスに変換。外部パスであれば絶対パスのまま。
  */
 function relativizePath(absPath, projectDir) {
   return absPath.startsWith(projectDir) ? absPath.slice(projectDir.length + 1) : absPath;
@@ -449,25 +449,25 @@ export function buildBlockMessage(projectDir, candidates) {
   const reviewReady = candidates.filter((c) => isReviewReady(c));
   const planBlocked = candidates.filter((c) => !c.commit_required && !isReviewReady(c));
   const lines = [
-    '[worktree-shipping-guard] Stop 차단: 완료되지 않은 worktree 작업이 있습니다.',
+    '[worktree-shipping-guard] Stop 遮断: 完了していない worktree 作業があります。',
     '',
-    '사용자 정책 (R-CM-030): worktree 에서 시스템 코드 변경을 수행했다면 최종 응답 전 반드시 commit 을 남겨야 합니다.',
-    'commit 된 작업은 사용자 컨펌 후 /create-pr ship-worktree → squash merge → cleanup 까지 진행되어야 합니다.',
-    '오탐 방지: 본 세션 소유 worktree 에 uncommitted 변경 또는 unmerged commit 이 있을 때만 대상입니다. 변경/커밋이 없는 READ-ONLY 세션은 통과합니다.',
+    'ユーザーポリシー (R-CM-030): worktree でシステムコードの変更を行った場合は、最終応答 of 前に必ず commit を残さなければなりません。',
+    'commit された作業は、ユーザー確認後に /create-pr ship-worktree → squash merge → cleanup まで進行させる必要があります。',
+    '誤検知防止: 本セッションが所有する worktree に uncommitted な変更または unmerged な commit がある場合のみ対象です。変更/コミットのない READ-ONLY セッションは通過します。',
     '',
-    '대상 worktree:',
+    '対象 worktree:',
   ];
   for (const c of candidates) {
     const rel = relativizePath(c.path, projectDir);
-    const planTag = c.plan_missing ? ' [PLAN.md 부재 — 자동 작성 필요]' : '';
+    const planTag = c.plan_missing ? ' [PLAN.md 不在 — 自動作成が必要]' : '';
     const dirtyTag = c.uncommitted > 0 ? `, uncommitted=${c.uncommitted} file(s)` : '';
-    const actionTag = c.commit_required ? ' [commit 필요]' : '';
+    const actionTag = c.commit_required ? ' [commit が必要]' : '';
     lines.push(`  - ${rel}  (branch=${c.branch}, unmerged=${c.commits} commit${dirtyTag})${actionTag}${planTag}`);
   }
   if (candidates.some((c) => c.commit_required)) {
     lines.push('');
-    lines.push('uncommitted 변경이 있는 worktree 는 작업 완료로 간주하지 않습니다.');
-    lines.push('먼저 본인이 만든 변경만 stage/commit 하세요:');
+    lines.push('uncommitted な変更がある worktree は作業完了とは見なしません。');
+    lines.push('先に自身が作成した変更のみを stage/commit してください:');
     lines.push('');
     for (const c of candidates.filter((item) => item.commit_required)) {
       lines.push(`  cd "${relativizePath(c.path, projectDir)}"`);
@@ -478,29 +478,29 @@ export function buildBlockMessage(projectDir, candidates) {
   }
   if (candidates.some((c) => c.plan_missing)) {
     lines.push('');
-    lines.push('PLAN.md 부재 worktree (M1 stop loop 회피):');
-    lines.push('  - ship-worktree 는 PLAN.md 미체크박스 검증을 자체 수행 — PLAN.md 부재 시 거부.');
-    lines.push('  - 위치: `.tmp/worktree-<safeBranch>/PLAN.md` (worktree 루트 아님, R-CM-008/R-CM-030 — 머지 누출 차단).');
-    lines.push('  - 위 worktree 에 PLAN.md 를 먼저 작성 (목표 / 체크리스트 / 검증 / handoff) 후 ship 호출.');
-    lines.push('  - 또는 사용자에게 작업 의도 확인 후 worktree 자체 폐기.');
+    lines.push('PLAN.md 不在の worktree (M1 stop loop 回避):');
+    lines.push('  - ship-worktree は PLAN.md の未チェックボックスの検証を独自に実施 — PLAN.md 不在時は拒否。');
+    lines.push('  - 位置: `.tmp/worktree-<safeBranch>/PLAN.md` (worktree ルートではない、R-CM-008/R-CM-030 — マージ漏洩防止)。');
+    lines.push('  - 上記の worktree に PLAN.md を先に作成 (目標 / チェックリスト / 検証 / handoff) してから ship を呼び出してください。');
+    lines.push('  - またはユーザーに作業意図を確認した後に worktree 自体を廃棄。');
   }
   if (planBlocked.length > 0) {
     lines.push('');
-    lines.push('PLAN.md checklist 미완료/미확인 worktree:');
+    lines.push('PLAN.md checklist 未完了/未確認の worktree:');
     for (const c of planBlocked) {
-      const status = c.plan_status ? formatPlanChecklistStatus(c.plan_status) : 'PLAN.md 상태 미확인';
+      const status = c.plan_status ? formatPlanChecklistStatus(c.plan_status) : 'PLAN.md 状態未確認';
       lines.push(`  - ${relativizePath(c.path, projectDir)}: ${status}`);
       if (Array.isArray(c.plan_status?.unchecked) && c.plan_status.unchecked.length > 0) {
         for (const item of c.plan_status.unchecked.slice(0, 5)) lines.push(`    ${item}`);
       }
     }
-    lines.push('  → 승인 요청 리뷰는 PLAN.md checklist 가 모두 완료된 worktree 에서만 출력합니다.');
-    lines.push('  → 먼저 PLAN.md 를 완료/취소 처리한 뒤 다시 Stop 하거나 verify-plan 을 실행하세요.');
+    lines.push('  → 承認要請レビューは、PLAN.md checklist がすべて完了した worktree からのみ出力します。');
+    lines.push('  → 先に PLAN.md を完了/キャンセル処理した後に、再度 Stop するか verify-plan を実行してください。');
   }
   lines.push('');
   if (reviewReady.length > 0) {
-    lines.push('commit + 완료된 PLAN.md checklist 가 있는 worktree 는 아래 리뷰를 사용자에게 출력하고 명시 승인을 받으세요.');
-    lines.push('사용자가 "승인하고 진행" 으로 명시 컨펌한 후에만 다음 명령을 실행합니다 (멱등 — 이미 PR 있으면 재사용):');
+    lines.push('commit + 完了した PLAN.md checklist がある worktree は、以下のレビューをユーザーに出力して明示的な承認を得てください。');
+    lines.push('ユーザーが「承認して進行」として明示的に確認した後にのみ、以下のコマンドを実行します (べき等 — すでに PR があれば再利用):');
     lines.push('');
     lines.push('  OPS="node .claude/scripts/create-pr/ops.mjs"');
     for (const c of reviewReady) {
@@ -512,50 +512,50 @@ export function buildBlockMessage(projectDir, candidates) {
         branch: c.branch,
         baseBranch: review.base_branch || 'main',
         planPath: c.plan_status?.plan_path || resolveWorktreePlanPath(c.path, c.branch),
-        planChecklist: c.plan_status ? formatPlanChecklistStatus(c.plan_status) : '완료',
+        planChecklist: c.plan_status ? formatPlanChecklistStatus(c.plan_status) : '完了',
         worktreeStatus: `clean, unmerged=${c.commits} commit`,
         gitLog: review.git_log,
         commitCount: review.commit_count ?? c.commits,
         commitRange: review.commit_range || 'origin/main..HEAD',
         latestCommit: review.latest_commit,
-        changedFilesTree: review.changed_files_tree || '(수집 필요)',
+        changedFilesTree: review.changed_files_tree || '(収集が必要)',
         changedRows: review.changed_rows || [],
       }));
       lines.push('');
-      lines.push('승인 후 실행:');
+      lines.push('承認後に実行:');
       lines.push(`  $OPS verify-plan --worktree "${rel}"`);
       lines.push(`  node .claude/scripts/mark-pre-ship-confirmed.mjs "${c.branch}" --quality self_review_pass`);
-      lines.push(`  $OPS ship-worktree --worktree "${rel}" --title "<Conventional Commits>" --body "<요약>"`);
+      lines.push(`  $OPS ship-worktree --worktree "${rel}" --title "<Conventional Commits>" --body "<要約>"`);
     }
   } else {
-    lines.push('현재 승인 요청 리뷰를 출력할 worktree 가 없습니다. dirty 변경을 commit 하거나 PLAN.md checklist 를 완료하세요.');
+    lines.push('現在、承認要請レビューを出力する worktree がありません。dirty な変更を commit するか、PLAN.md checklist を完了させてください。');
   }
-  // Layer 2 — base staleness 경고 (BLOCK 추가 X — ship 시점 non-FF 가 차단 담당)
+  // Layer 2 — base staleness 警告 (BLOCK 追加なし — ship 時点 non-FF が遮断を担当)
   const stale = candidates.filter((c) => Array.isArray(c.stale_reasons) && c.stale_reasons.length);
   if (stale.length > 0) {
     lines.push('');
-    lines.push('base freshness 경고 (Layer 2 — 차단 X, 사후 게이트는 ship-worktree non-FF 검사):');
+    lines.push('base freshness 警告 (Layer 2 — 遮断なし、事後ゲートは ship-worktree non-FF 検査):');
     for (const c of stale) {
       lines.push(`  - ${relativizePath(c.path, projectDir)}: ${c.stale_reasons.join(', ')}`);
     }
-    lines.push('  → 다음 worktree 부터 표준 진입점 사용: make wt.new BR=<branch> (또는 node .claude/scripts/worktree-new.mjs --branch <branch>)');
-    lines.push('  → 현 worktree 는 ship 직전 rebase 권장: git fetch origin main && git rebase origin/main');
+    lines.push('  → 次の worktree からは標準エントリーポイントを使用してください: make wt.new BR=<branch> (または node .claude/scripts/worktree-new.mjs --branch <branch>)');
+    lines.push('  → 現在の worktree は ship 直前に rebase 推奨: git fetch origin main && git rebase origin/main');
   }
   lines.push('');
-  lines.push('이번 한 번 시도 후 pending/실패 시 본 hook 은 다음 Stop 을 통과시킵니다 (5분간 재차단 안 함).');
-  lines.push('hotfix/* 브랜치 worktree 는 면제됩니다.');
+  lines.push('今回の試行がペンディング/失敗した場合、本 hook は次の Stop を通過させます (5分間は再遮断しません)。');
+  lines.push('hotfix/* ブランチの worktree は免除されます。');
   return lines.join('\n');
 }
 
 /**
- * M3 — 마커 신선으로 passthrough 처리된 worktree 가 있으면 stderr 알림.
- *   사용자가 "ship 미수행 + 5분 재차단 안 함" 상태를 인지하지 못해 silently 진행되는
- *   함정 차단. settings.json hook 의 stderr 는 사용자에게 노출되지만 Claude 컨텍스트에는
- *   영향 없음 — 정확히 의도된 채널.
+ * M3 — マーカー新鮮により passthrough 処理された worktree があれば stderr で通知。
+ *   ユーザーが「ship 未遂行 + 5分再遮断なし」状態を認知できずに silently に進行する
+ *   罠を遮断。settings.json hook の stderr はユーザーに露出されるが、Claude のコンテキストには
+ *   影響なし — 正確に意図されたチャネル。
  */
 export function emitSkippedAttemptNotice(skipped, write = (m) => process.stderr.write(m)) {
   if (!Array.isArray(skipped) || skipped.length === 0) return;
-  const lines = ['[worktree-shipping-guard] passthrough — 5분 시도 마커 신선 (재차단 안 함):'];
+  const lines = ['[worktree-shipping-guard] passthrough — 5分試行マーカー新鮮 (再遮断なし):'];
   for (const c of skipped) {
     const staleTag =
       Array.isArray(c.stale_reasons) && c.stale_reasons.length
@@ -563,27 +563,27 @@ export function emitSkippedAttemptNotice(skipped, write = (m) => process.stderr.
         : '';
     lines.push(`  - branch=${c.branch}, unmerged=${c.commits} commit (path=${c.path})${staleTag}`);
   }
-  lines.push('  → 마커 만료 후 자동 재차단. 즉시 처리하려면 마커 삭제 + 재진입.');
+  lines.push('  → マーカー満了後に自動再遮断。即時処理するにはマーカー削除 + 再進入。');
   write(`${lines.join('\n')}\n`);
 }
 
 /**
- * R-CM-036 — 본 세션이 소유하지 않는(타 세션/orphan) worktree 가 미완료 작업을 가졌으나
- *   차단하지 않은 경우 stderr 알림. silent drop 차단 — 다른 세션의 WIP 를 본 세션이
- *   조용히 무시하지 않고 사용자에게 가시화한다 (block 여부와 무관하게 항상 호출).
- *   stderr 는 사용자에게 노출되지만 Claude 컨텍스트에는 영향 없음 — 의도된 채널.
+ * R-CM-036 — 本セッションが所有しない (他セッション/orphan) worktree が未完了作業を持つが、
+ *   遮断しなかった場合に stderr で通知。silent drop を遮断 — 他のセッションの WIP を本セッションが
+ *   静かに無視せず、ユーザーに可視化する (block の有無に関わらず常に呼び出し)。
+ *   stderr はユーザーに露出されるが、Claude のコンテキストには影響なし — 意図されたチャネル。
  */
 export function emitNotOwnedNotice(notOwned, write = (m) => process.stderr.write(m)) {
   if (!Array.isArray(notOwned) || notOwned.length === 0) return;
   const lines = [
-    '[worktree-shipping-guard] passthrough — 본 세션 소유가 아닌 worktree 의 미완료 작업 (차단 안 함, R-CM-036):',
+    '[worktree-shipping-guard] passthrough — 本セッション所有ではない worktree の未完了作業 (遮断なし、R-CM-036):',
   ];
   for (const c of notOwned) {
     const dirty = c.uncommitted > 0 ? `, uncommitted=${c.uncommitted} file(s)` : '';
-    const tag = c.ownership === 'other' ? '타 세션 소유' : 'orphan (소유 세션 미상)';
+    const tag = c.ownership === 'other' ? '他セッション所有' : 'orphan (所有セッション未詳)';
     lines.push(`  - branch=${c.branch}, unmerged=${c.commits} commit${dirty} [${tag}] (path=${c.path})`);
   }
-  lines.push('  → 해당 worktree 를 만든 세션에서 ship 하거나, 본인 작업이면 그 worktree 안에서 진행하세요.');
+  lines.push('  → 該当する worktree を作成したセッションで ship するか、自身の作業であればその worktree 内で進行してください。');
   write(`${lines.join('\n')}\n`);
 }
 
@@ -593,20 +593,20 @@ export async function run(data) {
       return HookOutput.passthrough();
     }
     const projectDir = resolveProjectDir(data);
-    // session_id / cwd 는 모든 hook 이벤트 공통 stdin 필드 (Stop 포함, 공식 문서) — R-CM-036 소유권 판정 입력.
+    // session_id / cwd はすべての hook イベント共通の stdin フィールド (Stop 含む、公式文書) — R-CM-036 所有権判定入力。
     const verdict = evaluate(projectDir, { sessionId: data?.session_id, cwd: data?.cwd });
 
-    // R-CM-036 — 타 세션/orphan worktree 의 미완료 작업은 block/passthrough 무관하게 항상 알림
+    // R-CM-036 — 他セッション/orphan worktree の未完了作業は block/passthrough に関わらず常に通知
     emitNotOwnedNotice(verdict.not_owned);
 
-    // M3 — passthrough 케이스에서도 시도 마커 신선으로 skip된 항목 있으면 사용자 알림
+    // M3 — passthrough ケースでも試行マーカー新鮮により skip された項目があればユーザー通知
     if (!verdict.block) {
       emitSkippedAttemptNotice(verdict.skipped_attempt);
       return HookOutput.passthrough();
     }
 
-    // 한 번만 시도 — ship 대상에만 마커 즉시 생성 (다음 Stop 은 5분간 통과).
-    // uncommitted 변경은 "작업 완료 전 commit" 의무이므로 마커로 통과시키지 않는다.
+    // 1回のみ試行 — ship 対象にのみマーカーを即時生成 (次の Stop は5分間通過)。
+    // uncommitted な変更は「作業完了前の commit」義務があるため、マーカーによる通過はさせない。
     for (const c of verdict.candidates) {
       if (!c.commit_required && c.review_ready) touchAttemptMarker(projectDir, c.branch);
     }
