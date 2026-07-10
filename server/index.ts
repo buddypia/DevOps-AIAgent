@@ -2,17 +2,12 @@ import express from "express";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { readFileSync, existsSync } from "node:fs";
 
 import { ipAllowlistMiddleware, ipAllowlistSummary } from "./ipAllowlist.js";
 import { discoverAgentCardFromUrl } from "./agentCardDiscovery.js";
 
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js";
-import { buildSquadContract } from "../src/contracts.js";
 import { MARKET_AGENTS } from "../src/market.js";
-import { buildMissionRun } from "../src/mission.js";
-import { buildOpsDrill } from "../src/ops.js";
-import { buildWinningStrategy } from "../src/strategy.js";
 import { SUBMISSION_PROOF } from "../src/submission.js";
 import type { GeminiRecommendation } from "../src/types.js";
 
@@ -132,23 +127,6 @@ const AgentCardDiscoverySchema = z.object({
   url: z.string().trim().min(1).max(1000)
 });
 
-const MissionSchema = RecommendSchema.extend({
-  objective: z.string().trim().max(20000).optional()
-});
-
-const OpsDrillSchema = RecommendSchema.extend({
-  observed: z
-    .object({
-      latencyP95Ms: z.number().nonnegative().max(60000).optional(),
-      errorRatePercent: z.number().nonnegative().max(100).optional(),
-      healthOk: z.boolean().optional(),
-      fallbackActive: z.boolean().optional(),
-      budgetBurnPercent: z.number().nonnegative().max(100).optional(),
-      submissionUrlsReady: z.boolean().optional()
-    })
-    .optional()
-});
-
 function publicBaseUrl(req: express.Request) {
   const configured = process.env.PUBLIC_BASE_URL;
   if (configured) return configured.replace(/\/$/, "");
@@ -156,104 +134,16 @@ function publicBaseUrl(req: express.Request) {
   return `${proto}://${req.get("host")}`;
 }
 
-function getDynamicSkills(): any[] {
-  const dynamic: any[] = [];
-  
-  dynamic.push(
-    {
-      id: "competitive.decision-matrix",
-      name: "Decision Matrix",
-      description: "SWOT and decision matrix logic",
-      tags: ["decision-matrix-lock"]
-    },
-    {
-      id: "judge.first-click",
-      name: "First Click Judge",
-      description: "First click router checks",
-      tags: ["first-click-route-lock"]
-    },
-    {
-      id: "judge.first-click-smoke",
-      name: "First Click Smoke Judge",
-      description: "Smoke check validations",
-      tags: ["first-click-smoke-lock"]
-    },
-    {
-      id: "submission.dossier",
-      name: "Submission Dossier",
-      description: "Dossier handoff packet logic",
-      tags: ["submission-dossier-lock"]
-    },
-    {
-      id: "deploy.recover",
-      name: "Deploy Recovery",
-      description: "Deploy and restore options",
-      tags: ["get-proof"]
-    },
-    {
-      id: "agent-card.shortlist",
-      name: "Agent Card Shortlist",
-      description: "Shortlist potential candidates",
-      tags: ["get-proof"]
-    },
-    {
-      id: "agent-card.trial-plan",
-      name: "Agent Card Trial Plan",
-      description: "Create JSON-RPC trial instructions",
-      tags: ["get-proof"]
-    },
-    {
-      id: "agent-card.trial-verification",
-      name: "Agent Card Trial Verification",
-      description: "Verify trial results and execution",
-      tags: ["get-proof"]
-    },
-    {
-      id: "agent-card.trial-handoff",
-      name: "Agent Card Trial Handoff",
-      description: "Workspace evidence records",
-      tags: ["get-proof"]
-    }
-  );
-
-  try {
-    const manifestPath = path.resolve(process.cwd(), "outputs/manifest.json");
-    if (existsSync(manifestPath)) {
-      const content = readFileSync(manifestPath, "utf8");
-      const data = JSON.parse(content);
-      if (data && Array.isArray(data.projects)) {
-        for (const p of data.projects) {
-          dynamic.push({
-            id: `${p.packageName}.audit`,
-            name: `${p.name} Audit`,
-            description: `${p.name} の自動監査を実行する。`,
-            tags: ["project-skill", p.slug]
-          });
-          dynamic.push({
-            id: `${p.packageName}.deploy`,
-            name: `${p.name} Deployment`,
-            description: `${p.name} を自動デプロイする。`,
-            tags: ["project-skill", p.slug]
-          });
-        }
-      }
-    }
-  } catch (e) {
-    for (let i = 1; i <= 40; i++) {
-      dynamic.push({
-        id: `fallback.skill-${i}`,
-        name: `Fallback Skill ${i}`,
-        tags: ["fallback"]
-      });
-    }
-  }
-
-  return dynamic;
-}
-
 function agentCard(baseUrl: string) {
-  const dynamicSkills = getDynamicSkills();
-  const baseSkills = [
+  // 実行可能スキルのみを公開する: AGENT_JOBS の8スキルは /a2a message/send で実実行される
+  const executableSkills = Object.values(AGENT_JOBS).map((job) => ({
+    id: job.skillId,
+    name: job.title,
+    description: job.skillDescription,
+    tags: ["real-run", "maker-checker", job.agentId],
+    examples: [`skillId=${job.skillId} で message/send すると ${job.title} が実行される`]
+  }));
+  const allSkills = [
     {
       id: "market.discover",
       name: "Discover AI agents by capability",
@@ -268,53 +158,8 @@ function agentCard(baseUrl: string) {
       tags: ["agent-card", "marketplace", "discovery", "ssrf-guard"],
       examples: [`${SUBMISSION_PROOF.deployedUrl}/.well-known/agent-card.json を候補として取り込んで`]
     },
-    {
-      id: "strategy.audit",
-      name: "Audit competitive strategy",
-      description: "現在の編成から競合比較、SWOT、審査5項目スコアを算出する。",
-      tags: ["strategy", "swot"],
-      examples: ["いまの編成で審査に勝てるか診断して"]
-    },
-    {
-      id: "mission.run",
-      name: "Run an autonomous mission",
-      description: "sense→decide→delegate→verify→shipの5段階でAIの自律判断の証跡を生成する。",
-      tags: ["mission", "autonomy"]
-    },
-    {
-      id: "ops.drill",
-      name: "Run an operations drill",
-      description: "Cloud Run health/latency/エラー率から継続かrollbackかを判断する。",
-      tags: ["ops", "cloud-run"]
-    },
-    {
-      id: "ops.triage.execute",
-      name: "Execute real SRE triage on Cloud Run",
-      description:
-        "実Cloud RunサービスのログをCloud Logging APIから取得し、Gemini maker→引用ゲート(実ログID照合)→独立checkerの実パイプラインでトリアージする本物の実行。ランはFirestoreに永続化され、tasks/getで追跡できる。",
-      tags: ["ops", "sre", "cloud-logging", "real-run", "maker-checker"],
-      examples: ["ops.triage: a2a-agent-marketplace の直近ログをトリアージして"]
-    },
-    {
-      id: "contract.issue",
-      name: "Issue an agent contract",
-      description: "選択済みAIの成果物、受入条件、SLA、検証コマンドを契約化する。",
-      tags: ["contract", "acceptance"]
-    },
-    {
-      id: "task.delegate",
-      name: "Delegate a task via A2A",
-      description: "message/send形式で市場エージェントへタスクを委任し、編成・契約・戦略の要約を返す。",
-      tags: ["a2a", "delegate"]
-    }
+    ...executableSkills
   ];
-
-  const allSkills = [...baseSkills];
-  for (const ds of dynamicSkills) {
-    if (!allSkills.some(s => s.id === ds.id)) {
-      allSkills.push(ds);
-    }
-  }
 
   return {
     protocolVersion: "0.3.0",
@@ -340,12 +185,9 @@ function agentCard(baseUrl: string) {
       endpoints: {
         marketEndpoint: `${baseUrl}/api/market`,
         recommendEndpoint: `${baseUrl}/api/recommend`,
-        contractsEndpoint: `${baseUrl}/api/contracts`,
-        strategyEndpoint: `${baseUrl}/api/strategy`,
-        missionEndpoint: `${baseUrl}/api/mission`,
-        opsDrillEndpoint: `${baseUrl}/api/ops-drill`,
         agentCardDiscoverEndpoint: `${baseUrl}/api/agent-card/discover`,
         hiresEndpoint: `${baseUrl}/api/hires`,
+        agentJobsEndpoint: `${baseUrl}/api/agent-jobs`,
         agentRunsEndpoint: `${baseUrl}/api/agent-runs`
       }
     },
@@ -365,7 +207,6 @@ function parseJson(text: string) {
 
 async function runGemini(projectBrief: string, selectedAgentIds: string[]): Promise<GeminiRecommendation> {
   const recommendation = recommendSquad(projectBrief, selectedAgentIds);
-  const strategy = buildWinningStrategy(recommendation);
 
   if (!opsGenAi) {
     return localGeminiRecommendation(recommendation, "Gemini is not configured (API key / Vertex ADC)");
@@ -392,32 +233,6 @@ async function runGemini(projectBrief: string, selectedAgentIds: string[]): Prom
     "",
     "Current score:",
     JSON.stringify({ before: recommendation.before, after: recommendation.after, uplift: recommendation.uplift }, null, 2),
-    "",
-    "Competitive strategy:",
-    JSON.stringify(
-      {
-        strategicThesis: strategy.strategicThesis,
-        judgeScore: strategy.judgeScore,
-        mvpScore: strategy.mvpScore,
-        moatScore: strategy.moatScore,
-        topCompetitors: strategy.competitors.slice(0, 4).map((competitor) => ({
-          name: competitor.name,
-          category: competitor.category,
-          counterPosition: competitor.counterPosition,
-          counterMove: competitor.counterMove
-        })),
-        swot: strategy.swot,
-        nextBestAgent: strategy.nextBestAgent
-          ? {
-              name: strategy.nextBestAgent.agent.name,
-              reason: strategy.nextBestAgent.reason,
-              expectedLift: strategy.nextBestAgent.expectedLift
-            }
-          : null
-      },
-      null,
-      2
-    ),
     "",
     "JSON schema:",
     JSON.stringify(
@@ -516,51 +331,6 @@ app.post("/api/agent-card/discover", async (req, res) => {
   }
   const result = await discoverAgentCardFromUrl(parsed.data.url);
   res.json(result);
-});
-
-app.post("/api/strategy", (req, res) => {
-  const parsed = RecommendSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
-    return;
-  }
-  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
-  res.json(buildWinningStrategy(recommendation));
-});
-
-app.post("/api/mission", (req, res) => {
-  const parsed = MissionSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
-    return;
-  }
-  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
-  const strategy = buildWinningStrategy(recommendation);
-  res.json(buildMissionRun(recommendation, strategy, parsed.data.objective));
-});
-
-app.post("/api/ops-drill", (req, res) => {
-  const parsed = OpsDrillSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
-    return;
-  }
-  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
-  const strategy = buildWinningStrategy(recommendation);
-  res.json(buildOpsDrill(recommendation, strategy, parsed.data.observed));
-});
-
-app.post("/api/contracts", (req, res) => {
-  const parsed = RecommendSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
-    return;
-  }
-  const recommendation = recommendSquad(parsed.data.projectBrief, parsed.data.selectedAgentIds);
-  const strategy = buildWinningStrategy(recommendation);
-  const mission = buildMissionRun(recommendation, strategy, "選択したAIを成果物、受入条件、SLA、検証コマンド付きで雇う。");
-  const opsDrill = buildOpsDrill(recommendation, strategy);
-  res.json(buildSquadContract({ recommendation, strategy, mission, opsDrill }));
 });
 
 app.post("/api/recommend", async (req, res) => {
@@ -764,11 +534,8 @@ app.post("/a2a", async (req, res) => {
     return;
   }
 
+  // 登録スキル外のmessage/send: 市場推薦(ローカル能力モデル)で応答し、実実行スキルの一覧を案内する
   const recommendation = recommendSquad(String(text), ["market-broker", "gemini-strategist", "cloud-run-sre"], 140);
-  const strategy = buildWinningStrategy(recommendation);
-  const mission = buildMissionRun(recommendation, strategy, String(text));
-  const opsDrill = buildOpsDrill(recommendation, strategy);
-  const squadContract = buildSquadContract({ recommendation, strategy, mission, opsDrill });
 
   res.json({
     jsonrpc: "2.0",
@@ -787,19 +554,11 @@ app.post("/a2a", async (req, res) => {
               after: recommendation.after,
               uplift: recommendation.uplift,
               selected: recommendation.selected.map((agent) => ({ id: agent.id, name: agent.name, price: agent.price })),
-              a2aTimeline: recommendation.a2aTimeline,
-              strategy: {
-                strategicThesis: strategy.strategicThesis,
-                judgeScore: strategy.judgeScore,
-                moatScore: strategy.moatScore
-              },
-              mission: { summary: mission.summary, autonomyScore: mission.autonomyScore },
-              opsDrill: { severity: opsDrill.severity, rollbackRecommended: opsDrill.rollbackRecommended },
-              contract: { contractScore: squadContract.contractScore, totalPrice: squadContract.totalPrice },
+              executableSkillIds: Object.keys(A2A_SKILL_TO_AGENT),
               endpoints: {
                 market: `${baseUrl}/api/market`,
                 recommend: `${baseUrl}/api/recommend`,
-                contracts: `${baseUrl}/api/contracts`,
+                agentRuns: `${baseUrl}/api/agent-runs`,
                 agentCard: `${baseUrl}/.well-known/agent-card.json`
               }
             }
@@ -809,93 +568,6 @@ app.post("/a2a", async (req, res) => {
     }
   });
 });
-
-// --- DevOps AI Agent Hackathon Verification Proof Routes ---
-
-// API mock endpoints
-app.get("/api/sample/buyer-outcome-brief", (_req, res) => {
-  res.json({
-    decision: "repair-before-share",
-    metrics: [
-      { id: "live-proof", value: "3/5" }
-    ]
-  });
-});
-
-app.get("/api/sample/agent-card-shortlist", (_req, res) => {
-  res.json({
-    verdict: "trial-ready",
-    candidateCount: 3,
-    leadCandidate: {
-      recommendation: "lead-trial"
-    }
-  });
-});
-
-app.get("/api/sample/agent-card-trial-plan", (_req, res) => {
-  res.json({
-    readiness: "ready-to-run",
-    jsonRpcPayload: {
-      method: "message/send"
-    },
-    evidenceContract: [1, 2, 3, 4, 5]
-  });
-});
-
-app.get("/api/sample/agent-card-trial-verification", (_req, res) => {
-  res.json({
-    status: "accepted",
-    score: 95,
-    checks: [
-      { id: "artifact-url", status: "pass" }
-    ]
-  });
-});
-
-app.get("/api/sample/agent-card-trial-handoff", (_req, res) => {
-  res.json({
-    status: "workspace-ready",
-    evidenceRecord: {
-      status: "accepted"
-    },
-    links: [1, 2, 3, 4]
-  });
-});
-
-app.get("/api/first-click-smoke", (_req, res) => {
-  res.json({
-    readiness: "smoke-passed",
-    missingCount: 0,
-    passedCount: 15
-  });
-});
-
-// HTML static proofs endpoints
-const htmlProofs: Record<string, string> = {
-  "/sample/buyer-outcome-brief": "Buyer Outcome Brief",
-  "/sample/pilot-run-receipt": "Pilot Run Receipt",
-  "/sample/work-order-brief": "Buyer Work Order Brief",
-  "/buyer-proof-monitor": "Buyer proof monitor",
-  "/buyer-proof-recovery": "buyer proof recovery desk",
-  "/sample/agent-card-shortlist": "Agent Card Shortlist",
-  "/sample/agent-card-trial-plan": "Agent Card Trial Plan - JSON-RPC trial payload",
-  "/sample/agent-card-trial-verification": "Agent Card Trial Verification (accepted)",
-  "/sample/agent-card-trial-handoff": "Agent Card Trial Handoff - workspace-ready - Workspace evidence record",
-  "/win-autopilot": "Win Autopilot Proof",
-  "/winner-sufficiency": "Winner Sufficiency Lock",
-  "/observability-oracle": "Observability Oracle Proof",
-  "/competitive-decision-matrix": "Competitive Decision Matrix - Head-to-Head Matrix",
-  "/first-click-smoke": "First-Click Smoke Lock",
-  "/publisher": "Submission Publisher Proof - ProtoPedia Quality Lock",
-  "/dossier": "Submission Dossier Proof - Handoff Packet",
-  "/deploy-recovery": "Deploy Recovery - Copy/Paste Commands"
-};
-
-for (const [route, keyword] of Object.entries(htmlProofs)) {
-  app.get(route, (_req, res) => {
-    res.send(`<!DOCTYPE html><html><head><title>Proof</title></head><body><h1>${keyword}</h1></body></html>`);
-  });
-}
 
 const distPath = path.resolve(process.cwd(), "dist");
 app.use("/docs", express.static(path.resolve(process.cwd(), "docs")));

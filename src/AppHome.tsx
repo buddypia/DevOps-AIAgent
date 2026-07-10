@@ -1,15 +1,10 @@
 import { useMemo, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { recommendSquad } from "./agentEngine.js";
-import ContractDesk from "./ContractDesk.js";
 import { MAX_CUSTOM_AGENTS, mergeAgentCatalog, type AgentCardImportResult } from "./customAgent.js";
 import { DEFAULT_PROJECT_BRIEF } from "./market.js";
-import MissionControl from "./MissionControl.js";
 import { ONBOARDING_TEMPLATES } from "./onboardingTemplates.js";
 import OpsAgentConsole from "./OpsAgentConsole.js";
-import OpsDrillPanel from "./OpsDrillPanel.js";
-import StrategyWarRoom from "./StrategyWarRoom.js";
-import { buildWinningStrategy } from "./strategy.js";
 import type { GeminiRecommendation, MarketAgent, SquadScore } from "./types.js";
 
 function ScoreBar({ label, before, after }: { label: string; before: number; after: number }) {
@@ -43,7 +38,6 @@ export default function AppHome() {
   const [cardUrl, setCardUrl] = useState("");
   const [cardResult, setCardResult] = useState<AgentCardImportResult | null>(null);
   const [cardLoading, setCardLoading] = useState(false);
-  const [workspaceOpen, setWorkspaceOpen] = useState(false);
 
   const agentCatalog = useMemo(() => mergeAgentCatalog(customAgents), [customAgents]);
   const recommendation = useMemo(
@@ -51,7 +45,6 @@ export default function AppHome() {
     [brief, selectedIds, agentCatalog]
   );
   const hiredIds = useMemo(() => new Set(recommendation.selected.map((agent) => agent.id)), [recommendation]);
-  const strategy = useMemo(() => buildWinningStrategy(recommendation), [recommendation]);
 
   function toggleAgent(id: string) {
     setSelectedIds((prev) => {
@@ -210,26 +203,6 @@ export default function AppHome() {
         <li className="flow-step">
           <div className="flow-badge">5</div>
           <div className="flow-body">
-            <h2>A2Aで委任 — 実行タイムライン</h2>
-            <p className="flow-desc">発見 → 交渉 → 委任 → 審査 → 配送。</p>
-            <div className="timeline">
-              {recommendation.a2aTimeline.map((item, index) => (
-                <div key={`${item.actor}-${item.verb}-${index}`} className="timeline-row">
-                  <span className="timeline-verb">{item.verb}</span>
-                  <div className="timeline-body">
-                    <p className="timeline-actor">{item.actor}</p>
-                    <p className="timeline-payload">{item.payload}</p>
-                  </div>
-                  <span className={`timeline-status status-${item.status}`}>{item.status}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </li>
-
-        <li className="flow-step">
-          <div className="flow-badge">6</div>
-          <div className="flow-body">
             <h2>雇ったエージェントが本物の仕事を実行 — 8体すべて実データで動く</h2>
             <p className="flow-desc">
               デモではなく実実行 — 実ログ/実CI/実脆弱性DB/実HTML/実A2A委任を証拠に、Geminiが自律判断し、独立checkerの検証を経てFirestoreへ記録する。
@@ -239,7 +212,7 @@ export default function AppHome() {
         </li>
 
         <li className="flow-step">
-          <div className="flow-badge">7</div>
+          <div className="flow-badge">6</div>
           <div className="flow-body">
             <h2>Gemini 3.5 Flash が戦略をまとめる</h2>
             <p className="flow-desc">APIキー未設定でもローカル推論でフォールバックする。</p>
@@ -290,19 +263,6 @@ export default function AppHome() {
         ) : null}
       </section>
 
-      <section className="workspace-toggle">
-        <button type="button" className="btn-ghost" onClick={() => setWorkspaceOpen((prev) => !prev)}>
-          {workspaceOpen ? "詳細ワークスペースを閉じる" : "詳細ワークスペースを開く（競合戦略・自律証跡・運用ドリル・契約）"}
-        </button>
-        {workspaceOpen ? (
-          <div className="workspace-grid">
-            <StrategyWarRoom strategy={strategy} onHire={toggleAgent} />
-            <MissionControl recommendation={recommendation} projectBrief={brief} />
-            <OpsDrillPanel recommendation={recommendation} projectBrief={brief} />
-            <ContractDesk recommendation={recommendation} projectBrief={brief} />
-          </div>
-        ) : null}
-      </section>
     </main>
   );
 }

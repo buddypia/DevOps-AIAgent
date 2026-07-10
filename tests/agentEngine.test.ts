@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { createA2ATimeline, profileProject, recommendSquad, scoreSquad } from "../src/agentEngine";
+import { profileProject, recommendSquad, scoreSquad } from "../src/agentEngine";
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market";
 
 describe("agent marketplace engine", () => {
@@ -19,14 +19,6 @@ describe("agent marketplace engine", () => {
     expect(recommendation.after.total).toBeGreaterThan(recommendation.before.total);
     expect(recommendation.uplift.governance).toBeGreaterThan(25);
     expect(recommendation.mcpMatrix.length).toBeGreaterThanOrEqual(3);
-  });
-
-  test("A2A timeline exposes discovery, negotiation, delegation, and shipping steps", () => {
-    const selected = MARKET_AGENTS.filter((agent) => ["market-broker", "cloud-run-sre"].includes(agent.id));
-    const timeline = createA2ATimeline(selected);
-
-    expect(timeline.map((item) => item.verb)).toEqual(expect.arrayContaining(["discover", "negotiate", "message/send", "ship"]));
-    expect(timeline[0].payload).toContain("agent-card.json");
   });
 
   test("squad score remains bounded", () => {
