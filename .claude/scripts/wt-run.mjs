@@ -2,8 +2,8 @@
 /**
  * wt-run.mjs — Redirect command execution to the active worktree.
  *
- * 이 스크립트는 AI 세션 중 CWD가 메인 저장소로 리셋되었을 때,
- * 자동으로 활성화된 worktree를 찾아 그 안에서 검증/체크 명령어를 실행시킵니다.
+ * このスクリプトは、AI セッション中に CWD がメインリポジトリにリセットされた際、
+ * 自動的に有効化された worktree を探してその中で検証/チェックコマンドを実行します。
  */
 
 import { existsSync, readFileSync } from 'node:fs';
@@ -36,7 +36,7 @@ function resolveActiveWorktree(explicitWt) {
     return resolve(REPO_ROOT, explicitWt);
   }
 
-  // 1. CONTEXT.json에서 활성 worktree 검출
+  // 1. CONTEXT.json から活性 worktree を検出
   const ctxPath = join(REPO_ROOT, 'CONTEXT.json');
   if (existsSync(ctxPath)) {
     try {
@@ -49,7 +49,7 @@ function resolveActiveWorktree(explicitWt) {
     }
   }
 
-  // 2. git worktree list에서 .worktrees/ 하위 worktree 검출
+  // 2. git worktree list から .worktrees/ 配下の worktree を検出
   try {
     const stdout = execSync('git worktree list --porcelain', { cwd: REPO_ROOT, encoding: 'utf-8' });
     const lines = stdout.split('\n');
@@ -67,7 +67,7 @@ function resolveActiveWorktree(explicitWt) {
     if (wtPaths.length === 1) {
       return wtPaths[0];
     } else if (wtPaths.length > 1) {
-      console.warn(`[wt-run] 경고: 여러 개의 활성 worktree가 발견되었습니다. 첫 번째(${wtPaths[0]})를 사용합니다.`);
+      console.warn(`[wt-run] 警告: 複数の活性 worktree が発見されました。最初の一つ (${wtPaths[0]}) を使用します。`);
       return wtPaths[0];
     }
   } catch {
@@ -80,20 +80,20 @@ function resolveActiveWorktree(explicitWt) {
 const { worktree: explicitWt, cmdArgs } = parseArgs(process.argv.slice(2));
 
 if (cmdArgs.length === 0) {
-  console.error('❌ wt-run: 실행할 명령어가 필요합니다. 예) node .claude/scripts/wt-run.mjs npm run test');
+  console.error('❌ wt-run: 実行するコマンドが必要です。例) node .claude/scripts/wt-run.mjs npm run test');
   process.exit(2);
 }
 
 const targetCwd = resolveActiveWorktree(explicitWt) || REPO_ROOT;
 
 if (targetCwd === REPO_ROOT) {
-  console.warn(`[wt-run] 경고: 활성화된 worktree를 찾을 수 없습니다. 메인 저장소 루트(${targetCwd})에서 실행합니다.`);
+  console.warn(`[wt-run] 警告: 有効化された worktree を見つけられませんでした。メインリポジトリのルート (${targetCwd}) から実行します。`);
 } else {
-  console.log(`[wt-run] CWD 리다이렉션: ${targetCwd}`);
+  console.log(`[wt-run] CWD リダイレクション: ${targetCwd}`);
 }
 
 const cmdString = cmdArgs.join(' ');
-console.log(`[wt-run] 실행 명령어: ${cmdString}`);
+console.log(`[wt-run] 実行コマンド: ${cmdString}`);
 
 const child = spawnSync(cmdString, {
   cwd: targetCwd,

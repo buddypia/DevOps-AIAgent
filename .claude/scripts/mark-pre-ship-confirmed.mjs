@@ -1,39 +1,39 @@
 #!/usr/bin/env node
 
 /**
- * mark-pre-ship-confirmed.mjs — Pre-Ship Review Panel 컨펌 마커 생성 CLI
+ * mark-pre-ship-confirmed.mjs — Pre-Ship Review Panel 承認マーカー生成 CLI
  *
- * Why (R-CM-029 Rule 3.1 Proposal-stage 의무):
- *   (a) 위협: pre-ship-review-guard 의 deny 메시지가 절대 경로 substring 으로
+ * Why (R-CM-029 Rule 3.1 Proposal-stage 義務):
+ *   (a) 脅威: pre-ship-review-guard の deny メッセージが絶対パスの substring で
  *       `mkdir -p /abs/main/.tmp && touch /abs/main/.tmp/pre-ship-review-confirmed-<key>`
- *       를 제시하면 AI 가 worktree cwd 에서 동작 중일 때 (1) 경로 truncation 또는
- *       (2) 무의식적 상대 경로 단축으로 wrong `.tmp/` (worktree-local) 에 마커
- *       생성 후 hook 이 부재 판정 → 무한 deny loop 위험.
- *   (b) 기존 갭: deny 메시지는 cwd-agnostic 절대 경로 substring 만 제공. AI 가
- *       cwd 컨텍스트 헤맬 때 안전망 부재.
- *   (c) 더 단순한 대안 비교: 절대 경로 substring 유지 (현행) 도 정상 동작하지만
- *       multi-worktree 환경에서 AI 인지 부담 비대칭적으로 큼. CLI 한 줄은
- *       cwd 어디서 호출돼도 동일 결과 보장 → AI 컨텍스트 헤맴 차단.
+ *       を提示した際、AI が worktree cwd で動作中である場合、(1) パスの truncation または
+ *       (2) 無意識な相対パス of 短縮により誤った `.tmp/` (worktree-local) にマーカーを
+ *       生成してしまい、hook が不在と判定 → 無限 deny loop の危険。
+ *   (b) 既存のギャップ: deny メッセージは cwd-agnostic な絶対パスの substring のみを提供。AI が
+ *       cwd コンテキストを見失った場合の安全網が不在。
+ *   (c) より単純な代替案の比較: 絶対パスの substring 維持 (現行) でも正常動作するが、
+ *       multi-worktree 環境において AI の認知負荷が非対称的に大きい。CLI 1行は
+ *       cwd のどこから呼び出されても同一の結果を保証 → AI コンテキストの混乱を遮断。
  *
  * Usage:
  *   node .claude/scripts/mark-pre-ship-confirmed.mjs <branch-or-worktree-path>
  *   node /abs/path/.claude/scripts/mark-pre-ship-confirmed.mjs feature/foo
  *   node /abs/path/.claude/scripts/mark-pre-ship-confirmed.mjs .worktrees/fix__bar
- *   node /abs/path/.claude/scripts/mark-pre-ship-confirmed.mjs --staged    # ship-feature 모드
+ *   node /abs/path/.claude/scripts/mark-pre-ship-confirmed.mjs --staged    # ship-feature モード
  *
  * Behavior:
- *   - main project root 를 `git rev-parse --git-common-dir` 의 부모로 자동 resolve.
- *     (어떤 worktree cwd 에서 호출돼도 동일 main root.)
- *   - `<main>/.tmp/pre-ship-review-confirmed-<safeBranchKey>` 마커 생성 (mkdir -p + touch).
- *   - safeBranchKey / inferBranchFromWorktreePath 는 worktree-plan-path.mjs SSOT.
- *   - 결과 경로를 stdout 으로 출력.
+ *   - main project root を `git rev-parse --git-common-dir` の親として自動 resolve。
+ *     (どの worktree cwd から呼び出されても同一の main root。)
+ *   - `<main>/.tmp/pre-ship-review-confirmed-<safeBranchKey>` マーカーを生成 (mkdir -p + touch)。
+ *   - safeBranchKey / inferBranchFromWorktreePath は worktree-plan-path.mjs SSOT。
+ *   - 結果パスを stdout に出力。
  *
  * Exit codes:
- *   0 — 마커 생성 성공
- *   1 — 인자 누락 / git common-dir resolve 실패 / mkdir/touch 실패
+ *   0 — マーカー生成成功
+ *   1 — 引数不足 / git common-dir resolve 失敗 / mkdir・touch 失敗
  *
- * Boundary (R-CM-028): 관점 1 (brief2dev 자체) 전용. 관점 2 는 pre-ship-review-guard
- * 가 scaffold target 에 미배포 (R-CM-030 Rule 11 boundary-divergent).
+ * Boundary (R-CM-028): 観点 1 (brief2dev 自体) 専用。観点 2 は pre-ship-review-guard
+ * が scaffold target に未配備 (R-CM-030 Rule 11 boundary-divergent)。
  */
 
 import { execSync } from 'node:child_process';
@@ -50,11 +50,11 @@ import { VALID_QUALITY_LABELS } from '../../.cli/lib/quality-gate-labels.mjs';
 import { parseUncheckedPlanItems } from '../../.cli/lib/worktree-plan-status.mjs';
 
 /**
- * git common-dir 의 부모를 main project root 로 resolve.
- * worktree cwd 든 main cwd 든 동일 root 반환.
+ * git common-dir の親を main project root として resolve。
+ * worktree cwd でも main cwd でも同一の root を返却。
  *
  * @param {string} cwd
- * @returns {string|null} 절대 경로 또는 null (git repo 아님)
+ * @returns {string|null} 絶対パスまたは null (git repo ではない)
  */
 export function resolveMainRoot(cwd = process.cwd()) {
   try {
@@ -65,10 +65,9 @@ export function resolveMainRoot(cwd = process.cwd()) {
       timeout: 3000,
     }).trim();
     if (!out) return null;
-    // common-dir 는 main 의 `.git` 디렉토리. parent = main root.
-    // Edge case: bare repo / git 루트 자체에서 호출 시 `--git-common-dir` 가 `.`
-    // 반환 → abs === cwd → dirname() 은 부모 디렉토리 (잘못된 main root) 반환.
-    // 이 때는 cwd 자체가 main root.
+    // common-dir は main の `.git` ディレクトリ。parent = main root。
+    // Edge case: bare repo / git ルート自体で呼び出した際 `--git-common-dir` が `.`
+    // を返却 → abs === cwd → dirname() は親ディレクトリ (誤った main root) を返却。
     const abs = resolve(cwd, out);
     if (abs === cwd) return cwd;
     return dirname(abs);
@@ -78,7 +77,7 @@ export function resolveMainRoot(cwd = process.cwd()) {
 }
 
 /**
- * 인자에서 branch 명 추출. worktree path / branch / --staged 모두 수용.
+ * 引数から branch 名を抽出。worktree path / branch / --staged すべて許容。
  *
  * @param {string} arg
  * @returns {string|null}
@@ -94,19 +93,19 @@ export function resolveBranch(arg) {
 }
 
 /**
- * 마커 파일 경로 산출 — SSOT: worktree-plan-path.mjs#preShipMarkerPath.
- * pre-ship-review-guard.mjs (hook) 와 동일 함수 공유 → marker create/check 정합성.
+ * マーカーファイルパスの算出 — SSOT: worktree-plan-path.mjs#preShipMarkerPath。
+ * pre-ship-review-guard.mjs (hook) と同一関数を共有 → marker create/check 整合性。
  */
 export const markerPath = preShipMarkerPath;
 
 /**
- * --quality 인자 검증 + 정규화 (trim). enum SSOT: `lib/quality-gate-labels.mjs`.
+ * --quality 引数の検証 + 正規化 (trim)。enum SSOT: `lib/quality-gate-labels.mjs`。
  *
- * 회고 #1 회귀 차단: marker 파일에 label 영속화 → pre-ship-review-guard 가
- * label 부재/무효 시 deny. silent skip 차단.
+ * デグレード #1 遮断: marker ファイルに label を永続化 → pre-ship-review-guard が
+ * label 不在/無効時に deny。silent skip 遮断。
  *
  * @param {string|null|undefined} raw
- * @returns {string|null} 유효 label 또는 null
+ * @returns {string|null} 有効な label または null
  */
 export function parseQualityLabel(raw) {
   if (typeof raw !== 'string') return null;
@@ -115,8 +114,8 @@ export function parseQualityLabel(raw) {
 }
 
 /**
- * 마커 생성 (mkdir -p + write). `content === ''` 시 기존 시그니처 호환 (empty
- * marker + mtime refresh). `content !== ''` 시 항상 overwrite (label 갱신).
+ * マーカー生成 (mkdir -p + write)。`content === ''` 時は従来のシグネチャ互換 (empty
+ * marker + mtime refresh)。`content !== ''` 時は常に overwrite (label 更新)。
  *
  * @param {string} path
  * @param {string} content
@@ -132,35 +131,35 @@ export function createMarker(path, content = '') {
 }
 
 /**
- * PLAN.md 미완료 체크박스 사전 검사 — ops.mjs verify-plan 과 같은 SSOT (parseUnchecked) 재사용.
+ * PLAN.md 未完了チェックボックス事前検査 — ops.mjs verify-plan と同一の SSOT (parseUnchecked) を再利用。
  *
- * Why (R-CM-029 Rule 3 Proposal-stage 의무):
- *   (a) 위협: PR #303 ship 단계에서 PLAN.md `- [ ]` 토글 누락으로 ops.mjs verify-plan
- *       차단 → 1 round-trip 발생. AI 가 verification 통과 → commit → marker 생성 → ship
- *       흐름에서 PLAN.md 토글 단계를 silently SKIP 가능.
- *   (b) 기존 갭: ops.mjs verify-plan 은 ship 호출 시점만 차단. 마커 생성 시점은
- *       검사 부재 → round-trip 발생 후 차단.
- *   (c) 더 단순한 대안: 본 함수가 한 phase 빠른 시점에 차단 + ops.mjs 의 parseUnchecked
- *       재사용으로 SSOT 1개 유지.
+ * Why (R-CM-029 Rule 3 Proposal-stage 義務):
+ *   (a) 脅威: PR #303 ship 段階で PLAN.md の `- [ ]` トグルの漏れにより ops.mjs verify-plan が
+ *       遮断 → 1 round-trip が発生。AI が verification を通過 → commit → marker 生成 → ship の
+ *       フローにおいて PLAN.md トグル段階を silently に SKIP 可能。
+ *   (b) 既存のギャップ: ops.mjs verify-plan は ship 呼び出し時点のみ遮断。マーカー生成時点は
+ *       検査不在 → round-trip 発生後に遮断。
+ *   (c) より単純な代替案: 本関数が 1フェーズ早い時点で遮断 + ops.mjs の parseUnchecked を
+ *       再利用することで SSOT を 1つに維持。
  *
- * 정책:
- *   - branch=null (staged 모드) → skip (ship-feature 모드, worktree 부재)
- *   - force=true → skip (의도적 우회, ops.mjs --force-plan 정합)
- *   - worktree path 후보 2개 자동 탐색: slash variant + escape variant
- *   - worktree / PLAN.md 부재 → skip (fail-open)
- *   - 미완료 체크박스 0건 → ok
- *   - 미완료 체크박스 1+건 → fail (unchecked 라인 + planPath 반환)
+ * ポリシー:
+ *   - branch=null (staged モード) → skip (ship-feature モード、worktree 不在)
+ *   - force=true → skip (意図的な迂回、ops.mjs --force-plan と整合)
+ *   - worktree path 候補を 2つ自動探索: slash variant + escape variant
+ *   - worktree / PLAN.md 不在 → skip (fail-open)
+ *   - 未完了チェックボックス 0件 → ok
+ *   - 未完了チェックボックス 1件以上 → fail (unchecked 行 + planPath 返却)
  *
- * @param {string} mainRoot — main project root 절대 경로
- * @param {string|null} branch — resolveBranch() 결과
- * @param {boolean} force — --force 플래그
+ * @param {string} mainRoot — main project root 絶対パス
+ * @param {string|null} branch — resolveBranch() 結果
+ * @param {boolean} force — --force フラグ
  * @returns {{ok: boolean, skipped?: string, unchecked?: string[], planPath?: string}}
  */
 export function checkPlanCheckboxes(mainRoot, branch, force) {
   if (!branch) return { ok: true, skipped: 'staged_mode' };
   if (force) return { ok: true, skipped: 'force_flag' };
 
-  // worktree path 후보: slash variant (.worktrees/feature/foo) + escape variant (.worktrees/feature__foo)
+  // worktree path 候補: slash variant (.worktrees/feature/foo) + escape variant (.worktrees/feature__foo)
   const safeKey = safeBranchKey(branch);
   const candidates = [
     join(mainRoot, '.worktrees', branch),
@@ -172,7 +171,7 @@ export function checkPlanCheckboxes(mainRoot, branch, force) {
   const planPath = resolveWorktreePlanPath(wtPath);
   if (!existsSync(planPath)) return { ok: true, skipped: 'plan_absent' };
 
-  // readFileSync fail-open — 인코딩 / symlink / 동시 접근 예외 시 skip (R-CM-006 Rule 2).
+  // readFileSync fail-open — エンコーディング / symlink / 同時アクセス例外時は skip (R-CM-006 Rule 2)。
   let content;
   try {
     content = readFileSync(planPath, 'utf-8');
@@ -185,16 +184,16 @@ export function checkPlanCheckboxes(mainRoot, branch, force) {
 }
 
 /**
- * Unknown `--*` flag 검출. 회귀 차단 (본 세션 2026-05-15 10:23 `--worktree` orphan
- * marker): unknown `--<flag>` 가 positional 로 silently 수용되어 branch key `---<flag>`
- * 형태의 무의미한 marker 가 생성된 사례.
+ * Unknown `--*` flag の検出。デグレード遮断 (本セッション 2026-05-15 10:23 `--worktree` orphan
+ * marker): unknown `--<flag>` が positional として silently に受容され、branch key `---<flag>`
+ * 形の無意味な marker が生成された事例。
  *
- * known flag 정의:
- * - `--force` / `--quality` / `--staged` 만 known (현재 main() 처리 인자)
- * - `--quality` 다음 토큰은 value 로 분류 (parseQualityLabel 이 enum 검증 담당)
+ * known flag 定義:
+ * - `--force` / `--quality` / `--staged` のみ known (現在 main() 処理引数)
+ * - `--quality` 次のトークンは value として分類 (parseQualityLabel が enum 検証を担当)
  *
  * @param {string[]} args — argv.slice(2)
- * @returns {string|null} 첫 unknown flag (있으면) / null (모두 known)
+ * @returns {string|null} 最初の unknown flag (あれば) / null (すべて known)
  */
 export function validateUnknownFlags(args) {
   const KNOWN_FLAGS = new Set(['--force', '--quality', '--staged']);
@@ -202,23 +201,23 @@ export function validateUnknownFlags(args) {
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (typeof a !== 'string' || !a.startsWith('--')) continue;
-    if (qualityIdx >= 0 && i === qualityIdx + 1) continue; // --quality 의 value 슬롯 skip
+    if (qualityIdx >= 0 && i === qualityIdx + 1) continue; // --quality の value スロット skip
     if (!KNOWN_FLAGS.has(a)) return a;
   }
   return null;
 }
 
 function main(argv) {
-  // --force / --quality <label> 플래그 추출
+  // --force / --quality <label> フラグを抽出
   const args = argv.slice(2);
 
-  // Unknown flag 검출 — silent positional 수용 차단 (회귀 차단)
+  // Unknown flag 検出 — silent positional の受容を遮断 (デグレード遮断)
   const unknown = validateUnknownFlags(args);
   if (unknown) {
     process.stderr.write(
       `[mark-pre-ship-confirmed] unknown flag: ${unknown}\n` +
         '  known flags: --force / --quality <label> / --staged\n' +
-        '  사용법: node mark-pre-ship-confirmed.mjs <branch | worktree-path | --staged> --quality <label> [--force]\n',
+        '  使用法: node mark-pre-ship-confirmed.mjs <branch | worktree-path | --staged> --quality <label> [--force]\n',
     );
     process.exit(1);
   }
@@ -241,15 +240,15 @@ function main(argv) {
     process.exit(1);
   }
 
-  // --quality 강제 검증 (회고 #1 회귀 차단 — silent skip 차단)
+  // --quality 強制検証 (デグレード #1 遮断 — silent skip 遮断)
   const quality = parseQualityLabel(qualityRaw);
   if (!quality) {
     process.stderr.write(
-      '[mark-pre-ship-confirmed] --quality <label> 필수.\n' +
-        '  label 종류:\n' +
-        '    agent_go         : /code-review --fix + code-reviewer agent 둘 다 Go (2026-05-27 — Claude Code 빌트인 /simplify 폐기 + simplifit 스킬 deprecate 후 /code-review 단일 진입점)\n' +
-        '    self_review_pass : agent 호출 실패/skip 시 자가 점검 통과 (Panel Decisions 사유 명시)\n' +
-        '    trivial_skip     : R-CM-030 Rule 10 trivial 면제 (≤2 파일 + ≤20 LOC + non-substantive)\n',
+      '[mark-pre-ship-confirmed] --quality <label> は必須です。\n' +
+        '  label の種類:\n' +
+        '    agent_go         : /code-review --fix + code-reviewer agent ともに Go (2026-05-27 — Claude Code ビルトイン /simplify 廃止 + simplifit スキル deprecate 後 /code-review 単一エントリーポイント)\n' +
+        '    self_review_pass : agent 呼び出し失敗/skip 時のセルフチェック通過 (Panel Decisions 理由明示)\n' +
+        '    trivial_skip     : R-CM-030 Rule 10 trivial 免除 (≤2 ファイル + ≤20 LOC + non-substantive)\n',
     );
     process.exit(1);
   }
@@ -257,19 +256,19 @@ function main(argv) {
   const mainRoot = resolveMainRoot();
   if (!mainRoot) {
     process.stderr.write(
-      '[mark-pre-ship-confirmed] git common-dir resolve 실패 (git repo 아님?)\n',
+      '[mark-pre-ship-confirmed] git common-dir resolve 失敗 (git repo ではない？)\n',
     );
     process.exit(1);
   }
   const branch = resolveBranch(arg);
 
-  // PLAN.md 사전 검사 — 미완료 체크박스 발견 시 마커 생성 차단 (round-trip 회피).
+  // PLAN.md 事前検査 — 未完了チェックボックス発見時はマーカー生成を遮断 (round-trip 回避)。
   const check = checkPlanCheckboxes(mainRoot, branch, force);
   if (!check.ok) {
     process.stderr.write(
-      `[mark-pre-ship-confirmed] PLAN.md 미완료 체크박스 ${check.unchecked.length}건:\n` +
+      `[mark-pre-ship-confirmed] PLAN.md 未完了チェックボックス ${check.unchecked.length}件:\n` +
         check.unchecked.map((l) => `  ${l}`).join('\n') +
-        `\n\n우회: --force 플래그 또는 항목에 (취소됨) / (dropped) / (deferred) / ~~취소선~~ 마커 추가.\n` +
+        `\n\n迂回: --force フラグまたは項目に (キャンセル済み) / (dropped) / (deferred) / ~~取り消し線~~ マーカーを追加してください。\n` +
         `PLAN: ${check.planPath}\n`,
     );
     process.exit(1);
@@ -283,19 +282,19 @@ function main(argv) {
   try {
     createMarker(path, payload);
   } catch (e) {
-    process.stderr.write(`[mark-pre-ship-confirmed] 마커 생성 실패: ${e.message}\n`);
+    process.stderr.write(`[mark-pre-ship-confirmed] マーカー生成失敗: ${e.message}\n`);
     process.exit(1);
   }
   process.stdout.write(`${path}\n`);
 }
 
 /**
- * "이 모듈이 CLI 로 직접 실행됐는가" 판정 — non-ASCII 경로 안전.
+ * "このモジュールが CLI として直接実行されたか" 判定 — non-ASCII パス安全。
  *
- * 회고 2026-07-10: repo 경로에 non-ASCII 문자(예: "×", U+00D7)가 있으면
- * `import.meta.url === \`file://${argv1}\`` 수동 concat 비교가 항상 false 다.
- * import.meta.url 은 non-ASCII 를 percent-encode 하지만 concat 은 raw 문자열
- * 그대로이기 때문. pathToFileURL 로 양쪽을 동일하게 정규화해 비교한다.
+ * 振り返り 2026-07-10: repo パスに non-ASCII 文字 (例: "×", U+00D7) がある場合、
+ * `import.meta.url === \`file://${argv1}\`` の手動 concat 比較が常に false となる。
+ * import.meta.url は non-ASCII を percent-encode するが、concat は raw 文字列
+ * そのままであるため。pathToFileURL で両者を同一に正規化して比較する。
  *
  * @param {string} moduleUrl — import.meta.url
  * @param {string|undefined} argv1 — process.argv[1]
@@ -306,7 +305,7 @@ export function isMainModule(moduleUrl, argv1) {
   return moduleUrl === pathToFileURL(argv1).href;
 }
 
-// CLI entry (import 시 미실행)
+// CLI entry (import 時の実行は遮断)
 if (isMainModule(import.meta.url, process.argv[1])) {
   main(process.argv);
 }

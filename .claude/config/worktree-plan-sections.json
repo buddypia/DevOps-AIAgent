@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "updated_at": "2026-07-02",
-  "description": "GENERIC PLAN.md 섹션 템플릿 — transplant-bundle(git-worktree-isolation)이 외부 프로젝트로 이식하는 customizable seed. brief2dev 자신은 이 JSON 을 읽지 않는다(옵션 C — 라이브 경로는 .claude/scripts/lib/worktree-plan-template.mjs#DEFAULT_PLAN_SECTIONS JS 상수 고정 사용). `sections` 배열은 .cli/lib/section-template-renderer.mjs#renderTemplateFromSections 와 동일 스키마(static/checklist_group/field_list/fenced_block/table 5 블록 타입, {{var}} placeholder). DEFAULT_PLAN_SECTIONS 와 byte-exact 동일 내용(tests/unit/worktree-plan-template.test.mjs 의 drift 회귀 테스트가 고정) — 대상 프로젝트는 heading 문구·섹션 수·checklist 항목을 이식 후 자유롭게 가감해도 렌더러 계약은 그대로 유지된다.",
+  "description": "GENERIC PLAN.md セクションテンプレート — transplant-bundle(git-worktree-isolation)が外部プロジェクトに移植する customizable seed。brief2dev 自体はこの JSON を読み込まない(オプション C — ライブパスは .claude/scripts/lib/worktree-plan-template.mjs#DEFAULT_PLAN_SECTIONS JS 定数固定を使用)。`sections` 配列は .cli/lib/section-template-renderer.mjs#renderTemplateFromSections と同一のスキーマ(static/checklist_group/field_list/fenced_block/table 5 ブロックタイプ, {{var}} placeholder)。DEFAULT_PLAN_SECTIONS と byte-exact 同一の内容(tests/unit/worktree-plan-template.test.mjs の drift デグレードテストで固定) — 対象プロジェクトは heading 文言・セクション数・checklist 項目を移植後に自由に変更しても、レンダラーの契約はそのまま維持される。",
   "sections": [
     {
       "heading": "# PLAN — {{branch}}",
@@ -12,7 +12,7 @@
       "blocks": [
         {
           "type": "static",
-          "lines": ["(작성 필요 — 한 문장으로 이 worktree 에서 달성할 목표)"]
+          "lines": ["(記入が必要 — 一言でこの worktree にて達成する目標)"]
         }
       ]
     },
@@ -21,7 +21,7 @@
       "blocks": [
         {
           "type": "static",
-          "lines": ["(작성 필요 — 왜 지금 이 변경이 필요한가? 기존 갭/문제)"]
+          "lines": ["(記入が必要 — なぜ今この変更が必要なのか？既存のギャップ/課題)"]
         }
       ]
     },
@@ -30,7 +30,7 @@
       "blocks": [
         {
           "type": "static",
-          "lines": ["(작성 필요 — 변경 대상 파일/모듈 목록)"]
+          "lines": ["(記入が必要 — 変更対象のファイル/モジュール一覧)"]
         }
       ]
     },
@@ -39,7 +39,7 @@
       "blocks": [
         {
           "type": "static",
-          "lines": ["(작성 필요 — 의도적으로 건드리지 않는 영역)"]
+          "lines": ["(記入が必要 — 意図的に変更を加えない領域)"]
         }
       ]
     },
@@ -48,17 +48,17 @@
       "blocks": [
         {
           "type": "checklist_group",
-          "subheading": "### AI 자동 (이번 턴 안에 실행)",
+          "subheading": "### AI 自動 (今回のターン内に実行)",
           "items": [
-            "(작성 필요 — `npm test` / `npx vitest run <paths>` 같은 명령)",
-            "(작성 필요 — lint / audit / smoke 등 자동 검증)"
+            "(記入が必要 — `npm test` / `npx vitest run <paths>` などのコマンド)",
+            "(記入が必要 — lint / audit / smoke などの自動検証)"
           ]
         },
         {
           "type": "checklist_group",
-          "subheading": "### 사용자 수동",
+          "subheading": "### ユーザー手動",
           "items": [
-            "(해당 없으면 항목 자체 삭제 또는 (dropped) 마커. UI 변경이라면 \"브라우저에서 X 확인\" 같은 사용자 결정 의존 검증)"
+            "(該当なしの場合は項目自体を削除、または (dropped) マーカー。UIの変更であれば \"ブラウザで X を確認\" などのユーザー決定に依存する検証)"
           ]
         }
       ]
@@ -68,7 +68,7 @@
       "blocks": [
         {
           "type": "static",
-          "lines": ["- {{createdAt}}: worktree 생성 + PLAN 초안."]
+          "lines": ["- {{createdAt}}: worktree 作成 + PLAN 草案。"]
         }
       ]
     },
@@ -77,7 +77,7 @@
       "blocks": [
         {
           "type": "static",
-          "lines": ["- 없음 (시작 시점)"]
+          "lines": ["- なし (開始時点)"]
         }
       ]
     },
@@ -86,14 +86,14 @@
       "blocks": [
         {
           "type": "static",
-          "lines": ["- (작성 필요 — AI default / 사용자 명시 결정 구분)"]
+          "lines": ["- (記入が必要 — AI デフォルト / ユーザー明示決定の区分)"]
         }
       ]
     }
   ],
   "_adapt": {
-    "purpose": "외부 프로젝트 적응 가이드(brief2dev 코드는 본 키를 읽지 않음 — 안내 전용).",
-    "how": "heading 문구, 섹션 개수, checklist_group 의 subheading/items 를 자유롭게 가감하라. 5 블록 타입(static/checklist_group/field_list/fenced_block/table) 은 .cli/lib/section-template-renderer.mjs 가 해석한다 — table 타입은 PLAN.md 기본 템플릿에는 쓰이지 않지만 같은 렌더러가 지원한다.",
-    "wiring": "이 JSON 은 현재 어떤 코드도 자동으로 읽지 않는다. 실제로 적용하려면 대상 프로젝트의 worktree-init.mjs(ensureWorktreePlan 호출부)에서 이 파일을 읽어 `renderPlanTemplate(branch, { createdAt, sections: <이 JSON의 sections 배열> })` 로 넘기도록 직접 wiring 하거나, 이식된 worktree-plan-template.mjs 의 DEFAULT_PLAN_SECTIONS 상수를 이 JSON 내용으로 바로 교체하라."
+    "purpose": "外部プロジェクト適応ガイド(brief2dev コードは本キーを読み込まない — 案内専用)。",
+    "how": "heading 文言、セクション数、checklist_group の subheading/items を自由に変更せよ。5つのブロックタイプ(static/checklist_group/field_list/fenced_block/table) は .cli/lib/section-template-renderer.mjs が解釈する — table タイプは PLAN.md 基本テンプレートには使われないが、同一のレンダラーがサポートする。",
+    "wiring": "この JSON は現在どのコードからも自動で読み込まれない。実際に適用するには対象プロジェクトの worktree-init.mjs(ensureWorktreePlan 呼び出し部)でこのファイルを読み込んで `renderPlanTemplate(branch, { createdAt, sections: <この JSON の sections 配列> })` に渡すように直接 wiring するか、移植された worktree-plan-template.mjs の DEFAULT_PLAN_SECTIONS 定数をこの JSON の内容に直接置き換える必要がある。"
   }
 }

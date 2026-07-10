@@ -1,30 +1,30 @@
 #!/usr/bin/env node
 
 /**
- * ops.mjs — create-pr 통합 실행 엔진 (8 명령, GitHub Flow, v2 응답 계약)
+ * ops.mjs — create-pr 統合実行エンジン (8 コマンド, GitHub Flow, v2 応答契約)
  *
- * 명령:
- *   Mode A (Staged 격리):  init / isolate / commit / ship-feature / finalize
+ * コマンド:
+ *   Mode A (Staged 隔離):  init / isolate / commit / ship-feature / finalize
  *   Mode B (Worktree):    verify-plan / ship-worktree / cleanup-worktree
  *
- * 출력 계약 (v2): stdout JSON 1줄
- *   성공: { ok: true,  mode, command, ... }                   (exit 0)
- *   실패: { ok: false, mode, command, error, hint?, details? } (exit 1)
+ * 出力契約 (v2): stdout JSON 1行
+ *   成功: { ok: true,  mode, command, ... }                   (exit 0)
+ *   失敗: { ok: false, mode, command, error, hint?, details? } (exit 1)
  *
- *   sync_status 값: synced | fetch_failed | local_changes | ff_failed
+ *   sync_status 値: synced | fetch_failed | local_changes | ff_failed
  *
  * Config: .claude/skills/create-pr/config.json
- *   { github_account, base_branch, enforce_ssh_remote? }  (base_branch 기본 main)
+ *   { github_account, base_branch, enforce_ssh_remote? }  (base_branch デフォルト main)
  *
- * 철칙: unstaged/untracked 파일은 실행 전후로 정확히 동일해야 한다.
- *   - worktree 격리: 원본 HEAD 불변
- *   - dirty main 시 sync abort: 원본 변경을 건드리지 않고 동기화만 중단 (자동 stash 미사용)
+ * 鉄則: unstaged/untracked ファイルは実行前後で正確に同一でなければならない。
+ *   - worktree 隔離: オリジナル HEAD 不変
+ *   - dirty main 時の sync abort: オリジナルの変更に手を加えず同期のみ中断 (自動 stash 未使用)
  *
- * 보안: 모든 외부 명령은 execFileSync 배열 인자 → shell 미경유.
+ * セキュリティ: すべての外部コマンドは execFileSync 配列引数 → shell 非経由。
  *
- * 훅 연동: cmdInit이 .tmp/create-pr-active 플래그 생성 →
- *   commit-guard.mjs / destructive-git-guard.mjs 가 allowlist 모드 전환.
- *   cmdFinalize / cmdCleanupWorktree 종료 시 플래그 자동 제거.
+ * フック連動: cmdInit が .tmp/create-pr-active フラグを生成 →
+ *   commit-guard.mjs / destructive-git-guard.mjs が allowlist モードに転換。
+ *   cmdFinalize / cmdCleanupWorktree 終了時にフラグを自動除去。
  */
 
 import { execFileSync } from 'node:child_process';
@@ -50,18 +50,18 @@ export { buildFileTree };
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
- * Project root 산출. 다중 worktree 환경에서 AI 가 worktree 내부에서 ops.mjs 를
- * 직접 호출해도 main worktree root 회복하도록 보장.
+ * Project root 算出。マルチ worktree 環境で AI が worktree 内部から ops.mjs を
+ * 直接呼び出しても main worktree root を回復するように保証。
  *
- * 우선순위:
- *   1. `process.env.CLAUDE_PROJECT_DIR` — 명시 override (테스트 / 사용자 지정).
- *   2. `git rev-parse --git-common-dir` 부모 — 모든 worktree 가 동일 main root 회귀.
- *      `.git` 디렉토리는 main worktree 안에 본체가 있고, 다른 worktree 들은
- *      `.git` 파일로 main 의 common-dir 를 가리킨다. 부모 = main worktree root.
- *   3. `__dirname` 기반 fallback — worktree 안에서 호출 시 worktree 루트로 떨어지는
- *      함정이 있어 마지막 fallback (이전 동작 호환성용 — git 외부 실행 환경).
+ * 優先順位:
+ *   1. `process.env.CLAUDE_PROJECT_DIR` — 明示 override (テスト / ユーザー指定)。
+ *   2. `git rev-parse --git-common-dir` 親 — すべての worktree が同一の main root に回帰。
+ *      `.git` ディレクトリは main worktree 内に本体があり、他の worktree は
+ *      `.git` ファイルで main の common-dir を指す。親 = main worktree root。
+ *   3. `__dirname` 基準 fallback — worktree 内での呼び出し時に worktree ルートに落ちてしまう
+ *      罠があるための最終 fallback (従来の動作互換用 — git 外部実行環境)。
  *
- * 회귀: tests/unit/create-pr-ops.test.mjs `resolveProjectRoot` describe block.
+ * 回帰: tests/unit/create-pr-ops.test.mjs `resolveProjectRoot` describe block.
  */
 export function resolveProjectRoot(cwd = process.cwd()) {
   if (process.env.CLAUDE_PROJECT_DIR) return process.env.CLAUDE_PROJECT_DIR;
@@ -71,8 +71,8 @@ export function resolveProjectRoot(cwd = process.cwd()) {
       encoding: 'utf-8',
       stdio: ['ignore', 'pipe', 'ignore'],
     }).trim();
-    // 빈 stdout 또는 '.' 만으로는 부모 추론이 의미 없다 — silent worktree-root
-    // fallback 함정이 재현되므로 명시적으로 fallback 으로 보내고 stderr 흔적을 남긴다.
+    // 空の stdout または '.' のみでは親の推論に意味がない — silent worktree-root
+    // fallback の罠が再現されるため、明示的に fallback へ送り、stderr に痕跡を残す。
     if (commonDir && commonDir !== '.' && commonDir !== '') {
       return dirname(resolve(cwd, commonDir));
     }
@@ -80,7 +80,7 @@ export function resolveProjectRoot(cwd = process.cwd()) {
       `[ops.mjs] resolveProjectRoot: git common-dir empty (cwd=${cwd}), falling back to __dirname-based path.\n`,
     );
   } catch {
-    // git 외부 / git 미설치 — __dirname fallback 으로
+    // git 外部 / git 未インストール — __dirname fallback へ
   }
   return resolve(__dirname, '..', '..', '..');
 }
@@ -100,19 +100,19 @@ const BASE_BRANCH = CFG.base_branch || 'main';
 const GH_ACCOUNT = CFG.github_account || null;
 const ENFORCE_SSH = CFG.enforce_ssh_remote === true;
 
-// v2.1: 30s → 30min. ship-feature 는 MERGEABLE_TIMEOUT_MS=5min 동안 polling 하므로
-// 30s threshold 는 활발히 동작 중인 ship-feature 직후 다른 명령이 flag 를 stale 로
-// 판단하여 동시 진입 보호를 우회하는 사고를 유발한다. 30min 은 단일 사용자 CLI 의
-// 합리적 사이클 상한.
-// export: 회귀 테스트가 import 하여 헬퍼 복제 없이 검증.
+// v2.1: 30s → 30min。ship-feature は MERGEABLE_TIMEOUT_MS=5min の間 polling するため
+// 30s threshold は活発に動作中の ship-feature 直後に他のコマンドが flag を stale と
+// 判断し、同時進入保護を迂回する事故を誘発する。30min は単一ユーザー CLI の
+// 合理的なサイクル上限。
+// export: デグレードテストが import してヘルパーの複製なしで検証。
 export const ACTIVE_FLAG_STALE_MS = 30 * 60 * 1000;
 const MERGEABLE_TIMEOUT_MS = 300_000;
 const MERGEABLE_POLL_MS = 5_000;
 
 // ═ Shell ═
-// 네트워크 transient 에러 패턴 — 포트 차단/핫스팟 불안정 시 gh·git 호출의 *일시적* 실패.
-// 논리 에러("already exists" / merge conflict / auth)는 포함하지 않는다 — 재시도해도 같은 결과.
-// export: 회귀 테스트가 헬퍼 복제 없이 직접 검증.
+// ネットワーク transient エラーパターン — ポート遮断/ホットスポット不安定時の gh・git 呼び出しの *一時的* 失敗。
+// 論理エラー ("already exists" / merge conflict / auth) は含めない — 再試行しても同一の結果。
+// export: デグレードテストがヘルパーの複製なしで直接検証。
 const TRANSIENT_ERROR_PATTERNS = [
   /ETIMEDOUT/i,
   /ECONNRESET/i,
@@ -120,8 +120,8 @@ const TRANSIENT_ERROR_PATTERNS = [
   /EAI_AGAIN/i,
   /ENOTFOUND/i,
   /timed out/i,
-  // /timeout/i 는 의도적 제외 — GitHub API 422 검증 에러("...timeout: 0" 등)를 false-transient
-  // 로 오재시도. 실제 timeout 은 /timed out/·ETIMEDOUT·/TLS handshake/·아래 Go http client 로 커버.
+  // /timeout/i は意図的に除外 — GitHub API 422 検証エラー ("...timeout: 0" など) を false-transient
+  // として誤って再試行するのを防ぐ。実際の timeout は /timed out/・ETIMEDOUT・/TLS handshake/・以下の Go http client でカバー。
   /Client\.Timeout exceeded/i,
   /TLS handshake/i,
   /connection reset/i,
@@ -145,12 +145,12 @@ function defaultSleepSeconds(sec) {
   try {
     execFileSync('sleep', [String(sec)], { stdio: 'ignore' });
   } catch {
-    /* sleep 실패는 무시 — 재시도 진행 (delay 0 으로 강등) */
+    /* sleep 失敗は無視 — 再試行を進行 (delay 0 に降格) */
   }
 }
 
-// transient 네트워크 에러만 재시도. 논리 에러는 즉시 throw (재시도 무의미).
-// opts.sleep 주입으로 테스트는 실제 대기 없이 검증.
+// transient ネットワークエラーのみ再試行。論理エラーは即時 throw (再試行は無意味)。
+// opts.sleep 注入によりテストは実際の待機なしで検証。
 export function retryTransient(fn, opts = {}) {
   const attempts = Number.isInteger(opts.attempts) && opts.attempts > 0 ? opts.attempts : 3;
   const sleep = typeof opts.sleep === 'function' ? opts.sleep : defaultSleepSeconds;
@@ -162,7 +162,7 @@ export function retryTransient(fn, opts = {}) {
     } catch (e) {
       lastErr = e;
       if (attempt >= attempts || !isTransient(e)) throw e;
-      sleep(Math.min(baseDelaySec * attempt, 8)); // 2s → 4s → 6s (상한 8s)
+      sleep(Math.min(baseDelaySec * attempt, 8)); // 2s → 4s → 6s (上限 8s)
     }
   }
   throw lastErr;
@@ -185,8 +185,8 @@ function execOnce(cmd, opts = {}) {
   }
 }
 
-// opts.retry > 1 일 때만 transient 재시도 (네트워크 호출 — gh / git fetch·push).
-// 로컬 호출(git status / rev-parse / make q.check)은 retry 미지정 → 즉시 fail-fast.
+// opts.retry > 1 の時のみ transient 再試行 (ネットワーク呼び出し — gh / git fetch・push)。
+// ローカル呼び出し (git status / rev-parse / make q.check) は retry 未指定 → 即時 fail-fast。
 function exec(cmd, opts = {}) {
   if (opts.retry && opts.retry > 1) {
     return retryTransient(() => execOnce(cmd, opts), { attempts: opts.retry, sleep: opts.sleep });
@@ -197,9 +197,9 @@ function exec(cmd, opts = {}) {
 const git = (args, opts = {}) => exec(['git', ...args], opts);
 
 /**
- * github_account 미설정 시 gh CLI 의 기본 로그인 계정을 그대로 사용한다
- * (config.json _adapt / SKILL.md / transplant-bundles.json 이 문서화한 계약).
- * 순수 함수로 분리 — gh CLI 실행 없이 커맨드 구성 로직만 단위 테스트 가능.
+ * github_account 未設定時は gh CLI のデフォルトログインアカウントをそのまま使用する
+ * (config.json _adapt / SKILL.md / transplant-bundles.json が文書化した契約)。
+ * 純粋関数に分離 — gh CLI 実行なしでコマンド構成ロジックのみを単体テスト可能。
  */
 export function buildGhTokenCommand(ghAccount) {
   return ghAccount ? ['gh', 'auth', 'token', '-u', ghAccount] : ['gh', 'auth', 'token'];
@@ -209,15 +209,15 @@ let cachedToken = null;
 function ghToken() {
   if (cachedToken) return cachedToken;
   const tokenCmd = buildGhTokenCommand(GH_ACCOUNT);
-  // gh()의 env 구성 단계에서 eager 호출되어 exec 의 retry scope 밖이므로 직접 retryTransient.
-  // (gh auth token 은 로컬 키링 조회라 보통 네트워크 무관이나, 첫 gh() 호출 transient 갭 차단.)
+  // gh() の env 構成段階で eager 呼び出しされ、exec の retry scope 外であるため直接 retryTransient.
+  // (gh auth token はローカルキーリング参照のため通常はネットワークと無関係だが、最初の gh() 呼び出しの transient ギャップを遮断。)
   try {
     cachedToken = retryTransient(() => exec(tokenCmd), { attempts: 3 });
   } catch (e) {
     const err = new Error(
-      `gh 인증 토큰 조회 실패 (${GH_ACCOUNT ? `계정: ${GH_ACCOUNT}` : '기본 로그인 계정'}): ${e.message}`
+      `gh 認証トークン照会失敗 (${GH_ACCOUNT ? `アカウント: ${GH_ACCOUNT}` : 'デフォルトログインアカウント'}): ${e.message}`
     );
-    err.details = { hint: `gh auth login 상태 확인, 또는 config.github_account 로 계정 명시: ${CONFIG_PATH}` };
+    err.details = { hint: `gh auth login 状態を確認、または config.github_account にてアカウントを明示: ${CONFIG_PATH}` };
     throw err;
   }
   return cachedToken;
@@ -225,7 +225,7 @@ function ghToken() {
 
 const gh = (args, opts = {}) => exec(['gh', ...args], {
   timeout: 60_000,
-  retry: 3, // 모든 gh 호출은 api.github.com transient(TLS handshake timeout 등) 재시도. opts.retry 로 override.
+  retry: 3, // すべての gh 呼び出しは api.github.com transient (TLS handshake timeout など) 再試行。opts.retry で override。
   ...opts,
   env: { ...process.env, GH_TOKEN: ghToken(), GH_HOST: 'github.com' },
 });
@@ -233,14 +233,14 @@ const gh = (args, opts = {}) => exec(['gh', ...args], {
 function resolveRepo() {
   const url = git(['remote', 'get-url', 'origin']);
   const m = url.match(/[:/]([^:/]+\/[^/]+?)(?:\.git)?$/);
-  if (!m) throw new Error(`origin URL 파싱 실패: ${url}`);
+  if (!m) throw new Error(`origin URL パース失敗: ${url}`);
   return m[1];
 }
 
 /**
- * `--worktree <p>` 인자를 PROJECT_DIR 기준 절대경로로 정규화한다.
- * 절대경로 입력은 그대로 반환 (false-prepend 회피).
- * 회귀 차단: tests/unit/create-pr-ops.test.mjs
+ * `--worktree <p>` 引数を PROJECT_DIR 基準の絶対パスに正規化する。
+ * 絶対パス入力はそのまま返却 (false-prepend 回避)。
+ * デグレード遮断: tests/unit/create-pr-ops.test.mjs
  */
 export function resolveWorktreeAbsPath(wtPath) {
   if (!wtPath) return wtPath;
@@ -248,10 +248,10 @@ export function resolveWorktreeAbsPath(wtPath) {
 }
 
 /**
- * `git worktree list --porcelain` 출력에서 worktree 절대 경로 목록을 추출.
- * Pure parser — 테스트 가능.
+ * `git worktree list --porcelain` 出力から worktree 絶対パスの一覧を抽出。
+ * Pure parser — テスト可能。
  *
- * 입력 예시:
+ * 入力例:
  *   worktree /a/main
  *   HEAD abc...
  *   branch refs/heads/main
@@ -260,9 +260,9 @@ export function resolveWorktreeAbsPath(wtPath) {
  *   HEAD def...
  *   branch refs/heads/feature/foo
  *
- * 정확 매칭 (`^worktree (.+)$`) 으로 향후 git 의 다른 `worktree`-시작 prefix
- * 확장 (예: hypothetical `worktree-config-file ...`) 과 충돌하지 않도록 보호.
- * 빈 path 는 capture group 결과로 자동 제외.
+ * 正確なマッチング (`^worktree (.+)$`) により、将来的な git の他の `worktree` 開始の prefix
+ * 拡張 (例: 仮定的な `worktree-config-file ...`) と衝突しないように保護。
+ * 空の path は capture group の結果として自動除外。
  *
  * @param {string} porcelainOutput
  * @returns {string[]}
@@ -275,8 +275,8 @@ export function parseWorktreePaths(porcelainOutput) {
   for (const line of porcelainOutput.split(/\r?\n/)) {
     const match = WORKTREE_LINE_RE.exec(line);
     if (match) {
-      // `.trim()` 은 trailing whitespace 방어용 — git porcelain 은 trailing space
-      // 가 없는 것이 정상이지만, capture group 이 빨아들이는 경우 대비 (no-op 동등).
+      // `.trim()` は trailing whitespace 防御用 — git porcelain は trailing space
+      // がないのが正常だが、capture group が吸い込む場合を考慮 (no-op 同等)。
       const path = match[1].trim();
       if (path) paths.push(path);
     }
@@ -285,12 +285,12 @@ export function parseWorktreePaths(porcelainOutput) {
 }
 
 /**
- * `git status --porcelain` 출력을 dirty/clean 으로 분류한다. Pure parser — 테스트 가능.
+ * `git status --porcelain` 出力を dirty/clean に分類する。Pure parser — テスト可能。
  *
- * Untracked 파일 (`?? path`) 은 의도적으로 제외 — 사용자의 ad-hoc 작업물이지 머지 결과와
- * 충돌하는 변경이 아니다. 머지 결과 ff 를 막는 것은 tracked file 의 unstaged/staged 변경.
+ * Untracked ファイル (`?? path`) は意図的に除外 — ユーザーの ad-hoc 作業物でありマージ結果と
+ * 衝突する変更ではない。マージ結果の ff を防ぐのは tracked file の unstaged/staged 変更。
  *
- * @param {string} porcelain - `git status --porcelain` 의 stdout
+ * @param {string} porcelain - `git status --porcelain` の stdout
  * @returns {{status: 'clean'|'dirty', dirty_paths?: string[]}}
  */
 export function parsePorcelainStatus(porcelain) {
@@ -300,7 +300,7 @@ export function parsePorcelainStatus(porcelain) {
     .filter((line) => line && !line.startsWith('??'))
     .map((line) => {
       const rest = line.slice(3).trim();
-      // ff merge 영향은 rename 의 new path 측이므로 그것만 dirty_paths 에 보고.
+      // ff merge 影響は rename の new path 側なので、それのみを dirty_paths に報告。
       const arrow = rest.indexOf(' -> ');
       return arrow >= 0 ? rest.slice(arrow + 4).trim() : rest;
     })
@@ -309,11 +309,11 @@ export function parsePorcelainStatus(porcelain) {
 }
 
 /**
- * 머지 성공 후 main repo (PROJECT_DIR) 의 working tree dirty 상태를 감지한다.
- * 사용자가 main repo 에서 squash merge 결과와 충돌하는 unstaged 변경을 가지고 있으면
- * `git pull --ff-only` 실패 — AI 가 해당 상태를 인지해야 명시적 reconcile 안내 가능.
+ * マージ成功後、main repo (PROJECT_DIR) の working tree dirty 状態を検知する。
+ * ユーザーが main repo で squash merge 結果と衝突する unstaged 変更を所持していると
+ * `git pull --ff-only` 失敗 — AI が該当状態を認知して初めて明示的な reconcile 案内が可能。
  *
- * git 호출 실패는 fail-open ('unknown') — ship 결과 자체에 영향 없음.
+ * git 呼び出し失敗は fail-open ('unknown') — ship 結果自体に影響なし。
  *
  * @returns {{status: 'clean'|'dirty'|'unknown', dirty_paths?: string[]}}
  */
@@ -326,11 +326,11 @@ export function detectPostMergeMainStatus(cwd = PROJECT_DIR) {
   }
 }
 
-// ═ Pure helpers (테스트 가능) ═
+// ═ Pure helpers (テスト可能) ═
 
 /**
- * 머지된 PR 의 변경 파일 목록 수집. gh CLI 호출.
- * 실패 시 빈 배열 (핵심 머지 결과 영향 없음 — fail-open).
+ * マージされた PR の変更ファイル一覧を収集。gh CLI 呼び出し。
+ * 失敗時は空の配列 (中核のマージ結果に影響なし — fail-open)。
  */
 function collectChangedFilesViaPr(prNumber, repo) {
   try {
@@ -344,15 +344,15 @@ function collectChangedFilesViaPr(prNumber, repo) {
 }
 
 /**
- * `/create-pr ship-worktree` post-merge 단계에서 followup-debt-tracker.mjs 의
- * `register --pr <num> --json` 을 호출하고, 등록된 DEBT 항목들을 응답에 가시화한다.
+ * `/create-pr ship-worktree` post-merge 段階で followup-debt-tracker.mjs の
+ * `register --pr <num> --json` を呼び出し、登録された DEBT 項目を応答として可視化する。
  *
- * R-CM-010 Iron Law 정합: silent execute 후 "자동 등록됐을 것" 추정 차단 — 결과를
- * `count` + `items` 로 명시 반환하여 AI 가 사용자에게 직접 보고 가능하게 한다.
+ * R-CM-010 Iron Law 整合: silent execute 後「自動登録された」との推測を遮断 — 結果を
+ * `count` + `items` として明示的に返却し、AI がユーザーに直接報告できるようにする。
  *
- * Fail-open (R-CM-033 #10 정합): script 부재 / invalid PR / 실행 실패 / stdout
- * parse 실패 모두 `{ error, count: 0, items: [] }` 반환 (throw X) — ship-worktree
- * 메인 흐름 차단 금지.
+ * Fail-open (R-CM-033 #10 整合): スクリプト不在 / 無効な PR / 実行失敗 / stdout
+ * parse 失敗すべて `{ error, count: 0, items: [] }` 返却 (throw しない) — ship-worktree
+ * メインフロー遮断禁止。
  *
  * @param {number} prNumber
  * @returns {{ error: string | null, count: number, items: Array<object> }}
@@ -433,7 +433,7 @@ function deleteBranchAndStashes(branch) {
 // PLAN.md parser SSOT. Re-exported for legacy tests / callers.
 export const parseUnchecked = parseUncheckedPlanItems;
 
-// AI 컨텍스트 분기 명확화
+// AI コンテキストの分岐の明確化
 const STAGED_CMDS = new Set(['init', 'isolate', 'commit', 'ship-feature', 'finalize']);
 const WORKTREE_CMDS = new Set(['verify-plan', 'ship-worktree', 'cleanup-worktree']);
 function inferMode(command) {
@@ -442,7 +442,7 @@ function inferMode(command) {
   return null;
 }
 
-// 동시 실행 보호: 30초 이내 active flag = 다른 세션 진행 중
+// 同時実行保護: 30秒以内 active flag = 他のセッション進行中
 function isStaleActiveFlag(flagPath, now = Date.now(), thresholdMs = ACTIVE_FLAG_STALE_MS) {
   if (!existsSync(flagPath)) return true;
   try {
@@ -465,14 +465,14 @@ function requireArg(args, key, { type = 'string' } = {}) {
   const v = args[key];
   if (v === undefined) throw new Error(`--${key} is required`);
   if (type === 'string' && typeof v !== 'string') {
-    throw new Error(`--${key} requires a value (got: ${v}). 사용법: --${key} <value>`);
+    throw new Error(`--${key} requires a value (got: ${v}). 使用法: --${key} <value>`);
   }
   return v;
 }
 
 // ═ State ═
 const readBranch = () => {
-  if (!existsSync(BRANCH_FILE)) throw new Error('세션 없음. isolate 먼저 실행');
+  if (!existsSync(BRANCH_FILE)) throw new Error('セッションなし。isolate を先に実行');
   return readFileSync(BRANCH_FILE, 'utf-8').trim();
 };
 
@@ -490,8 +490,8 @@ function autoCleanup() {
   rmSync(STATE_DIR, { recursive: true, force: true });
 }
 
-// Pre-Ship Review 마커 라이프사이클 (R-CM-030)
-// 정상 ship 성공 시 즉시 unlink, cleanup-worktree 진입 시 stale GC 로 cancelled 흐름 누적 방지.
+// Pre-Ship Review マーカーライフサイクル (R-CM-030)
+// 正常な ship 成功時に即時 unlink、cleanup-worktree 進入時に stale GC にて cancelled フローの累積を防止。
 const SHIP_REVIEW_MARKER_PREFIX = 'pre-ship-review-confirmed-';
 const SHIP_REVIEW_MARKER_MAX_AGE_MS = 60 * 60 * 1000;
 export function shipReviewMarkerKey(branchOrPath) {
@@ -522,26 +522,26 @@ function gcStaleShipReviewMarkers(maxAgeMs = SHIP_REVIEW_MARKER_MAX_AGE_MS) {
   } catch {}
 }
 
-// SSH remote 검사 (opt-in via config.enforce_ssh_remote)
+// SSH remote 検査 (config.enforce_ssh_remote による opt-in)
 function checkSshRemoteIfRequired() {
   if (!ENFORCE_SSH) return;
   const remoteUrl = git(['remote', 'get-url', 'origin']);
   const isSsh = remoteUrl.startsWith('git@') || remoteUrl.startsWith('ssh://');
   if (!isSsh) {
-    const err = new Error('origin이 SSH remote가 아님');
+    const err = new Error('origin が SSH remote ではありません');
     err.details = {
       remote_url: remoteUrl,
-      hint: 'config.enforce_ssh_remote=true 인 경우 SSH alias remote 필요. git remote set-url 로 전환 후 재시도.',
+      hint: 'config.enforce_ssh_remote=true の場合、SSH alias remote が必要。git remote set-url にて切り替え後に再試行してください。',
     };
     throw err;
   }
 }
 
 /**
- * make 타겟 존재 여부 확인 (`make -n <target>` dry-run — 실제 레시피 실행 없이 rule 탐색만).
- * Makefile 부재 / 타겟 부재 모두 false. 이식된 프로젝트(brief2dev 전용 `q.ci-mirror` 등 소프트
- * 참조 타겟)가 그 타겟을 갖지 않은 경우를 감지해 하드 실패 대신 graceful skip 하기 위한 헬퍼.
- * 회귀: tests/unit/create-pr-ops.test.mjs `makeTargetExists` describe block.
+ * make ターゲットの存在有無を確認 (`make -n <target>` dry-run — 実際のレシピ実行なしで rule 探索のみ)。
+ * Makefile 不在 / ターゲット不在はすべて false。移植されたプロジェクト(brief2dev 専用 `q.ci-mirror` などソフト
+ * 参照ターゲット)がそのターゲットを持たない場合を検知し、ハードエラーの代わりに graceful にスキップするためのヘルパー。
+ * デグレード: tests/unit/create-pr-ops.test.mjs `makeTargetExists` describe block。
  */
 export function makeTargetExists(target, cwd) {
   try {
@@ -552,19 +552,19 @@ export function makeTargetExists(target, cwd) {
   }
 }
 
-// ═ Mode A: Staged 격리 ═
+// ═ Mode A: Staged 隔離 ═
 
 function cmdInit() {
   if (!isStaleActiveFlag(ACTIVE_FLAG)) {
-    const err = new Error('다른 create-pr 세션이 진행 중입니다 (30초 이내 active flag).');
-    err.details = { hint: '진행 중 세션 종료를 기다리거나 .tmp/create-pr-active 를 수동 정리 후 재시도' };
+    const err = new Error('他の create-pr セッションが進行中です (30秒以内 active flag)。');
+    err.details = { hint: '進行中のセッション終了を待つか、.tmp/create-pr-active を手動で整理した後に再試行してください' };
     throw err;
   }
   autoCleanup();
 
-  // CI Mirror Gate (60min stamp freshness). brief2dev 자체는 `make q.ci-mirror` 를 갖지만,
-  // 이식된 프로젝트(transplant-bundle)는 그 타겟이 없을 수 있다 — 소프트 참조이므로 타겟
-  // 부재 시 게이트 자체를 skip 한다 (하드 실패 금지, adaptation_notes 정합).
+  // CI Mirror Gate (60min stamp freshness)。brief2dev 自体は `make q.ci-mirror` を持つが、
+  // 移植されたプロジェクト (transplant-bundle) はそのターゲットがない場合がある — ソフト参照のためターゲット
+  // 不在時はゲート自体を skip する (ハードエラー禁止、adaptation_notes 整合)。
   const CI_MIRROR_STAMP = join(PROJECT_DIR, '.tmp', 'ci-mirror-passed');
   const STAMP_FRESHNESS_MS = 60 * 60 * 1000;
   let stampValid = false;
@@ -584,8 +584,8 @@ function cmdInit() {
       const stdout = e.stdout || '';
       const stderr = e.stderr || '';
       const err = new Error(
-        `CI 미러 (make q.ci-mirror) 실패. create-pr 스킬로 자동 수정 루프를 시작하거나, ` +
-        `수동 수정 후 재시도하세요.\n\n[STDOUT]\n${stdout}\n[STDERR]\n${stderr}`
+        `CI ミラー (make q.ci-mirror) 失敗。create-pr スキルで自動修正ループを開始するか、 ` +
+        `手動修正後に再試行してください。\n\n[STDOUT]\n${stdout}\n[STDERR]\n${stderr}`
       );
       err.details = { stdout, stderr };
       throw err;
@@ -593,15 +593,15 @@ function cmdInit() {
   }
 
   const branch = git(['branch', '--show-current']);
-  if (branch !== BASE_BRANCH) throw new Error(`현재 브랜치가 ${BASE_BRANCH}가 아님: ${branch}`);
+  if (branch !== BASE_BRANCH) throw new Error(`現在のブランチが ${BASE_BRANCH} ではありません: ${branch}`);
 
   const stagedFiles = git(['diff', '--cached', '--name-only']).split('\n').filter(Boolean);
-  if (stagedFiles.length === 0) throw new Error('staged 파일 없음');
+  if (stagedFiles.length === 0) throw new Error('staged ファイルなし');
 
   const secretPattern = /\.(env|key|pem|p12|keystore)$|(^|\/)credentials\.json$|service-account/;
   const secrets = stagedFiles.filter(f => secretPattern.test(f));
   if (secrets.length) {
-    const err = new Error(`기밀 파일 감지: ${secrets.join(', ')}`);
+    const err = new Error(`機密ファイル検知: ${secrets.join(', ')}`);
     err.details = { secrets };
     throw err;
   }
@@ -613,7 +613,7 @@ function cmdInit() {
   try {
     git(['fetch', 'origin', BASE_BRANCH], { timeout: 30_000, retry: 3 });
   } catch (e) {
-    warnings.push(`원격 fetch 실패: ${e.message}. 최신성 미검증.`);
+    warnings.push(`リモート fetch 失敗: ${e.message}。最新性未検証。`);
   }
   try {
     const localSha = git(['rev-parse', 'HEAD']);
@@ -623,20 +623,20 @@ function cmdInit() {
       const behind = parseInt(git(['rev-list', '--count', `HEAD..origin/${BASE_BRANCH}`]) || '0', 10);
       if (ahead > 0) {
         throw new Error(
-          `로컬 ${BASE_BRANCH}이 origin/${BASE_BRANCH}보다 ${ahead}커밋 앞섬. ` +
-          `먼저 push/PR 처리 후 재시도. (자동 push는 의도치 않은 commit 전파 위험으로 비활성화됨)`
+          `ローカル ${BASE_BRANCH} が origin/${BASE_BRANCH} より ${ahead} コミット先行しています。` +
+          `先に push/PR 処理した後に再試行してください。(自動 push は意図しないコミット伝播の危険性のため無効化されています)`
         );
       }
       if (behind > 0) {
         warnings.push(
-          `로컬 ${BASE_BRANCH}이 origin/${BASE_BRANCH}보다 ${behind}커밋 뒤쳐짐. ` +
-          `finalize가 ff-merge로 자동 동기화 예정. PR 머지 시 충돌 가능성.`
+          `ローカル ${BASE_BRANCH} が origin/${BASE_BRANCH} より ${behind} コミット遅れています。` +
+          `finalize が ff-merge で自動同期予定。PR マージ時に衝突の可能性あり。`
         );
       }
     }
   } catch (e) {
-    if (e.message.includes('앞섬')) throw e;
-    warnings.push(`최신성 비교 실패: ${e.message}`);
+    if (e.message.includes('先行')) throw e;
+    warnings.push(`最新性比較失敗: ${e.message}`);
   }
 
   mkdirSync(STATE_DIR, { recursive: true });
@@ -649,7 +649,7 @@ function cmdInit() {
 
 function cmdIsolate(args) {
   const branchName = requireArg(args, 'branch');
-  if (!existsSync(PATCH_FILE)) throw new Error('init 먼저 실행');
+  if (!existsSync(PATCH_FILE)) throw new Error('先に init を実行してください');
 
   git(['worktree', 'add', '-b', branchName, WT_DIR, 'HEAD']);
   writeFileSync(BRANCH_FILE, branchName);
@@ -662,7 +662,7 @@ function cmdIsolate(args) {
 function cmdCommit(args) {
   const message = requireArg(args, 'message');
   const files = (typeof args.files === 'string') ? args.files.split(',') : null;
-  if (!existsSync(WT_DIR)) throw new Error('worktree 없음. isolate 먼저 실행');
+  if (!existsSync(WT_DIR)) throw new Error('worktree なし。先に isolate を実行してください');
 
   writeFileSync(MSG_FILE, message);
   const cmdArgs = files
@@ -674,13 +674,13 @@ function cmdCommit(args) {
   return { ok: true, sha: git(['rev-parse', 'HEAD'], { cwd: WT_DIR }).slice(0, 7) };
 }
 
-// 멱등 PR 생성: 동일 head의 open PR 있으면 재사용 + title/body 업데이트.
-// gh() 가 transient(TLS timeout 등) 재시도하므로 list 일시 실패가 빈 결과처럼 보여
-// 중복 create → "already exists" 로 멈추던 함정을 차단. create "already exists" 도 재탐지로 복구.
-// ghFn 주입(default gh) — 회귀 테스트가 already-exists 복구 시나리오를 stub 으로 검증
-// (detectExternalSupersetRisk 의 gitFn 주입 패턴과 동일).
+// べき等 PR 生成: 同一 head の open PR があれば再利用 + title/body アップデート。
+// gh() が transient (TLS timeout など) を再試行するため、list の一時的失敗が空の結果のように見え、
+// 重複 create → "already exists" で停止する罠を遮断。create "already exists" も再検知で復旧。
+// ghFn 注入 (default gh) — デグレードテストが already-exists 復旧シナリオを stub で検証
+// (detectExternalSupersetRisk の gitFn 注入パターンと同一)。
 export function getOrCreatePr({ base, head, title, body, repo }, ghFn = gh) {
-  // ship-worktree 단독 호출 시 STATE_DIR 부재 가능 (init 비의존). 멱등 mkdir.
+  // ship-worktree 単独呼び出し時は STATE_DIR 不在の可能性あり (init 非依存)。べき等 mkdir。
   mkdirSync(STATE_DIR, { recursive: true });
   writeFileSync(BODY_FILE, body);
 
@@ -701,23 +701,23 @@ export function getOrCreatePr({ base, head, title, body, repo }, ghFn = gh) {
     return { prNumber: found.prNumber, prUrl: found.prUrl, existing: true };
   };
 
-  // 1) 기존 open PR 탐지 (gh transient 재시도 포함). 탐지 자체가 persistent 실패하면
-  //    create 단계의 "already exists" 분기에서 복구하므로 여기선 삼키고 진행.
+  // 1) 既存の open PR 検知 (gh transient 再試行含む)。検知自体が persistent 失敗した場合は
+  //    create 段階の "already exists" 分岐で復旧するため、ここでは無視して進行。
   try {
     const found = findExistingPr();
     if (found) return useExisting(found);
   } catch {
-    /* 탐지 실패 — create 의 already-exists 복구에 위임 */
+    /* 検知失敗 — create の already-exists 復旧に委譲 */
   }
 
-  // 2) 생성. "already exists" = 이미 PR 존재(탐지가 transient 로 놓침) → 재탐지 복구.
+  // 2) 生成。"already exists" = すでに PR が存在 (検知が transient で漏れた) → 再検知復旧。
   try {
     const url = ghFn([
       'pr', 'create', '--repo', repo, '--base', base, '--head', head,
       '--title', title, '--body-file', BODY_FILE,
     ]);
     const prNumber = parseInt(url.match(/\/pull\/(\d+)/)?.[1] || '0', 10);
-    if (!prNumber) throw new Error(`PR 번호 파싱 실패: ${url}`);
+    if (!prNumber) throw new Error(`PR 番号パース失敗: ${url}`);
     return { prNumber, prUrl: url, existing: false };
   } catch (e) {
     if (/already exists/i.test(String(e && e.message))) {
@@ -725,14 +725,14 @@ export function getOrCreatePr({ base, head, title, body, repo }, ghFn = gh) {
         const recovered = findExistingPr();
         if (recovered) return useExisting(recovered);
       } catch {
-        /* 재탐지도 실패 — 원본 already-exists 에러로 'PR 존재' 사실 전달 */
+        /* 再検知も失敗 — オリジナルの already-exists エラーで 'PR存在' の事実を伝達 */
       }
     }
     throw e;
   }
 }
 
-// BLOCKED/BEHIND 시 false 반환 (graceful pending), 타임아웃도 false
+// BLOCKED/BEHIND 時に false 返却 (graceful pending)、タイムアウトも false
 function waitMergeable(prNumber, repo) {
   let waited = 0;
   while (waited < MERGEABLE_TIMEOUT_MS) {
@@ -758,16 +758,16 @@ function createAndMergePr({ base, head, title, body, deleteBranch = null, noMerg
 
   let { mergeable, state } = waitMergeable(prNumber, repo);
   if (!mergeable && worktreeDir && (state === 'BEHIND' || state === 'DIRTY' || state === 'BLOCKED')) {
-    console.log(`[create-pr] PR #${prNumber}가 머지 불가능 상태(${state})입니다. 자동 동기화 및 재시도를 시도합니다.`);
+    console.log(`[create-pr] PR #${prNumber} がマージ不可能な状態 (${state}) です。自動同期および再試行を試みます。`);
     try {
       git(['fetch', 'origin', base], { cwd: worktreeDir, timeout: 30_000, retry: 3 });
       let syncSuccess = false;
       try {
         git(['merge', '--no-edit', `origin/${base}`], { cwd: worktreeDir });
-        console.log(`[create-pr] 로컬 병합 성공.`);
+        console.log(`[create-pr] ローカルマージ成功。`);
         syncSuccess = true;
       } catch (mergeErr) {
-        console.log(`[create-pr] 로컬 병합 충돌 발생. 자동 충돌 해결 시도...`);
+        console.log(`[create-pr] ローカルマージ衝突発生。自動衝突解決を試行中...`);
         const conflictingFiles = git(['diff', '--name-only', '--diff-filter=U'], { cwd: worktreeDir })
           .trim()
           .split('\n')
@@ -778,17 +778,17 @@ function createAndMergePr({ base, head, title, body, deleteBranch = null, noMerg
           const hasMakefile = existsSync(join(worktreeDir, 'Makefile'));
           const validateCmd = hasMakefile ? 'make q.check' : (existsSync(join(worktreeDir, 'package.json')) ? 'npm test' : null);
           if (validateCmd) {
-            console.log(`[create-pr] 자동 해결 완료. 검증 도구(${validateCmd})를 구동합니다...`);
+            console.log(`[create-pr] 自動解決完了。検証ツール (${validateCmd}) を駆動します...`);
             try {
               exec(validateCmd.split(' '), { cwd: worktreeDir });
-              console.log(`[create-pr] 검증 통과!`);
+              console.log(`[create-pr] 検証通過！`);
               syncSuccess = true;
             } catch (gateErr) {
-              console.error(`[create-pr] 검증 실패. 병합 취소.`);
+              console.error(`[create-pr] 検証失敗。マージキャンセル。`);
               try { git(['merge', '--abort'], { cwd: worktreeDir }); } catch {}
             }
           } else {
-            console.log(`[create-pr] 자동 해결 완료. 검증 생략.`);
+            console.log(`[create-pr] 自動解決完了。検証省略。`);
             syncSuccess = true;
           }
         } else {
@@ -798,21 +798,21 @@ function createAndMergePr({ base, head, title, body, deleteBranch = null, noMerg
 
       if (syncSuccess) {
         git(['push', 'origin', head], { cwd: worktreeDir, timeout: 60_000, retry: 3 });
-        console.log(`[create-pr] 업데이트된 브랜치 push 완료. PR 상태 재확인 중...`);
+        console.log(`[create-pr] アップデートされたブランチの push 完了。PR 状態を再確認中...`);
         const retryResult = waitMergeable(prNumber, repo);
         mergeable = retryResult.mergeable;
         state = retryResult.state;
       }
     } catch (syncErr) {
-      console.error(`[create-pr] 자동 동기화 시도 중 에러: ${syncErr.message}`);
+      console.error(`[create-pr] 自動同期試行中のエラー: ${syncErr.message}`);
     }
   }
 
   if (!mergeable) {
-    // v2.1: warning(string) → warnings(array) 통일. finalize 와 같은 형식.
+    // v2.1: warning (string) → warnings (array) 統一。finalize と同一の形式。
     return {
       prNumber, prUrl, merged: false, pending: true, existing,
-      warnings: [`PR #${prNumber} 자동 머지 유보 (mergeStateStatus=${state}). CI/리뷰 통과 후 수동 머지 또는 재시도.`],
+      warnings: [`PR #${prNumber} 自動マージ保留 (mergeStateStatus=${state})。CI/レビュー通過後に手動マージまたは再試行してください。`],
     };
   }
 
@@ -822,13 +822,13 @@ function createAndMergePr({ base, head, title, body, deleteBranch = null, noMerg
     `/repos/${repo}/pulls/${prNumber}/merge`,
     '-f', `merge_method=squash`,
   ]));
-  if (!resp.merged) throw new Error(`PR #${prNumber} merge 실패`);
+  if (!resp.merged) throw new Error(`PR #${prNumber} merge 失敗`);
 
   if (deleteBranch) {
     try { gh(['api', '--method', 'DELETE', `/repos/${repo}/git/refs/heads/${deleteBranch}`]); } catch {}
   }
 
-  // 머지된 파일 목록 + 트리 (실패 시 silent passthrough — 핵심 머지 결과 영향 X)
+  // マージされたファイル一覧 + ツリー (失敗時は silent passthrough — 中核のマージ結果に影響なし)
   const changed_files = collectChangedFilesViaPr(prNumber, repo);
   const changed_files_tree = buildFileTree(changed_files);
   const warnings = [];
@@ -858,14 +858,14 @@ function cmdShipFeature(args) {
     worktreeDir: WT_DIR,
   });
 
-  // ship 성공 시 Pre-Ship Review 마커 정리 (R-CM-030 라이프사이클).
-  // ship-feature 모드의 마커 키는 'staged'.
+  // ship 成功時に Pre-Ship Review マーカー整理 (R-CM-030 ライフサイクル)。
+  // ship-feature モードのマーカーキーは 'staged'。
   if (result.merged) unlinkShipReviewMarker('staged');
 
   return { ok: true, ...result };
 }
 
-// finalize: fail-loud 의미론. fetch/stash/ff 실패는 ok:false (R-CM-010 정합)
+// finalize: fail-loud セマンティクス。fetch/stash/ff 失敗は ok:false (R-CM-010 整合)
 function cmdFinalize() {
   const localBranch = existsSync(BRANCH_FILE) ? readFileSync(BRANCH_FILE, 'utf-8').trim() : null;
   if (existsSync(WT_DIR)) {
@@ -884,22 +884,22 @@ function cmdFinalize() {
   } catch (e) {
     cleanupState();
     return {
-      ok: false, error: `동기화용 fetch 실패: ${e.message}`,
-      hint: 'remote 확인 (git remote -v). 네트워크 복구 후 git fetch + git merge --ff-only 수동 실행.',
+      ok: false, error: `同期用 fetch 失敗: ${e.message}`,
+      hint: 'remote 確認 (git remote -v)。ネットワーク復旧後に git fetch + git merge --ff-only を手動実行。',
       worktree_cleaned: true, sync_status: 'fetch_failed',
     };
   }
 
-  // dirty main 은 동기화하지 않고 중단한다 (자동 stash 미사용 — 원본 working tree 미접촉).
-  // 사용자가 수동으로 commit/stash 한 뒤 재시도한다. main 로컬 sync 만 skip 되며
-  // 다음 worktree-new 의 fetch + ff 가 self-heal 한다.
+  // dirty main は同期せずに中断する (自動 stash 未使用 — オリジナルの working tree に非接触)。
+  // ユーザーが手動で commit/stash させた後に再試行する。main ローカル sync のみが skip され、
+  // 次の worktree-new の fetch + ff が self-heal する。
   const hasChanges = git(['status', '--porcelain']).trim().length > 0;
   if (hasChanges) {
     cleanupState();
     return {
       ok: false,
-      error: '로컬 uncommitted 변경사항이 존재하여 동기화를 진행할 수 없습니다.',
-      hint: '변경사항을 수동으로 commit 하거나 stash 한 뒤 다시 동기화하십시오.',
+      error: 'ローカルの uncommitted 変更事項が存在するため同期を進行できません。',
+      hint: '変更事項を手動で commit するか stash させた後に再度同期してください。',
       worktree_cleaned: true,
       sync_status: 'local_changes',
     };
@@ -910,7 +910,7 @@ function cmdFinalize() {
     git(['checkout', BASE_BRANCH]);
     git(['merge', '--ff-only', `origin/${BASE_BRANCH}`]);
   } catch (e) {
-    ffFailed = `${BASE_BRANCH} ff-only 실패: ${e.message}`;
+    ffFailed = `${BASE_BRANCH} ff-only 失敗: ${e.message}`;
   }
 
   cleanupState();
@@ -918,7 +918,7 @@ function cmdFinalize() {
   if (ffFailed) {
     return {
       ok: false, error: ffFailed,
-      hint: '원격 main이 로컬 main의 선조가 아님 (non-fast-forward). git log + 수동 rebase 필요.',
+      hint: 'リモートの main がローカルの main の先祖ではありません (non-fast-forward)。git log + 手動 rebase が必要。',
       sync_status: 'ff_failed',
     };
   }
@@ -930,21 +930,21 @@ function cmdFinalize() {
 /**
  * R-CM-008 Rule 9 (multi-worktree superset detection).
  *
- * 본 worktree 의 변경 파일 set 과 origin/<baseBranch> 의 최근 24h commit 들이
- * 건드린 파일 set 의 intersection 을 계산해, 다른 세션의 PR 이 본 worktree 의
- * 작업을 silently superset 으로 흡수했을 가능성을 감지한다.
+ * 本 worktree の変更ファイル set と origin/<baseBranch> の最近 24h の commit が
+ * タッチしたファイル set の intersection を計算し、他のセッションの PR が本 worktree の
+ * 作業を silently superset として吸収した可能性を検知する。
  *
- * Multi-worktree 동시 진행 (Claude Code / Codex 등) 시 한 세션이 다른 세션의
- * commit 을 superset 으로 squash merge 하면 후자의 worktree 가 의미를 잃는다.
- * fetch 직후 detection → warning (block X — R-CM-031 Reversible default) 으로
- * 사용자에게 인지 기회 제공.
+ * Multi-worktree 同時進行 (Claude Code / Codex など) 時、あるセッションが他のセッションの
+ * commit を superset として squash merge すると後者の worktree が意味を失う。
+ * fetch 直後に detection → warning (block しない — R-CM-031 Reversible default) により
+ * ユーザーに認知の機会を提供。
  *
- * fail-open: git 명령 실패 시 null 반환 (R-CM-006 Rule 2).
+ * fail-open: git コマンド失敗時は null を返却 (R-CM-006 Rule 2)。
  *
- * @param {string} absWtPath worktree 절대 경로
- * @param {string} baseBranch 비교 기준 branch (보통 main)
- * @param {Function} [gitFn=git] git executor (default = 모듈 git wrapper). Override in tests only.
- * @returns {Array<{sha,subject,files}> | null} overlap 1+ 시 배열, 없으면 null
+ * @param {string} absWtPath worktree 絶対パス
+ * @param {string} baseBranch 比較基準 branch (通常 main)
+ * @param {Function} [gitFn=git] git executor (default = モジュール git wrapper). Override in tests only.
+ * @returns {Array<{sha,subject,files}> | null} overlap 1+ の時配列、なければ null
  */
 export function detectExternalSupersetRisk(absWtPath, baseBranch, gitFn = git) {
   const splitLines = (s) => s.split('\n').map((line) => line.trim()).filter(Boolean);
@@ -954,8 +954,8 @@ export function detectExternalSupersetRisk(absWtPath, baseBranch, gitFn = git) {
     );
     if (myFiles.length === 0) return null;
 
-    // Single `git log --name-only --format="%H %s"` 호출로 N+1 spawn 회피.
-    // 출력: 각 commit block 은 빈 line 으로 구분 — "<sha> <subject>\n<file1>\n<file2>\n\n<sha2>...".
+    // Single `git log --name-only --format="%H %s"` 呼び出しにより N+1 spawn を回避。
+    // 出力: 各 commit block は空の line で区分 — "<sha> <subject>\n<file1>\n<file2>\n\n<sha2>..."。
     const logOutput = gitFn(
       ['log', `origin/${baseBranch}`, '--since=24.hours.ago', '--name-only', '--format=%H %s'],
       { cwd: absWtPath },
@@ -991,7 +991,7 @@ export function detectExternalSupersetRisk(absWtPath, baseBranch, gitFn = git) {
 export function tryAutoResolveConflicts(absWtPath, conflictingFiles) {
   if (!conflictingFiles || conflictingFiles.length === 0) return true;
 
-  console.log(`[auto-resolve] 충돌 파일 감지됨: ${conflictingFiles.join(', ')}`);
+  console.log(`[auto-resolve] 衝突ファイル検知: ${conflictingFiles.join(', ')}`);
 
   const autoResolvablePatterns = [
     /package-lock\.json$/,
@@ -1006,14 +1006,14 @@ export function tryAutoResolveConflicts(absWtPath, conflictingFiles) {
   });
 
   if (unresolvable.length > 0) {
-    console.log(`[auto-resolve] 자동 해결 불가능한 파일이 있습니다: ${unresolvable.join(', ')}`);
+    console.log(`[auto-resolve] 自動解決不可能なファイルがあります: ${unresolvable.join(', ')}`);
     return false;
   }
 
   try {
     for (const file of conflictingFiles) {
       if (file.endsWith('package-lock.json') || file.endsWith('pnpm-lock.yaml') || file.endsWith('yarn.lock')) {
-        console.log(`[auto-resolve] ${file} 충돌 해결 시도: --theirs 선택 후 패키지 재생성`);
+        console.log(`[auto-resolve] ${file} 衝突解決試行: --theirs 選択後にパッケージ再生成`);
         git(['checkout', '--theirs', file], { cwd: absWtPath });
         if (file.endsWith('package-lock.json')) {
           try { exec(['npm', 'install'], { cwd: absWtPath }); } catch {}
@@ -1024,7 +1024,7 @@ export function tryAutoResolveConflicts(absWtPath, conflictingFiles) {
         }
         git(['add', file], { cwd: absWtPath });
       } else if (file.includes('PLAN.md') || file.endsWith('.md')) {
-        console.log(`[auto-resolve] ${file} 충돌 해결 시도: --ours 선택`);
+        console.log(`[auto-resolve] ${file} 衝突解決試行: --ours 選択`);
         git(['checkout', '--ours', file], { cwd: absWtPath });
         git(['add', file], { cwd: absWtPath });
       }
@@ -1032,47 +1032,47 @@ export function tryAutoResolveConflicts(absWtPath, conflictingFiles) {
 
     const remaining = git(['diff', '--name-only', '--diff-filter=U'], { cwd: absWtPath }).trim();
     if (remaining.length > 0) {
-      console.log(`[auto-resolve] 미해결 충돌이 남아있습니다: ${remaining}`);
+      console.log(`[auto-resolve] 未解決の衝突が残っています: ${remaining}`);
       return false;
     }
 
     git(['commit', '--no-edit'], { cwd: absWtPath });
-    console.log(`[auto-resolve] 모든 충돌이 성공적으로 자동 해결되었으며 merge commit이 생성되었습니다.`);
+    console.log(`[auto-resolve] すべての衝突が正常に自動解決され、merge commit が生成されました。`);
     return true;
   } catch (err) {
-    console.error(`[auto-resolve] 충돌 해결 중 에러 발생: ${err.message}`);
+    console.error(`[auto-resolve] 衝突解決中にエラーが発生しました: ${err.message}`);
     return false;
   }
 }
 
 /**
- * `detectExternalSupersetRisk` 의 overlaps 배열을 사용자용 warning 문자열로 포매팅.
- * Helper 추출 목적: cmdShipWorktree 통합 경로 (warning 포매팅 + indentation) 단위 테스트
- * 가능화 — code-reviewer agent HIGH-2 (PR #296) 회귀 차단.
+ * `detectExternalSupersetRisk` の overlaps 配列をユーザー用の warning 文字列にフォーマット。
+ * Helper 抽出目的: cmdShipWorktree 統合パス (warning フォーマット + indentation) 単体テスト
+ * 可能化 — code-reviewer agent HIGH-2 (PR #296) デグレード遮断。
  *
  * @param {Array<{sha,subject,files}> | null} overlaps
  * @param {string} baseBranch
- * @returns {string | null} overlaps 1+ 시 warning string, 그 외 null
+ * @returns {string | null} overlaps 1+ の時 warning string、それ以外は null
  */
 export function formatSupersetWarning(overlaps, baseBranch) {
   if (!overlaps || overlaps.length === 0) return null;
   const lines = overlaps
     .map((o) => `  ${o.sha} ${o.subject} (${o.files.join(', ')})`)
     .join('\n');
-  return `multi-worktree superset 위험: origin/${baseBranch} 의 최근 24h 머지 ${overlaps.length}건이 본 worktree 의 변경 파일을 건드렸습니다. 본 PR 이 redundant 또는 silently superset 흡수 가능성 — 변경 의도가 여전히 유효한지 확인 후 진행하세요.\n${lines}`;
+  return `multi-worktree superset 危険: origin/${baseBranch} の最近 24h のマージ ${overlaps.length} 件が本 worktree の変更ファイルにタッチしました。本 PR が redundant または silently superset に吸収される可能性 — 変更意図が依然として有効であるか確認の上で進行してください。\n${lines}`;
 }
 
 /**
- * ship 응답의 5-소스 `mergedWarnings` 를 합성하는 순수 함수 (DEBT-15 "mergedWarnings
- * spread" 의 명시 대상). 각 소스의 null/undefined 를 방어하여 평탄 배열로 결합한다.
- * 순서: result → superset → preservation → runBundle → cleanup (사용자 노출 순서 계약).
+ * ship 応答の 5ソース `mergedWarnings` を合成する純粋関数 (DEBT-15 "mergedWarnings
+ * spread" の明示対象)。各ソースの null/undefined を防ぎつつフラットな配列に結合する。
+ * 順序: result → superset → preservation → runBundle → cleanup (ユーザー露出順序の契約)。
  *
  * @param {object} p
- * @param {object} p.result            createAndMergePr 결과 (warnings 보유 가능)
+ * @param {object} p.result            createAndMergePr 結果 (warnings 保有の可能性あり)
  * @param {string[]} [p.supersetWarnings=[]]
  * @param {string[]} [p.preservationWarnings=[]]
- * @param {object|null} [p.runBundle=null]      warnings 보유 가능
- * @param {object|null} [p.cleanupResult=null]  warnings 보유 가능
+ * @param {object|null} [p.runBundle=null]      warnings 保有の可能性あり
+ * @param {object|null} [p.cleanupResult=null]  warnings 保有の可能性あり
  * @returns {string[]}
  */
 export function mergeShipWarnings({
@@ -1092,48 +1092,48 @@ export function mergeShipWarnings({
 }
 
 /**
- * ship 응답의 `cleanup_hint` 분기만 분리한 순수 함수. cmdShipWorktree 의 가장
- * 분기 밀도 높은 sub-logic (nested ternary) 을 독립 테스트 단위로 격리한다.
+ * ship 応答の `cleanup_hint` 分岐のみを分離した純粋関数。cmdShipWorktree の最も
+ * 分岐密度の高い sub-logic (nested ternary) を独立したテスト単位に隔離する。
  *
- * R-CM-010 Iron Law: AI 가 cleanup 자동 수행 추정 금지 — hint 로 명시.
- *   - `--no-cleanup` + merged: 후속 cleanup-worktree 실행 안내 (최우선).
- *   - 위임 cleanup 의 main 동기화 실패 (fetch/stash/ff): 그 hint 를 그대로 전달
- *     (PR 머지는 비가역 — ship 은 ok:true 유지, sync 상태만 surface).
- *   - 그 외: null.
+ * R-CM-010 Iron Law: AI が cleanup を自動実行したと推測するのを禁止 — hint に明示。
+ *   - `--no-cleanup` + merged: 後続の cleanup-worktree 実行案内 (最優先)。
+ *   - 委譲された cleanup の main 同期失敗 (fetch/stash/ff): その hint をそのまま伝達
+ *     (PR マージは非可逆 — ship は ok:true 維持、sync 状態のみを surface)。
+ *   - その他: null。
  *
  * @param {object} p
- * @param {boolean} [p.cleanup=true]   cleanup 요청 여부 (--no-cleanup 반대)
- * @param {boolean} [p.merged=false]   PR 머지 성공 여부 (result.merged)
- * @param {string} p.wtPath            원본 worktree 인자 (미정리 hint 메시지용)
- * @param {object|null} [p.cleanupResult=null]  cmdCleanupWorktree 결과
+ * @param {boolean} [p.cleanup=true]   cleanup 要求の有無 (--no-cleanup 反対)
+ * @param {boolean} [p.merged=false]   PR マージ成功の有無 (result.merged)
+ * @param {string} p.wtPath            オリジナル worktree 引数 (未整理 hint メッセージ用)
+ * @param {object|null} [p.cleanupResult=null]  cmdCleanupWorktree 結果
  * @returns {string|null}
  */
 export function composeCleanupHint({ cleanup = true, merged = false, wtPath, cleanupResult = null }) {
   if (!cleanup && merged) {
-    return `worktree 미정리 — 후속 실행: node .claude/scripts/create-pr/ops.mjs cleanup-worktree --worktree ${wtPath}`;
+    return `worktree 未整理 — 後続実行: node .claude/scripts/create-pr/ops.mjs cleanup-worktree --worktree ${wtPath}`;
   }
   const cr = cleanupResult ?? {};
   return cr.ok === false ? (cr.hint ?? null) : null;
 }
 
 /**
- * cmdShipWorktree 의 응답 조립 글루 — 5-소스 `mergedWarnings` spread + `cleanup_hint`
- * 분기 + `?? null` 필드 기본값 — 를 순수 함수로 분리. git/gh/fs 호출부와 격리하여
- * `formatSupersetWarning` 추출 선례처럼 단위 테스트 가능하게 한다 (DEBT-15 / DEBT-27).
+ * cmdShipWorktree の応答組み立てグルー — 5ソース `mergedWarnings` spread + `cleanup_hint`
+ * 分岐 + `?? null` フィールドデフォルト値 — を純粋関数に分離。git/gh/fs 呼び出し部と隔離して
+ * `formatSupersetWarning` 抽出先例のように単体テスト可能にする (DEBT-15 / DEBT-27)。
  *
- * 동작은 cmdShipWorktree 인라인 버전과 동일하다 (pure refactor — 입력만 받아 응답 형성).
+ * 動作は cmdShipWorktree インラインバージョンと同一 (pure refactor — 入力のみ受け取って応答を形成)。
  *
  * @param {object} p
- * @param {object} p.result            createAndMergePr 결과 (warnings / merged / ...rest)
- * @param {string[]} [p.supersetWarnings=[]]      R-CM-008 Rule 9 superset 경고
- * @param {string[]} [p.preservationWarnings=[]]  run/output 보존 경고
- * @param {object|null} [p.runBundle=null]        preserveWorktreeRunOutputs 결과
- * @param {object|null} [p.cleanupResult=null]    cmdCleanupWorktree 결과
- * @param {boolean} [p.cleanedUp=false]           worktree 정리 완료 여부
- * @param {boolean} [p.cleanup=true]              cleanup 요청 여부 (--no-cleanup 반대)
- * @param {string} p.wtPath                       원본 worktree 인자 (cleanup_hint 메시지용)
- * @param {object|null} [p.postMergeMainStatus=null]  main repo dirty 상태
- * @returns {object} ship-worktree 최종 응답 객체 (ok:true 고정)
+ * @param {object} p.result            createAndMergePr 結果 (warnings / merged / ...rest)
+ * @param {string[]} [p.supersetWarnings=[]]      R-CM-008 Rule 9 superset 警告
+ * @param {string[]} [p.preservationWarnings=[]]  run/output 保存警告
+ * @param {object|null} [p.runBundle=null]        preserveWorktreeRunOutputs 結果
+ * @param {object|null} [p.cleanupResult=null]    cmdCleanupWorktree 結果
+ * @param {boolean} [p.cleanedUp=false]           worktree 整理完了の有無
+ * @param {boolean} [p.cleanup=true]              cleanup 要求の有無 (--no-cleanup 反対)
+ * @param {string} p.wtPath                       オリジナル worktree 引数 (cleanup_hint メッセージ用)
+ * @param {object|null} [p.postMergeMainStatus=null]  main repo dirty 状態
+ * @returns {object} ship-worktree 最終応答オブジェクト (ok:true 固定)
  */
 export function composeShipResponse({
   result,
@@ -1181,12 +1181,12 @@ export function composeShipResponse({
   };
 }
 
-// 이식된 외부 프로젝트(transplant-bundle 대상)는 brief2dev 파이프라인을 쓰지 않으므로
-// 'output' / 'docs/pipeline-log' 같은 흔한 이름의 자체 디렉토리를 가질 수 있다 — 이를
-// brief2dev run 산출물로 오인해 보존 로직을 발동시키면 안 된다. `.brief2dev/` 마커가
-// 실재하는 프로젝트(brief2dev 자체 + 그 파이프라인을 쓰는 scaffold 산출물)에서만 이
-// 제네릭 후보를 포함한다. 마커 없는 프로젝트는 layout-resolver 기반 동적 후보
-// (`.brief2dev/runs` 등, 이미 `.brief2dev/` 로 네임스페이스됨) 만 대상.
+// 移植された外部プロジェクト (transplant-bundle 対象) は brief2dev パイプラインを使用しないため
+// 'output' / 'docs/pipeline-log' のような一般的な名前の独自ディレクトリを所持することがある — これを
+// brief2dev run 成果物と誤認して保存ロジックを発動させてはならない。`.brief2dev/` マーカーが
+// 実在するプロジェクト (brief2dev 自体 + そのパイプラインを使用する scaffold 成果物) でのみこの
+// ジェネリック候補を含める。マーカーのないプロジェクトは layout-resolver 基準の動的候補
+// (`.brief2dev/runs` 等、すでに `.brief2dev/` でネームスペース化されたもの) のみが対象。
 function runOutputCandidateRelPaths(absWtPath) {
   const pipelineRoot = getPipelineDataRoot();
   const pipelineRootName = basename(pipelineRoot);
@@ -1239,7 +1239,7 @@ export function preserveWorktreeRunOutputs(absWtPath, branch, options = {}) {
     return {
       ok: true,
       skipped: true,
-      warnings: ['보존할 run/output 후보가 없습니다.'],
+      warnings: ['保存する run/output 候補がありません。'],
       copied_paths: [],
       total_files: 0,
       total_bytes: 0,
@@ -1260,7 +1260,7 @@ export function preserveWorktreeRunOutputs(absWtPath, branch, options = {}) {
   try {
     headSha = git(['rev-parse', 'HEAD'], { cwd: absWtPath });
   } catch {
-    warnings.push('worktree HEAD sha 확인 실패 — manifest.head_sha=null 로 기록.');
+    warnings.push('worktree HEAD sha 確認失敗 — manifest.head_sha=null として記録。');
   }
 
   const copied = [];
@@ -1316,21 +1316,21 @@ export function preserveWorktreeRunOutputs(absWtPath, branch, options = {}) {
 function cmdVerifyPlan(args) {
   const wtPath = requireArg(args, 'worktree');
   const planPath = resolveWorktreePlanPath(resolveWorktreeAbsPath(wtPath));
-  if (!existsSync(planPath)) throw new Error(`PLAN.md 없음: ${planPath}`);
+  if (!existsSync(planPath)) throw new Error(`PLAN.md なし: ${planPath}`);
   const content = readFileSync(planPath, 'utf-8');
   const force = args.force === true;
   const unchecked = parseUnchecked(content);
   if (!force && unchecked.length > 0) {
     throw new Error(
-      `PLAN.md에 완료되지 않은 작업이 ${unchecked.length}건 있습니다:\n${unchecked.join('\n')}\n\n` +
-      `※ 우회: --force 또는 항목에 (취소됨)/(dropped)/(deferred)/~~취소선~~ 마커 추가`
+      `PLAN.md に未完了のタスクが ${unchecked.length} 件あります:\n${unchecked.join('\n')}\n\n` +
+      `※ 迂回: --force または項目に (キャンセル済み)/(dropped)/(deferred)/~~取り消し線~~ マーカーを追加`
     );
   }
   return {
     ok: true,
     message: unchecked.length === 0
-      ? '모든 PLAN 체크박스 완료(또는 취소/무시)됨'
-      : `--force 우회로 ${unchecked.length}건 미완료 항목 무시`,
+      ? 'すべてのPLANチェックボックスが完了(またはキャンセル/無視)されました'
+      : `--force 迂回により ${unchecked.length} 件の未完了項目を無視`,
     unchecked_count: unchecked.length,
   };
 }
@@ -1339,56 +1339,56 @@ function cmdShipWorktree(args) {
   const wtPath = requireArg(args, 'worktree');
   const absWtPath = resolveWorktreeAbsPath(wtPath);
   if (!existsSync(absWtPath)) {
-    // 다중 worktree 환경에서 AI 가 worktree 내부 cwd 로 ops.mjs 를 호출하면
-    // 정규화가 잘못된 경우가 종종 있었다 (PROJECT_DIR fallback 함정). 명확한
-    // 진단 메시지로 잘못된 path 와 함께 실제 활성 worktree 목록을 제시한다.
+    // マルチ worktree 環境で AI が worktree 内部の cwd から ops.mjs を呼び出すと
+    // 正規化が誤っているケースが度々存在した (PROJECT_DIR fallback の罠)。明確な
+    // 診断メッセージで誤ったパスとともに実際の活性 worktree の一覧を提示する。
     let candidates = [];
     try {
       candidates = parseWorktreePaths(git(['worktree', 'list', '--porcelain']));
     } catch {
-      // git 호출 실패 — 단일 메시지로 fallback
+      // git 呼び出し失敗 — 単一メッセージで fallback
     }
     const candidateBlock = candidates.length > 0
-      ? `\n활성 worktree 후보:\n  - ${candidates.join('\n  - ')}`
+      ? `\n活性 worktree 候補:\n  - ${candidates.join('\n  - ')}`
       : '';
-    throw new Error(`Worktree 없음: ${absWtPath}${candidateBlock}`);
+    throw new Error(`Worktree なし: ${absWtPath}${candidateBlock}`);
   }
 
-  // PLAN.md 필수 검증 (CLAUDE.md "PLAN.md 필수" 정책. --force-plan 은 미완료 체크박스 우회용)
-  // 위치: .tmp/worktree-<safeBranch>/PLAN.md (worktree-plan-path.mjs SSOT)
+  // PLAN.md 必須検証 (CLAUDE.md "PLAN.md 必須" ポリシー。--force-plan は未完了チェックボックスの迂回用)
+  // 位置: .tmp/worktree-<safeBranch>/PLAN.md (worktree-plan-path.mjs SSOT)
   const planPath = resolveWorktreePlanPath(absWtPath);
   if (!existsSync(planPath)) {
-    throw new Error(`PLAN.md 파일이 존재하지 않습니다: ${planPath}. worktree 루트의 .tmp/worktree-<branch>/PLAN.md 에 작성 후 재시도하세요.`);
+    throw new Error(`PLAN.md ファイルが存在しません: ${planPath}。worktree ルートの .tmp/worktree-<branch>/PLAN.md に作成した後に再試行してください。`);
   }
   const forcePlan = args['force-plan'] === true;
   if (!forcePlan) {
     const unchecked = parseUnchecked(readFileSync(planPath, 'utf-8'));
     if (unchecked.length > 0) {
       throw new Error(
-        `PLAN.md에 완료되지 않은 체크박스가 ${unchecked.length}건 있습니다.\n` +
-        `※ 우회: --force-plan 플래그 또는 항목에 (취소됨)/(dropped)/(deferred)/~~취소선~~ 마커 추가`
+        `PLAN.md に未完了のチェックボックスが ${unchecked.length} 件あります。\n` +
+        `※ 迂回: --force-plan フラグまたは項目に (キャンセル済み)/(dropped)/(deferred)/~~取り消し線~~ マーカーを追加`
       );
     }
   }
 
-  // Worktree Commit Requirement: create-pr 는 dirty worktree 를 ship 하지 않는다.
-  // Stop guard 와 같은 계약으로 tracked/untracked 변경 모두 먼저 commit 하게 한다.
+  // Worktree Commit Requirement: create-pr は dirty worktree を ship しない。
+  // Stop guard と同一の契約により、tracked/untracked の変更ともに先に commit させる。
   const status = git(['status', '--porcelain', '--untracked-files=all'], { cwd: absWtPath }).trim();
   if (status.length > 0) {
     const err = new Error(
-      `Worktree에 커밋되지 않은 변경사항이 있습니다.\n해당 변경을 커밋한 후 다시 시도하세요.\n[상태]\n${status}`
+      `Worktree にコミットされていない変更事項があります。\n該当の変更をコミットした後に再度お試しください。\n[状態]\n${status}`
     );
     err.details = {
       code: 'commit_required',
       dirty_status: status.split('\n'),
-      hint: 'worktree 안에서 git status --short 확인 후 본인이 만든 파일만 stage/commit 하고 ship-worktree 를 다시 실행하세요.',
+      hint: 'worktree 内で git status --short を確認し、自身が作成したファイルのみを stage/commit して ship-worktree を再度実行してください。',
     };
     throw err;
   }
 
 
-  // Push 전 원본 변경사항 자동 동기화 (Shift-Left Conflict Detection)
-  // + R-CM-008 Rule 9: multi-worktree superset 감지 (fetch 후, merge 전)
+  // Push 前のオリジナル変更事項の自動同期 (Shift-Left Conflict Detection)
+  // + R-CM-008 Rule 9: multi-worktree superset 検知 (fetch 後、merge 前)
   const supersetWarnings = [];
   try {
     git(['fetch', 'origin', BASE_BRANCH], { cwd: absWtPath, timeout: 30_000, retry: 3 });
@@ -1400,7 +1400,7 @@ function cmdShipWorktree(args) {
     try {
       git(['merge', '--no-edit', `origin/${BASE_BRANCH}`], { cwd: absWtPath });
     } catch (mergeErr) {
-      console.log(`[ship-worktree] 원본(${BASE_BRANCH}) 병합 중 충돌이 감지되었습니다. 자동 해결을 시도합니다.`);
+      console.log(`[ship-worktree] オリジナル(${BASE_BRANCH}) マージ中に衝突が検知されました。自動解決を試みます。`);
       const conflictingFiles = git(['diff', '--name-only', '--diff-filter=U'], { cwd: absWtPath })
         .trim()
         .split('\n')
@@ -1415,25 +1415,25 @@ function cmdShipWorktree(args) {
       const hasMakefile = existsSync(join(absWtPath, 'Makefile'));
       const validateCmd = hasMakefile ? 'make q.check' : (existsSync(join(absWtPath, 'package.json')) ? 'npm test' : null);
       if (validateCmd) {
-        console.log(`[ship-worktree] 자동 해결 완료. 검증 도구(${validateCmd})를 구동하여 최종 정합성을 검사합니다...`);
+        console.log(`[ship-worktree] 自動解決完了。検証ツール(${validateCmd})を駆動して最終的な整合性を検証します...`);
         try {
           exec(validateCmd.split(' '), { cwd: absWtPath });
-          console.log(`[ship-worktree] 검증 통과! 자동 충돌 해결이 승인되었습니다.`);
+          console.log(`[ship-worktree] 検証通過！自動衝突解決が承認されました。`);
         } catch (gateErr) {
-          console.error(`[ship-worktree] 검증 실패: 자동 해결된 코드가 품질 게이트를 통과하지 못했습니다. 병합을 취소합니다.`);
+          console.error(`[ship-worktree] 検証失敗: 自動解決されたコードが品質ゲートを通過しませんでした。マージをキャンセルします。`);
           try { git(['merge', '--abort'], { cwd: absWtPath }); } catch {}
-          throw new Error(`자동 충돌 해결 후 품질 검사(${validateCmd}) 실패: ${gateErr.message}`);
+          throw new Error(`自動衝突解決後の品質検査(${validateCmd}) 失敗: ${gateErr.message}`);
         }
       } else {
-        console.log(`[ship-worktree] 자동 해결 완료. 실행할 품질 검사 도구가 없어 검증을 스킵합니다.`);
+        console.log(`[ship-worktree] 自動解決完了。実行する品質検査ツールがないため検証をスキップします。`);
       }
     }
   } catch (e) {
-    throw new Error(`원본(${BASE_BRANCH})과의 병합 중 충돌이 발생했습니다. 수동으로 충돌을 해결한 후 커밋하고 다시 시도하세요.\n에러: ${e.message}`);
+    throw new Error(`オリジナル(${BASE_BRANCH})とのマージ中に衝突が発生しました。手動で衝突を解決してコミットした後に再度お試しください。\nエラー: ${e.message}`);
   }
 
   const branch = git(['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: absWtPath });
-  if (!branch || branch === 'HEAD') throw new Error(`브랜치 파악 불가: ${wtPath}`);
+  if (!branch || branch === 'HEAD') throw new Error(`ブランチの把握不可: ${wtPath}`);
 
   git(['push', '-u', 'origin', branch], { cwd: absWtPath, timeout: 60_000, retry: 3 });
 
@@ -1450,12 +1450,12 @@ function cmdShipWorktree(args) {
     worktreeDir: absWtPath,
   });
 
-  // 머지 성공 시 worktree 전체 정리 (기본값). --no-cleanup 으로 opt-out.
-  // cmdCleanupWorktree 에 위임하여 worktree 제거 + 로컬 branch 삭제뿐 아니라
-  // auto-checkpoint stash drop (deleteBranchAndStashes) + CONTEXT.json 정리 +
-  // 로컬 main 동기화 (fetch + stash-based ff-merge) 까지 일괄 수행한다.
-  // 이전에는 인라인 worktree remove/prune/branch -D 만 수행해 stash·main 동기화가
-  // 누락됐고, 사용자가 cleanup-worktree 를 별도 호출해야 했다 (정리 누락 갭).
+  // マージ成功時に worktree 全体整理 (デフォルト)。--no-cleanup にて opt-out。
+  // cmdCleanupWorktree に委譲して worktree 除去 + ローカル branch 削除のみならず、
+  // auto-checkpoint stash drop (deleteBranchAndStashes) + CONTEXT.json 整理 +
+  // ローカル main 同期 (fetch + stash-based ff-merge) まで一括遂行する。
+  // 以前はインラインの worktree remove/prune/branch -D のみ実行し、stash・main 同期が
+  // 欠落していたため、ユーザーが cleanup-worktree を別途呼び出す必要があった (整理漏れのギャップ)。
   let cleanedUp = false;
   let cleanupResult = null;
   let runBundle = null;
@@ -1466,25 +1466,25 @@ function cmdShipWorktree(args) {
       runBundle = preserveWorktreeRunOutputs(absWtPath, branch);
     } else if (candidates.length > 0) {
       preservationWarnings.push(
-        `cleanup 이 ${candidates.map((candidate) => candidate.relPath).join(', ')} 후보를 제거합니다. 보존하려면 ship-worktree --preserve-run 을 사용하세요.`,
+        `cleanup が ${candidates.map((candidate) => candidate.relPath).join(', ')} 候補を除去します。保存するには ship-worktree --preserve-run を使用してください。`,
       );
     }
     cleanupResult = cmdCleanupWorktree({ worktree: wtPath });
     cleanedUp = cleanupResult.worktree_cleaned === true;
   }
 
-  // ship 성공 시 Pre-Ship Review 마커 정리 (R-CM-030 라이프사이클).
-  // 위임 cleanup 시 cmdCleanupWorktree 가 이미 unlink — 여기서는 --no-cleanup
-  // 경로 커버용 (멱등 — 중복 호출 안전).
+  // ship 成功時に Pre-Ship Review マーカー整理 (R-CM-030 ライフサイクル)。
+  // 委譲された cleanup 時、cmdCleanupWorktree がすでに unlink — ここでは --no-cleanup
+  // パスカバー用 (べき等 — 重複呼び出し安全)。
   if (result.merged) unlinkShipReviewMarker(wtPath);
 
-  // 머지 성공 직후 main repo working tree dirty 여부 보고.
-  // AI 는 main 의 unstaged 변경이 머지 결과와 충돌할 수 있음을 인지하고 사용자에게
-  // 명시적 reconcile (git pull --ff-only) 안내해야 한다.
+  // マージ成功直後、main repo working tree dirty 状態を報告。
+  // AI は main の unstaged 変更がマージ結果と衝突する可能性があることを認知し、ユーザーに
+  // 明示的な reconcile (git pull --ff-only) を案内しなければならない。
   const post_merge_main_status = result.merged ? detectPostMergeMainStatus() : null;
 
-  // 응답 조립 글루 (mergedWarnings spread + cleanup_hint 분기 + ?? null 필드 기본값)
-  // 는 순수 함수 composeShipResponse 에 위임 — git/gh/fs 격리로 단위 테스트 가능
+  // 応答組み立てのグルー (mergedWarnings spread + cleanup_hint 分岐 + ?? null フィールドデフォルト値)
+  // は純粋関数 composeShipResponse に委譲 — git/gh/fs 隔離により単体テスト可能
   // (DEBT-15 / DEBT-27, `tests/unit/create-pr-ship-response-compose.test.mjs`).
   return composeShipResponse({
     result,
@@ -1504,8 +1504,8 @@ function cmdCleanupWorktree(args) {
   const absWtPath = resolveWorktreeAbsPath(wtPath);
   const warnings = [];
 
-  // 해당 worktree 마커 + stale (>1h) 마커 GC (R-CM-030 라이프사이클).
-  // ship-worktree 가 이미 unlink 했어도 멱등 — cancelled 흐름 누적 방지가 주 목적.
+  // 該当の worktree マーカー + stale (>1h) マーカー GC (R-CM-030 ライフサイクル)。
+  // ship-worktree がすでに unlink していてもべき等 — cancelled フローの累積防止が主目的。
   unlinkShipReviewMarker(wtPath);
   gcStaleShipReviewMarkers();
 
@@ -1517,7 +1517,7 @@ function cmdCleanupWorktree(args) {
   }
   if (branch) deleteBranchAndStashes(branch);
 
-  // CONTEXT.json 의 worktree 참조 정리 (있는 경우만)
+  // CONTEXT.json の worktree 参照整理 (存在する場合のみ)
   const ctxPath = join(PROJECT_DIR, 'CONTEXT.json');
   if (existsSync(ctxPath)) {
     try {
@@ -1527,29 +1527,29 @@ function cmdCleanupWorktree(args) {
         writeFileSync(ctxPath, JSON.stringify(ctx, null, 2) + '\n');
       }
     } catch (e) {
-      warnings.push(`CONTEXT.json 업데이트 실패: ${e.message}`);
+      warnings.push(`CONTEXT.json アップデート失敗: ${e.message}`);
     }
   }
 
-  // main 동기화 (finalize 와 동일 의미론, fail-loud). dirty main 은 stash 하지 않고 abort.
+  // main 同期 (finalize と同一のセマンティクス、fail-loud)。dirty main は stash せずに abort。
   try {
     git(['fetch', 'origin', BASE_BRANCH], { cwd: PROJECT_DIR, timeout: 60_000, retry: 3 });
   } catch (e) {
     return {
-      ok: false, error: `${BASE_BRANCH} fetch 실패: ${e.message}`,
-      hint: 'remote 확인 후 수동 동기화', sync_status: 'fetch_failed',
+      ok: false, error: `${BASE_BRANCH} fetch 失敗: ${e.message}`,
+      hint: 'remote 確認のうえ手動同期', sync_status: 'fetch_failed',
       worktree_cleaned: true, warnings,
     };
   }
 
-  // dirty main 은 동기화하지 않고 중단한다 (자동 stash 미사용 — 원본 working tree 미접촉).
-  // PR 은 이미 머지됐으므로 유효하며, main 로컬 sync 만 skip 된다 (다음 worktree-new self-heal).
+  // dirty main は同期せずに中断する (自動 stash 未使用 — オリジナルの working tree に非接触)。
+  // PR はすでにマージされているため有効であり、main ローカル sync のみが skip される (次の worktree-new で self-heal)。
   const hasChanges = git(['status', '--porcelain'], { cwd: PROJECT_DIR }).trim().length > 0;
   if (hasChanges) {
     return {
       ok: false,
-      error: '로컬 uncommitted 변경사항이 존재하여 동기화를 진행할 수 없습니다.',
-      hint: '변경사항을 수동으로 commit 하거나 stash 한 뒤 다시 동기화하십시오.',
+      error: 'ローカルの uncommitted 変更事項が存在するため同期を進行できません。',
+      hint: '変更事項を手動で commit するか stash させた後に再度同期してください。',
       worktree_cleaned: true,
       warnings,
       sync_status: 'local_changes',
@@ -1561,13 +1561,13 @@ function cmdCleanupWorktree(args) {
     git(['checkout', BASE_BRANCH], { cwd: PROJECT_DIR });
     git(['merge', '--ff-only', `origin/${BASE_BRANCH}`], { cwd: PROJECT_DIR });
   } catch (e) {
-    ffFailed = `${BASE_BRANCH} ff-only 실패: ${e.message}`;
+    ffFailed = `${BASE_BRANCH} ff-only 失敗: ${e.message}`;
   }
 
   if (ffFailed) {
     return {
       ok: false, error: ffFailed,
-      hint: '원격 main이 로컬 선조 아님. 수동 rebase 필요',
+      hint: 'リモートの main がローカルの先祖ではありません。手動 rebase が必要',
       sync_status: 'ff_failed', worktree_cleaned: true, warnings,
     };
   }
@@ -1625,7 +1625,7 @@ function main() {
   }
 }
 
-// v2.1: import 시 main() 자동 실행 차단. 회귀 테스트가 constant 만 import 가능.
+// v2.1: import 時の main() 自動実行を遮断。デグレードテストが constant のみ import 可能。
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   main();
 }

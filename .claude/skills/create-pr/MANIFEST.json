@@ -3,7 +3,7 @@
   "skill_id": "create-pr",
   "version": "2.0.0-unified",
   "tier": 3,
-  "tier_description": "Utility - Worktree 격리 GitHub Flow (8 명령, v2 응답 계약). Mode A staged 격리 + Mode B PLAN.md 기반 worktree 배포. unstaged/untracked 100% 보전, fail-loud finalize.",
+  "tier_description": "Utility - Worktree 隔離 GitHub Flow (8 コマンド, v2 応答契約)。Mode A staged 隔離 + Mode B PLAN.md 基準の worktree 配備。unstaged/untracked 100% 保存, fail-loud finalize。",
   "enforced_protocol": {
     "preflight_required": true,
     "postflight_required": true,
@@ -19,7 +19,7 @@
   "preflight_checks": [
     {
       "id": "PF-001",
-      "description": "init: main 최신성 + staged 존재 + 기밀 파일 차단 + gh auth + 동시 실행 보호 (30s flag mtime)",
+      "description": "init: main 最新性 + staged 存在 + 機密ファイル遮断 + gh auth + 同時実行保護 (30s flag mtime)",
       "blocking": true
     },
     {
@@ -29,24 +29,24 @@
     },
     {
       "id": "PF-003",
-      "description": "ship-worktree: PLAN.md 검증 (코드블록/HTML주석 strip, 취소 마커 인식) + committed/clean worktree 검사 (commit_required)",
+      "description": "ship-worktree: PLAN.md 検証 (コードブロック/HTML コメントのストリップ、キャンセルマーカーの認識) + committed/clean worktree 検査 (commit_required)",
       "blocking": true
     }
   ],
   "postflight_checks": [
     {
       "id": "POF-001",
-      "description": "ship-feature 완료 (merged === true 또는 pending === true graceful)",
+      "description": "ship-feature 完了 (merged === true または pending === true graceful)",
       "blocking": true
     },
     {
       "id": "POF-002",
-      "description": "finalize 완료 (sync_status === 'synced' 또는 의도된 fail-loud 응답)",
+      "description": "finalize 完了 (sync_status === 'synced' または意図された fail-loud 応答)",
       "blocking": true
     },
     {
       "id": "POF-003",
-      "description": "cleanup-worktree 완료 시 sync_status === 'synced' 또는 의도된 fail-loud 응답 (local_changes/ff_failed/fetch_failed)",
+      "description": "cleanup-worktree 完了時に sync_status === 'synced' または意図された fail-loud 応答 (local_changes/ff_failed/fetch_failed)",
       "blocking": true
     }
   ],
@@ -54,11 +54,11 @@
     "direct_invocable": true,
     "trigger_keywords": [
       "create-pr",
-      "PR 작성",
-      "릴리즈",
+      "PR 作成",
+      "リリース",
       "release"
     ],
-    "args_pattern": "[추가 지시사항 (선택)]"
+    "args_pattern": "[追加指示事項 (選択)]"
   },
   "runtime_requirements": {
     "node": ">=18",
@@ -86,7 +86,7 @@
   "references": [
     {
       "file": "references/superpowers-branch-completion-options.md",
-      "description": "create-pr Mode B와 destructive guard 정책에 맞춘 branch completion options reference로 병합. 원본 local merge/discard 절차 직접 배포는 회피."
+      "description": "create-pr Mode B と destructive guard ポリシーに合わせた branch completion options reference としてマージ。オリジナルの local merge/discard 手順の直接配信は回避。"
     }
   ]
 }

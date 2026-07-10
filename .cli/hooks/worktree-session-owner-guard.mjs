@@ -3,30 +3,30 @@
 /**
  * worktree-session-owner-guard.mjs - PreToolUse Edit|Write|MultiEdit|Bash Hook
  *
- * 멀티세션 환경에서 AI 세션이 **자기 세션이 만든 worktree 의 파일만** 편집·커밋하도록
- * 강제한다. 대상 파일/커밋이 속한 worktree 의 `.session-owner` 사이드카가 현재 세션
- * (`data.session_id`) 과 불일치하면 deny.
+ * マルチセッション環境において AI セッションが **自身のセッションが作成した worktree のファイルのみ** 編集・コミットするように
+ * 強制する。対象ファイル/コミットが属する worktree の `.session-owner` サイドカーが現在のセッション
+ * (`data.session_id`) と一致しなければ deny。
  *
- * 정책 SSOT: R-CM-036 (worktree-session-ownership.md).
- * 사이드카 기록: worktree-owner-tracker.mjs (PostToolUse Bash).
+ * ポリシー SSOT: R-CM-036 (worktree-session-ownership.md).
+ * サイドカー記録: worktree-owner-tracker.mjs (PostToolUse Bash)。
  *
- * 2-Layer 방어 (R-CM-036):
- *   Layer 1 — cwd-confinement (결정론적·orphan-proof·session_id 무관, PRIMARY):
- *     대상 worktree ≠ cwd 의 worktree → deny. 사이드카 불필요 → orphan 구멍 없음.
- *     cwd 가 main repo(worktree 밖)인데 대상이 worktree → deny (cd 안 하고 침범 = 사고 패턴).
- *   Layer 2 — session_id 사이드카 (SECONDARY, 같은 worktree path 내 다른 세션 방어):
- *     `.session-owner` 존재 & ≠ 현재 session_id → deny.
+ * 2-Layer 防御 (R-CM-036):
+ *   Layer 1 — cwd-confinement (決定論的・orphan-proof・session_id 無関係、PRIMARY):
+ *     対象 worktree ≠ cwd の worktree → deny。サイドカー不要 → orphan 穴なし。
+ *     cwd が main repo (worktree 外) なのに対象が worktree → deny (cd せずに侵害 = 事故パターン)。
+ *   Layer 2 — session_id サイドカー (SECONDARY、同一の worktree path 内の他セッション防御):
+ *     `.session-owner` 存在 & ≠ 現在の session_id → deny。
  *
- * 동작 (carve-out 은 전부 fail-open passthrough — 오차단 0 우선):
- *   - tool 이 Edit|Write|MultiEdit|Bash 아님 → passthrough
- *   - 대상이 .worktrees/ 하위 아님 (main repo 파일) → passthrough (worktree-policy-guard 영역)
- *   - `.tmp/create-pr-active` 존재 → passthrough (ship/create-pr 흐름 carve-out)
- *   - Bash 가 `git commit` 아님 / `--dry-run` → passthrough
- *   - Layer 1: cwd worktree ≠ 대상 worktree → **deny** (session_id 무관 — orphan 도 차단)
- *   - Layer 2: 같은 worktree 인데 사이드카 owner ≠ session_id → **deny**
+ * 動作 (carve-out はすべて fail-open passthrough — 誤遮断 0 優先):
+ *   - tool が Edit|Write|MultiEdit|Bash 以外 → passthrough
+ *   - 対象が .worktrees/ 配下ではない (main repo ファイル) → passthrough (worktree-policy-guard 領域)
+ *   - `.tmp/create-pr-active` 存在 → passthrough (ship/create-pr フロー carve-out)
+ *   - Bash が `git commit` 以外 / `--dry-run` → passthrough
+ *   - Layer 1: cwd worktree ≠ 対象 worktree → **deny** (session_id 無関係 — orphan も遮断)
+ *   - Layer 2: 同一 worktree だがサイドカー owner ≠ session_id → **deny**
  *   - error → passthrough (R-CM-006 Rule 2 fail-open)
  *
- * Reference 패턴: worktree-policy-guard.mjs
+ * Reference パターン: worktree-policy-guard.mjs
  */
 
 import { join, relative, isAbsolute } from 'node:path';
@@ -39,13 +39,13 @@ import {
 } from '../lib/utils.mjs';
 import { worktreeOwnerPath } from '../lib/worktree-plan-path.mjs';
 import { HookOutput } from '../lib/hook-output.mjs';
-// worktree 루트 판정 = 단일 SSOT (R-CM-037). 세션축 무관 순수함수.
-// 테스트는 worktree-path.mjs 에서 직접 import (re-export 의존 제거 — DEBT-183).
+// worktree ルート判定 = 単一の SSOT (R-CM-037)。セッション軸無関係の純粋関数。
+// テストは worktree-path.mjs から直接 import (re-export 依存の除去 — DEBT-183)。
 import { resolveWorktreeRoot } from '../lib/worktree-path.mjs';
 import { extractApplyPatchFilePaths } from '../lib/apply-patch-paths.mjs';
 
 /**
- * worktree 의 `.session-owner` 첫 줄(session_id). 부재/실패/빈 파일 → null.
+ * worktree の `.session-owner` 1行目 (session_id)。不在/失敗/空ファイル → null。
  */
 export function readSessionOwner(worktreeRoot) {
   try {
@@ -62,13 +62,13 @@ function toAbs(raw, baseDir) {
 }
 
 /**
- * Edit|Write|MultiEdit 대상 파일 abs 경로 (단일).
+ * Edit|Write|MultiEdit 対象ファイルの abs パス (単一)。
  */
 export function editTargetPath(toolName, toolInput, baseDir) {
-  // Codex 는 편집 시 tool_name="apply_patch" + tool_input.command (패치 본문) 전송.
-  // 다중 파일 패치: worktree 소속 경로를 우선 선택 — innocent main 파일이 패치 앞에
-  // 와도 cross-worktree 침범(worktree-resident 파일)을 검출하도록 (단일 path 검사의
-  // ordering 우회 방지). worktree 소속 경로 부재 시 첫 경로(main repo 파일 → 상위에서 passthrough).
+  // Codex は編集時に tool_name="apply_patch" + tool_input.command (パッチ本文) を送信。
+  // 複数ファイルパッチ: worktree 所属のパスを優先選択 — innocent な main ファイルがパッチの前に
+  // 来ても cross-worktree 侵害 (worktree-resident ファイル) を検出するように (単一 path 検査の
+  // ordering 迂回防止)。worktree 所属のパスがない場合は最初のパス (main repo ファイル → 上位で passthrough)。
   if (toolName === 'apply_patch') {
     const paths = extractApplyPatchFilePaths(toolInput?.command, baseDir);
     return paths.find((p) => resolveWorktreeRoot(p)) || paths[0] || null;
@@ -78,10 +78,10 @@ export function editTargetPath(toolName, toolInput, baseDir) {
 }
 
 /**
- * Bash 명령이 worktree 를 변경하는 `git commit` 이면 대상 worktree 의 기준 경로 반환.
+ * Bash コマンドが worktree を変更する `git commit` であれば、対象 worktree の基準パスを返却。
  *   - `git -C <path> ... commit`  → <path>
- *   - 그 외 `git commit`          → data.cwd (현재 cwd 의 worktree)
- *   - commit 아님 / `--dry-run`   → null (대상 없음)
+ *   - その他 `git commit`          → data.cwd (現在の cwd の worktree)
+ *   - commit 以外 / `--dry-run`   → null (対象なし)
  */
 export function commitTargetBase(cmd, cwd, baseDir) {
   if (!cmd || typeof cmd !== 'string') return null;
@@ -99,10 +99,10 @@ export async function run(data) {
       return HookOutput.passthrough();
     }
 
-    const sessionId = data?.session_id; // Layer 1 은 없어도 동작 (결정론적)
+    const sessionId = data?.session_id; // Layer 1 はなくても動作 (決定論的)
 
     const projectDir = resolveProjectDir(data);
-    // ship / create-pr 흐름은 worktree 경로를 합법적으로 다룬다 → carve-out
+    // ship / create-pr フローは worktree パスを合法的に扱う → carve-out
     if (existsSync(join(projectDir, '.tmp', 'create-pr-active'))) {
       return HookOutput.passthrough();
     }
@@ -117,37 +117,37 @@ export async function run(data) {
     if (!targetAbs) return HookOutput.passthrough();
 
     const wtRoot = resolveWorktreeRoot(targetAbs);
-    if (!wtRoot) return HookOutput.passthrough(); // main repo 파일 / 비-worktree
+    if (!wtRoot) return HookOutput.passthrough(); // main repo ファイル / 非 worktree
 
     const relRoot = relative(projectDir, wtRoot).replace(/\\/g, '/') || wtRoot;
     const action = toolName === 'Bash' ? 'commit' : 'edit';
 
-    // ── Layer 1: cross-worktree confinement (cwd 가 *다른* worktree 일 때만 deny) ──
-    // brief2dev Claude Code 의 Edit/Bash cwd 는 항상 main(PROJECT_DIR) 로 고정된다
-    // (learnings bash-cwd-reset-worktree) — 단일 세션이 main cwd 에서 자기 worktree 를
-    // 편집하는 것이 *정상* 워크플로다. 따라서 cwd=main(null) 은 deny 하지 않고
-    // Layer 2(session_id 사이드카)로 위임한다. cwd 가 *다른 worktree* 인 경우만
-    // cross-worktree 침범으로 차단한다 (trip-jarvis 멀티-cd 세션 시나리오).
+    // ── Layer 1: cross-worktree confinement (cwd が *異なる* worktree の場合のみ deny) ──
+    // brief2dev Claude Code の Edit/Bash cwd は常に main (PROJECT_DIR) に固定される
+    // (learnings bash-cwd-reset-worktree) — 単一セッションが main cwd で自身の worktree を
+    // 編集するのが *正常な* ワークフローである。したがって cwd=main(null) は deny せず、
+    // Layer 2 (session_id サイドカー) へ委譲する。cwd が *異なる worktree* である場合のみ
+    // cross-worktree 侵害として遮断する (trip-jarvis マルチ cd セッションシナリオ)。
     const cwdWt = resolveWorktreeRoot(data?.cwd || '');
     if (cwdWt !== null && cwdWt !== wtRoot) {
       return HookOutput.deny(
-        `[Session Owner Guard] cross-worktree ${action} 차단: ${relRoot}\n\n` +
-          `현재 cwd 는 다른 worktree (${relative(projectDir, cwdWt).replace(/\\/g, '/')}) 인데 ` +
-          `대상은 worktree ${relRoot} 입니다.\n` +
-          `각 세션은 자기 worktree 의 파일만 편집·커밋할 수 있습니다 (R-CM-036 Layer 1).\n` +
-          `  → 본인 worktree 에서 작업하거나, 정상 ship 흐름(/create-pr ship-worktree)을 사용하세요.`
+        `[Session Owner Guard] cross-worktree ${action} 遮断: ${relRoot}\n\n` +
+          `現在の cwd は異なる worktree (${relative(projectDir, cwdWt).replace(/\\/g, '/')}) ですが、` +
+          `対象は worktree ${relRoot} です。\n` +
+          `各セッションは自身の worktree のファイルのみ編集・コミットできます (R-CM-036 Layer 1)。\n` +
+          `  → 自身の worktree で作業するか、正常な ship フロー (/create-pr ship-worktree) を使用してください。`
       );
     }
 
-    // ── Layer 2: session_id 사이드카 (같은 worktree path 내 다른 세션 방어) ──
+    // ── Layer 2: session_id サイドカー (同一の worktree path 内の他セッション防御) ──
     if (sessionId && typeof sessionId === 'string') {
       const owner = readSessionOwner(wtRoot);
       if (owner && owner !== sessionId) {
         return HookOutput.deny(
-          `[Session Owner Guard] 타 세션 소유 worktree ${action} 차단: ${relRoot}\n\n` +
-            `이 worktree 는 다른 세션(owner=${owner.slice(0, 12)}…)이 생성했습니다.\n` +
-            `현재 세션(${sessionId.slice(0, 12)}…)은 자기 세션이 만든 worktree 만 편집·커밋할 수 있습니다 (R-CM-036 Layer 2).\n` +
-            `  → 본인 worktree 에서 작업하거나, 해당 worktree 를 만든 세션에 위임하세요.`
+          `[Session Owner Guard] 他セッション所有の worktree ${action} 遮断: ${relRoot}\n\n` +
+            `この worktree は他のセッション (owner=${owner.slice(0, 12)}…) が作成しました。\n` +
+            `現在のセッション (${sessionId.slice(0, 12)}…) は自身のセッションが作成した worktree のみ編集・コミットできます (R-CM-036 Layer 2)。\n` +
+            `  → 自身の worktree で作業するか、該当する worktree を作成したセッションに委譲してください。`
         );
       }
     }
