@@ -7,6 +7,7 @@ import {
   getOpsConfig,
   parseModelJson,
   redactSensitiveText,
+  resolveTarget,
   summarizeLogEntry
 } from "../server/opsAgent.js";
 import { createMemoryRunStore } from "../server/runStore.js";
@@ -223,6 +224,25 @@ describe("executeOpsAgentRun", () => {
     expect(result.error).toContain("hard stop");
   });
 
+  it("fetches evidence from the per-target project when the allowlist maps one", async () => {
+    const crossConfig = makeConfig({ targetAllowlist: ["a2a-agent-marketplace", "aitech-good-a13973/vibementor-ai"] });
+    const { genAi } = makeGenAiStub([makerJson(["log-1"]), CHECKER_CONFIRM]);
+    const seenProjects: Array<string | undefined> = [];
+    const run = createRun("cloud-run-sre", "vibementor-ai", "web", { config: crossConfig, genAi });
+    const result = await executeOpsAgentRun(run, {
+      config: crossConfig,
+      genAi,
+      fetchEvidence: async ({ project }) => {
+        seenProjects.push(project);
+        return [makeEvidence("log-1", { service: "vibementor-ai" })];
+      },
+      store: createMemoryRunStore()
+    });
+
+    expect(result.status).toBe("completed");
+    expect(seenProjects).toEqual(["aitech-good-a13973"]);
+  });
+
   it("marks findings uncertain instead of crashing when the checker call fails", async () => {
     const { genAi } = makeGenAiStub([makerJson(["log-1"]), "__THROW__"]);
     const run = createRun("cloud-run-sre", "a2a-agent-marketplace", "web", { config, genAi });
@@ -245,5 +265,33 @@ describe("getOpsConfig", () => {
     expect(config.targetService).toBe("a2a-agent-marketplace");
     expect(config.targetAllowlist).toEqual(["svc-a", "svc-b"]);
     expect(config.model).toBe("gemini-3.5-flash");
+  });
+
+  it("accepts project/service allowlist entries and defaults to the personal GCP target", () => {
+    const config = getOpsConfig({ OPS_TARGET_ALLOWLIST: "svc-a,other-project/svc-b" } as NodeJS.ProcessEnv);
+    expect(config.targetAllowlist).toEqual(["svc-a", "other-project/svc-b"]);
+    expect(getOpsConfig({} as NodeJS.ProcessEnv).targetAllowlist).toEqual(["a2a-agent-marketplace", "aitech-good-a13973/vibementor-ai"]);
+  });
+});
+
+describe("resolveTarget", () => {
+  const config = makeConfig({ targetAllowlist: ["a2a-agent-marketplace", "aitech-good-a13973/vibementor-ai"] });
+
+  it("resolves a bare allowlist entry to the default project", () => {
+    expect(resolveTarget(config, "a2a-agent-marketplace")).toEqual({ service: "a2a-agent-marketplace", project: "test-project" });
+  });
+
+  it("resolves a project/service entry to its own project", () => {
+    expect(resolveTarget(config, "vibementor-ai")).toEqual({ service: "vibementor-ai", project: "aitech-good-a13973" });
+  });
+
+  it("falls back to the default target when the requested service is not allowlisted", () => {
+    expect(resolveTarget(config, "chiebukuro-app")).toEqual({ service: "a2a-agent-marketplace", project: "test-project" });
+    expect(resolveTarget(config, undefined)).toEqual({ service: "a2a-agent-marketplace", project: "test-project" });
+  });
+
+  it("handles an empty allowlist and empty service name without throwing", () => {
+    expect(resolveTarget(makeConfig({ targetAllowlist: [] }), "anything")).toEqual({ service: "a2a-agent-marketplace", project: "test-project" });
+    expect(resolveTarget(config, "")).toEqual({ service: "a2a-agent-marketplace", project: "test-project" });
   });
 });

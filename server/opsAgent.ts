@@ -12,7 +12,10 @@ const OpsConfigSchema = z.object({
   location: z.string().min(1).default("asia-northeast1"),
   model: z.string().min(1).default("gemini-3.5-flash"),
   targetService: z.string().regex(/^[a-z0-9-]{1,63}$/).default("a2a-agent-marketplace"),
-  targetAllowlist: z.array(z.string().regex(/^[a-z0-9-]{1,63}$/)).default(["a2a-agent-marketplace", "chiebukuro-app"]),
+  // allowlist エントリ: "service" または "<gcp-project>/service" (別GCPプロジェクトのログを対象化)
+  targetAllowlist: z
+    .array(z.string().regex(/^(?:[a-z][a-z0-9-]{4,28}[a-z0-9]\/)?[a-z0-9-]{1,63}$/))
+    .default(["a2a-agent-marketplace", "aitech-good-a13973/vibementor-ai"]),
   lookbackMinutes: z.number().int().min(5).max(1440).default(180),
   // 概算単価 (USD / 1M tokens)。実測請求ではなく見積り表示用
   costInputPerMTok: z.number().nonnegative().default(0.3),
@@ -32,6 +35,23 @@ export function getOpsConfig(env: NodeJS.ProcessEnv = process.env): OpsConfig {
     costInputPerMTok: env.OPS_COST_INPUT_PER_MTOK ? Number(env.OPS_COST_INPUT_PER_MTOK) : undefined,
     costOutputPerMTok: env.OPS_COST_OUTPUT_PER_MTOK ? Number(env.OPS_COST_OUTPUT_PER_MTOK) : undefined
   });
+}
+
+export type OpsTarget = { service: string; project?: string };
+
+function parseTargetEntry(entry: string): OpsTarget {
+  const separator = entry.indexOf("/");
+  if (separator < 0) return { service: entry };
+  return { project: entry.slice(0, separator), service: entry.slice(separator + 1) };
+}
+
+// 要求サービスを allowlist と照合し、監視対象の {service, project} を解決する。
+// allowlist 外の要求はデフォルトターゲットへフォールバック。
+export function resolveTarget(config: OpsConfig, requestedService?: string): OpsTarget {
+  const targets = config.targetAllowlist.map(parseTargetEntry);
+  const requested = requestedService ? targets.find((t) => t.service === requestedService) : undefined;
+  const target = requested ?? targets.find((t) => t.service === config.targetService) ?? { service: config.targetService };
+  return { service: target.service, project: target.project ?? config.project };
 }
 
 // ---------------------------------------------------------------------------
@@ -117,16 +137,16 @@ export function summarizeLogEntry(entry: RawLogEntry, index: number): LogEvidenc
 
 const MAX_EVIDENCE_ENTRIES = 60;
 
-export type EvidenceFetcher = (args: { service: string; lookbackMinutes: number }) => Promise<LogEvidence[]>;
+export type EvidenceFetcher = (args: { service: string; project?: string; lookbackMinutes: number }) => Promise<LogEvidence[]>;
 
 export function createLoggingEvidenceFetcher(config: OpsConfig, auth: GoogleAuth = new GoogleAuth({ scopes: "https://www.googleapis.com/auth/cloud-platform" })): EvidenceFetcher {
-  async function listEntries(filter: string, pageSize: number): Promise<RawLogEntry[]> {
+  async function listEntries(project: string | undefined, filter: string, pageSize: number): Promise<RawLogEntry[]> {
     const token = await auth.getAccessToken();
     const response = await fetch("https://logging.googleapis.com/v2/entries:list", {
       method: "POST",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
       body: JSON.stringify({
-        resourceNames: [`projects/${config.project}`],
+        resourceNames: [`projects/${project}`],
         filter,
         orderBy: "timestamp desc",
         pageSize
@@ -137,12 +157,13 @@ export function createLoggingEvidenceFetcher(config: OpsConfig, auth: GoogleAuth
     return body.entries ?? [];
   }
 
-  return async ({ service, lookbackMinutes }) => {
+  return async ({ service, project, lookbackMinutes }) => {
+    const logProject = project ?? config.project;
     const since = new Date(Date.now() - lookbackMinutes * 60_000).toISOString();
     const base = `resource.type="cloud_run_revision" AND resource.labels.service_name="${service}" AND timestamp>="${since}"`;
     const [problems, context] = await Promise.all([
-      listEntries(`${base} AND severity>=WARNING`, 40),
-      listEntries(base, 20)
+      listEntries(logProject, `${base} AND severity>=WARNING`, 40),
+      listEntries(logProject, base, 20)
     ]);
     const seen = new Set<string>();
     const merged: LogEvidence[] = [];
@@ -304,15 +325,16 @@ export async function executeOpsAgentRun(run: OpsAgentRun, deps: OpsRunDeps): Pr
     run.status = "running";
     await store.saveRun(run);
 
-    // ① 発見 — 実Cloud Loggingから証拠収集
-    let evidence = await fetchEvidence({ service: run.targetService, lookbackMinutes: config.lookbackMinutes });
+    // ① 発見 — 実Cloud Loggingから証拠収集 (allowlist の project/service 指定があれば当該プロジェクトを参照)
+    const target = resolveTarget(config, run.targetService);
+    let evidence = await fetchEvidence({ service: run.targetService, project: target.project, lookbackMinutes: config.lookbackMinutes });
     if (evidence.length === 0) {
-      evidence = await fetchEvidence({ service: run.targetService, lookbackMinutes: 1440 });
+      evidence = await fetchEvidence({ service: run.targetService, project: target.project, lookbackMinutes: 1440 });
       run.evidenceWindowMinutes = 1440;
     }
     run.evidenceCount = evidence.length;
     run.evidenceSample = evidence.slice(0, 12);
-    await phase("evidence", `Cloud Loggingから実ログ ${evidence.length} 件を取得 (${run.evidenceWindowMinutes}分窓, redaction適用)`);
+    await phase("evidence", `Cloud Loggingから実ログ ${evidence.length} 件を取得 (project: ${target.project ?? "-"}, ${run.evidenceWindowMinutes}分窓, redaction適用)`);
     checkDeadline();
 
     if (evidence.length === 0) {
