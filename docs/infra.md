@@ -5,7 +5,7 @@
 ## 1. 移行先プロジェクト情報
 本プロジェクトは、以下のプロジェクトIDおよびアカウントでのみ利用し、動作させます。
 
-* **Google Cloud アカウント**: `shoridevel@gmail.com`
+* **Google Cloud アカウント**: `<YOUR_GCP_ACCOUNT_EMAIL>` (GCPにログインするGoogleアカウント)
 * **プロジェクト名**: `Hackathon`
 * **プロジェクトID**: `sixth-oath-502008-u3`
 * **プロジェクト番号**: `232938133905`
@@ -47,7 +47,7 @@
 お手元のターミナルで、他のプロジェクトやアカウントが混入しないよう設定を固定します。
 ```bash
 # アカウントの切り替えと認証
-gcloud auth login shoridevel@gmail.com
+gcloud auth login <YOUR_GCP_ACCOUNT_EMAIL>
 
 # アプリケーションデフォルト認証（ADC）のログイン
 # ※ローカル環境でFirestoreやGeminiを使用するために必要です
