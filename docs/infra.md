@@ -89,6 +89,11 @@ Cloud Run は、セキュリティ向上のため最小権限のカスタムサ�
    gcloud projects add-iam-policy-binding sixth-oath-502008-u3 \
        --member="serviceAccount:agent-market-runtime@sixth-oath-502008-u3.iam.gserviceaccount.com" \
        --role="roles/aiplatform.user"
+
+   # Cloud Loggingの参照権限 (SRE/oracleなどのオブザーバビリティエージェントに必須)
+   gcloud projects add-iam-policy-binding sixth-oath-502008-u3 \
+       --member="serviceAccount:agent-market-runtime@sixth-oath-502008-u3.iam.gserviceaccount.com" \
+       --role="roles/logging.viewer"
    ```
 
 ### ステップ 4: Artifact Registry リポジトリの作成
