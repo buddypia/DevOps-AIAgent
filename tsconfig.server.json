@@ -12,5 +12,5 @@
     "rootDir": ".",
     "types": ["node"]
   },
-  "include": ["server", "src/agentEngine.ts", "src/market.ts", "src/types.ts"]
+  "include": ["server", "src/agentEngine.ts", "src/market.ts", "src/types.ts", "src/lzStringMin.d.ts"]
 }

@@ -26,3 +26,12 @@ coverage/
 
 # Private idea / planning material (not for public repo)
 .tmp/
+*.tmp
+
+
+# Verification/debug artifacts (screenshots, research output) — not product assets
+tmp/
+artifacts/
+data/
+raw/
+
