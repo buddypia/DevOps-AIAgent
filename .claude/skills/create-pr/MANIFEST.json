@@ -46,7 +46,7 @@
     },
     {
       "id": "POF-003",
-      "description": "cleanup-worktree 완료 시 active_stash === null 또는 stash conflict hint 표시",
+      "description": "cleanup-worktree 완료 시 sync_status === 'synced' 또는 의도된 fail-loud 응답 (local_changes/ff_failed/fetch_failed)",
       "blocking": true
     }
   ],

@@ -16,7 +16,7 @@ AI가 병렬로 변경한 결과를 Feature PR → main 동기화까지 자동 �
 
 **불변식**: unstaged/untracked는 실행 전후로 정확히 동일하다.
 - Mode A Phase 1: worktree 격리 → 원본 HEAD 불변
-- Mode A Phase 2: `git stash push --include-untracked` → main ff-only merge → `git stash pop`. pop 충돌 시 stash 자동 유지(reflog 영구 보존).
+- Mode A Phase 2: dirty main 은 자동 stash 하지 않고 sync 를 중단(`sync_status: local_changes`)한다. 원본 working tree 를 건드리지 않으며, 사용자가 수동으로 commit/stash 후 재시도한다.
 
 **Worktree Commit Requirement**: Mode B `ship-worktree` 는 dirty worktree 를 배포하지 않는다.
 - PR 생성/머지 전에 `git status --porcelain --untracked-files=all` 이 clean 이어야 한다.
@@ -33,8 +33,7 @@ AI가 병렬로 변경한 결과를 Feature PR → main 동기화까지 자동 �
   "ok": true | false,
   "mode": "staged" | "worktree" | null,    // AI 분기 지표
   "command": "init" | "verify-plan" ...,
-  "sync_status"?: "synced" | "fetch_failed" | "stash_failed" | "ff_failed" | "synced_with_stash_conflict",
-  "active_stash"?: "create-pr-sync-backup-..." | null,
+  "sync_status"?: "synced" | "fetch_failed" | "local_changes" | "ff_failed",
   "changed_files"?: ["a.md", "b/c.mjs"],   // ship-feature/ship-worktree 머지 성공 시
   "changed_files_tree"?: "└── ...",         // 사람용 markdown box-drawing 트리
   "completion_report_markdown"?: "# PR 승인 후 완료 보고\n...", // ship-worktree 승인 후 사용자 보고 템플릿
@@ -44,7 +43,7 @@ AI가 병렬로 변경한 결과를 Feature PR → main 동기화까지 자동 �
 }
 ```
 
-**fail-loud 의미론** (R-CM-010 정합): `finalize`/`cleanup-worktree`의 fetch/stash/ff 실패는 `ok:false` + `sync_status`. silent warning 아님.
+**fail-loud 의미론** (R-CM-010 정합): `finalize`/`cleanup-worktree`의 fetch/local_changes/ff 실패는 `ok:false` + `sync_status`. silent warning 아님. dirty main 은 `sync_status: local_changes` 로 중단하며 원본 working tree 를 건드리지 않는다.
 
 **Post-merge 트리 보고 의무 (`changed_files_tree`)**: `ship-feature` / `ship-worktree` 가 `merged: true` 응답 시 `changed_files` (path 배열) + `changed_files_tree` (markdown box-drawing 트리) 두 필드를 포함한다. AI 는 머지 보고 직후 `changed_files_tree` 필드 값을 **사용자에게 그대로 출력**하여 어떤 파일이 머지됐는지 인지 가능하게 한다. gh 호출 실패 시 `changed_files: []` + `changed_files_tree: "(no files)"` (silent fail-open — 핵심 머지 결과 영향 없음).
 
@@ -64,7 +63,7 @@ node .claude/scripts/create-pr/ops.mjs <command> [--key value ...]
 | `isolate` | staged | `--branch <b>` | worktree + feature 브랜치 생성 + staged `apply --index` |
 | `commit` | staged | `--message <m> [--files <f1,f2>]` | worktree 내 커밋 |
 | `ship-feature` | staged | `--title <t> [--body <b>] [--no-merge]` | push → 멱등 PR → squash merge → remote branch 삭제 |
-| `finalize` | staged | — | worktree 제거 + stash-based 원본 동기화 (fail-loud) |
+| `finalize` | staged | — | worktree 제거 + 원본 main 동기화 (dirty 시 abort, fail-loud) |
 | `verify-plan` | worktree | `--worktree <p> [--force]` | PLAN.md 미완료 체크박스 검증 (코드블록/HTML주석 strip, 취소 마커 인식) |
 | `ship-worktree` | worktree | `--worktree <p> --title <t> [--body <b>] [--force-plan] [--no-merge] [--no-cleanup]` | PLAN.md 검증 + committed/clean worktree 검증 + push + 멱등 PR + auto full cleanup (기본값 — `cleanup-worktree` 위임: worktree·branch 제거 + auto-checkpoint stash drop + CONTEXT.json 정리 + main 동기화) |
 | `cleanup-worktree` | worktree | `--worktree <p>` | worktree 제거 + branch 삭제 + auto-checkpoint stash drop + CONTEXT.json 정리 + main 동기화 (fail-loud). `--no-cleanup` 으로 ship 한 경우 별도 호출 |
@@ -81,8 +80,8 @@ $OPS isolate --branch "$BRANCH"                       # Step 2 (AI가 BRANCH 결
 $OPS commit --message "$MSG"                          # Step 3 (필요 시 --files로 여러 번)
 $OPS ship-feature --title "$FT" --body "$FB"          # Step 4 (CI 완료까지 최대 5분 대기)
 $OPS finalize                                         # Step 5
-# → finalize의 active_stash가 null이 아니면 수동 복구 안내
 # → finalize의 sync_status !== 'synced' 이면 추가 조치 필요
+#   (local_changes: dirty main → 수동 commit/stash 후 재시도)
 ```
 
 ### AI 실행 시퀀스 — Mode B (Worktree, feature-pilot 연동)
@@ -158,14 +157,14 @@ worktree 작업이 끝났지만 PR, 보관, 폐기 중 어떤 종료 경로를 �
 |----|------|------|
 | POF-001 | ship-feature 완료 (`merged === true` 또는 `pending === true` graceful) | ✅ |
 | POF-002 | finalize 완료 (`sync_status === 'synced'` 또는 의도된 fail-loud 응답) | ✅ |
-| POF-003 | cleanup-worktree 완료 시 active_stash === null 또는 stash conflict hint 표시 | ✅ |
+| POF-003 | cleanup-worktree 완료 시 `sync_status === 'synced'` 또는 의도된 fail-loud 응답 (`local_changes`/`ff_failed`/`fetch_failed`) | ✅ |
 
 ## Maintenance
 
 - **Boundary (R-CM-028)**: boundary-uniform — 본 스킬은 관점 1 (brief2dev 자체 거버넌스/룰/스킬/hook 변경) + 관점 2 (scaffold 내부 feature/bug-fix) 양쪽에서 동일 의미로 사용. main + worktree-aware 분기는 코드 레벨 (commit-guard / destructive-git-guard) 에서 자동 처리되며, 두 관점 모두 같은 흐름 (init/isolate/commit/ship/finalize) 을 따름. 분기 메커니즘 불필요.
-- **Sources**: R-CM-008 (git-workflow), R-CM-010 (verification-before-completion, fail-loud 의미론), R-CM-028 (two-perspective-boundary), `git-worktree(1)`, `git-stash(1)`, GitHub REST `PUT /repos/{owner}/{repo}/pulls/{n}/merge`
+- **Sources**: R-CM-008 (git-workflow), R-CM-010 (verification-before-completion, fail-loud 의미론), R-CM-028 (two-perspective-boundary), `git-worktree(1)`, GitHub REST `PUT /repos/{owner}/{repo}/pulls/{n}/merge`
 - **관련 스크립트**: `.claude/scripts/create-pr/ops.mjs` — 8명령 통합 실행 엔진
 - **관련 훅**: `.cli/hooks/commit-guard.mjs`, `.cli/hooks/destructive-git-guard.mjs`
 - **테스트**: `tests/unit/create-pr-ops.test.mjs` (verify-plan + 응답 계약), `tests/unit/create-pr-spec.test.mjs` (PLAN.md 파서 + parseArgs + finalize 상태 머신 + scope-aware gate + 동시 실행 보호 등 fragile 영역 격리 검증)
-- **Known limits**: `git merge --ff-only`는 실행 중 remote 변경 시 실패 (`sync_status: ff_failed`) · stash pop 충돌 시 reflog 영구 보존 (수동 복구) · BLOCKED/BEHIND mergeStateStatus 시 `pending` 반환 — AI 가 CI 통과 후 재시도 또는 수동 머지 · multi-commit은 `commit --files` 수동 분할 · `--key=value` 형식 미지원 (모든 명령 `--key value` 형식 사용)
+- **Known limits**: `git merge --ff-only`는 실행 중 remote 변경 시 실패 (`sync_status: ff_failed`) · dirty main 은 동기화하지 않고 중단 (`sync_status: local_changes`) — 사용자가 수동 commit/stash 후 재시도 (다음 worktree-new 의 fetch+ff 가 self-heal) · BLOCKED/BEHIND mergeStateStatus 시 `pending` 반환 — AI 가 CI 통과 후 재시도 또는 수동 머지 · multi-commit은 `commit --files` 수동 분할 · `--key=value` 형식 미지원 (모든 명령 `--key value` 형식 사용)
 - **Last updated**: 2026-05-14
