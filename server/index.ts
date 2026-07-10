@@ -15,7 +15,7 @@ import { buildWinningStrategy } from "../src/strategy.js";
 import { SUBMISSION_PROOF } from "../src/submission.js";
 import type { GeminiRecommendation } from "../src/types.js";
 
-import { createGenAiClient, createLoggingEvidenceFetcher, createRun, executeOpsAgentRun, getOpsConfig } from "./opsAgent.js";
+import { createGenAiClient, createLoggingEvidenceFetcher, createRun, executeOpsAgentRun, getOpsConfig, resolveTarget } from "./opsAgent.js";
 import { createRunStore } from "./runStore.js";
 import type { OpsAgentRun } from "./opsAgent.js";
 
@@ -51,7 +51,7 @@ async function startOpsRun(
   if (runRateLimited()) {
     return { error: "レート制限: 10分あたりの実行上限に達しました (ハードストップ)", status: 429 };
   }
-  const target = targetService && opsConfig.targetAllowlist.includes(targetService) ? targetService : opsConfig.targetService;
+  const target = resolveTarget(opsConfig, targetService).service;
   const run = createRun(OPS_AGENT_ID, target, trigger, { config: opsConfig, genAi: opsGenAi });
   await runStore.saveRun(run);
   void executeOpsAgentRun(run, { config: opsConfig, genAi: opsGenAi, fetchEvidence: fetchOpsEvidence, store: runStore }).catch((error) =>
