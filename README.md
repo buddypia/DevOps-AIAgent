@@ -1,21 +1,40 @@
-# Agent-To-Agent Marketplace
+# Agent Guild — A2A Agent Marketplace / Mission Control
 
-必要な能力を持つAIエージェントを市場から探して雇い、A2Aで委任し、**実システムに対して本当に実行させる** DevOps × AI Agent Hackathon 向けプロダクトです。
+**目標を1つ渡すと、AIギルドが実働する。** Gemini オーケストレーターが専門エージェントを自律選抜し、実システムに対して本当に実行し、機械検証を通過した結果だけを統合レポートとして返す DevOps × AI Agent Hackathon 向けプロダクトです。
+
+![Agent Guild hero](public/assets/agent-marketplace-hero.webp)
 
 ## Concept
 
-`brief2dev` の「要件を開発・検証・運用へ落とす」考え方を、エージェント市場に変換しました。ユーザーはプロジェクトブリーフを貼り、AIエージェントを能力値・スキル・価格で比較して雇用します。雇ったエージェントはデモ表示ではなく、実ログ・実CI・実脆弱性DB・実HTML・実A2A委任を証拠として Gemini が分析する実行ラン（maker → 引用ゲート → 独立checker）を回し、結果を Firestore に永続化します。
+ユーザーが書くのは「目標」だけです。
+
+```
+本番Cloud Runサービスの稼働リスクを総点検して。ログ異常・既知脆弱性・UX品質を確認し、優先度付きの対応計画にまとめて。
+```
+
+これを受けたオーケストレーター (Gemini) が、以下のループを**自律的に**回します。
+
+1. **計画** — 8体の専門エージェントカタログから編成を選抜（最大4体、順序つき、無効な選択は機械検証で棄却）
+2. **実実行** — 各エージェントが実ログ / 実CI / 実脆弱性DB / 実HTML / 実A2A委任を証拠に、共通パイプライン（証拠収集 → Gemini maker → 引用ゲート → 独立 Gemini checker → 受入判定）を実行
+3. **観察・適応** — 各ラン完了ごとに結果を観察し、続行 / 残りスキップ / エージェント1体の追加投入を判断
+4. **統合レポート** — 受入所見だけを証拠に verdict（達成 / 部分達成 / ブロック）と対応計画を生成。レポートの runId 引用も引用ゲートで機械検証
+
+ハードストップ: ミッション同時実行1件・10分2件、1ミッション最大5ステップ、時間予算240秒、ラン生成レート制限（10分18ラン）。エージェントは破壊的操作を行わず、critical/high 所見は**人間承認待ちエスカレーション**に落ちます。
+
+### 演出値ゼロのゲーミフィケーション
+
+エージェントのランク (S/A/B/C) と統計は、ハードコードされた能力値ではなく **Firestore に永続化された実行履歴（ラン数・受入所見・受入率・checker確認率・実コスト）から自動算出**されます。評判は実際に受け入れられた仕事でしか上がりません。
 
 ## Hackathon Fit
 
 - **Google Cloud**: Cloud Run デプロイ（`Dockerfile` / `cloudbuild.yaml` / `/api/healthz`）、Cloud Logging、Firestore
-- **AI**: Gemini `gemini-3.5-flash`（APIキー or Vertex AI + ADC）
-- **A2A**: `/.well-known/agent-card.json` と `/a2a` JSON-RPC 互換エンドポイント。skillId 指定の `message/send` で実行、`tasks/get` で追跡
+- **AI**: Gemini `gemini-3.5-flash`（APIキー or Vertex AI + ADC）。エージェントポートレート/ヒーロー画像も Gemini 画像生成モデルで作成（`scripts/generate_agent_art.mjs`）
+- **A2A**: `/.well-known/agent-card.json` と `/a2a` JSON-RPC 互換エンドポイント。`mission.execute` で自律ミッションを外部エージェントから起動可能、`tasks/get` でラン/ミッションを追跡
 - **DevOps**: GitHub Actions CI（typecheck / test / build / architecture check）+ 手動デプロイ / 公開検証ワークフロー
 
 ## 実行可能な8エージェント
 
-全エージェントが共通パイプライン（実証拠収集 → Gemini maker → 引用ゲート機械検証 → 独立 Gemini checker → 受入判定 → Firestore 永続化）で動きます。ハードストップ: 実行レート制限（10分12ラン）、時間予算55秒、証拠ゼロなら Gemini を呼ばずコスト0で完了。
+全エージェントが共通パイプライン（実証拠収集 → Gemini maker → 引用ゲート機械検証 → 独立 Gemini checker → 受入判定 → Firestore 永続化）で動きます。証拠ゼロなら Gemini を呼ばずコスト0で完了。
 
 | エージェント | A2A skillId | 実際に触るシステム |
 |---|---|---|
@@ -30,26 +49,21 @@
 
 ## Web UI
 
-1. プロジェクトブリーフを入力
-2. 語句から必要能力を診断（ローカル能力モデル）
-3. エージェント市場を価値スコア順にランキング、「雇う」で編成
-4. 雇用前後のプロジェクトスコア改善を可視化
-5. 雇ったエージェントの実行コンソール — 実行ランの phase / 証拠 / findings / checker 判定を追跡
-6. Gemini 3.5 Flash が戦略サマリを生成（未設定時は `local-fallback` と明示してローカル推論で代替）
-
-公開 Agent Card の取り込み（`/api/agent-card/discover`、SSRFガード付き）でカタログに外部エージェントを追加できます（実行対象は上記8体のみ）。
+1. **Mission Control** — 目標を書いて「ミッション開始」。計画 → 各エージェントの実実行 → 適応判断 → 統合レポートまでをライブタイムラインで追跡。オーケストレーターの全判断は監査ログに記録
+2. **ギルド名鑑** — 8体のポートレート（Gemini 画像生成）と、実行履歴から自動算出された実績（ラン数 / 受入所見 / 受入率 / checker確認率 / 実コスト / ランク）
+3. **手動実行コンソール** — 1体ずつ指名して実行し、証拠 → maker → 引用ゲート → checker の全過程を追跡。模擬インシデント注入（実ログとして Cloud Logging に記録）で SRE ドリルも可能
+4. **A2Aネットワーク** — 公開 Agent Card の検証付き取り込み（SSRFガード）と提出物への導線
 
 ## Endpoints
 
-- `GET /healthz` / `GET /api/healthz` — 稼働状態（Gemini 構成、実行基盤、runStore）
-- `GET /.well-known/agent-card.json` — Agent Card（実行可能8スキル + market.discover + agent-card.discover）
-- `POST /a2a` — JSON-RPC。`message.metadata.skillId` に実行スキルを指定すると雇用契約 + 実実行、`tasks/get` でラン状態照会。スキル未指定は市場推薦で応答
-- `GET /api/market` — エージェントカタログ
-- `POST /api/recommend` — Gemini 戦略サマリ（失敗時 local-fallback）
-- `POST /api/agent-card/discover` — 公開 Agent Card の検証付き取得
+- `GET /healthz` / `GET /api/healthz` — 稼働状態（Gemini 構成、実行基盤、runStore、missionControl）
+- `GET /.well-known/agent-card.json` — Agent Card（`mission.execute` + 実行可能8スキル + market.discover + agent-card.discover）
+- `POST /a2a` — JSON-RPC。`mission.execute` で自律ミッション起動、skillId 指定の `message/send` で単体実行、`tasks/get` でラン/ミッション照会
+- `POST /api/missions`, `GET /api/missions`, `GET /api/missions/:id` — 自律ミッションの起動・一覧・追跡
+- `GET /api/agent-stats` — 実行履歴から算出した実績統計（ランクの根拠）
+- `GET /api/market` / `POST /api/recommend` / `POST /api/agent-card/discover` — カタログ・戦略サマリ・Agent Card 取り込み
 - `GET|POST /api/hires`, `DELETE /api/hires/:agentId` — 雇用管理
-- `GET /api/agent-jobs` — 実行可能エージェントのカタログ
-- `POST /api/agent-runs`, `GET /api/agent-runs`, `GET /api/agent-runs/:id` — 実行ランの起動・一覧・照会
+- `GET /api/agent-jobs`, `POST /api/agent-runs`, `GET /api/agent-runs`, `GET /api/agent-runs/:id` — 単体ランの起動・一覧・照会
 - `POST /api/ops-agent/incident-drill` — 模擬インシデントを実ログとして Cloud Logging に注入（SREドリル用、1分1回）
 
 ## Configuration
@@ -66,13 +80,13 @@
 | `OPS_RUN_STORE` | `memory` 指定で Firestore を使わない | project があれば firestore |
 | `PUBLIC_BASE_URL` | 自己プローブ・A2A委任の基準URL | リクエストヘッダーから推定 |
 
-どちらの認証も無い場合、8エージェントの実行APIは 503 を返します（UIの市場・推薦はローカル推論で動作）。
+どちらの認証も無い場合、ミッションと8エージェントの実行APIは 503 を返します（UIの名鑑・Agent Card 取り込みは動作）。
 
 ## Local Development
 
 ```bash
 npm install
-npm run dev            # http://localhost:8080 (Gemini未設定: 市場UIのみ)
+npm run dev            # http://localhost:8080
 ```
 
 実行エージェントまで動かす場合（Vertex AI + ADC、`docs/infra.md` のプロジェクトを使用）:
@@ -88,7 +102,7 @@ export GOOGLE_CLOUD_LOCATION=asia-northeast1
 npm run dev
 ```
 
-Gemini API キーを使う場合は、`GEMINI_API_KEY` をシェルに export してから `npm run dev` を起動します（値のハードコード・コミットは禁止）。
+Gemini API キーを使う場合は、`GEMINI_API_KEY` をシェルに export してから `npm run dev` を起動します（値のハードコード・コミットは禁止）。ローカルで Firestore を汚したくない場合は `OPS_RUN_STORE=memory` を併用します。
 
 ## Quality Gates
 
@@ -97,52 +111,3 @@ make q.check               # typecheck + test
 make q.build               # 本番ビルド (asset budget 検証含む)
 make q.check-architecture  # SSOT ファイル + workflow 検証項目の存在確認
 ```
-
-## GitHub Actions
-
-- **CI** (`ci.yml`): push / PR で typecheck / test / build / architecture check — <https://github.com/buddypia/DevOps-AIAgent/actions/workflows/ci.yml>
-- **Deploy Cloud Run** (`deploy-cloud-run.yml`): 手動実行。Workload Identity Federation で Cloud Build を叩き、デプロイ後に公開URLの実サーフェス（healthz / Agent Card の実行8スキル / A2A契約）を検証
-- **Verify Public Proof** (`verify-public-proof.yml`): 手動実行。Secrets 不要で公開URLの実サーフェスだけを検証
-
-```bash
-gh workflow run deploy-cloud-run.yml --ref main \
-  -f region=asia-northeast1 \
-  -f service=a2a-agent-marketplace \
-  -f repository=cloud-run-source-deploy \
-  -f target_url=https://a2a-agent-marketplace-nxbw7of6cq-an.a.run.app
-
-gh workflow run verify-public-proof.yml --ref main \
-  -f target_url=https://a2a-agent-marketplace-nxbw7of6cq-an.a.run.app
-```
-
-Deploy 用 secrets（`GCP_PROJECT_ID` / `GCP_WORKLOAD_IDENTITY_PROVIDER` / `GCP_DEPLOY_SERVICE_ACCOUNT`）の初期設定は `scripts/bootstrap_github_actions_deploy.sh` を参照。
-
-## Cloud Run
-
-Deployed URL: <https://a2a-agent-marketplace-nxbw7of6cq-an.a.run.app>
-
-```bash
-gcloud builds submit --config cloudbuild.yaml \
-  --project sixth-oath-502008-u3 \
-  --substitutions _REGION=asia-northeast1,_SERVICE=a2a-agent-marketplace,_REPOSITORY=cloud-run-source-deploy
-```
-
-またはローカル Docker（`GEMINI_API_KEY` をシェルに export してから）:
-
-```bash
-docker build -t a2a-agent-marketplace .
-docker run --rm -p 8080:8080 --env GEMINI_API_KEY a2a-agent-marketplace
-```
-
-本番は APIキーを使わず、Cloud Run の実行サービスアカウント（`agent-market-runtime`）+ Vertex AI で認証します（`cloudbuild.yaml` — シークレット不要）。インフラ構成・IAM・移行手順は [docs/infra.md](docs/infra.md) を参照。
-
-## IP Allowlist
-
-固定IPと楽天モバイル帯のallowlistを持ちますが、審査員と GitHub Actions から開けることを優先し既定は `monitor` mode（遮断しない）です。非公開デモ時のみ `IP_ALLOWLIST_MODE=strict` を設定します。
-
-## Submission
-
-- 公開GitHub: <https://github.com/buddypia/DevOps-AIAgent>
-- Cloud Run: <https://a2a-agent-marketplace-nxbw7of6cq-an.a.run.app>
-- 公開CI: <https://github.com/buddypia/DevOps-AIAgent/actions/workflows/ci.yml>
-- ProtoPedia タグ: `findy_hackathon`
