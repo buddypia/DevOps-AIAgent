@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Activity, ShieldCheck, Siren } from "lucide-react";
+
+import AgentAvatar from "./AgentAvatar.js";
 
 type AgentJobMeta = {
   agentId: string;
@@ -32,7 +34,7 @@ type OpsRun = {
   agentId: string;
   targetService: string;
   input?: string;
-  trigger: "web" | "a2a";
+  trigger: "web" | "a2a" | "mission";
   status: "queued" | "running" | "completed" | "failed";
   phases: RunPhase[];
   evidenceCount: number;
@@ -72,10 +74,13 @@ function StatusBadge({ status }: { status: OpsRun["status"] }) {
 }
 
 interface OpsAgentConsoleProps {
-  projectBrief: string;
+  // 親からの更新シグナル (ミッション完了時など) でラン一覧を再取得する
+  refreshSignal: number;
+  // 手動ランが完了した際に親へ通知 (実績統計の更新)
+  onRunSettled: () => void;
 }
 
-export default function OpsAgentConsole({ projectBrief }: OpsAgentConsoleProps) {
+export default function OpsAgentConsole({ refreshSignal, onRunSettled }: OpsAgentConsoleProps) {
   const [jobs, setJobs] = useState<AgentJobMeta[]>([]);
   const [hiredIds, setHiredIds] = useState<Set<string>>(new Set());
   const [runs, setRuns] = useState<OpsRun[]>([]);
@@ -91,7 +96,7 @@ export default function OpsAgentConsole({ projectBrief }: OpsAgentConsoleProps) 
   const hasActiveRun = runs.some((run) => run.status === "queued" || run.status === "running");
   const hired = selectedJob ? hiredIds.has(selectedJob.agentId) : false;
 
-  const inputValue = selectedJob ? (inputValues[selectedJob.agentId] ?? (selectedJob.inputKind === "text" ? projectBrief : "")) : "";
+  const inputValue = selectedJob ? (inputValues[selectedJob.agentId] ?? "") : "";
 
   const refresh = useCallback(async () => {
     try {
@@ -125,6 +130,18 @@ export default function OpsAgentConsole({ projectBrief }: OpsAgentConsoleProps) 
     }, 2500);
     return () => clearInterval(timer);
   }, [hasActiveRun, refresh]);
+
+  // 親からの更新シグナル (ミッションがランを生成した後など)
+  useEffect(() => {
+    if (refreshSignal > 0) void refresh();
+  }, [refreshSignal, refresh]);
+
+  // 手動ランの完了検知 → 親の実績統計を更新
+  const wasActiveRef = useRef(false);
+  useEffect(() => {
+    if (wasActiveRef.current && !hasActiveRun) onRunSettled();
+    wasActiveRef.current = hasActiveRun;
+  }, [hasActiveRun, onRunSettled]);
 
   async function handleToggleHire() {
     if (!selectedJob) return;
@@ -190,7 +207,7 @@ export default function OpsAgentConsole({ projectBrief }: OpsAgentConsoleProps) 
       <div className="ops-console-head">
         <div>
           <h3>
-            <Activity size={16} /> エージェント実行コンソール — 8体すべて本物の実行
+            <Activity size={16} /> 8体すべて、本物のシステムに対して実行
           </h3>
           <p className="ops-console-sub">
             全エージェント共通の実パイプライン: 実証拠の収集 → Gemini maker → 引用ゲート(証拠ID照合) → 独立checker → Firestore記録。レート制限・時間予算のハードストップ付き。
@@ -207,6 +224,7 @@ export default function OpsAgentConsole({ projectBrief }: OpsAgentConsoleProps) 
             style={{ borderColor: selectedAgentId === job.agentId ? job.color : undefined }}
             onClick={() => setSelectedAgentId(job.agentId)}
           >
+            <AgentAvatar agentId={job.agentId} name={job.name} color={job.color} size={22} />
             <span className="ops-agent-dot" style={{ background: hiredIds.has(job.agentId) ? job.color : "transparent", borderColor: job.color }} />
             {job.name}
           </button>
@@ -287,8 +305,8 @@ export default function OpsAgentConsole({ projectBrief }: OpsAgentConsoleProps) 
               <StatusBadge status={run.status} />
               <span>{jobByAgent.get(run.agentId)?.name ?? run.agentId}</span>
               <span className="ops-run-chip-meta">
-                {new Date(run.startedAt).toLocaleTimeString("ja-JP")}・{run.trigger === "a2a" ? "A2A" : "Web"}・{run.findings.filter((f) => f.accepted).length}
-                件受入
+                {new Date(run.startedAt).toLocaleTimeString("ja-JP")}・{run.trigger === "a2a" ? "A2A" : run.trigger === "mission" ? "Mission" : "Web"}・
+                {run.findings.filter((f) => f.accepted).length}件受入
               </span>
             </button>
           ))}
