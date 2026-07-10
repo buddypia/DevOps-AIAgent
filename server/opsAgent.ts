@@ -102,7 +102,7 @@ export function redactSensitiveText(text: string): string {
   return out;
 }
 
-type RawLogEntry = {
+export type RawLogEntry = {
   insertId?: string;
   timestamp?: string;
   severity?: string;
@@ -139,8 +139,10 @@ const MAX_EVIDENCE_ENTRIES = 60;
 
 export type EvidenceFetcher = (args: { service: string; project?: string; lookbackMinutes: number }) => Promise<LogEvidence[]>;
 
-export function createLoggingEvidenceFetcher(config: OpsConfig, auth: GoogleAuth = new GoogleAuth({ scopes: "https://www.googleapis.com/auth/cloud-platform" })): EvidenceFetcher {
-  async function listEntries(project: string | undefined, filter: string, pageSize: number): Promise<RawLogEntry[]> {
+export type LogLister = (project: string | undefined, filter: string, pageSize: number) => Promise<RawLogEntry[]>;
+
+export function createLogLister(auth: GoogleAuth = new GoogleAuth({ scopes: "https://www.googleapis.com/auth/cloud-platform" })): LogLister {
+  return async (project, filter, pageSize) => {
     const token = await auth.getAccessToken();
     const response = await fetch("https://logging.googleapis.com/v2/entries:list", {
       method: "POST",
@@ -155,8 +157,10 @@ export function createLoggingEvidenceFetcher(config: OpsConfig, auth: GoogleAuth
     if (!response.ok) throw new Error(`Cloud Logging API error: ${response.status} ${(await response.text()).slice(0, 200)}`);
     const body = (await response.json()) as { entries?: RawLogEntry[] };
     return body.entries ?? [];
-  }
+  };
+}
 
+export function createLoggingEvidenceFetcher(config: OpsConfig, listEntries: LogLister = createLogLister()): EvidenceFetcher {
   return async ({ service, project, lookbackMinutes }) => {
     const logProject = project ?? config.project;
     const since = new Date(Date.now() - lookbackMinutes * 60_000).toISOString();
@@ -249,6 +253,7 @@ export type OpsAgentRun = {
   id: string;
   agentId: string;
   targetService: string;
+  input?: string;
   trigger: "web" | "a2a";
   status: "queued" | "running" | "completed" | "failed";
   phases: RunPhaseLog[];
@@ -269,19 +274,38 @@ export type OpsAgentRun = {
 
 export type RunSaver = { saveRun(run: OpsAgentRun): Promise<void> };
 
+// 証拠収集の結果 (note = evidenceフェーズの表示文言、windowMinutes = 実際に走査した時間窓)
+export type EvidenceBundle = { evidence: LogEvidence[]; note?: string; windowMinutes?: number };
+
+// 各エージェントの実行時定義: 証拠の集め方とmaker/checkerの役割だけが異なり、
+// パイプライン(ゲート/checker/記録/ハードストップ)は全エージェント共通
+export type AgentJobRuntime = {
+  makerRole: string;
+  checkerRole: string;
+  emptyNote: string;
+  collectEvidence: (input: string) => Promise<EvidenceBundle>;
+};
+
 export type OpsRunDeps = {
   config: OpsConfig;
   genAi: { client: GenAIClient; mode: "api-key" | "vertex" };
-  fetchEvidence: EvidenceFetcher;
+  job: AgentJobRuntime;
   store: RunSaver;
   timeBudgetMs?: number;
 };
 
-export function createRun(agentId: string, targetService: string, trigger: "web" | "a2a", deps: Pick<OpsRunDeps, "config" | "genAi">): OpsAgentRun {
+export function createRun(
+  agentId: string,
+  targetService: string,
+  trigger: "web" | "a2a",
+  deps: Pick<OpsRunDeps, "config" | "genAi">,
+  input?: string
+): OpsAgentRun {
   return {
     id: randomUUID(),
     agentId,
     targetService,
+    input: input ? redactSensitiveText(input).slice(0, 600) : undefined,
     trigger,
     status: "queued",
     phases: [],
@@ -310,8 +334,8 @@ function addUsage(run: OpsAgentRun, config: OpsConfig, usage?: { promptTokenCoun
   );
 }
 
-export async function executeOpsAgentRun(run: OpsAgentRun, deps: OpsRunDeps): Promise<OpsAgentRun> {
-  const { config, genAi, fetchEvidence, store } = deps;
+export async function executeAgentRun(run: OpsAgentRun, deps: OpsRunDeps): Promise<OpsAgentRun> {
+  const { config, genAi, job, store } = deps;
   const deadline = Date.now() + (deps.timeBudgetMs ?? 55_000);
   const phase = async (name: string, detail: string, status: "done" | "error" = "done") => {
     run.phases.push({ phase: name, status, detail, at: new Date().toISOString() });
@@ -325,47 +349,45 @@ export async function executeOpsAgentRun(run: OpsAgentRun, deps: OpsRunDeps): Pr
     run.status = "running";
     await store.saveRun(run);
 
-    // ① 発見 — 実Cloud Loggingから証拠収集 (allowlist の project/service 指定があれば当該プロジェクトを参照)
-    const target = resolveTarget(config, run.targetService);
-    let evidence = await fetchEvidence({ service: run.targetService, project: target.project, lookbackMinutes: config.lookbackMinutes });
-    if (evidence.length === 0) {
-      evidence = await fetchEvidence({ service: run.targetService, project: target.project, lookbackMinutes: 1440 });
-      run.evidenceWindowMinutes = 1440;
-    }
+    // ① 発見 — job固有の実証拠収集 (実ログ/実API/実HTML等。engineは収集方法を知らない)
+    const bundle = await job.collectEvidence(run.input ?? "");
+    const evidence = bundle.evidence;
+    if (bundle.windowMinutes) run.evidenceWindowMinutes = bundle.windowMinutes;
     run.evidenceCount = evidence.length;
     run.evidenceSample = evidence.slice(0, 12);
-    await phase("evidence", `Cloud Loggingから実ログ ${evidence.length} 件を取得 (project: ${target.project ?? "-"}, ${run.evidenceWindowMinutes}分窓, redaction適用)`);
+    await phase("evidence", bundle.note ?? `実証拠 ${evidence.length} 件を取得 (redaction適用)`);
     checkDeadline();
 
     if (evidence.length === 0) {
       run.serviceHealth = "unknown";
-      run.summary = `対象サービス ${run.targetService} のログが直近24時間に存在しないため、トリアージ対象がありません。`;
+      run.summary = job.emptyNote;
       run.status = "completed";
       run.finishedAt = new Date().toISOString();
       await phase("decide", "証拠ゼロのため完了 (Geminiは呼び出さずコスト0)");
       return run;
     }
 
-    // ② maker — Geminiによる実トリアージ
+    // ② maker — Geminiによる実分析 (役割はjobが定義)
     const makerPrompt = [
-      "You are an SRE triage agent for a Cloud Run service. Analyze ONLY the log evidence below.",
+      job.makerRole,
       "Return strict JSON only. Cite ONLY ids that appear in [brackets]. Never invent ids.",
       "",
-      `Target service: ${run.targetService}`,
-      "Log evidence:",
+      `Target: ${run.targetService}`,
+      run.input ? `User input:\n${run.input}\n` : "",
+      "Evidence:",
       evidenceBlock(evidence),
       "",
       "JSON schema:",
       JSON.stringify({
         serviceHealth: "healthy|degraded|critical",
-        summary: "1-3 sentence Japanese summary of service state",
+        summary: "1-3 sentence Japanese summary",
         findings: [
           {
             title: "short Japanese title",
             severity: "critical|high|medium|low",
-            hypothesis: "probable cause in Japanese",
-            recommendedAction: "concrete next action in Japanese (gcloud command if applicable)",
-            citedLogIds: ["insertId from evidence"]
+            hypothesis: "rationale in Japanese, grounded in the cited evidence",
+            recommendedAction: "concrete next action in Japanese",
+            citedLogIds: ["evidence id from [brackets]"]
           }
         ]
       })
@@ -395,11 +417,11 @@ export async function executeOpsAgentRun(run: OpsAgentRun, deps: OpsRunDeps): Pr
     if (maker.findings.length > 0) {
       try {
         const checkerPrompt = [
-          "You are an INDEPENDENT SRE reviewer. You did not write these findings.",
-          "For each finding, verdict whether the log evidence supports it. Refute anything unsupported.",
+          job.checkerRole,
+          "You did not write these findings. For each finding, verdict whether the evidence supports it. Refute anything unsupported.",
           "Return strict JSON only.",
           "",
-          "Log evidence:",
+          "Evidence:",
           evidenceBlock(evidence),
           "",
           "Findings to review:",

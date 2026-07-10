@@ -1551,3 +1551,66 @@ pre {
   padding: 3px 0;
   border-bottom: 1px dotted var(--line);
 }
+
+/* マルチエージェント実行コンソール */
+.ops-agent-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ops-agent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  padding: 6px 13px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.ops-agent-chip.is-active {
+  background: var(--panel-strong);
+  box-shadow: 0 0 0 2px rgba(23, 33, 38, 0.06);
+}
+
+.ops-agent-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid;
+  flex: 0 0 auto;
+}
+
+.ops-job-panel {
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: grid;
+  gap: 10px;
+  background: var(--panel-strong);
+}
+
+.ops-job-title {
+  font-size: 13.5px;
+}
+
+.ops-job-input {
+  display: grid;
+  gap: 5px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.ops-job-input textarea,
+.ops-job-input input {
+  font: inherit;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--panel);
+  resize: vertical;
+}
