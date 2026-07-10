@@ -14,6 +14,7 @@
 - **参加資格**: 日本居住18歳以上、個人/チーム可。SNSハッシュタグ `#findy_hackathon`
 
 詳細は `docs/01_hackathon/devops_ai_agent_hackathon_notion.md` を参照。
+インフラ構成や移行方法については [docs/infra.md](file:///Users/a13973/dev/buddypia/hackathon/DevOps×AIAgent/docs/infra.md) を参照。
 
 ---
 
