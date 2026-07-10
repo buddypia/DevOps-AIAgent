@@ -311,6 +311,15 @@ pre {
   font-size: 13px;
 }
 
+.agent-avatar-img {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  object-fit: cover;
+  border: 1.5px solid transparent;
+}
+
 .agent-name {
   font-size: 13px;
   font-weight: 700;

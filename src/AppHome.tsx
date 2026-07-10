@@ -165,9 +165,13 @@ export default function AppHome() {
                 return (
                   <div key={agent.id} className="agent-card" style={{ borderColor: agent.color }}>
                     <div className="agent-card-head">
-                      <span className="agent-avatar" style={{ background: agent.color }}>
-                        {agent.name.slice(0, 1)}
-                      </span>
+                      {agent.avatarUrl ? (
+                        <img className="agent-avatar-img" src={agent.avatarUrl} alt={agent.name} style={{ borderColor: agent.color }} />
+                      ) : (
+                        <span className="agent-avatar" style={{ background: agent.color }}>
+                          {agent.name.slice(0, 1)}
+                        </span>
+                      )}
                       <div>
                         <p className="agent-name">{agent.name}</p>
                         <p className="agent-headline">{agent.headline}</p>
