@@ -1,0 +1,37 @@
+{
+  "version": "1.1.0",
+  "updated_at": "2026-07-01",
+  "description": "GENERIC worktree-policy — transplant-bundle(git-worktree-isolation)이 외부 프로젝트의 .claude/config/worktree-policy.json 으로 이식하는 범용 기본값. brief2dev 자체 정책(.claude/config/worktree-policy.json — .brief2dev/**, output/** 등 brief2dev-specific tier1)과 달리, 어느 ecosystem 에도 적용 가능한 cross-project git-ignored 런타임 디렉토리 + settings.json(hook 등록 codegen 특수, git-tracked 예외)만 Tier 1(직접 편집 허용)로 둔다. 100% Worktree Paradigm 은 동일: 그 외 git-tracked 자산은 Tier 3(worktree 강제)이라 보호 branch 에서 직접 편집 시 worktree-policy-guard 가 deny 한다(README.md 포함, `.claude/config/**` 자신 포함 — 의도된 동작. brief2dev 자체 정책과 동일 파라다임, 2026-07-01 정정 — 이전 버전은 .claude/settings.json 이 tier1 에 없어 이식 직후 hook 등록 편집이 막히는 self-lock 갭이 있었다). 외부 프로젝트는 자기 git-ignored 산출물 디렉토리에 맞춰 tier1 patterns 를, 기본 branch 명에 맞춰 protected_branches 를 가감하면 된다. worktree 격리가 불필요하면 worktree-policy-guard 를 settings 에 등록하지 않으면 된다.",
+  "protected_branches": ["main", "master"],
+  "tiers": {
+    "tier1_main_allowed": {
+      "description": "main 직접 Edit/Write 허용 — git-ignored 런타임/빌드 산출물 + settings.json(hook 등록 codegen 특수) 한정(PR 대상 아님 또는 codegen 관리 → split-brain 무관). 아래는 ecosystem-중립 공통 디렉토리. 프로젝트별 산출물 경로는 소유자가 가감.",
+      "patterns": [
+        ".tmp/**",
+        ".cache/**",
+        "tmp/**",
+        "node_modules/**",
+        "dist/**",
+        "build/**",
+        "out/**",
+        "coverage/**",
+        "target/**",
+        ".next/**",
+        ".nuxt/**",
+        ".svelte-kit/**",
+        ".turbo/**",
+        ".claude/settings.json",
+        ".claude/settings.local.json"
+      ]
+    }
+  },
+  "escape_hatch": {
+    "branch_patterns": ["hotfix/*", "hotfix-*"],
+    "description": "긴급 수정 또는 hook/worktree 자체 망가짐 시 비상구"
+  },
+  "_adapt": {
+    "purpose": "외부 프로젝트 적응 가이드(가드는 본 키를 읽지 않음 — 안내 전용).",
+    "how": "본 프로젝트의 git-ignored 산출물 디렉토리(.gitignore 참조)를 tier1_main_allowed.patterns 에 추가하라. git-tracked 소스/설정(본 정책 파일 `.claude/config/worktree-policy.json` 자신 포함)은 Tier 3(자동) 으로 두어 worktree 강제 — settings.json 만 codegen 특수 예외. main 에서 README.md 등 tracked 파일 편집이 deny 되는 것은 worktree paradigm 의 의도된 동작이다.",
+    "disable": "worktree 격리가 불필요하면 외부 settings.json/hook-registry 에 worktree-policy-guard 를 등록하지 않으면 된다(파일만 복사돼도 미등록 시 no-op)."
+  }
+}

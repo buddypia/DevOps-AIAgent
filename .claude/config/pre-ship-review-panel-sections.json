@@ -1,0 +1,204 @@
+{
+  "version": "1.0.0",
+  "updated_at": "2026-07-02",
+  "description": "GENERIC Pre-Ship Human Review Panel 섹션 템플릿 — transplant-bundle(git-worktree-isolation)이 외부 프로젝트로 이식하는 customizable seed. brief2dev 자신은 이 JSON 을 읽지 않는다(옵션 C — 라이브 경로는 .cli/lib/worktree-ship-report.mjs#DEFAULT_REVIEW_SECTIONS JS 상수 고정 사용). `sections` 배열은 .cli/lib/section-template-renderer.mjs#renderTemplateFromSections 와 동일 스키마(static/checklist_group/field_list/fenced_block/table 5 블록 타입). DEFAULT_REVIEW_SECTIONS 와 byte-exact 동일 내용(tests/unit/worktree-ship-report.test.mjs 의 drift 회귀 테스트가 고정) — 섹션 수·문구·표 컬럼을 대상 프로젝트가 이식 후 자유롭게 가감해도 렌더러 계약은 그대로 유지된다.",
+  "sections": [
+    {
+      "heading": "## 1. 승인 요청",
+      "blocks": [
+        {
+          "type": "static",
+          "lines": [
+            "다음 worktree 작업이 완료된 상태입니다.",
+            "내용을 확인하고, merge / cleanup을 진행해도 좋을지 승인해 주십시오.",
+            "선택해 주세요:",
+            "- 승인하고 진행",
+            "- 수정 필요",
+            "- 중단"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "## 2. 상태 요약",
+      "blocks": [
+        {
+          "type": "field_list",
+          "fields": [
+            {
+              "label": "Worktree path",
+              "key": "worktreePath"
+            },
+            {
+              "label": "Branch",
+              "key": "branch"
+            },
+            {
+              "label": "Base branch",
+              "key": "baseBranch"
+            },
+            {
+              "label": "PLAN.md",
+              "key": "planPath"
+            },
+            {
+              "label": "PLAN.md checklist",
+              "key": "planChecklist"
+            },
+            {
+              "label": "Worktree status",
+              "key": "worktreeStatus"
+            },
+            {
+              "label": "Quality Gate",
+              "key": "qualityGate"
+            },
+            {
+              "label": "Test / verify",
+              "key": "testVerify"
+            },
+            {
+              "label": "Draft PR",
+              "key": "draftPr"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "## 3. Worktree 커밋 정보",
+      "blocks": [
+        {
+          "type": "fenced_block",
+          "content_key": "gitLog",
+          "fallback": "<git log --oneline origin/main..HEAD>",
+          "trim": true
+        },
+        {
+          "type": "field_list",
+          "fields": [
+            {
+              "label": "Commit count",
+              "key": "commitCount"
+            },
+            {
+              "label": "Commit range",
+              "key": "commitRange"
+            },
+            {
+              "label": "Latest commit",
+              "key": "latestCommit"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "## 4. PR Draft",
+      "blocks": [
+        {
+          "type": "field_list",
+          "fields": [
+            {
+              "label": "PR URL",
+              "key": "prUrl"
+            },
+            {
+              "label": "PR status",
+              "key": "prStatus"
+            },
+            {
+              "label": "Merge status",
+              "key": "mergeStatus"
+            },
+            {
+              "label": "CI status",
+              "key": "ciStatus"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "## 5. 수정 / 추가된 파일",
+      "blocks": [
+        {
+          "type": "fenced_block",
+          "content_key": "changedFilesTree",
+          "fallback": "(수집 필요)",
+          "trim": false
+        }
+      ]
+    },
+    {
+      "heading": "## 6. 변경 내용",
+      "blocks": [
+        {
+          "type": "table",
+          "rows_key": "changedRows",
+          "header_lines": [
+            " Path               종류    역할    변경 이유",
+            "━━━━━━  ━━━━━━━━━━━━━━━━━  ━━━━━━  ━━━━━━━━━━"
+          ],
+          "row_template": " {path}    {kind}    리뷰 시 기입    리뷰 시 기입",
+          "empty_rows": [
+            {
+              "path": "(수집 필요)",
+              "kind": "NEW/EDIT/DELETE"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "## 7. 수정한 이유",
+      "blocks": [
+        {
+          "type": "static",
+          "lines": ["- 배경:", "- 해결한 문제:", "- 채택한 방침:", "- 사용자 요구사항과의 대응:"]
+        }
+      ]
+    },
+    {
+      "heading": "## 8. 트레이드오프 (Trade-off)",
+      "blocks": [
+        {
+          "type": "static",
+          "lines": ["- 채택안:", "- 대체안:", "- 채택 이유:", "- 희생한 점:", "- 향후 재검토 조건:"]
+        }
+      ]
+    },
+    {
+      "heading": "## 9. 리스크 / 롤백 (Rollback)",
+      "blocks": [
+        {
+          "type": "static",
+          "lines": ["- 영향 범위:", "- 기지(알려진) 리스크:", "- 미검증 사항:", "- Rollback 방법:"]
+        }
+      ]
+    },
+    {
+      "heading": "## 10. 세션 내 남은 작업",
+      "blocks": [
+        {
+          "type": "static",
+          "lines": ["- 없음 / 있음:", "- 다음에 필요한 작업:"]
+        }
+      ]
+    },
+    {
+      "heading": "## 11. 세션 내 문제점 및 개선점",
+      "blocks": [
+        {
+          "type": "static",
+          "lines": ["- 문제점:", "- 개선안:", "- 다음 작업 시 주의사항:"]
+        }
+      ]
+    }
+  ],
+  "_adapt": {
+    "purpose": "외부 프로젝트 적응 가이드(brief2dev 코드는 본 키를 읽지 않음 — 안내 전용).",
+    "how": "섹션 수(brief2dev 컨벤션은 11)는 강제 아님 — heading/블록을 자유롭게 가감하라. field_list 의 값은 항상 valueOrDash 처리(빈 값 → '-'). table 의 row_template 은 `{key}` placeholder 를 rows_key 배열의 각 객체 필드로 치환한다.",
+    "wiring": "이 JSON 은 현재 어떤 코드도 자동으로 읽지 않는다. 실제로 적용하려면 대상 프로젝트의 pre-ship-review-guard.mjs(buildPreShipApprovalReview 호출부)에서 이 파일을 읽어 `buildPreShipApprovalReview({ ...데이터, sections: <이 JSON의 sections 배열> })` 로 넘기도록 직접 wiring 하거나, 이식된 worktree-ship-report.mjs 의 DEFAULT_REVIEW_SECTIONS 상수를 이 JSON 내용으로 바로 교체하라."
+  }
+}
