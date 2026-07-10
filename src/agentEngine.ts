@@ -1,6 +1,5 @@
 import { CAPABILITY_LABELS, MARKET_AGENTS } from "./market.js";
 import type {
-  A2ATimelineItem,
   AgentFit,
   CapabilityKey,
   GeminiRecommendation,
@@ -192,47 +191,6 @@ function selectWithinBudget(ranked: AgentFit[], budget: number) {
   return selected;
 }
 
-export function createA2ATimeline(selected: MarketAgent[]): A2ATimelineItem[] {
-  const lead = selected.find((agent) => agent.id === "market-broker") ?? selected[0];
-  if (!lead) return [];
-
-  const hired = selected.filter((agent) => agent.id !== lead.id);
-  const delegation = hired.length > 0 ? hired.map((agent) => agent.handle).join(" / ") : "候補エージェント";
-
-  return [
-    {
-      actor: lead.name,
-      verb: "discover",
-      payload: "/.well-known/agent-card.json から候補の能力と入力形式を確認",
-      status: "done"
-    },
-    {
-      actor: lead.name,
-      verb: "negotiate",
-      payload: `予算・MCP成熟度・A2AスキルIDで ${delegation} を選定`,
-      status: "done"
-    },
-    {
-      actor: delegation,
-      verb: "message/send",
-      payload: "プロジェクト弱点、希望アウトカム、検証コマンドをJSONで委任",
-      status: hired.length > 0 ? "running" : "ready"
-    },
-    {
-      actor: "Gemini Strategist",
-      verb: "review",
-      payload: "Gemini 3.5 Flashで勝ち筋・残リスク・30秒ピッチへ圧縮",
-      status: selected.some((agent) => agent.id === "gemini-strategist") ? "running" : "ready"
-    },
-    {
-      actor: "Cloud Run SRE",
-      verb: "ship",
-      payload: "Cloud Runの公開URL、ヘルスチェック、ログ確認を提出物へ接続",
-      status: selected.some((agent) => agent.id === "cloud-run-sre") ? "running" : "ready"
-    }
-  ];
-}
-
 export function recommendSquad(brief: string, selectedIds: string[] = [], budget = 140, agentCatalog: MarketAgent[] = MARKET_AGENTS): Recommendation {
   const profile = profileProject(brief);
   const ranked = rankAgents(brief, selectedIds, agentCatalog);
@@ -255,7 +213,6 @@ export function recommendSquad(brief: string, selectedIds: string[] = [], budget
     before,
     after,
     uplift: subtractScore(after, before),
-    a2aTimeline: createA2ATimeline(selected),
     devopsPlan: [
       "Agent Cardを公開し、市場ブローカーが能力・MCP成熟度・価格を読み取る",
       "Gemini 3.5 Flashでプロジェクトブリーフを診断し、雇うべき能力を更新する",

@@ -66,13 +66,6 @@ export type SquadScore = {
   total: number;
 };
 
-export type A2ATimelineItem = {
-  actor: string;
-  verb: string;
-  payload: string;
-  status: "ready" | "running" | "done";
-};
-
 export type Recommendation = {
   profile: ProjectProfile;
   selected: MarketAgent[];
@@ -82,7 +75,6 @@ export type Recommendation = {
   before: SquadScore;
   after: SquadScore;
   uplift: SquadScore;
-  a2aTimeline: A2ATimelineItem[];
   devopsPlan: string[];
   mcpMatrix: Array<{ agent: string; mcp: string; maturity: number; tools: string[] }>;
   headline: string;
