@@ -1,7 +1,7 @@
 export const SUBMISSION_PROOF = {
   publicGitHubUrl: "https://github.com/buddypia/DevOps-AIAgent",
   ciWorkflowUrl: "https://github.com/buddypia/DevOps-AIAgent/actions/workflows/ci.yml",
-  deployedUrl: "https://a2a-agent-marketplace-rfyriohodq-an.a.run.app",
+  deployedUrl: "https://a2a-agent-marketplace-nxbw7of6cq-an.a.run.app",
   protopediaUrl: "",
   videoUrl: ""
 } as const;

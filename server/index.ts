@@ -15,8 +15,10 @@ import { buildWinningStrategy } from "../src/strategy.js";
 import { SUBMISSION_PROOF } from "../src/submission.js";
 import type { GeminiRecommendation } from "../src/types.js";
 
-import { createGenAiClient, createLoggingEvidenceFetcher, createRun, executeOpsAgentRun, getOpsConfig, resolveTarget } from "./opsAgent.js";
+import { AGENT_JOBS, A2A_SKILL_TO_AGENT, createDefaultReadTextFile } from "./agentJobs.js";
+import { createGenAiClient, createLogLister, createLoggingEvidenceFetcher, createRun, executeAgentRun, getOpsConfig } from "./opsAgent.js";
 import { createRunStore } from "./runStore.js";
+import type { JobContext } from "./agentJobs.js";
 import type { OpsAgentRun } from "./opsAgent.js";
 
 const app = express();
@@ -27,11 +29,13 @@ const model = process.env.GEMINI_MODEL || "gemini-3.5-flash";
 const opsConfig = getOpsConfig();
 const opsGenAi = createGenAiClient(opsConfig);
 const runStore = createRunStore(opsConfig.project, process.env.OPS_RUN_STORE);
-const fetchOpsEvidence = opsConfig.project ? createLoggingEvidenceFetcher(opsConfig) : null;
+const logLister = opsConfig.project ? createLogLister() : null;
+const fetchOpsEvidence = opsConfig.project && logLister ? createLoggingEvidenceFetcher(opsConfig, logLister) : null;
+const readTextFile = createDefaultReadTextFile();
 const OPS_AGENT_ID = "cloud-run-sre";
 
-// ハードストップ: ラン生成レート制限 (10分窓で最大6ラン)
-const RUN_RATE_LIMIT = { windowMs: 10 * 60_000, max: 6 };
+// ハードストップ: ラン生成レート制限 (10分窓で最大12ラン — broker委任の連鎖分を含む)
+const RUN_RATE_LIMIT = { windowMs: 10 * 60_000, max: 12 };
 const recentRunStarts: number[] = [];
 function runRateLimited(): boolean {
   const now = Date.now();
@@ -41,22 +45,49 @@ function runRateLimited(): boolean {
   return false;
 }
 
-async function startOpsRun(
+function buildJobContext(baseUrl: string): JobContext {
+  return {
+    config: opsConfig,
+    baseUrl,
+    fetchImpl: fetch,
+    fetchLoggingEvidence: fetchOpsEvidence,
+    listLogEntries: logLister,
+    listRuns: (limit) => runStore.listRuns(limit),
+    readTextFile,
+    discoverCard: discoverAgentCardFromUrl
+  };
+}
+
+async function startAgentRun(
+  agentId: string,
   trigger: "web" | "a2a",
-  targetService?: string
-): Promise<{ run?: OpsAgentRun; error?: string; status: 202 | 429 | 503 }> {
-  if (!opsGenAi || !fetchOpsEvidence) {
-    return { error: "実行基盤が未構成です (Gemini APIキー / Vertex ADC / GOOGLE_CLOUD_PROJECT を確認)", status: 503 };
+  input: string,
+  baseUrl: string
+): Promise<{ run?: OpsAgentRun; error?: string; status: 202 | 400 | 429 | 503 }> {
+  const job = AGENT_JOBS[agentId];
+  if (!job) {
+    return { error: `エージェント ${agentId} は実行未対応です`, status: 400 };
+  }
+  if (!opsGenAi) {
+    return { error: "実行基盤が未構成です (Gemini APIキー / Vertex ADC を確認)", status: 503 };
   }
   if (runRateLimited()) {
     return { error: "レート制限: 10分あたりの実行上限に達しました (ハードストップ)", status: 429 };
   }
-  const target = resolveTarget(opsConfig, targetService).service;
-  const run = createRun(OPS_AGENT_ID, target, trigger, { config: opsConfig, genAi: opsGenAi });
+  const ctx = buildJobContext(baseUrl);
+  const run = createRun(agentId, job.runTarget(opsConfig, input), trigger, { config: opsConfig, genAi: opsGenAi }, input || undefined);
   await runStore.saveRun(run);
-  void executeOpsAgentRun(run, { config: opsConfig, genAi: opsGenAi, fetchEvidence: fetchOpsEvidence, store: runStore }).catch((error) =>
-    console.error("ops run failed", error)
-  );
+  void executeAgentRun(run, {
+    config: opsConfig,
+    genAi: opsGenAi,
+    store: runStore,
+    job: {
+      makerRole: job.makerRole,
+      checkerRole: job.checkerRole,
+      emptyNote: job.emptyNote,
+      collectEvidence: (runInput) => job.collectEvidence(ctx, runInput)
+    }
+  }).catch((error) => console.error("agent run failed", error));
   return { run, status: 202 };
 }
 
@@ -178,14 +209,13 @@ function agentCard(baseUrl: string) {
         description: "Cloud Run health/latency/エラー率から継続かrollbackかを判断する。",
         tags: ["ops", "cloud-run"]
       },
-      {
-        id: "ops.triage.execute",
-        name: "Execute real SRE triage on Cloud Run",
-        description:
-          "実Cloud RunサービスのログをCloud Logging APIから取得し、Gemini maker→引用ゲート(実ログID照合)→独立checkerの実パイプラインでトリアージする本物の実行。ランはFirestoreに永続化され、tasks/getで追跡できる。",
-        tags: ["ops", "sre", "cloud-logging", "real-run", "maker-checker"],
-        examples: ["ops.triage: a2a-agent-marketplace の直近ログをトリアージして"]
-      },
+      ...Object.values(AGENT_JOBS).map((job) => ({
+        id: job.skillId,
+        name: `${job.title} (real execution)`,
+        description: `${job.skillDescription} 実パイプライン(証拠→maker→引用ゲート→独立checker)で実行され、ランはFirestoreに永続化、tasks/getで追跡できる。`,
+        tags: ["real-run", "maker-checker", job.agentId],
+        examples: [`message/send の params.message.metadata.skillId に ${job.skillId} を指定`]
+      })),
       {
         id: "contract.issue",
         name: "Issue an agent contract",
@@ -342,7 +372,8 @@ app.get("/healthz", (_req, res) => {
     opsAgent: {
       enabled: Boolean(opsGenAi && fetchOpsEvidence),
       targetService: opsConfig.targetService,
-      runStore: runStore.backend
+      runStore: runStore.backend,
+      executableAgents: Object.keys(AGENT_JOBS).length
     },
     ipAllowlist: ipAllowlistSummary
   });
@@ -359,7 +390,8 @@ app.get("/api/healthz", (_req, res) => {
     opsAgent: {
       enabled: Boolean(opsGenAi && fetchOpsEvidence),
       targetService: opsConfig.targetService,
-      runStore: runStore.backend
+      runStore: runStore.backend,
+      executableAgents: Object.keys(AGENT_JOBS).length
     },
     ipAllowlist: ipAllowlistSummary
   });
@@ -446,6 +478,7 @@ app.post("/api/recommend", async (req, res) => {
 const HireSchema = z.object({ agentId: z.string().trim().min(1).max(64) });
 const RunCreateSchema = z.object({
   agentId: z.string().trim().min(1).max(64),
+  input: z.string().trim().max(4000).optional(),
   targetService: z
     .string()
     .trim()
@@ -499,17 +532,17 @@ app.post("/api/agent-runs", async (req, res) => {
     res.status(400).json({ error: "invalid_request", issues: parsed.error.issues });
     return;
   }
-  if (parsed.data.agentId !== OPS_AGENT_ID) {
-    res.status(400).json({ error: "unsupported_agent", message: "実実行に対応しているのは cloud-run-sre です" });
+  if (!AGENT_JOBS[parsed.data.agentId]) {
+    res.status(400).json({ error: "unsupported_agent", message: `実実行に対応しているのは ${Object.keys(AGENT_JOBS).join(", ")} です` });
     return;
   }
   try {
     const hires = await runStore.listHires();
-    if (!hires.some((hire) => hire.agentId === OPS_AGENT_ID)) {
-      res.status(403).json({ error: "not_hired", message: "先に cloud-run-sre を雇用してください" });
+    if (!hires.some((hire) => hire.agentId === parsed.data.agentId)) {
+      res.status(403).json({ error: "not_hired", message: `先に ${parsed.data.agentId} を雇用してください` });
       return;
     }
-    const started = await startOpsRun("web", parsed.data.targetService);
+    const started = await startAgentRun(parsed.data.agentId, "web", parsed.data.input ?? parsed.data.targetService ?? "", publicBaseUrl(req));
     if (!started.run) {
       res.status(started.status).json({ error: started.error });
       return;
@@ -518,6 +551,26 @@ app.post("/api/agent-runs", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : "run create failed" });
   }
+});
+
+// 実行可能エージェントのカタログ (UIのコンソールが参照)
+app.get("/api/agent-jobs", (_req, res) => {
+  const jobs = Object.values(AGENT_JOBS).map((job) => {
+    const marketAgent = MARKET_AGENTS.find((agent) => agent.id === job.agentId);
+    return {
+      agentId: job.agentId,
+      name: marketAgent?.name ?? job.agentId,
+      handle: marketAgent?.handle ?? "",
+      color: marketAgent?.color ?? "#2457a6",
+      title: job.title,
+      skillId: job.skillId,
+      inputKind: job.inputKind,
+      inputLabel: job.inputLabel,
+      inputPlaceholder: job.inputPlaceholder,
+      findingNoun: job.findingNoun
+    };
+  });
+  res.json({ jobs });
 });
 
 app.get("/api/agent-runs", async (req, res) => {
@@ -590,11 +643,12 @@ app.post("/a2a", async (req, res) => {
     return;
   }
 
-  // A2A実タスク: ops.triage スキルへの委任 = 雇用契約 + 実実行
+  // A2A実タスク: 登録スキルへの委任 = 雇用契約 + 実実行 (8エージェント対応)
   const skillId = String(req.body?.params?.message?.metadata?.skillId || "");
-  if (skillId === "ops.triage.execute" || /ops\.triage/i.test(String(text))) {
-    await runStore.saveHire(OPS_AGENT_ID).catch(() => null);
-    const started = await startOpsRun("a2a");
+  const dispatchAgentId = A2A_SKILL_TO_AGENT[skillId] ?? (/ops\.triage/i.test(String(text)) ? OPS_AGENT_ID : null);
+  if (dispatchAgentId) {
+    await runStore.saveHire(dispatchAgentId).catch(() => null);
+    const started = await startAgentRun(dispatchAgentId, "a2a", String(text).slice(0, 4000), publicBaseUrl(req));
     if (!started.run) {
       res.json({ jsonrpc: "2.0", id, error: { code: -32000, message: started.error ?? "run failed" } });
       return;
