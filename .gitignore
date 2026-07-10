@@ -35,3 +35,9 @@ artifacts/
 data/
 raw/
 
+
+# --- brief2dev transplant-bundle (auto-managed block) ---
+.worktrees/
+.cache/
+.brief2dev/
+# --- end brief2dev transplant-bundle ---

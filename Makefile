@@ -1,4 +1,4 @@
-.PHONY: help q.check q.fix q.typecheck q.test q.build q.check-architecture
+.PHONY: help q.check q.fix q.typecheck q.test q.build q.check-architecture wt.new wt.run
 
 PACKAGE_MANAGER ?= npm
 
@@ -39,3 +39,23 @@ q.check-architecture:
 	@grep -q "deploy-recovery" .github/workflows/verify-public-proof.yml
 	@grep -q "Answer Grounding" AGENTS.md || grep -q "統治" AGENTS.md || (echo "[FAIL] AGENTS.md から統治セクションが失われています" && exit 1)
 	@echo "q.check-architecture PASS"
+
+# ============================================================
+# Worktree isolation (brief2dev エコシステム由来)
+# ============================================================
+
+## 新しい worktree を作成 (例: make wt.new BR=feature/<task>)
+wt.new:
+	@if [ -z "$(BR)" ]; then \
+		echo "❌ wt.new: BR=<branch> 必須。例) make wt.new BR=feature/<task>"; \
+		exit 2; \
+	fi
+	@node .claude/scripts/worktree-new.mjs --branch $(BR) $(if $(BASE),--base $(BASE)) $(if $(DRY),--dry-run)
+
+## アクティブな worktree でコマンド実行 (CWD リダイレクション)
+wt.run:
+	@if [ -z "$(CMD)" ]; then \
+		echo "❌ wt.run: CMD=\"<command>\" 必須。例) make wt.run CMD=\"npm test\""; \
+		exit 2; \
+	fi
+	@node .claude/scripts/wt-run.mjs $(CMD)
