@@ -254,7 +254,7 @@ export type OpsAgentRun = {
   agentId: string;
   targetService: string;
   input?: string;
-  trigger: "web" | "a2a";
+  trigger: "web" | "a2a" | "mission";
   status: "queued" | "running" | "completed" | "failed";
   phases: RunPhaseLog[];
   evidenceCount: number;
@@ -297,7 +297,7 @@ export type OpsRunDeps = {
 export function createRun(
   agentId: string,
   targetService: string,
-  trigger: "web" | "a2a",
+  trigger: "web" | "a2a" | "mission",
   deps: Pick<OpsRunDeps, "config" | "genAi">,
   input?: string
 ): OpsAgentRun {
@@ -392,13 +392,25 @@ export async function executeAgentRun(run: OpsAgentRun, deps: OpsRunDeps): Promi
         ]
       })
     ].join("\n");
-    const makerResponse = await genAi.client.models.generateContent({
-      model: config.model,
-      contents: makerPrompt,
-      config: { responseMimeType: "application/json", temperature: 0.2, maxOutputTokens: 2048 }
-    });
-    addUsage(run, config, makerResponse.usageMetadata);
-    const maker = MakerOutputSchema.parse(parseModelJson(makerResponse.text ?? "{}"));
+    // thinkingを含むモデルは可視出力が途中で切れてJSON parseに失敗することがあるため、予算を広めに取り1回リトライする
+    let maker: z.infer<typeof MakerOutputSchema> | null = null;
+    let makerError: unknown;
+    for (let attempt = 0; attempt < 2 && maker === null; attempt += 1) {
+      try {
+        const makerResponse = await genAi.client.models.generateContent({
+          model: config.model,
+          contents: makerPrompt,
+          config: { responseMimeType: "application/json", temperature: 0.2, maxOutputTokens: 8192 }
+        });
+        addUsage(run, config, makerResponse.usageMetadata);
+        maker = MakerOutputSchema.parse(parseModelJson(makerResponse.text ?? "{}"));
+      } catch (error) {
+        makerError = error;
+      }
+    }
+    if (maker === null) {
+      throw makerError instanceof Error ? makerError : new Error("maker generation failed");
+    }
     run.serviceHealth = maker.serviceHealth;
     run.summary = maker.summary;
     await phase("triage", `maker(${config.model})がfindings ${maker.findings.length} 件を生成`);
@@ -433,7 +445,7 @@ export async function executeAgentRun(run: OpsAgentRun, deps: OpsRunDeps): Promi
         const checkerResponse = await genAi.client.models.generateContent({
           model: config.model,
           contents: checkerPrompt,
-          config: { responseMimeType: "application/json", temperature: 0, maxOutputTokens: 1024 }
+          config: { responseMimeType: "application/json", temperature: 0, maxOutputTokens: 4096 }
         });
         addUsage(run, config, checkerResponse.usageMetadata);
         reviews = CheckerOutputSchema.parse(parseModelJson(checkerResponse.text ?? "{}")).reviews;
