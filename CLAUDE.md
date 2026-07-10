@@ -1,12 +1,12 @@
 @AGENTS.md
 
-<!-- brief2dev-transplant:start — auto-managed block (transplant-bundle.mjs 가 재이식 시 갱신, 직접 편집 금지) -->
+<!-- brief2dev-transplant:start — auto-managed block (transplant-bundle.mjs が再移植時に更新、直接編集禁止) -->
 
-## 이식된 메커니즘 (brief2dev transplant-bundle)
+## 移植されたメカニズム (brief2dev transplant-bundle)
 
-- 이 프로젝트의 일부 자산(hook/script/skill)은 brief2dev 에서 이식되어 외부에서 유지보수된다. 인벤토리 SSOT: `.claude/.transplant-receipt.json`
-- 번들: `git-worktree-isolation` (이식 2026-07-10, v1.0)
-- receipt 의 `role: "managed"` 파일은 재이식 시 항상 최신으로 덮어써진다 — **직접 수정 금지**. 동작 조정은 `role: "customizable"` 설정 파일(재이식 시 보존됨)을 편집하거나 원본(brief2dev)에 반영한다.
-- 재이식/업그레이드: receipt 각 번들의 `reapply_command` 실행 (managed 로컬 수정 감지 + customizable 보존 내장).
+- このプロジェクトの一部資産 (hook/script/skill) は brief2dev から移植され、外部で保守されます。インベントリ SSOT: `.claude/.transplant-receipt.json`
+- バンドル: `git-worktree-isolation` (移植 2026-07-10, v1.0)
+- receipt の `role: "managed"` ファイルは再移植時に常に最新で上書きされます — **直接修正禁止**。動作調整は `role: "customizable"` 設定ファイル (再移植時保存) を編集するか、オリジナル (brief2dev) に反映します。
+- 再移植/アップグレード: receipt 各バンドルの `reapply_command` 実行 (managed ローカル修正検知 + customizable 保存内蔵)。
 
 <!-- brief2dev-transplant:end -->

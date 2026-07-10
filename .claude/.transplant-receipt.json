@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0",
-  "$comment": "brief2dev transplant-bundle 이식 receipt — 이 프로젝트에 이식된 번들 인벤토리 SSOT. role=managed 파일은 재이식 시 항상 최신으로 덮어써진다(로컬 수정 금지 — 조정은 role=customizable 파일 또는 brief2dev 원본에). role=customizable 파일은 이 프로젝트가 직접 편집하며 재이식 시 보존된다.",
+  "$comment": "brief2dev transplant-bundle 移植 receipt — このプロジェクトに移植されたバンドルのインベントリ SSOT。role=managed ファイルは再移植時に常に最新で上書きされます (ローカル修正禁止 — 調整は role=customizable ファイルまたは brief2dev オリジナルに)。role=customizable ファイルはこのプロジェクトが直接編集し、再移植時も保存されます。",
   "generated_by": "transplant-bundle.mjs",
   "bundles": {
     "git-worktree-isolation": {
-      "title": "Git/Worktree 격리 + AI 안전 git 가드 + worktree 생성 도구 (멀티 CLI)",
+      "title": "Git/Worktree 隔離 + AI 安全 git ガード + worktree 生成ツール (マルチ CLI)",
       "bundle_version": "1.0",
       "source": {
         "repo": "brief2dev",
@@ -208,47 +208,47 @@
       "target_notes": [
         {
           "id": "worktree-init-symlink-graceful",
-          "note": "worktree-init.mjs 의 `.brief2dev/system` symlink 는 brief2dev cross-aidea SSOT 공유용. 외부 프로젝트에 `.brief2dev/system` 이 없으면 init 이 graceful 처리(main system dir 부재 분기) — 외부에선 PLAN.md 자동 생성만 유효하고 symlink 단계는 no-op. worktree 격리가 불필요한 단일-clone 프로젝트는 가드 hook 만 사용해도 된다."
+          "note": "worktree-init.mjs の `.brief2dev/system` symlink は brief2dev cross-aidea SSOT 共有用。外部プロジェクトに `.brief2dev/system` がなければ init は graceful 処理 (main system dir 不在の分岐) — 外部では PLAN.md 自動生成のみ有効で symlink 段階は no-op。worktree 隔離が不要な単一 clone プロジェクトはガード hook のみを使用してもよい。"
         },
         {
           "id": "worktree-policy-generic-tiers",
-          "note": "worktree-policy.json 은 generic 템플릿(data/registry/transplant-templates/worktree-policy.generic.json)이 .claude/config/worktree-policy.json 으로 리맵 이식된다 — ecosystem-중립 git-ignored 산출물(.tmp/.cache/dist/build/node_modules/target/.next 등) + .claude/settings.json(hook 등록 codegen 특수, git-tracked 예외)만 Tier 1. brief2dev-specific 경로(.brief2dev/output)는 포함 안 됨. `.claude/config/**` (정책 파일 자신 포함) 은 Tier 3 — brief2dev 자체 정책과 동일 파라다임(2026-07-01 정정, 이전 버전은 settings.json 미포함으로 이식 직후 hook 등록 편집이 막히는 self-lock 갭 존재). 외부 프로젝트는 자기 git-ignored 디렉토리에 맞춰 tier1 patterns 가감(선택). main 에서 tracked 파일(README.md 등) 편집 deny 는 worktree paradigm 의 의도된 동작 — 격리 불필요 시 worktree-policy-guard 미등록."
+          "note": "worktree-policy.json は generic テンプレート (data/registry/transplant-templates/worktree-policy.generic.json) が .claude/config/worktree-policy.json としてリマップ移植される — ecosystem 中立な git-ignored 成果物 (.tmp/.cache/dist/build/node_modules/target/.next など) + .claude/settings.json (hook 登録 codegen 特殊、git-tracked 例外) のみが Tier 1。brief2dev 固有のパス (.brief2dev/output) は含まれない。`.claude/config/**` (ポリシーファイル自身を含む) は Tier 3 — brief2dev 自体のポリシーと同一のパラダイム (2026-07-01 訂正、旧バージョンは settings.json 未含のため移植直後に hook 登録編集がブロックされる self-lock ギャップが存在)。外部プロジェクトは各自の git-ignored ディレクトリに合わせて tier1 patterns を加減可能 (任意)。main での tracked ファイル (README.md など) の編集 deny は worktree パラダイムの意図された動作 — 隔離不要な場合は worktree-policy-guard 未登録。"
         },
         {
           "id": "base-branch-autodetect",
-          "note": "base 브랜치는 worktree-new.mjs 가 자동 감지(origin/HEAD → main → master)하고, origin 원격이 없는 순수 로컬 repo 에서는 fetch/ff 를 skip 하고 local <base> 기준으로 worktree 를 만든다 — master 기본/원격 없는 외부 프로젝트도 무수정 동작."
+          "note": "base ブランチは worktree-new.mjs が自動検知 (origin/HEAD → main → master) し、origin リモートのない純粋なローカル repo では fetch/ff を skip して local <base> 基準で worktree を作成する — master デフォルト/リモートのない外部プロジェクトも修正なしで動作。"
         },
         {
           "id": "trunk-start-warning-harmless",
-          "note": "trunk-start-warning 은 SessionStart 컨텍스트 주입(main 진입 시 worktree 안내)으로 차단 권한이 없어 어떤 외부 환경에서도 무해하다."
+          "note": "trunk-start-warning は SessionStart コンテキスト注入 (main 進入時に worktree 案内) であり、遮断権限がないため、どのような外部環境でも無害です。"
         },
         {
           "id": "retransplant-customization-protection",
-          "note": "재이식 시 커스터마이징 보호(2026-07-01 추가): worktree-policy.json 등 extra_files 로 이식된 파일은 대상 프로젝트가 이식 후 직접 편집(tier1 patterns 가감)하도록 설계됐다. 같은 번들을 대상에 재실행하면 대상에 이미 다른 내용으로 존재하는 extra_files 는 기본적으로 SKIP 되어 커스터마이징이 보존된다(`--force` 로 강제 덮어쓰기 가능). entry_hooks/entry_scripts/cli 등록 JSON 은 brief2dev 가 유지보수하는 메커니즘 코드이므로 이 보호 대상이 아니며 재이식 시 항상 최신으로 갱신된다. root cause: 이 안전장치 부재 시 재이식이 대상의 커스터마이징을 침묵 속에 generic 기본값으로 되돌릴 수 있다."
+          "note": "再移植時のカスタマイズ保護 (2026-07-01 追加): worktree-policy.json など extra_files として移植されたファイルは、対象プロジェクトが移植後に直接編集 (tier1 patterns の加減) するように設計されている。同一バンドルを対象に再実行すると、対象にすでに異なる内容で存在する extra_files は基本的に SKIP され、カスタマイズが保存される (`--force` で強制上書き可能)。entry_hooks/entry_scripts/cli 登録 JSON は brief2dev が維持管理するメカニズムコードであるため、この保護対象ではなく、再移植時は常に最新に更新される。root cause: この安全装置がない場合、再移植が対象のカスタマイズを気づかないうちに generic なデフォルト値に戻してしまう可能性がある。"
         },
         {
           "id": "pre-ship-review-procedure",
-          "note": "PLAN.md 체크박스 → N섹션 인간 리뷰 → 승인 마커 절차(2026-07-02 추가): mark-pre-ship-confirmed.mjs(승인 마커 생성) + pre-ship-review-guard.mjs(마커 freshness 검사 PreToolUse Bash 가드)가 이식되어, 대상 프로젝트에서도 `ship-*` 계열 명령 실행 전 리뷰 패널 승인을 강제하는 절차 자체가 동작한다. 두 스크립트는 BFS 전이 수집으로 worktree-plan-template.mjs/worktree-ship-report.mjs/section-template-renderer.mjs/quality-gate-labels.mjs/worktree-plan-path.mjs/worktree-plan-status.mjs 를 자동 포함한다."
+          "note": "PLAN.md チェックボックス → Nセクションの人間レビュー → 承認マーカー手順 (2026-07-02 追加): mark-pre-ship-confirmed.mjs (承認マーカー生成) + pre-ship-review-guard.mjs (マーカー freshness 検査 PreToolUse Bash ガード) が移植され、対象プロジェクトでも `ship-*` 系列のコマンド実行前にレビューパネルの承認を強制する手順自体が動作する。両スクリプトは BFS 遷移収集によって worktree-plan-template.mjs/worktree-ship-report.mjs/section-template-renderer.mjs/quality-gate-labels.mjs/worktree-plan-path.mjs/worktree-plan-status.mjs を自動的に包含する。"
         },
         {
           "id": "review-panel-sections-wiring",
-          "note": "리뷰 패널 섹션 커스터마이징(2026-07-02 추가): worktree-plan-sections.json(PLAN.md, brief2dev 기본 8섹션)과 pre-ship-review-panel-sections.json(승인 패널, brief2dev 기본 11섹션)은 extra_files 로 직접 편집 가능한 seed 로 이식된다 — heading 문구/섹션 개수/checklist 항목/table 컬럼 모두 자유 가감. 두 JSON 의 `sections` 스키마는 section-template-renderer.mjs#renderTemplateFromSections 가 해석하는 5 블록 타입(static/checklist_group/field_list/fenced_block/table) 그대로다. brief2dev 자신은 이 JSON 파일을 읽지 않는다(옵션 C — 라이브 경로는 DEFAULT_PLAN_SECTIONS/DEFAULT_REVIEW_SECTIONS JS 상수 고정 사용, 파일 I/O 실패 모드 미도입) — 대상 프로젝트가 이 JSON 을 실제로 반영하려면 각 JSON 의 `_adapt.wiring` 안내대로 (a) worktree-init.mjs/pre-ship-review-guard.mjs 호출부에서 JSON 을 읽어 `options.sections` 로 넘기도록 직접 wiring 하거나, (b) 이식된 worktree-plan-template.mjs/worktree-ship-report.mjs 의 DEFAULT_*_SECTIONS 상수를 JSON 내용으로 바로 교체해야 한다."
+          "note": "レビューパネルのセクションカスタマイズ (2026-07-02 追加): worktree-plan-sections.json (PLAN.md, brief2dev 基本8セクション) と pre-ship-review-panel-sections.json (承認パネル, brief2dev 基本11セクション) は extra_files として直接編集可能な seed として移植される — heading 文言/セクション数/checklist 項目/table カラムはすべて自由に変更可能。両 JSON の `sections` スキーマは section-template-renderer.mjs#renderTemplateFromSections が解釈する 5つのブロックタイプ (static/checklist_group/field_list/fenced_block/table) そのままである。brief2dev 自体はこの JSON ファイルを読み込まない (オプション C — ライブパスは DEFAULT_PLAN_SECTIONS/DEFAULT_REVIEW_SECTIONS JS 定数固定を使用、ファイル I/O 失敗モード未導入) — 対象プロジェクトがこの JSON を実際に反映するには、各 JSON の `_adapt.wiring` の案内に従い (a) worktree-init.mjs/pre-ship-review-guard.mjs 呼び出し元で JSON を読み込み `options.sections` に渡すように直接 wiring するか、(b) 移植された worktree-plan-template.mjs/worktree-ship-report.mjs の DEFAULT_*_SECTIONS 定数を JSON 内容に直接置き換える必要がある。"
         },
         {
           "id": "non-customizable-transitive-libs",
-          "note": "non-customizable 파일(2026-07-02 추가): quality-gate-labels.mjs 와 worktree-plan-status.mjs 는 entry_hooks/entry_scripts 의 전이 의존으로 BFS 수집되는 brief2dev 유지보수 코드다 — extra_files 가 아니므로 customizable 플래그가 없고, 재이식 시 항상 최신 버전으로 덮어써진다(대상 프로젝트가 이 두 파일을 직접 수정했다면 재이식 전 백업 권장)."
+          "note": "non-customizable ファイル (2026-07-02 追加): quality-gate-labels.mjs と worktree-plan-status.mjs は entry_hooks/entry_scripts の遷移依存関係として BFS 収集される brief2dev 保守コードである — extra_files ではないため customizable フラグがなく、再移植時は常に最新バージョンで上書きされる (対象プロジェクトがこの2つのファイルを直接修正した場合、再移植前のバックアップを推奨)。"
         },
         {
           "id": "create-pr-github-dependency",
-          "note": "ops.mjs 의 GitHub Flow 의존(2026-07-02 추가, 2026-07-03 create-pr 이식으로 해소): 이전에는 승인 마커 이후의 실제 push/PR/squash-merge 자동화(`/create-pr` 스킬, `.claude/scripts/create-pr/ops.mjs`)가 본 번들의 이식 대상이 아니었다. 2026-07-03 부터 entry_skills 로 `create-pr` 스킬 자체를 이식한다 — commit-guard/destructive-git-guard/worktree-session-owner-guard/worktree-shipping-guard/pre-ship-review-guard 5개 hook 이 `.tmp/create-pr-active` 카브아웃 마커(오직 `ops.mjs`의 cmdInit/cmdFinalize/cmdCleanupWorktree 만 생성·제거)와 `/create-pr ship-worktree` 안내 문구를 코드에 직접 참조하는데, create-pr 이식 없이는 이 5개 hook 의 유일한 해제 경로가 대상 프로젝트에 존재하지 않았기 때문이다(entry_scripts 에 `create-pr/ops.mjs` 도 포함 — join() 이 하위 경로를 그대로 지원해 스키마/코드 변경 없이 가능). 여전히 남는 한계: 대상 프로젝트가 GitHub 이 아니거나 다른 PR 워크플로우를 쓰면 `gh` CLI 의존 로직은 직접 대체 구현이 필요하다."
+          "note": "ops.mjs の GitHub Flow 依存関係 (2026-07-02 追加、2026-07-03 create-pr 移植により解消): 以前は、承認マーカー以降の実際の push/PR/squash-merge 自動化 (`/create-pr` スキル, `.claude/scripts/create-pr/ops.mjs`) は本バンドルの移植対象外であった。2026-07-03 から entry_skills として `create-pr` スキル自体を移植する — commit-guard/destructive-git-guard/worktree-session-owner-guard/worktree-shipping-guard/pre-ship-review-guard の 5つの hook が `.tmp/create-pr-active` カーブアウトマーカー (唯一 `ops.mjs` の cmdInit/cmdFinalize/cmdCleanupWorktree のみが生成・削除) と `/create-pr ship-worktree` 案内文言をコードで直接参照しているが、create-pr の移植なしではこの 5つの hook の唯一の解除パスが対象プロジェクトに存在しなかったためである (entry_scripts に `create-pr/ops.mjs` も包含 — join() が下位パスをそのままサポートし、スキーマ/コード変更なしで可能)。依然として残る限界: 対象プロジェクトが GitHub ではないか、他の PR ワークフローを使用する場合、`gh` CLI 依存ロジックは直接代替実装を行う必要がある。"
         },
         {
           "id": "create-pr-config-genericized",
-          "note": "create-pr/config.json 제네릭화(2026-07-03 추가): `.claude/skills/create-pr/config.json` 은 brief2dev 자신의 값(예: 특정 GitHub 계정)을 담고 있어 그대로 이식하면 안 된다 — extra_files 리맵으로 `data/registry/transplant-templates/create-pr-config.generic.json`(`base_branch: \"main\"` 만 포함, `github_account` 없음)이 대신 이식된다. `github_account` 는 한 머신에 여러 GitHub 계정을 `gh` CLI 로 로그인해둔 경우에만 필요한 선택 필드(다중 계정 disambiguation) — 단일 계정이면 생략해도 `gh` 의 기본 로그인 계정을 그대로 사용하므로 템플릿에서 제외했다. 필요해지면 대상이 직접 `config.json` 에 추가한다. entry_skills(통째 복사)와 extra_files(제네릭 리맵)가 같은 대상 경로를 가리킬 때는 항상 extra_files 가 우선한다(`planTransplant` 의 destRel 기준 Map 삽입 순서)."
+          "note": "create-pr/config.json ジェネリック化 (2026-07-03 追加): `.claude/skills/create-pr/config.json` は brief2dev 自身の値 (例: 特定の GitHub アカウント) を含んでいるためそのまま移植してはならない — extra_files リマップによって `data/registry/transplant-templates/create-pr-config.generic.json` (`base_branch: \"main\"` のみ含む、`github_account` なし) が代わりに移植される。`github_account` は同一マシンで複数の GitHub アカウントを `gh` CLI でログインさせている場合のみ必要なオプションフィールド (複数アカウントの曖昧さ回避) — 単一アカウントであれば省略しても `gh` のデフォルトログインアカウントをそのまま使用するため、テンプレートから除外した。必要に応じて、対象が直接 `config.json` に追加する。entry_skills (丸ごとコピー) と extra_files (ジェネリックリマップ) が同一の対象パスを指す場合は、常に extra_files が優先される (`planTransplant` の destRel 基準の Map 挿入順序)。"
         },
         {
           "id": "create-pr-soft-references",
-          "note": "create-pr SKILL.md 의 소프트 참조(2026-07-03 추가): create-pr SKILL.md/MANIFEST.json 은 `/pre-ship-quality-advisor`, `code-standards-aligner`, `final-review`, `make q.ci-mirror` 등을 언급하지만 전부 '권고(강제 X)'이거나 존재하지 않을 수 있는 Makefile 타겟이다 — 이들은 본 번들에 포함하지 않는다(하드 런타임 의존만 포함 기준, 소프트 추천까지 따라가면 스코프가 무한 확장). 대상 프로젝트에 해당 스킬/타겟이 없어도 create-pr 핵심 흐름(init/isolate/commit/ship-feature/finalize/verify-plan/ship-worktree/cleanup-worktree)은 정상 동작한다(`ops.mjs#cmdInit` 이 `make -n q.ci-mirror` 로 타겟 실재 여부를 먼저 확인하고, 부재 시 그 게이트만 건너뛴다 — 2026-07-03 실제 이식 후 재현으로 이 주장이 깨졌던 회귀를 수정)."
+          "note": "create-pr SKILL.md のソフト参照 (2026-07-03 追加): create-pr SKILL.md/MANIFEST.json は `/pre-ship-quality-advisor`, `code-standards-aligner`, `final-review`, `make q.ci-mirror` などを言及するが、すべて '推奨 (強制ではない)' であるか、存在しない可能性のある Makefile ターゲットである — これらは本バンドルに含めない (ハードなランタイム依存のみを含める基準であり、ソフトな推奨まで追うとスコープが無限拡張するため)。対象プロジェクトに当該スキル/ターゲットが存在しなくても、create-pr の中核フロー (init/isolate/commit/ship-feature/finalize/verify-plan/ship-worktree/cleanup-worktree) は正常動作する (`ops.mjs#cmdInit` が `make -n q.ci-mirror` でターゲットの実在有無を事前に確認し、不在時はそのゲートのみスキップする — 2026-07-03 実際の移植後に再現し、この主張が壊れていたデグレードを修正)。"
         }
       ]
     }

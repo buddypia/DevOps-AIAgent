@@ -3,150 +3,150 @@
 /**
  * destructive-git-guard.mjs - PreToolUse Bash Hook
  *
- * Claude Code의 Bash 툴에서 파괴적인 git 명령을 차단합니다.
+ * Claude Code の Bash ツールで破壊的な git コマンドを遮断します。
  *
- * 방어 체계에서의 역할:
+ * 防御体系における役割:
  * ┌──────────────────────────────────────────────────────────────┐
- * │ L1: settings.json deny 규칙 → defaultMode 설정에 의존       │
- * │ L2: 이 Hook                  → PreToolUse에서 명령 파싱 차단 │
- * │ L3: .git/hooks/              → git native 레벨에서 차단      │
+ * │ L1: settings.json deny 規則 → defaultMode 設定に依存        │
+ * │ L2: この Hook                → PreToolUse でコマンドパージ遮断│
+ * │ L3: .git/hooks/              → git native レベルで遮断        │
  * └──────────────────────────────────────────────────────────────┘
  *
- * L1(deny)이 bypassPermissions 등으로 무력화되더라도,
- * 이 Hook(L2)이 독립적으로 파괴적인 명령을 차단합니다.
+ * L1(deny) が bypassPermissions などにより無力化されたとしても、
+ * この Hook(L2) が独立して破壊的なコマンドを遮断します。
  *
- * 차단 대상 (working tree 파괴 명령만):
- * - git reset --hard/--merge/--keep (working tree 파괴)
- * - git checkout . / git checkout -- <file> (working tree 파괴)
- * - git restore . / glob / <dir>/ / :magic / pathspec 부재 (working tree 광역 파괴)
- * - git clean -f/-d (untracked 파일 삭제)
- * - git stash clear (모든 stash 스냅샷 일괄 삭제 — 복구 불가)
- * - git push --force / -f (리모트 히스토리 파괴)
- * - git rebase (히스토리 변경)
- * - git push --no-verify (pre-push 검증 hook 우회 — agent-worktree-guard retire 흡수 2026-06-26)
- * - raw git worktree add/remove (표준 진입점 우회 — 동상)
- * - rm -rf <.worktrees/...> (worktree 디렉토리 강제 삭제 — 동상, tokenizer classifyRmWorktree)
+ * 遮断対象 (working tree 破壊コマンドのみ):
+ * - git reset --hard/--merge/--keep (working tree 破壊)
+ * - git checkout . / git checkout -- <file> (working tree 破壊)
+ * - git restore . / glob / <dir>/ / :magic / pathspec 不在 (working tree 広域破壊)
+ * - git clean -f/-d (untracked ファイル削除)
+ * - git stash clear (すべての stash スナップショット一括削除 — 復旧不可)
+ * - git push --force / -f (リモートヒストリ破壊)
+ * - git rebase (ヒストリ変更)
+ * - git push --no-verify (pre-push 検証 hook 迂回 — agent-worktree-guard retire 吸収 2026-06-26)
+ * - raw git worktree add/remove (標準エントリーポイントの迂回 — 上記同様)
+ * - rm -rf <.worktrees/...> (worktree ディレクトリ強制削除 — 上記同様, tokenizer classifyRmWorktree)
  *
- * 허용 (inherently safe — working tree 보존):
- * - git reset --soft (HEAD만 이동)
- * - git reset HEAD <files> / git reset HEAD -- <files> (unstage, index만 수정)
- * - git reset (bare, --mixed) (전체 unstage, index만 수정)
- * - git restore --staged (unstage, index만 수정)
- * - git restore <명시적 파일> (bounded blast radius — stash drop(단일) 선례와 동형, 사용자 결정 2026-06-16)
- * - git stash push/save/drop/apply/pop/list/show/branch / 인수 없는 git stash (clear 외 모든 stash 허용)
- * - git checkout <branch-name> (브랜치 전환)
+ * 許容 (inherently safe — working tree 保存):
+ * - git reset --soft (HEAD のみ移動)
+ * - git reset HEAD <files> / git reset HEAD -- <files> (unstage, index のみ修正)
+ * - git reset (bare, --mixed) (全体 unstage, index のみ修正)
+ * - git restore --staged (unstage, index のみ修正)
+ * - git restore <明示的ファイル> (bounded blast radius — stash drop (単一) の前例と同型, ユーザー決定 2026-06-16)
+ * - git stash push/save/drop/apply/pop/list/show/branch / 引数なし of git stash (clear 以外のすべての stash を許容)
+ * - git checkout <branch-name> (ブランチの切り替え)
  */
 
 import { existsSync, statSync } from 'fs';
 import { join } from 'path';
 import { readStdin, output, safeHookMainWithProfile } from '../lib/utils.mjs';
 import { HookOutput } from '../lib/hook-output.mjs';
-// heredoc body 제거 — `cat <<EOF\ngit stash clear\nEOF` 같은 데이터 컨텍스트의 destructive
-// string 이 newline anchor (`\n` chain operator 인식) 로 false-positive 차단되는 문제 해결.
-// lib SSOT — pre-ship-review-guard 도 같은 lib 사용 (cross-hook circular execution 회피).
+// heredoc body 除去 — `cat <<EOF\ngit stash clear\nEOF` のようなデータコンテキストの destructive
+// 文字列が newline anchor (`\n` chain operator 認識) により false-positive 遮断される問題を解決。
+// lib SSOT — pre-ship-review-guard も同一の lib を使用 (cross-hook circular execution を回避)。
 import { stripHeredocBodies } from '../lib/heredoc-strip.mjs';
 import { anchoredPattern } from '../lib/hook-anchors.mjs';
 
 /**
- * 파괴적인 git 명령 패턴 정의
- * 각 패턴은 { regex, description, allowIf? } 형식
+ * 破壊的な git コマンドパターン定義
+ * 各パターンは { regex, description, allowIf? } 形式
  */
 const DESTRUCTIVE_PATTERNS = [
   {
-    // git reset --hard (HEAD + index + working tree 전부 리셋 = 데이터 파괴)
-    // git reset --merge, --keep (working tree 조건부 변경 = 위험)
+    // git reset --hard (HEAD + index + working tree すべてリセット = データ破壊)
+    // git reset --merge, --keep (working tree 条件付き変更 = 危険)
     //
-    // 허용 (working tree 보존, inherently safe):
-    //   --soft             → HEAD만 이동
-    //   --mixed (기본)     → index만 리셋, working tree 보존
-    //   HEAD <files>       → 특정 파일 unstage (index만 수정)
-    //   HEAD -- <files>    → 위와 동일 (-- 구분자)
-    //   (bare)             → 전체 unstage (index만 수정)
+    // 許容 (working tree 保存, inherently safe):
+    //   --soft             → HEAD のみ移動
+    //   --mixed (基本)     → index のみリセット, working tree 保存
+    //   HEAD <files>       → 特定ファイル unstage (index のみ修正)
+    //   HEAD -- <files>    → 上記と同様 (-- 区切り文字)
+    //   (bare)             → 全体 unstage (index のみ修正)
     //
-    // 판별 기준: --hard/--merge/--keep 플래그 존재 여부만으로 결정.
-    // 플래그 없는 git reset은 mixed 모드이며 working tree를 건드리지 않으므로 안전.
+    // 判別基準: --hard/--merge/--keep フラグの存在有無のみで決定。
+    // フラグのない git reset は mixed モードであり working tree に手を加えないため安全。
     regex: anchoredPattern('git\\s+reset\\s+--(hard|merge|keep)\\b', 'i'),
-    description: 'git reset --hard/--merge/--keep은 작업 중인 변경사항을 삭제합니다',
+    description: 'git reset --hard/--merge/--keep は作業中の変更事項を削除します',
     allowIf: null,
   },
   {
-    // git checkout . 또는 git checkout -- <path>
-    // 허용: git checkout <branch>, git checkout -b <branch>
+    // git checkout . または git checkout -- <path>
+    // 許容: git checkout <branch>, git checkout -b <branch>
     regex: anchoredPattern('git\\s+checkout\\s+(\\.|\\-\\-\\s)', 'i'),
-    description: 'git checkout ./-- 은 작업 중인 변경사항을 삭제합니다',
+    description: 'git checkout ./-- は作業中の変更事項を削除します',
     allowIf: null,
   },
-  // git restore 는 DESTRUCTIVE_PATTERNS 에서 제거됨 (사용자 결정 2026-06-16).
-  //   regex 기반 검사는 `git -C x restore .` 같은 global option 우회에 구조적으로 취약
-  //   (regex 가 git↔restore 인접을 요구). tokenizer 기반 classifyRestore() 가 전담하여
-  //   checkDestructiveGit() 에서 별도 호출된다 — blast-radius scoped 허용/차단.
+  // git restore は DESTRUCTIVE_PATTERNS から除去されました (ユーザー決定 2026-06-16)。
+  //   regex 基準の検査は `git -C x restore .` のような global option 迂回に対して構造的に脆弱
+  //   (regex が git↔restore 近接を要求)。tokenizer 基準の classifyRestore() が専担し、
+  //   checkDestructiveGit() から別途呼び出される — blast-radius scoped 許容/遮断。
   {
-    // git clean -f, -fd, -fx 등
+    // git clean -f, -fd, -fx など
     regex: anchoredPattern('git\\s+clean\\s+.*-[fdxX]', 'i'),
-    description: 'git clean은 untracked 파일을 영구적으로 삭제합니다',
+    description: 'git clean は untracked ファイルを永久に削除します',
     allowIf: null,
   },
   {
-    // git stash clear (모든 stash entry 일괄 삭제 — reflog 없이 복구 불가).
+    // git stash clear (すべての stash entry 一括削除 — reflog なしでは復旧不可)。
     //
-    // 사용자 결정 2026-05-18: stash 정책을 clear-only 로 완화.
-    // push/save/drop/apply/pop/list/show/branch 및 인수 없는 git stash 는
-    // 모두 허용한다 (멀티 터미널 untracked 손실 우려보다 stash 활용성 우선).
-    // clear 만 차단 — 단일 drop 과 달리 전체 일괄 삭제라 실수 시 피해 범위가 크다.
+    // ユーザー決定 2026-05-18: stash ポリシーを clear-only に緩和。
+    // push/save/drop/apply/pop/list/show/branch および引数なしの git stash は
+    // すべて許容する (マルチターミナルの untracked 損失懸念より stash 活用性を優先)。
+    // clear のみ遮断 — 単一の drop とは異なり全体一括削除のため、ミス時の被害範囲が大きい。
     //
-    // 미매칭 (안전 명령 통과):
+    // ミスマッチ (安全なコマンドは通過):
     //   git stash push / save / drop / apply / pop / list / show / branch
-    //   인수 없는 git stash (= 암묵적 push)
+    //   引数なしの git stash (= 暗黙的 push)
     regex: anchoredPattern('git\\s+stash\\s+clear\\b', 'i'),
-    description: 'git stash clear는 모든 stash 스냅샷을 일괄 삭제합니다 (복구 불가)',
+    description: 'git stash clear はすべての stash スナップショットを一括削除します (復旧不可)',
     allowIf: null,
   },
   {
     // git push --force, git push -f
     regex: anchoredPattern('git\\s+push\\s+.*(-f\\b|--force\\b)', 'i'),
-    description: 'git push --force는 리모트 저장소의 히스토리를 파괴합니다',
+    description: 'git push --force はリモートリポジトリのヒストリを破壊します',
     allowIf: null,
   },
   {
     // git rebase
     regex: anchoredPattern('git\\s+rebase\\b', 'i'),
-    description: 'git rebase 는 커밋 히스토리를 변경합니다',
+    description: 'git rebase はコミットヒストリを変更します',
     allowIf: null,
   },
   {
-    // git push --no-verify (pre-push/pre-commit 검증 hook 우회)
-    // agent-worktree-guard(Python) retire 시 흡수 (2026-06-26).
+    // git push --no-verify (pre-push/pre-commit 検証 hook 迂回)
+    // agent-worktree-guard(Python) retire 時に吸収 (2026-06-26)。
     regex: anchoredPattern('git\\s+push\\s+.*--no-verify\\b', 'i'),
-    description: 'git push --no-verify 는 pre-push 검증 hook 을 우회합니다',
+    description: 'git push --no-verify は pre-push 検証 hook を迂回します',
     allowIf: null,
   },
   {
-    // raw git worktree add/remove (표준 진입점 우회 → stale base / 미정리 위험).
-    // 생성은 make wt.new(worktree-new.mjs), 제거는 /create-pr ship-worktree cleanup.
-    // create-pr 흐름의 worktree remove 는 run() 의 CREATE_PR_SAFE_PATTERNS carve-out 이 허용.
-    // agent-worktree-guard(Python) retire 시 흡수 (2026-06-26).
+    // raw git worktree add/remove (標準エントリーポイントの迂回 → stale base / 未整理リスク)。
+    // 生成は make wt.new (worktree-new.mjs)、除去は /create-pr ship-worktree cleanup。
+    // create-pr フローの worktree remove は run() の CREATE_PR_SAFE_PATTERNS carve-out により許容。
+    // agent-worktree-guard (Python) retire 時に吸収 (2026-06-26)。
     regex: anchoredPattern('git\\s+worktree\\s+(add|remove)\\b', 'i'),
     description:
-      'raw git worktree add/remove 는 차단됩니다 (생성: make wt.new, 제거: /create-pr ship-worktree)',
+      'raw git worktree add/remove は遮断されます (生成: make wt.new, 除去: /create-pr ship-worktree)',
     allowIf: null,
   },
 ];
 
 // ── create-pr Safe Command Allowlist ──
 //
-// create-pr 플로우 진행 중 (.tmp/create-pr-active 존재 시)
-// 아래 패턴만 추가 허용. 그 외 파괴적 명령은 플래그 유무와 무관하게 차단.
+// create-pr フロー進行中 (.tmp/create-pr-active 存在時)
+// 以下のパターンのみ追加で許容。その他の破壊的コマンドはフラグ有無に関わらず遮断。
 //
-// 안전성 근거:
-//   git merge --ff-only:  HEAD 전진만 수행. 히스토리 변경 불가. 충돌 시 git 거부.
-//   git worktree remove:  격리된 worktree 디렉토리만 삭제.
+// 安全性根拠:
+//   git merge --ff-only:  HEAD 前進のみ遂行。ヒストリ変更不可。衝突時は git 拒否。
+//   git worktree remove:  隔離された worktree ディレクトリのみ削除。
 //
-// 제거된 항목:
-//   git reset HEAD -- <path>: DESTRUCTIVE_PATTERNS 자체가 --hard/--merge/--keep만
-//   차단하므로 unstage는 플래그 없이도 항상 허용됨. (v2.1)
+// 除去された項目:
+//   git reset HEAD -- <path>: DESTRUCTIVE_PATTERNS 自体が --hard/--merge/--keep のみ
+//   遮断するため unstage はフラグがなくても常に許容される。(v2.1)
 //
-// 플래그 누수 시 영향:
-//   위 2개 명령은 데이터 파괴가 불가능하므로 보안 영향 없음.
+// フラグ漏洩時の影響:
+//   上記 2つのコマンドはデータ破壊が不可能なためセキュリティ影響なし。
 const CREATE_PR_SAFE_PATTERNS = [
   /\bgit\s+merge\s+--ff-only\b/i,
   /\bgit\s+worktree\s+remove\b/i,
@@ -184,20 +184,20 @@ function isFreshCreatePrFlag(flagPath, now = Date.now()) {
 }
 
 /**
- * `git commit -m <body>` 의 메시지 본문을 검사 대상에서 제외한다.
+ * `git commit -m <body>` のメッセージ本文を検査対象から除外する。
  *
- * Problem: regex 가 `\bgit\s+reset\s+--hard\b` 로 매칭하므로 commit 메시지 본문에
- * 들어간 `git reset --hard` 같은 텍스트도 false-positive 차단. 본 함수는 `-m` 인자의
- * 따옴표/heredoc 본문만 strip 하여 false-positive 를 차단한다.
+ * Problem: regex が `\bgit\s+reset\s+--hard\b` でマッチするため、commit メッセージ本文に
+ * 入った `git reset --hard` のようなテキストも false-positive 遮断。本関数は `-m` 引数の
+ * クォーテーション/heredoc 本文のみを strip して false-positive を遮断する。
  *
- * 처리하는 3 변형 (Bash 표준 -m 사용 양식):
+ * 処理する3つの変形 (Bash 標準 -m 使用様式):
  *   -m "$(cat <<'EOF' ... EOF)"   — heredoc inside command substitution
  *   -m '...'                        — single-quoted literal
  *   -m "..."                        — double-quoted literal
  *
- * 다른 quoted context (예: `echo "git reset --hard"`) 는 의도적으로 strip 하지 않는다.
- * 안전 측 — `-m` 가 아닌 임의 string literal 은 destructive 명령을 정당화하는 의도가
- * 명확하지 않으므로 차단 유지.
+ * 他の quoted context (例: `echo "git reset --hard"`) は意図的に strip しない。
+ * 安全側 — `-m` 以外の任意の string literal は destructive コマンドを正当化する意図が
+ * 明確ではないため遮断を維持。
  *
  * @param {string} command
  * @returns {string} stripped command
@@ -223,12 +223,12 @@ function shellishTokens(commandSegment) {
 }
 
 /**
- * `git <global-option...> <subcommand>` 에서 git global option 을 제거해 `git <subcommand>` 로 정규화.
- * regex 기반 DESTRUCTIVE_PATTERNS 는 `git\s+<subcommand>` 인접을 요구하므로 `-C <path>` / `-c k=v` /
- * `--git-dir=` / `--work-tree=` / `--no-pager` 등 global option 이 끼면 우회된다(예: `git -C x push --force`).
- * classifyRestore/classifyRmWorktree(tokenizer)는 자체 처리하므로 본 정규화는 DESTRUCTIVE_PATTERNS 전용.
- * subcommand 옵션(`git commit -C HEAD` 의 -C)은 `git` 직후가 아니므로 영향받지 않는다.
- * agent-worktree-guard retire 시 흡수 — 구 guard.py 가 git_invocation() 으로 처리하던 우회 방어를 복원.
+ * `git <global-option...> <subcommand>` から git global option を除去して `git <subcommand>` に正規化。
+ * regex 基準の DESTRUCTIVE_PATTERNS は `git\s+<subcommand>` 近接を要求するため `-C <path>` / `-c k=v` /
+ * `--git-dir=` / `--work-tree=` / `--no-pager` など global option が挟まると迂回される (例: `git -C x push --force`)。
+ * classifyRestore/classifyRmWorktree (tokenizer) は独自処理するため、本正規化は DESTRUCTIVE_PATTERNS 専用。
+ * subcommand オプション (`git commit -C HEAD` の -C) は `git` 直後ではないため影響を受けない。
+ * agent-worktree-guard retire 時に吸収 — 旧 guard.py が git_invocation() で処理していた迂回防御を復元。
  * @param {string} command
  * @returns {string}
  */
@@ -246,8 +246,8 @@ export function stripGitGlobalOptions(command) {
 }
 
 /**
- * `git merge --ff-only <target>` 형태에서 merge target 을 추출한다.
- * `git -C <path> merge --ff-only ...` 같은 git global option 도 허용한다.
+ * `git merge --ff-only <target>` 形式から merge target を抽出する。
+ * `git -C <path> merge --ff-only ...` のような git global option も許容する。
  *
  * @param {string} command
  * @returns {string|null}
@@ -307,9 +307,9 @@ function normalizeBranchTarget(target) {
 }
 
 /**
- * create-pr 외부에서 worktree 브랜치를 main 으로 직접 fast-forward merge 하는
- * shipping 우회를 탐지한다. `origin/main` freshness sync 는 허용되어야 하므로
- * GitHub Flow 계열 branch prefix 만 차단한다.
+ * create-pr 外部から worktree ブランチを main に直接 fast-forward merge する
+ * shipping 迂回を検知する。`origin/main` freshness sync は許容される必要があるため、
+ * GitHub Flow 系の branch prefix のみ遮断する。
  *
  * @param {string} command
  * @returns {boolean}
@@ -323,34 +323,33 @@ export function isDirectWorktreeShippingMerge(command) {
 }
 
 /**
- * 단일 pathspec 이 국소(bounded)인지 판정한다.
- * 구체적 파일 경로만 true. cwd 재귀(.)/glob/magic/디렉토리는 false.
+ * 単一の pathspec が局所 (bounded) であるか判定する。
+ * 具体的なファイルパスのみ true。cwd 再帰(.)/glob/magic/ディレクトリは false。
  *
  * @param {string} p
  * @returns {boolean}
  */
 function isBoundedPathspec(p) {
   if (!p) return false;
-  const u = p.replace(/\\(.)/g, '$1'); // shell 백슬래시 이스케이프 해제 (\. → . , \* → *)
-  // glob(* ? [ ]) / brace({ }) / 변수·치환($ `) — expand 결과가 정적으로 미지(예: {.,x} → . 포함).
+  const u = p.replace(/\\(.)/g, '$1'); // shell バックスラッシュエスケープ解除 (\. → . , \* → *)
+  // glob(* ? [ ]) / brace({ }) / 変数・置換($ `) — expand 結果が静的に未知 (例: {.,x} → . 包含)。
   if (/[*?[\]{}$`]/.test(u)) return false;
-  if (u.startsWith(':')) return false; // magic pathspec (:/ , :(top) 등 repo-root 광역)
-  if (u.startsWith('~')) return false; // home 확장 (광역 가능)
-  if (u.endsWith('/')) return false; // 명시적 디렉토리 (재귀)
-  // path segment 가 . 또는 .. 이면 cwd/상위/디렉토리로 normalize 됨 → 광역 (foo/.. , ./. , ../x , .).
-  // 파일명 내부 dot(index.ts)은 segment 가 아니므로 영향 없음.
+  if (u.startsWith(':')) return false; // magic pathspec (:/ , :(top) など repo-root 広域)
+  if (u.startsWith('~')) return false; // home 拡張 (広域可能)
+  if (u.endsWith('/')) return false; // 明示的ディレクトリ (再帰)
+  // path segment が . または .. であれば cwd/上位/ディレクトリに normalize される → 広域 (foo/.. , ./. , ../x , .)。
   if (u.split('/').some(seg => seg === '.' || seg === '..')) return false;
-  return true; // 구체적 파일 경로
+  return true; // 具体的なファイルパス
 }
 
 /**
- * `restore` subcommand 인자에서 pathspec 을 추출하고 모두 bounded 인지 판정한다.
+ * `restore` subcommand 引数から pathspec を抽出し、すべて bounded であるか判定する。
  *
- * @param {string[]} args - 'restore' 뒤의 토큰들
+ * @param {string[]} args - 'restore' の後ろのトークン群
  * @returns {boolean}
  */
 function isBoundedRestoreArgs(args) {
-  // 별도 값을 갖는 옵션 (다음 토큰을 값으로 소비)
+  // 別途値を持つオプション (次のトークンを値として消費)
   const VALUE_OPTS = new Set(['--source', '-s']);
   let sawDashDash = false;
   const pathspecs = [];
@@ -362,24 +361,24 @@ function isBoundedRestoreArgs(args) {
       continue;
     }
     if (!sawDashDash && a.startsWith('-')) {
-      // pathspec 을 외부 파일/stdin 에서 읽는 옵션은 내용을 정적 검사할 수 없으므로 보수적 차단.
+      // pathspec を外部ファイル/stdin から読み取るオプションは内容を静的検査できないため保守的遮断。
       if (a === '--pathspec-from-file' || a.startsWith('--pathspec-from-file=')) return false;
       if (VALUE_OPTS.has(a)) {
-        i += 1; // 옵션 값 소비 (예: --source HEAD)
+        i += 1; // オプション値を消費 (例: --source HEAD)
         continue;
       }
-      continue; // --staged / --worktree / -W / -p 등 값 없는 플래그
+      continue; // --staged / --worktree / -W / -p など値のないフラグ
     }
     pathspecs.push(a);
   }
 
-  if (pathspecs.length === 0) return false; // pathspec 부재 → 의도 불명, 차단
+  if (pathspecs.length === 0) return false; // pathspec 不在 → 意図不明、遮断
   return pathspecs.every(isBoundedPathspec);
 }
 
 /**
- * 명령 segment 가 shell command substitution / parameter expansion 을 포함하는지.
- * 포함 시 restore 의 실제 blast radius 를 정적으로 알 수 없다 (치환 내용 = 미지).
+ * コマンド segment が shell command substitution / parameter expansion を含むか。
+ * 含む場合 restore の実際の blast radius を静的に知ることができない (置換内容 = 未知)。
  *
  * @param {string} s
  * @returns {boolean}
@@ -389,12 +388,12 @@ function hasShellSubstitution(s) {
 }
 
 /**
- * git global option 들을 건너뛰고 restore subcommand 토큰 인덱스를 찾는다.
- * `git -C <path> restore`, `git --no-pager restore` 등 global option 우회를 닫는다
- * (regex 기반 검사는 git↔restore 인접을 요구해 이 우회에 구조적으로 취약).
+ * git global option 群を読み飛ばし、restore subcommand トークンインデックスを見つける。
+ * `git -C <path> restore`, `git --no-pager restore` など global option 迂回を閉じる
+ * (regex 基準の検査は git↔restore 近接を要求し、この迂回に構造的に脆弱)。
  *
  * @param {string[]} tokens
- * @returns {number} restore 인덱스, 없으면 -1
+ * @returns {number} restore インデックス, およその位置、なければ -1
  */
 function findRestoreIndex(tokens) {
   const gitIndex = tokens.findIndex(t => t === 'git');
@@ -402,29 +401,29 @@ function findRestoreIndex(tokens) {
   for (let i = gitIndex + 1; i < tokens.length; i += 1) {
     const t = tokens[i];
     if (t === 'restore') return i;
-    // 별도 값을 갖는 global option → 값 토큰 소비
+    // 別途値を持つ global option → 値トークン消費
     if (t === '-C' || t === '-c' || t === '--git-dir' || t === '--work-tree') {
       i += 1;
       continue;
     }
-    if (t.startsWith('-')) continue; // 값 없는 global flag (--no-pager / --literal-pathspecs / -C glued 등)
-    return -1; // restore 가 아닌 다른 subcommand
+    if (t.startsWith('-')) continue; // 値のない global flag (--no-pager / --literal-pathspecs / -C glued など)
+    return -1; // restore ではない他の subcommand
   }
   return -1;
 }
 
 /**
- * restore 인자가 unstage-only (--staged 이며 --worktree 없음) 인지.
- * unstage-only 는 working tree 를 건드리지 않으므로 pathspec 범위와 무관하게 안전.
+ * restore 引数が unstage-only (--staged であり --worktree なし) であるか。
+ * unstage-only は working tree に手を加えないため pathspec 範囲と関係なく安全。
  *
- * @param {string[]} args - 'restore' 뒤의 토큰들
+ * @param {string[]} args - 'restore' の後ろのトークン群
  * @returns {boolean}
  */
-function isUnstageOnly(args) {
+export function isUnstageOnly(args) {
   let staged = false;
   let worktree = false;
   for (const a of args) {
-    if (a === '--') break; // 이후는 pathspec
+    if (a === '--') break; // 以降は pathspec
     if (a === '--staged') staged = true;
     if (a === '--worktree') worktree = true;
   }
@@ -432,22 +431,22 @@ function isUnstageOnly(args) {
 }
 
 /**
- * `git restore` 호출을 분류한다: 'block' | 'allow' | 'none'.
+ * `git restore` 呼び出しを分类する: 'block' | 'allow' | 'none'。
  *
- * 정책 (사용자 결정 2026-06-16 — blast-radius scoped 완화): stash drop(단일) 허용 /
- * clear(전체) 차단 선례와 동형. 명시적 파일 대상 restore 는 허용하고, working tree
- * 전체/디렉토리/glob/치환/광역 pathspec 을 한 번에 날리는 대형 blast radius 만 차단한다.
+ * ポリシー (ユーザー決定 2026-06-16 — blast-radius scoped 緩和): stash drop (単一) 許容 /
+ * clear (全体) 遮断の前例と同型。明示的ファイル対象の restore は許容し、working tree
+ * 全体/ディレクトリ/glob/置換/広域 pathspec を一回で吹き飛ばす大型 blast radius のみ遮断する。
  *
- * regex 가 아닌 tokenizer 기반이라 global option 우회(`git -C x restore .`)를 닫는다.
- * command substitution(`$(...)`, backtick) 이 restore segment 에 있으면 치환 내용을
- * 정적으로 알 수 없으므로 보수적으로 차단한다 (--pathspec-from-file 차단과 동일 정신).
- * backslash 이스케이프(`\.`)는 isBoundedPathspec 가 unescape 후 판정한다.
+ * regex ではなく tokenizer 基準なため global option 迂回 (`git -C x restore .`) を閉じる。
+ * command substitution (`$(...)`, backtick) が restore segment にあれば置換内容を
+ * 静的に知ることができないため、保守的に遮断する (--pathspec-from-file 遮断と同一精神)。
+ * バックスラッシュエスケープ (`\.`) は isBoundedPathspec が unescape 後に判定する。
  *
- * Known limitation: 후행 슬래시 없는 디렉토리명(`git restore src`)은 정적으로
- * 파일/디렉토리 구분 불가하여 bounded 로 판정된다 (FS stat 회피 — R-CM-006 fail-open).
- * 주 위협 `git restore .` 광역 삭제는 차단된다.
+ * Known limitation: 後行スラッシュのないディレクトリ名 (`git restore src`) は静的に
+ * ファイル/ディレクトリの区分が不可能なため bounded と判定される (FS stat 回避 — R-CM-006 fail-open)。
+ * 主な脅威である `git restore .` 広域削除は遮断される。
  *
- * 차단 가드 맥락이므로 파싱 모호 시 'block' 쪽으로 conservative.
+ * 遮断ガードの文脈であるためパージ曖昧時は 'block' 側へ conservative。
  *
  * @param {string} command
  * @returns {'block'|'allow'|'none'}
@@ -460,8 +459,8 @@ export function classifyRestore(command) {
 
   let sawRestore = false;
   for (const segment of segments) {
-    // restore 를 언급하는 segment 에 shell 치환이 있으면 blast radius 미지 → 차단.
-    // (치환이 inner `git restore .` 를 숨기거나 pathspec 을 동적 생성하는 우회 차단)
+    // restore を言及する segment に shell 置換があれば blast radius 未知 → 遮断。
+    // (置換が inner `git restore .` を隠蔽するか pathspec を動的生成する迂回を遮断)
     if (hasShellSubstitution(segment) && /\brestore\b/i.test(segment)) {
       return 'block';
     }
@@ -472,18 +471,18 @@ export function classifyRestore(command) {
 
     sawRestore = true;
     const args = tokens.slice(restoreIndex + 1);
-    if (isUnstageOnly(args)) continue; // --staged (working tree 미접촉) → 허용
-    if (isBoundedRestoreArgs(args)) continue; // 명시적 파일 → 허용
-    return 'block'; // 대형 blast radius
+    if (isUnstageOnly(args)) continue; // --staged (working tree 非接触) → 許容
+    if (isBoundedRestoreArgs(args)) continue; // 明示的ファイル → 許容
+    return 'block'; // 大型 blast radius
   }
 
   return sawRestore ? 'allow' : 'none';
 }
 
 /**
- * rm 인자 토큰들이 recursive(-r/-R/--recursive) AND force(-f/--force) 를 모두 포함하는지.
- * 결합 단축 플래그(-rf/-fr) + 분리 플래그(-r -f) + long 플래그 모두 인식.
- * @param {string[]} args - 'rm' 뒤의 토큰들
+ * rm 引数トークン群が recursive(-r/-R/--recursive) AND force(-f/--force) をすべて包含するか。
+ * 結合短縮フラグ (-rf/-fr) + 分離フラグ (-r -f) + long フラグをすべて認識。
+ * @param {string[]} args - 'rm' の後ろのトークン群
  * @returns {boolean}
  */
 function rmHasRecursiveForce(args) {
@@ -498,9 +497,9 @@ function rmHasRecursiveForce(args) {
 }
 
 /**
- * rm 인자 토큰 중 비-플래그 path 가 `.worktrees/` 디렉토리를 가리키는지.
- * backslash 이스케이프(`\.`)는 unescape 후 판정.
- * @param {string[]} args - 'rm' 뒤의 토큰들
+ * rm 引数トークンのうち非フラグ path が `.worktrees/` ディレクトリを指すか。
+ * バックスラッシュエスケープ (`\.`) は unescape 後に判定。
+ * @param {string[]} args - 'rm' の後ろのトークン群
  * @returns {boolean}
  */
 function rmTargetsWorktree(args) {
@@ -509,10 +508,10 @@ function rmTargetsWorktree(args) {
 }
 
 /**
- * `rm -rf <.worktrees/...>` 를 검출한다 (worktree 디렉토리 강제 삭제 차단).
- * 표준 제거 경로는 /create-pr ship-worktree cleanup (또는 create-pr 흐름의 git worktree remove).
- * agent-worktree-guard(Python) retire 시 흡수 (2026-06-26). regex 가 아닌 tokenizer 기반
- * (classifyRestore 동형) 으로 플래그 순서/global option 변형에 robust.
+ * `rm -rf <.worktrees/...>` を検出する (worktree ディレクトリの強制削除を遮断)。
+ * 標準の除去パスは /create-pr ship-worktree cleanup (または create-pr フローの git worktree remove)。
+ * agent-worktree-guard (Python) retire 時に吸収 (2026-06-26)。regex ではなく tokenizer 基準
+ * (classifyRestore 同型) でフラグ順序/global option 変形に robust。
  * @param {string} command
  * @returns {boolean}
  */
@@ -530,8 +529,8 @@ export function classifyRmWorktree(command) {
 }
 
 /**
- * 명령에서 파괴적인 git 패턴을 검사합니다
- * @param {string} command - Bash 명령
+ * コマンドから破壊的な git パターンを検査します
+ * @param {string} command - Bash コマンド
  * @returns {{ blocked: boolean, description?: string, matched?: string }}
  */
 export function checkDestructiveGit(command) {
@@ -545,40 +544,40 @@ export function checkDestructiveGit(command) {
     return {
       blocked: true,
       kind: 'worktree-shipping',
-      description: 'worktree branch fast-forward merge는 create-pr ship-worktree 경로로만 수행해야 합니다',
+      description: 'worktree branch fast-forward merge は create-pr ship-worktree パスのみで遂行する必要があります',
       matched: extractFastForwardMergeTarget(command),
     };
   }
 
-  // git restore 는 tokenizer 기반 classifyRestore 가 전담 (global option 우회 차단).
-  // 'allow'/'none' 이면 통과 (단, 다른 destructive 패턴 검사는 계속 — 예: restore && reset --hard).
+  // git restore は tokenizer 基準の classifyRestore が専担 (global option 迂回遮断)。
+  // 'allow'/'none' であれば通過 (ただし、他の destructive パターン検査は継続 — 例: restore && reset --hard)。
   if (classifyRestore(command) === 'block') {
     return {
       blocked: true,
       description:
-        'git restore . / glob / 디렉토리 / 치환 / 광역 pathspec 은 working tree 변경을 광역 삭제합니다 (명시적 단일 파일 restore 는 허용)',
+        'git restore . / glob / ディレクトリ / 置換 / 広域 pathspec は working tree 変更を広域削除します (明示的な単一ファイル restore は許容)',
       matched: 'git restore',
     };
   }
 
-  // rm -rf <.worktrees/...> — worktree 디렉토리 강제 삭제 차단 (tokenizer 기반).
+  // rm -rf <.worktrees/...> — worktree ディレクトリ強制削除を遮断 (tokenizer 基準)。
   if (classifyRmWorktree(command)) {
     return {
       blocked: true,
       description:
-        'rm -rf 로 worktree 디렉토리를 삭제하는 것은 차단됩니다 (제거: /create-pr ship-worktree cleanup 또는 create-pr 흐름의 git worktree remove)',
+        'rm -rf で worktree ディレクトリを削除することは遮断されます (除去: /create-pr ship-worktree cleanup または create-pr フローの git worktree remove)',
       matched: 'rm -rf .worktrees',
     };
   }
 
-  // 여러 줄 또는 && / ; / | 로 연결된 복합 명령도 검사.
-  // git global option(-C / -c / --git-dir 등) 정규화로 `git -C <path> push --force` 류 우회를 닫는다
-  // (regex 패턴이 git↔subcommand 인접을 요구하기 때문 — agent-worktree-guard retire 흡수).
+  // 複数行または && / ; / | で連結された複合コマンドも検査。
+  // git global option (-C / -c / --git-dir など) 正規化で `git -C <path> push --force` 類の迂回を閉じる
+  // (regex パターンが git↔subcommand 近接を要求するため — agent-worktree-guard retire 吸収)。
   const normalized = stripGitGlobalOptions(inspectable);
   for (const pattern of DESTRUCTIVE_PATTERNS) {
     const match = normalized.match(pattern.regex);
     if (match) {
-      // allowIf 조건 확인
+      // allowIf 条件を確認
       if (pattern.allowIf && pattern.allowIf(command)) {
         continue;
       }
@@ -594,7 +593,7 @@ export function checkDestructiveGit(command) {
 }
 
 /**
- * Orchestrator 호환 진입점.
+ * Orchestrator 互換エントリーポイント。
  */
 export async function run(data) {
   try {
@@ -605,7 +604,7 @@ export async function run(data) {
 
     const command = data.tool_input?.command || '';
 
-    // create-pr 플로우 진행 중: 안전 명령만 허용, 나머지는 일반 검사로 진행
+    // create-pr フロー進行中: 安全なコマンドのみ許容、残りは一般の検査として進行
     const projectDir = process.env.CLAUDE_PROJECT_DIR || '';
     const activeFlag = join(projectDir, '.tmp', 'create-pr-active');
     if (isFreshCreatePrFlag(activeFlag) && isCreatePrSafeCommand(command)) {
@@ -617,20 +616,20 @@ export async function run(data) {
     if (result.blocked) {
       if (result.kind === 'worktree-shipping') {
         return HookOutput.deny(
-          `[Destructive Git Guard] 직접 worktree branch fast-forward merge가 차단되었습니다.\n\n` +
-          `차단된 merge target: ${result.matched}\n` +
-          `이유: ${result.description}\n\n` +
-          `worktree shipping은 /create-pr ship-worktree 또는 ` +
-          `node .claude/scripts/create-pr/ops.mjs ship-worktree --worktree <path> 경로만 사용하세요.`
+          `[Destructive Git Guard] 直接の worktree branch fast-forward merge が遮断されました。\n\n` +
+          `遮断された merge target: ${result.matched}\n` +
+          `理由: ${result.description}\n\n` +
+          `worktree shipping は /create-pr ship-worktree または ` +
+          `node .claude/scripts/create-pr/ops.mjs ship-worktree --worktree <path> パスのみを使用してください。`
         );
       }
 
       return HookOutput.deny(
-        `[Destructive Git Guard] 파괴적인 git 명령이 감지되어 차단합니다.\n\n` +
-        `차단된 명령: ${result.matched}\n` +
-        `이유: ${result.description}\n\n` +
-        `이 명령은 커밋되지 않은 작업을 영구적으로 삭제할 수 있습니다.\n` +
-        `사용자에게 먼저 확인을 받은 후 진행해 주세요.`
+        `[Destructive Git Guard] 破壊的な git コマンドが検知されたため遮断します。\n\n` +
+        `遮断されたコマンド: ${result.matched}\n` +
+        `理由: ${result.description}\n\n` +
+        `このコマンドはコミットされていない作業を永久に削除する可能性があります。\n` +
+        `ユーザーに先に確認を得たうえで進行してください。`
       );
     }
 
@@ -640,7 +639,7 @@ export async function run(data) {
   }
 }
 
-// Standalone fallback (settings.json 직접 호출 시)
+// Standalone fallback (settings.json から直接呼び出された場合)
 if (!globalThis.__HOOK_ORCHESTRATOR__) {
   safeHookMainWithProfile('destructive-git-guard', async () => {
     const data = await readStdin();
