@@ -33,7 +33,7 @@ const fetchOpsEvidence = opsConfig.project && logLister ? createLoggingEvidenceF
 const readTextFile = createDefaultReadTextFile();
 const OPS_AGENT_ID = "cloud-run-sre";
 
-// ハードストップ: ラン生成レート制限 (10分窓で最大18ラン — broker委任の連鎖とミッションの自律実行分を含む)
+// ハードストップ: ラン生成レート制限 (10分窓で最大18ラン。broker委任の連鎖とミッションの自律実行分を含む)
 const RUN_RATE_LIMIT = { windowMs: 10 * 60_000, max: 18 };
 const recentRunStarts: number[] = [];
 function runRateLimited(): boolean {
@@ -95,7 +95,7 @@ async function startAgentRun(
 }
 
 // ---------------------------------------------------------------------------
-// Mission Control — 目標1つでオーケストレーターが計画→実実行→適応→統合レポート
+// Mission Control。目標1つでオーケストレーターが計画、実実行、適応、統合レポートまで行う。
 // ---------------------------------------------------------------------------
 
 // ハードストップ: ミッションは同時1件 + 10分窓で最大2件
@@ -117,12 +117,12 @@ function missionCatalog(): MissionCatalogEntry[] {
     description: job.skillDescription,
     inputHint:
       job.inputKind === "none"
-        ? "入力不要 — 空文字を渡す"
+        ? "入力不要。空文字を渡す"
         : job.inputKind === "text"
-          ? `${job.inputLabel} — 目標から分析対象のテキストを渡す`
+          ? `${job.inputLabel}。目標から分析対象のテキストを渡す`
           : job.inputKind === "url"
-            ? "Agent Card URL — 空文字なら自マーケットを対象にする"
-            : "Cloud Runサービス名 — 空文字なら既定ターゲットを対象にする"
+            ? "Agent Card URL。空文字なら自マーケットを対象にする"
+            : "Cloud Runサービス名。空文字なら既定ターゲットを対象にする"
   }));
 }
 
@@ -609,7 +609,7 @@ app.get("/api/missions/:id", async (req, res) => {
   }
 });
 
-// 実績ベースのエージェント統計 — 演出値ではなく実ラン履歴から算出
+// 実績ベースのエージェント統計。演出値ではなく実ラン履歴から算出。
 app.get("/api/agent-stats", async (_req, res) => {
   try {
     const runs = await runStore.listRuns(50);
@@ -667,6 +667,36 @@ app.get("/api/agent-runs/:id", async (req, res) => {
 
 // 模擬インシデント注入 (SREの障害対応ドリル)。本物のログとしてCloud Loggingに載る
 let lastDrillAt = 0;
+const INCIDENT_DRILL_SCENARIOS = [
+  {
+    id: "checkout-latency",
+    label: "決済アップストリーム遅延",
+    summary: "合成チェックアウトのレイテンシスパイクを記録しました。",
+    primarySeverity: "ERROR",
+    primaryMessage: "synthetic checkout latency spike: p95 4800ms, upstream timeout to payments-api",
+    secondarySeverity: "WARNING",
+    secondaryMessage: "retry storm detected: 34 retries/min against /api/recommend"
+  },
+  {
+    id: "queue-backlog",
+    label: "ジョブキュー滞留",
+    summary: "合成ジョブキューの滞留と再試行増加を記録しました。",
+    primarySeverity: "WARNING",
+    primaryMessage: "synthetic queue backlog: 86 pending jobs on agent-dispatch",
+    secondarySeverity: "ERROR",
+    secondaryMessage: "synthetic worker timeout: 7 dispatch attempts exceeded 3000ms"
+  },
+  {
+    id: "logging-delay",
+    label: "ログ配送遅延",
+    summary: "合成ログ配送の遅延と観測欠損を記録しました。",
+    primarySeverity: "ERROR",
+    primaryMessage: "synthetic log delivery delay: Cloud Logging export lag p95 4200ms",
+    secondarySeverity: "WARNING",
+    secondaryMessage: "synthetic observability gap: 12 request traces missing correlation ids"
+  }
+] as const;
+
 app.post("/api/ops-agent/incident-drill", (_req, res) => {
   const now = Date.now();
   if (now - lastDrillAt < 60_000) {
@@ -675,13 +705,19 @@ app.post("/api/ops-agent/incident-drill", (_req, res) => {
   }
   lastDrillAt = now;
   const drillId = randomUUID().slice(0, 8);
+  const scenario = INCIDENT_DRILL_SCENARIOS[Math.floor(Math.random() * INCIDENT_DRILL_SCENARIOS.length)];
   console.log(
-    JSON.stringify({ severity: "ERROR", message: `[incident-drill ${drillId}] synthetic checkout latency spike: p95 4800ms, upstream timeout to payments-api` })
+    JSON.stringify({ severity: scenario.primarySeverity, scenarioId: scenario.id, message: `[incident-drill ${drillId}] ${scenario.primaryMessage}` })
   );
   console.log(
-    JSON.stringify({ severity: "WARNING", message: `[incident-drill ${drillId}] retry storm detected: 34 retries/min against /api/recommend` })
+    JSON.stringify({ severity: scenario.secondarySeverity, scenarioId: scenario.id, message: `[incident-drill ${drillId}] ${scenario.secondaryMessage}` })
   );
-  res.json({ ok: true, drillId, note: "実ログとしてCloud Loggingへ記録。約15秒後に実行すると検出対象になります。" });
+  res.json({
+    ok: true,
+    drillId,
+    scenario: { id: scenario.id, label: scenario.label, severity: scenario.primarySeverity, summary: scenario.summary },
+    note: "合成ログをCloud Loggingへ記録しました。約15秒後にSRE監査で検出できます。"
+  });
 });
 
 app.get("/.well-known/agent-card.json", (req, res) => {

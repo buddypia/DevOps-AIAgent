@@ -8,7 +8,7 @@ import type { AgentIdentity } from "./MissionControl.js";
 import type { AgentTrackRecordView } from "./missionTypes.js";
 
 function formatRate(rate: number | null): string {
-  return rate === null ? "—" : `${Math.round(rate * 100)}%`;
+  return rate === null ? "未計測" : `${Math.round(rate * 100)}%`;
 }
 
 function formatLastRun(iso: string | null): string {

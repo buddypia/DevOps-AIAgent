@@ -29,6 +29,15 @@ const VERDICT_META: Record<string, { label: string; icon: typeof Rocket }> = {
   blocked: { label: "ブロック", icon: CircleAlert }
 };
 
+function missionIsStale(mission: MissionView, activeMissionId: string | null): boolean {
+  return (mission.status === "planning" || mission.status === "running") && activeMissionId !== mission.id;
+}
+
+function missionLabel(mission: MissionView, activeMissionId: string | null): string {
+  if (missionIsStale(mission, activeMissionId)) return "要確認";
+  return MISSION_STATUS_LABELS[mission.status];
+}
+
 function StepStatusBadge({ status }: { status: string }) {
   return <span className={`mc-step-status mc-step-status-${status}`}>{STEP_STATUS_LABELS[status] ?? status}</span>;
 }
@@ -42,6 +51,7 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
   const [goal, setGoal] = useState(MISSION_TEMPLATES[0].goal);
   const [missions, setMissions] = useState<MissionView[]>([]);
   const [selectedMissionId, setSelectedMissionId] = useState("");
+  const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -49,13 +59,19 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
     () => missions.find((mission) => mission.id === selectedMissionId) ?? missions[0] ?? null,
     [missions, selectedMissionId]
   );
-  const missionActive = selectedMission ? selectedMission.status === "planning" || selectedMission.status === "running" : false;
+  const missionActive = selectedMission
+    ? (selectedMission.status === "planning" || selectedMission.status === "running") && activeMissionId === selectedMission.id
+    : false;
+  const missionStale = selectedMission
+    ? (selectedMission.status === "planning" || selectedMission.status === "running") && activeMissionId !== selectedMission.id
+    : false;
 
   const refreshList = useCallback(async () => {
     try {
       const response = await fetch("/api/missions?limit=8");
-      const body = (await response.json()) as { missions?: MissionView[] };
+      const body = (await response.json()) as { missions?: MissionView[]; active?: string | null };
       setMissions(body.missions ?? []);
+      setActiveMissionId(body.active ?? null);
     } catch {
       // 一覧取得失敗は致命的ではない (次のポーリングで再試行)
     }
@@ -65,7 +81,7 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
     void refreshList();
   }, [refreshList]);
 
-  // アクティブミッションのポーリング — 完了/失敗で親へ通知 (実績・ラン一覧の更新)
+  // アクティブミッションのポーリング。完了/失敗で親へ通知する。
   useEffect(() => {
     if (!missionActive || !selectedMission) return;
     const missionId = selectedMission.id;
@@ -102,6 +118,7 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
         setMessage(body.message ?? body.error ?? "ミッションを開始できませんでした。");
         return;
       }
+      setActiveMissionId(body.missionId);
       setSelectedMissionId(body.missionId);
       await refreshList();
     } catch {
@@ -135,7 +152,7 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
           rows={3}
           maxLength={2000}
           onChange={(event) => setGoal(event.target.value)}
-          placeholder="達成したい目標を書く — 例: 本番サービスの稼働リスクを総点検して"
+          placeholder="達成したい目標を書く。例: 本番サービスの稼働リスクを総点検して"
           aria-label="ミッションの目標"
         />
         <div className="mc-start-row">
@@ -159,7 +176,9 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
               className={`mc-history-chip${selectedMission?.id === mission.id ? " is-active" : ""}`}
               onClick={() => setSelectedMissionId(mission.id)}
             >
-              <span className={`mc-status mc-status-${mission.status}`}>{MISSION_STATUS_LABELS[mission.status]}</span>
+              <span className={`mc-status mc-status-${missionIsStale(mission, activeMissionId) ? "stale" : mission.status}`}>
+                {missionLabel(mission, activeMissionId)}
+              </span>
               <span className="mc-history-goal">{mission.goal.slice(0, 42)}…</span>
               <span className="mc-history-time">{new Date(mission.startedAt).toLocaleTimeString("ja-JP")}</span>
             </button>
@@ -170,12 +189,22 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
       {selectedMission ? (
         <div className="mc-live" aria-live="polite">
           <div className="mc-live-head">
-            <span className={`mc-status mc-status-${selectedMission.status}`}>{MISSION_STATUS_LABELS[selectedMission.status]}</span>
+            <span className={`mc-status mc-status-${missionStale ? "stale" : selectedMission.status}`}>
+              {missionStale ? "要確認" : missionLabel(selectedMission, activeMissionId)}
+            </span>
             <p className="mc-live-goal">{selectedMission.goal}</p>
             <span className="mc-live-meta">
               {selectedMission.model}・{selectedMission.mode}・orchestrator ${selectedMission.usage.estimatedCostUsd}
             </span>
           </div>
+          {missionStale ? (
+            <div className="mc-stale-notice" role="status">
+              <CircleAlert size={16} />
+              <span>
+                <strong>保存された履歴です。</strong> 現在のworkerは確認できないため、pollingを停止しています。新しいミッションを開始できます。
+              </span>
+            </div>
+          ) : null}
           {selectedMission.planSummary ? (
             <p className="mc-plan-summary">
               <Radar size={14} /> 作戦: {selectedMission.planSummary}
@@ -204,7 +233,7 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
                     {step.observed ? (
                       <p className="mc-step-observed">
                         所見 {step.observed.findingsTotal} 件中 {step.observed.accepted} 件受入
-                        {step.observed.topFinding ? ` — ${step.observed.topFinding}` : ""}
+                        {step.observed.topFinding ? `。${step.observed.topFinding}` : ""}
                       </p>
                     ) : null}
                     {step.decision ? <p className="mc-step-decision">判断: {step.decision}</p> : null}
