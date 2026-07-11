@@ -1,0 +1,550 @@
+{
+  "generatedAt": "2026-05-13",
+  "source": "docs/01_hackathon/idea_recommendations_500_scored.md recalculated top 20",
+  "packageVersions": {
+    "dependencies": {
+      "@google/genai": "2.5.0",
+      "cors": "2.8.6",
+      "express": "5.2.1",
+      "zod": "4.4.3"
+    },
+    "devDependencies": {
+      "@types/cors": "2.8.19",
+      "@types/express": "5.0.6",
+      "@types/node": "25.9.1",
+      "concurrently": "9.2.1",
+      "tsx": "4.22.3",
+      "typescript": "6.0.3",
+      "vite": "8.0.14",
+      "vitest": "4.1.7"
+    }
+  },
+  "projects": [
+    {
+      "rank": 1,
+      "ideaNo": "001",
+      "name": "ShipGuard AI",
+      "slug": "01-shipguard-ai",
+      "packageName": "shipguard-ai",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/01-shipguard-ai",
+      "docs": {
+        "manual": "outputs/01-shipguard-ai/docs/manual.html",
+        "development": "outputs/01-shipguard-ai/docs/development.html",
+        "environment": "outputs/01-shipguard-ai/docs/environment.md",
+        "product": "outputs/01-shipguard-ai/docs/product.md",
+        "terraform": "outputs/01-shipguard-ai/docs/terraform.md",
+        "terraformHtml": "outputs/01-shipguard-ai/docs/terraform.html",
+        "architectureSvg": "outputs/01-shipguard-ai/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/01-shipguard-ai/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 2,
+      "ideaNo": "026",
+      "name": "Two Minute Triage",
+      "slug": "02-two-minute-triage",
+      "packageName": "two-minute-triage",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/02-two-minute-triage",
+      "docs": {
+        "manual": "outputs/02-two-minute-triage/docs/manual.html",
+        "development": "outputs/02-two-minute-triage/docs/development.html",
+        "environment": "outputs/02-two-minute-triage/docs/environment.md",
+        "product": "outputs/02-two-minute-triage/docs/product.md",
+        "terraform": "outputs/02-two-minute-triage/docs/terraform.md",
+        "terraformHtml": "outputs/02-two-minute-triage/docs/terraform.html",
+        "architectureSvg": "outputs/02-two-minute-triage/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/02-two-minute-triage/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 3,
+      "ideaNo": "002",
+      "name": "Canary Diff Judge",
+      "slug": "03-canary-diff-judge",
+      "packageName": "canary-diff-judge",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/03-canary-diff-judge",
+      "docs": {
+        "manual": "outputs/03-canary-diff-judge/docs/manual.html",
+        "development": "outputs/03-canary-diff-judge/docs/development.html",
+        "environment": "outputs/03-canary-diff-judge/docs/environment.md",
+        "product": "outputs/03-canary-diff-judge/docs/product.md",
+        "terraform": "outputs/03-canary-diff-judge/docs/terraform.md",
+        "terraformHtml": "outputs/03-canary-diff-judge/docs/terraform.html",
+        "architectureSvg": "outputs/03-canary-diff-judge/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/03-canary-diff-judge/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 4,
+      "ideaNo": "004",
+      "name": "Blast Radius Agent",
+      "slug": "04-blast-radius-agent",
+      "packageName": "blast-radius-agent",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/04-blast-radius-agent",
+      "docs": {
+        "manual": "outputs/04-blast-radius-agent/docs/manual.html",
+        "development": "outputs/04-blast-radius-agent/docs/development.html",
+        "environment": "outputs/04-blast-radius-agent/docs/environment.md",
+        "product": "outputs/04-blast-radius-agent/docs/product.md",
+        "terraform": "outputs/04-blast-radius-agent/docs/terraform.md",
+        "terraformHtml": "outputs/04-blast-radius-agent/docs/terraform.html",
+        "architectureSvg": "outputs/04-blast-radius-agent/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/04-blast-radius-agent/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 5,
+      "ideaNo": "226",
+      "name": "Privacy Impact Diff Agent",
+      "slug": "05-privacy-impact-diff-agent",
+      "packageName": "privacy-impact-diff-agent",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/05-privacy-impact-diff-agent",
+      "docs": {
+        "manual": "outputs/05-privacy-impact-diff-agent/docs/manual.html",
+        "development": "outputs/05-privacy-impact-diff-agent/docs/development.html",
+        "environment": "outputs/05-privacy-impact-diff-agent/docs/environment.md",
+        "product": "outputs/05-privacy-impact-diff-agent/docs/product.md",
+        "terraform": "outputs/05-privacy-impact-diff-agent/docs/terraform.md",
+        "terraformHtml": "outputs/05-privacy-impact-diff-agent/docs/terraform.html",
+        "architectureSvg": "outputs/05-privacy-impact-diff-agent/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/05-privacy-impact-diff-agent/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 6,
+      "ideaNo": "003",
+      "name": "Deploy Rehearsal Agent",
+      "slug": "06-deploy-rehearsal-agent",
+      "packageName": "deploy-rehearsal-agent",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/06-deploy-rehearsal-agent",
+      "docs": {
+        "manual": "outputs/06-deploy-rehearsal-agent/docs/manual.html",
+        "development": "outputs/06-deploy-rehearsal-agent/docs/development.html",
+        "environment": "outputs/06-deploy-rehearsal-agent/docs/environment.md",
+        "product": "outputs/06-deploy-rehearsal-agent/docs/product.md",
+        "terraform": "outputs/06-deploy-rehearsal-agent/docs/terraform.md",
+        "terraformHtml": "outputs/06-deploy-rehearsal-agent/docs/terraform.html",
+        "architectureSvg": "outputs/06-deploy-rehearsal-agent/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/06-deploy-rehearsal-agent/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 7,
+      "ideaNo": "024",
+      "name": "Post Deploy Judge",
+      "slug": "07-post-deploy-judge",
+      "packageName": "post-deploy-judge",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/07-post-deploy-judge",
+      "docs": {
+        "manual": "outputs/07-post-deploy-judge/docs/manual.html",
+        "development": "outputs/07-post-deploy-judge/docs/development.html",
+        "environment": "outputs/07-post-deploy-judge/docs/environment.md",
+        "product": "outputs/07-post-deploy-judge/docs/product.md",
+        "terraform": "outputs/07-post-deploy-judge/docs/terraform.md",
+        "terraformHtml": "outputs/07-post-deploy-judge/docs/terraform.html",
+        "architectureSvg": "outputs/07-post-deploy-judge/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/07-post-deploy-judge/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 8,
+      "ideaNo": "027",
+      "name": "Recovery Confidence Meter",
+      "slug": "08-recovery-confidence-meter",
+      "packageName": "recovery-confidence-meter",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/08-recovery-confidence-meter",
+      "docs": {
+        "manual": "outputs/08-recovery-confidence-meter/docs/manual.html",
+        "development": "outputs/08-recovery-confidence-meter/docs/development.html",
+        "environment": "outputs/08-recovery-confidence-meter/docs/environment.md",
+        "product": "outputs/08-recovery-confidence-meter/docs/product.md",
+        "terraform": "outputs/08-recovery-confidence-meter/docs/terraform.md",
+        "terraformHtml": "outputs/08-recovery-confidence-meter/docs/terraform.html",
+        "architectureSvg": "outputs/08-recovery-confidence-meter/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/08-recovery-confidence-meter/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 9,
+      "ideaNo": "051",
+      "name": "Eval Dataset Gardener",
+      "slug": "09-eval-dataset-gardener",
+      "packageName": "eval-dataset-gardener",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/09-eval-dataset-gardener",
+      "docs": {
+        "manual": "outputs/09-eval-dataset-gardener/docs/manual.html",
+        "development": "outputs/09-eval-dataset-gardener/docs/development.html",
+        "environment": "outputs/09-eval-dataset-gardener/docs/environment.md",
+        "product": "outputs/09-eval-dataset-gardener/docs/product.md",
+        "terraform": "outputs/09-eval-dataset-gardener/docs/terraform.md",
+        "terraformHtml": "outputs/09-eval-dataset-gardener/docs/terraform.html",
+        "architectureSvg": "outputs/09-eval-dataset-gardener/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/09-eval-dataset-gardener/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 10,
+      "ideaNo": "123",
+      "name": "Cloud Run Traffic Mixer",
+      "slug": "10-cloud-run-traffic-mixer",
+      "packageName": "cloud-run-traffic-mixer",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/10-cloud-run-traffic-mixer",
+      "docs": {
+        "manual": "outputs/10-cloud-run-traffic-mixer/docs/manual.html",
+        "development": "outputs/10-cloud-run-traffic-mixer/docs/development.html",
+        "environment": "outputs/10-cloud-run-traffic-mixer/docs/environment.md",
+        "product": "outputs/10-cloud-run-traffic-mixer/docs/product.md",
+        "terraform": "outputs/10-cloud-run-traffic-mixer/docs/terraform.md",
+        "terraformHtml": "outputs/10-cloud-run-traffic-mixer/docs/terraform.html",
+        "architectureSvg": "outputs/10-cloud-run-traffic-mixer/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/10-cloud-run-traffic-mixer/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 11,
+      "ideaNo": "126",
+      "name": "Runbook Decay Detector",
+      "slug": "11-runbook-decay-detector",
+      "packageName": "runbook-decay-detector",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/11-runbook-decay-detector",
+      "docs": {
+        "manual": "outputs/11-runbook-decay-detector/docs/manual.html",
+        "development": "outputs/11-runbook-decay-detector/docs/development.html",
+        "environment": "outputs/11-runbook-decay-detector/docs/environment.md",
+        "product": "outputs/11-runbook-decay-detector/docs/product.md",
+        "terraform": "outputs/11-runbook-decay-detector/docs/terraform.md",
+        "terraformHtml": "outputs/11-runbook-decay-detector/docs/terraform.html",
+        "architectureSvg": "outputs/11-runbook-decay-detector/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/11-runbook-decay-detector/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 12,
+      "ideaNo": "201",
+      "name": "Data Pipeline Sheriff",
+      "slug": "12-data-pipeline-sheriff",
+      "packageName": "data-pipeline-sheriff",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/12-data-pipeline-sheriff",
+      "docs": {
+        "manual": "outputs/12-data-pipeline-sheriff/docs/manual.html",
+        "development": "outputs/12-data-pipeline-sheriff/docs/development.html",
+        "environment": "outputs/12-data-pipeline-sheriff/docs/environment.md",
+        "product": "outputs/12-data-pipeline-sheriff/docs/product.md",
+        "terraform": "outputs/12-data-pipeline-sheriff/docs/terraform.md",
+        "terraformHtml": "outputs/12-data-pipeline-sheriff/docs/terraform.html",
+        "architectureSvg": "outputs/12-data-pipeline-sheriff/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/12-data-pipeline-sheriff/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 13,
+      "ideaNo": "005",
+      "name": "Rollback Concierge",
+      "slug": "13-rollback-concierge",
+      "packageName": "rollback-concierge",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/13-rollback-concierge",
+      "docs": {
+        "manual": "outputs/13-rollback-concierge/docs/manual.html",
+        "development": "outputs/13-rollback-concierge/docs/development.html",
+        "environment": "outputs/13-rollback-concierge/docs/environment.md",
+        "product": "outputs/13-rollback-concierge/docs/product.md",
+        "terraform": "outputs/13-rollback-concierge/docs/terraform.md",
+        "terraformHtml": "outputs/13-rollback-concierge/docs/terraform.html",
+        "architectureSvg": "outputs/13-rollback-concierge/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/13-rollback-concierge/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 14,
+      "ideaNo": "150",
+      "name": "Deployment Black Box Recorder",
+      "slug": "14-deployment-black-box-recorder",
+      "packageName": "deployment-black-box-recorder",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/14-deployment-black-box-recorder",
+      "docs": {
+        "manual": "outputs/14-deployment-black-box-recorder/docs/manual.html",
+        "development": "outputs/14-deployment-black-box-recorder/docs/development.html",
+        "environment": "outputs/14-deployment-black-box-recorder/docs/environment.md",
+        "product": "outputs/14-deployment-black-box-recorder/docs/product.md",
+        "terraform": "outputs/14-deployment-black-box-recorder/docs/terraform.md",
+        "terraformHtml": "outputs/14-deployment-black-box-recorder/docs/terraform.html",
+        "architectureSvg": "outputs/14-deployment-black-box-recorder/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/14-deployment-black-box-recorder/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 15,
+      "ideaNo": "011",
+      "name": "Dark Launch Scout",
+      "slug": "15-dark-launch-scout",
+      "packageName": "dark-launch-scout",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/15-dark-launch-scout",
+      "docs": {
+        "manual": "outputs/15-dark-launch-scout/docs/manual.html",
+        "development": "outputs/15-dark-launch-scout/docs/development.html",
+        "environment": "outputs/15-dark-launch-scout/docs/environment.md",
+        "product": "outputs/15-dark-launch-scout/docs/product.md",
+        "terraform": "outputs/15-dark-launch-scout/docs/terraform.md",
+        "terraformHtml": "outputs/15-dark-launch-scout/docs/terraform.html",
+        "architectureSvg": "outputs/15-dark-launch-scout/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/15-dark-launch-scout/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 16,
+      "ideaNo": "076",
+      "name": "AI Exploratory Tester",
+      "slug": "16-ai-exploratory-tester",
+      "packageName": "ai-exploratory-tester",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/16-ai-exploratory-tester",
+      "docs": {
+        "manual": "outputs/16-ai-exploratory-tester/docs/manual.html",
+        "development": "outputs/16-ai-exploratory-tester/docs/development.html",
+        "environment": "outputs/16-ai-exploratory-tester/docs/environment.md",
+        "product": "outputs/16-ai-exploratory-tester/docs/product.md",
+        "terraform": "outputs/16-ai-exploratory-tester/docs/terraform.md",
+        "terraformHtml": "outputs/16-ai-exploratory-tester/docs/terraform.html",
+        "architectureSvg": "outputs/16-ai-exploratory-tester/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/16-ai-exploratory-tester/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 17,
+      "ideaNo": "179",
+      "name": "Decision Fatigue Reducer",
+      "slug": "17-decision-fatigue-reducer",
+      "packageName": "decision-fatigue-reducer",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/17-decision-fatigue-reducer",
+      "docs": {
+        "manual": "outputs/17-decision-fatigue-reducer/docs/manual.html",
+        "development": "outputs/17-decision-fatigue-reducer/docs/development.html",
+        "environment": "outputs/17-decision-fatigue-reducer/docs/environment.md",
+        "product": "outputs/17-decision-fatigue-reducer/docs/product.md",
+        "terraform": "outputs/17-decision-fatigue-reducer/docs/terraform.md",
+        "terraformHtml": "outputs/17-decision-fatigue-reducer/docs/terraform.html",
+        "architectureSvg": "outputs/17-decision-fatigue-reducer/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/17-decision-fatigue-reducer/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 18,
+      "ideaNo": "209",
+      "name": "Model Rollback Agent",
+      "slug": "18-model-rollback-agent",
+      "packageName": "model-rollback-agent",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/18-model-rollback-agent",
+      "docs": {
+        "manual": "outputs/18-model-rollback-agent/docs/manual.html",
+        "development": "outputs/18-model-rollback-agent/docs/development.html",
+        "environment": "outputs/18-model-rollback-agent/docs/environment.md",
+        "product": "outputs/18-model-rollback-agent/docs/product.md",
+        "terraform": "outputs/18-model-rollback-agent/docs/terraform.md",
+        "terraformHtml": "outputs/18-model-rollback-agent/docs/terraform.html",
+        "architectureSvg": "outputs/18-model-rollback-agent/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/18-model-rollback-agent/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 19,
+      "ideaNo": "401",
+      "name": "Chaos Drill Agent",
+      "slug": "19-chaos-drill-agent",
+      "packageName": "chaos-drill-agent",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/19-chaos-drill-agent",
+      "docs": {
+        "manual": "outputs/19-chaos-drill-agent/docs/manual.html",
+        "development": "outputs/19-chaos-drill-agent/docs/development.html",
+        "environment": "outputs/19-chaos-drill-agent/docs/environment.md",
+        "product": "outputs/19-chaos-drill-agent/docs/product.md",
+        "terraform": "outputs/19-chaos-drill-agent/docs/terraform.md",
+        "terraformHtml": "outputs/19-chaos-drill-agent/docs/terraform.html",
+        "architectureSvg": "outputs/19-chaos-drill-agent/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/19-chaos-drill-agent/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    },
+    {
+      "rank": 20,
+      "ideaNo": "424",
+      "name": "Incident Commander Karaoke",
+      "slug": "20-incident-commander-karaoke",
+      "packageName": "incident-commander-karaoke",
+      "modelDefault": "gemini-3.1-flash-lite",
+      "path": "outputs/20-incident-commander-karaoke",
+      "docs": {
+        "manual": "outputs/20-incident-commander-karaoke/docs/manual.html",
+        "development": "outputs/20-incident-commander-karaoke/docs/development.html",
+        "environment": "outputs/20-incident-commander-karaoke/docs/environment.md",
+        "product": "outputs/20-incident-commander-karaoke/docs/product.md",
+        "terraform": "outputs/20-incident-commander-karaoke/docs/terraform.md",
+        "terraformHtml": "outputs/20-incident-commander-karaoke/docs/terraform.html",
+        "architectureSvg": "outputs/20-incident-commander-karaoke/docs/architecture.svg"
+      },
+      "terraform": {
+        "module": "outputs/20-incident-commander-karaoke/infra/terraform",
+        "cloudRun": true,
+        "cloudBuild": true,
+        "artifactRegistry": true,
+        "secretManager": true
+      }
+    }
+  ],
+  "githubReadiness": {
+    "generatedAt": "2026-05-22",
+    "includesHtmlManuals": true,
+    "includesDeveloperGuides": true,
+    "includesProjectGitignore": true,
+    "excludesGeneratedDependencies": true
+  },
+  "startupProduct": {
+    "generatedAt": "2026-05-25",
+    "productTelemetry": true,
+    "feedbackLoop": true,
+    "productStrategyDocs": true,
+    "validationPlan": true,
+    "noGoCriteria": true
+  },
+  "terraformReadiness": {
+    "generatedAt": "2026-05-26",
+    "projectCount": 20,
+    "cloudRunTarget": true,
+    "cloudBuildImageBuild": true,
+    "artifactRegistry": true,
+    "secretManagerOptional": true,
+    "markdownGuide": true,
+    "htmlGuide": true,
+    "architectureSvg": true
+  }
+}

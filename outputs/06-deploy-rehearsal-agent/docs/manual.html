@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Deploy Rehearsal Agent 操作マニュアル</title>
+  <style>:root {
+  color-scheme: light;
+  --accent: #4f46e5;
+  --secondary: #ca8a04;
+  --ink: #17202a;
+  --muted: #52606d;
+  --line: #d7dee7;
+  --paper: #ffffff;
+  --soft: #f5f7fa;
+  --warn: #fff8e6;
+  --good: #eefbf5;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--soft); color: var(--ink); line-height: 1.7; }
+main { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 56px; }
+header { background: linear-gradient(135deg, var(--accent), var(--secondary)); color: white; padding: 36px 0 42px; }
+header .inner { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
+h1 { margin: 0 0 10px; font-size: clamp(2rem, 5vw, 4.3rem); line-height: 1; letter-spacing: 0; }
+h2 { margin: 0 0 16px; font-size: 1.35rem; letter-spacing: 0; }
+h3 { margin: 0 0 10px; font-size: 1rem; letter-spacing: 0; }
+p { margin: 0 0 14px; }
+section { margin-top: 20px; padding: 22px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; }
+nav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+nav a { color: white; border: 1px solid rgba(255,255,255,.5); text-decoration: none; padding: 8px 10px; border-radius: 6px; font-weight: 700; }
+nav a[aria-current="page"] { background: rgba(255,255,255,.22); }
+ul, ol { margin: 0; padding-left: 1.2rem; }
+li + li { margin-top: 6px; }
+code, pre { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+pre { overflow-x: auto; padding: 14px; background: #111827; color: #e5e7eb; border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+th, td { border: 1px solid var(--line); padding: 10px; text-align: left; vertical-align: top; }
+th { background: #eef2f7; }
+.doc-id { opacity: .86; font-weight: 700; }
+.lede { max-width: 760px; font-size: 1.08rem; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.box { border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: #fff; }
+.box strong { color: var(--accent); }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pills span { border: 1px solid var(--line); border-radius: 999px; padding: 6px 9px; background: #fff; font-weight: 700; color: var(--muted); }
+.diagram { width: 100%; min-height: 220px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcfe; }
+.callout { background: var(--good); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.warn { background: var(--warn); }
+.muted { color: var(--muted); }
+.checklist li { list-style: none; margin-left: -1rem; }
+.checklist li::before { content: "✓"; color: var(--accent); font-weight: 900; margin-right: 8px; }
+@media (max-width: 760px) {
+  main { width: min(100% - 24px, 1120px); padding-top: 18px; }
+  header { padding: 26px 0 30px; }
+  .grid, .two { grid-template-columns: 1fr; }
+  section { padding: 18px; }
+}</style>
+</head>
+<body>
+  <header>
+    <div class="inner">
+      <h1>Deploy Rehearsal Agent</h1>
+      <p class="lede">Dry-runs deployment instructions before they become an outage.</p>
+      <nav aria-label="ドキュメント">
+  <a href="../README.md">README</a>
+  <a href="environment.md">環境設定</a>
+  <a aria-current="page" href="manual.html">操作マニュアル</a>
+  <a href="development.html">開発ガイド</a>
+</nav>
+<p class="doc-id">Rank 6 / Idea 003 / deploy-rehearsal-agent</p>
+    </div>
+  </header>
+  <main>
+    <section class="callout">
+      <h2>このMVPで検証する仮説</h2>
+      <p>pre-production rehearsal directorが、分散したDevOps証拠を短時間で読み、READY / REHEARSE / NOT READY の判断と次アクションに変換できれば、リリース判断・障害初動・運用レビューの待ち時間を減らせる。</p>
+      <div class="pills"><span>env readiness</span><span>command sequencing</span><span>stop conditions</span></div>
+    </section>
+
+    <section>
+      <h2>操作フロー</h2>
+      <svg class="diagram" role="img" aria-labelledby="flow-title flow-desc" viewBox="0 0 1080 230">
+  <title id="flow-title">Deploy Rehearsal Agent 操作フロー</title>
+  <desc id="flow-desc">入力、証拠整理、API検証、AI分析、人間の共有判断までの流れ。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#52606d" />
+    </marker>
+  </defs>
+  <rect width="1080" height="230" fill="#fbfcfe" />
+  <text x="28" y="34" font-size="20" font-weight="800" fill="#17202a">運用判断を5ステップで再現する</text>
+  <path d="M188 106 H226" stroke="#52606d" stroke-width="3" marker-end="url(#arrow)" /><rect x="28" y="72" width="160" height="68" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="2" />
+<text x="108" y="104" text-anchor="middle" font-size="15" font-weight="700" fill="#17202a">1. 対象入力</text>
+<text x="108" y="124" text-anchor="middle" font-size="12" fill="#52606d">READY / REHEARSE / NOT READY</text>
+<path d="M394 106 H432" stroke="#52606d" stroke-width="3" marker-end="url(#arrow)" /><rect x="234" y="72" width="160" height="68" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="2" />
+<text x="314" y="104" text-anchor="middle" font-size="15" font-weight="700" fill="#17202a">2. 証拠整理</text>
+<text x="314" y="124" text-anchor="middle" font-size="12" fill="#52606d">READY / REHEARSE / NOT READY</text>
+<path d="M600 106 H638" stroke="#52606d" stroke-width="3" marker-end="url(#arrow)" /><rect x="440" y="72" width="160" height="68" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="2" />
+<text x="520" y="104" text-anchor="middle" font-size="15" font-weight="700" fill="#17202a">3. API検証</text>
+<text x="520" y="124" text-anchor="middle" font-size="12" fill="#52606d">READY / REHEARSE / NOT READY</text>
+<path d="M806 106 H844" stroke="#52606d" stroke-width="3" marker-end="url(#arrow)" /><rect x="646" y="72" width="160" height="68" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="2" />
+<text x="726" y="104" text-anchor="middle" font-size="15" font-weight="700" fill="#17202a">4. AI/ fallback</text>
+<text x="726" y="124" text-anchor="middle" font-size="12" fill="#52606d">READY / REHEARSE / NOT READY</text>
+<rect x="852" y="72" width="160" height="68" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="2" />
+<text x="932" y="104" text-anchor="middle" font-size="15" font-weight="700" fill="#17202a">5. 判断共有</text>
+<text x="932" y="124" text-anchor="middle" font-size="12" fill="#52606d">READY / REHEARSE / NOT READY</text>
+</svg>
+      <ol>
+        <li><strong>対象</strong>にPR URL、障害名、Cloud Run revision、Runbook名などを入力します。</li>
+        <li><strong>Context</strong>にサービス背景、制約、安定版revision、関係者を入力します。</li>
+        <li><strong>Signals</strong>にCI、ログ、メトリクス、変更差分、問い合わせ内容を貼ります。</li>
+        <li>判断モードを選び、必要なら Evidence Window と Operator Note を足します。</li>
+        <li>分析結果の判断、根拠、リスク、コマンド、Runbook Patch、コメント案を確認します。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>サンプル入力</h2>
+      <table>
+        <tbody>
+          <tr><th>Target</th><td>release/v2.7.0 deploy rehearsal</td></tr>
+          <tr><th>Context</th><td>Team wants to deploy a Cloud Run service from source after merging feature flags and DB index migration.</td></tr>
+          <tr><th>Signals</th><td>README says set STRIPE_WEBHOOK_SECRET but .env.example lacks it. GitHub Actions deploy job uses node 20 while local package expects node 22. Cloud Run min instances set to zero. Rollback command exists but migration rollback SQL is missing.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>判断の読み方</h2>
+      <div class="grid">
+        <div class="box"><strong>READY</strong><p>証拠が十分で、通常フローで進められる状態です。</p></div>
+        <div class="box"><strong>REHEARSE</strong><p>進められる可能性はあるが、オーナー確認や追加観測が必要な状態です。</p></div>
+        <div class="box"><strong>NOT READY</strong><p>停止、ロールバック、エスカレーションなど強い介入が必要な状態です。</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>画面で確認する項目</h2>
+      <ul class="checklist">
+        <li>Confidence が判断に対して過信していないか</li>
+        <li>Evidence の重みが貼り付けた実データと対応しているか</li>
+        <li>Actions に owner と priority があり、次の担当者へ渡せるか</li>
+        <li>Verification Commands が実行可能な粒度になっているか</li>
+        <li>Comment Draft がPR、障害チャンネル、Runbookに貼れる文章か</li>
+      </ul>
+    </section>
+
+    <section class="warn">
+      <h2>運用上の注意</h2>
+      <p>このMVPは人間の承認を前提にした判断支援です。Gemini APIが使えない場合は deterministic fallback で動作しますが、実データ連携や本番自動化を行う前に、対象サービスの権限、監査ログ、ロールバック手順を確認してください。</p>
+    </section>
+  </main>
+</body>
+</html>

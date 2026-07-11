@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rollback Concierge 開発ガイド</title>
+  <style>:root {
+  color-scheme: light;
+  --accent: #b45309;
+  --secondary: #2563eb;
+  --ink: #17202a;
+  --muted: #52606d;
+  --line: #d7dee7;
+  --paper: #ffffff;
+  --soft: #f5f7fa;
+  --warn: #fff8e6;
+  --good: #eefbf5;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--soft); color: var(--ink); line-height: 1.7; }
+main { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 56px; }
+header { background: linear-gradient(135deg, var(--accent), var(--secondary)); color: white; padding: 36px 0 42px; }
+header .inner { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
+h1 { margin: 0 0 10px; font-size: clamp(2rem, 5vw, 4.3rem); line-height: 1; letter-spacing: 0; }
+h2 { margin: 0 0 16px; font-size: 1.35rem; letter-spacing: 0; }
+h3 { margin: 0 0 10px; font-size: 1rem; letter-spacing: 0; }
+p { margin: 0 0 14px; }
+section { margin-top: 20px; padding: 22px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; }
+nav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+nav a { color: white; border: 1px solid rgba(255,255,255,.5); text-decoration: none; padding: 8px 10px; border-radius: 6px; font-weight: 700; }
+nav a[aria-current="page"] { background: rgba(255,255,255,.22); }
+ul, ol { margin: 0; padding-left: 1.2rem; }
+li + li { margin-top: 6px; }
+code, pre { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+pre { overflow-x: auto; padding: 14px; background: #111827; color: #e5e7eb; border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+th, td { border: 1px solid var(--line); padding: 10px; text-align: left; vertical-align: top; }
+th { background: #eef2f7; }
+.doc-id { opacity: .86; font-weight: 700; }
+.lede { max-width: 760px; font-size: 1.08rem; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.box { border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: #fff; }
+.box strong { color: var(--accent); }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pills span { border: 1px solid var(--line); border-radius: 999px; padding: 6px 9px; background: #fff; font-weight: 700; color: var(--muted); }
+.diagram { width: 100%; min-height: 220px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcfe; }
+.callout { background: var(--good); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.warn { background: var(--warn); }
+.muted { color: var(--muted); }
+.checklist li { list-style: none; margin-left: -1rem; }
+.checklist li::before { content: "✓"; color: var(--accent); font-weight: 900; margin-right: 8px; }
+@media (max-width: 760px) {
+  main { width: min(100% - 24px, 1120px); padding-top: 18px; }
+  header { padding: 26px 0 30px; }
+  .grid, .two { grid-template-columns: 1fr; }
+  section { padding: 18px; }
+}</style>
+</head>
+<body>
+  <header>
+    <div class="inner">
+      <h1>Rollback Concierge 開発ガイド</h1>
+      <p class="lede">Looks at Cloud Run revisions, DB changes, and operational state to propose rollback sequencing.</p>
+      <nav aria-label="ドキュメント">
+  <a href="../README.md">README</a>
+  <a href="environment.md">環境設定</a>
+  <a href="manual.html">操作マニュアル</a>
+  <a aria-current="page" href="development.html">開発ガイド</a>
+</nav>
+<p class="doc-id">Rank 13 / Idea 005 / rollback-concierge</p>
+    </div>
+  </header>
+  <main>
+    <section>
+      <h2>アーキテクチャ</h2>
+      <svg class="diagram" role="img" aria-labelledby="arch-title arch-desc" viewBox="0 0 1080 300">
+  <title id="arch-title">Rollback Concierge アーキテクチャ図</title>
+  <desc id="arch-desc">Vite UI、Express API、Gemini API、Cloud Run、ログとヘルスチェックの関係。</desc>
+  <defs>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#52606d" />
+    </marker>
+  </defs>
+  <rect width="1080" height="300" fill="#fbfcfe" />
+  <rect x="32" y="88" width="176" height="88" rx="8" fill="#fff" stroke="#b45309" stroke-width="2" />
+  <text x="120" y="124" text-anchor="middle" font-size="17" font-weight="800" fill="#17202a">Browser UI</text>
+  <text x="120" y="150" text-anchor="middle" font-size="12" fill="#52606d">Vite dashboard</text>
+  <path d="M210 132 H314" stroke="#52606d" stroke-width="3" marker-end="url(#arrow2)" />
+  <rect x="320" y="54" width="230" height="156" rx="8" fill="#fff" stroke="#b45309" stroke-width="2" />
+  <text x="435" y="92" text-anchor="middle" font-size="17" font-weight="800" fill="#17202a">Cloud Run Service</text>
+  <text x="435" y="120" text-anchor="middle" font-size="12" fill="#52606d">Express API + static UI</text>
+  <text x="435" y="146" text-anchor="middle" font-size="12" fill="#52606d">/api/health /ready /version</text>
+  <text x="435" y="172" text-anchor="middle" font-size="12" fill="#52606d">Request ID + structured logs</text>
+  <path d="M552 132 H658" stroke="#52606d" stroke-width="3" marker-end="url(#arrow2)" />
+  <rect x="666" y="88" width="176" height="88" rx="8" fill="#fff" stroke="#b45309" stroke-width="2" />
+  <text x="754" y="124" text-anchor="middle" font-size="17" font-weight="800" fill="#17202a">Gemini API</text>
+  <text x="754" y="150" text-anchor="middle" font-size="12" fill="#52606d">structured JSON</text>
+  <path d="M435 212 V250 H922" stroke="#52606d" stroke-width="3" marker-end="url(#arrow2)" fill="none" />
+  <rect x="862" y="88" width="180" height="88" rx="8" fill="#fff" stroke="#b45309" stroke-width="2" />
+  <text x="952" y="120" text-anchor="middle" font-size="17" font-weight="800" fill="#17202a">Local fallback</text>
+  <text x="952" y="148" text-anchor="middle" font-size="12" fill="#52606d">demo-safe analysis</text>
+  <text x="32" y="36" font-size="20" font-weight="800" fill="#17202a">本番MVPの実装境界</text>
+</svg>
+      <div class="grid two">
+        <div class="box"><strong>Frontend</strong><p>Vite + TypeScript。シナリオ選択、入力、結果履歴、copy/exportを担当します。</p></div>
+        <div class="box"><strong>Backend</strong><p>Express API。Zod入力検証、Gemini呼び出し、fallback、ヘルスチェックを担当します。</p></div>
+        <div class="box"><strong>AI contract</strong><p>decision、confidence、risks、actions、evidence、automationPlan、commentDraftをJSONで返します。</p></div>
+        <div class="box"><strong>Runtime</strong><p>Cloud Run想定。PORT、Secret Manager、構造化ログ、request IDを使います。</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>ローカル開発</h2>
+      <pre><code>npm install
+cp .env.example .env
+npm run dev</code></pre>
+      <p>Viteが表示するURLを開きます。APIは <code>/api</code> でExpressへプロキシされます。</p>
+    </section>
+
+    <section>
+      <h2>検証コマンド</h2>
+      <pre><code>npm run typecheck
+npm run test
+npm run build
+npm run verify</code></pre>
+      <p><code>npm run verify</code> はTypeScript、Vitest、client build、server buildをまとめて実行します。</p>
+    </section>
+
+    <section>
+      <h2>API</h2>
+      <table>
+        <thead><tr><th>Endpoint</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>GET /api/health</code></td><td>起動確認。Cloud RunのHTTP health checkに使えます。</td></tr>
+          <tr><td><code>GET /api/ready</code></td><td>静的UI配信とfallback可用性を含むreadiness確認。</td></tr>
+          <tr><td><code>GET /api/version</code></td><td>serviceVersion、Node.js、model、project metadataを返します。</td></tr>
+          <tr><td><code>GET /api/project</code></td><td>UIが使うプロジェクト設定を返します。</td></tr>
+          <tr><td><code>POST /api/analyze</code></td><td>運用証拠を構造化判断JSONへ変換します。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>本番MVPチェック</h2>
+      <ul class="checklist">
+        <li>Security headers、CSP、no-store API cache、JSON error formatを実装済み</li>
+        <li>X-Request-Id と構造化ログで障害調査の起点を残す</li>
+        <li>GEMINI_API_KEY はSecret Managerで渡し、リポジトリに置かない</li>
+        <li>Dockerfileはmulti-stage build、runtime devDependencies除外、non-rootユーザー実行</li>
+        <li>CORS_ORIGIN、JSON_BODY_LIMIT、SERVICE_VERSIONを環境ごとに調整可能</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>仮説検証メモ</h2>
+      <table>
+        <tbody>
+          <tr><th>Problem hypothesis</th><td>rollback sequencing agentの判断材料が散らばり、初動の品質が担当者依存になる。</td></tr>
+          <tr><th>MVP experiment</th><td>A rollback planner that lists the safest order, verification checks, and irreversible steps.</td></tr>
+          <tr><th>Success metrics</th><td>Rollback safety, Data risk, Verification depth</td></tr>
+          <tr><th>Learn / pivot</th><td>実ユーザーが判断文、検証コマンド、コメント案をそのまま使えるかを観察し、外部API連携の優先順位を決める。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Web調査からの基準</h2>
+      <table>
+        <thead><tr><th>Source</th><th>MVPへの反映</th></tr></thead>
+        <tbody><tr><td><a href="https://docs.cloud.google.com/run/docs/configuring/healthchecks">Google Cloud Run health checks</a></td><td>Cloud Run startup probes succeed on HTTP 2xx/3xx health endpoints, so every MVP exposes health/readiness endpoints.</td></tr>
+<tr><td><a href="https://docs.cloud.google.com/run/docs/securing/security">Google Cloud Run security overview</a></td><td>Cloud Run production services should use dedicated identity, secrets, IAM, and runtime security controls.</td></tr>
+<tr><td><a href="https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes">GitHub README guidance</a></td><td>A README should explain what the project does, why it is useful, how to start, where to get help, and who maintains it.</td></tr>
+<tr><td><a href="https://owasp.org/www-project-application-security-verification-standard/">OWASP ASVS</a></td><td>Use security requirements as a verification yardstick for web applications and APIs.</td></tr>
+<tr><td><a href="https://arxiv.org/abs/1808.05630">Hypothesis-driven MVP research</a></td><td>Startup MVPs should connect experiments to explicit business hypotheses and learning decisions.</td></tr>
+<tr><td><a href="https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-1-flash-lite/">Gemini 3.1 Flash-Lite announcement</a></td><td>Gemini 3.1 Flash-Lite is positioned for high-volume, low-latency AI workloads.</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

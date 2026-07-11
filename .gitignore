@@ -41,3 +41,5 @@ raw/
 .cache/
 .brief2dev/
 # --- end brief2dev transplant-bundle ---
+
+.secret/
