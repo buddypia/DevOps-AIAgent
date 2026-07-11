@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Agent Guild — Judge Demo Command Center</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b1220'/%3E%3Cpath d='m16 6 10 10-10 10L6 16 16 6Z' fill='%235eead4'/%3E%3C/svg%3E" />
     <style>
       :root {
         --bg: #070b14;
@@ -344,20 +345,21 @@
           state.index = index;
           steps.forEach((step, i) => {
             step.classList.toggle('is-done', i < index);
-            step.classList.toggle('is-active', i === index);
+            step.classList.toggle('is-active', i === index && index < steps.length);
           });
           traces.forEach((trace, i) => {
             trace.classList.toggle('is-done', i < index);
-            trace.classList.toggle('is-current', i === index);
+            trace.classList.toggle('is-current', i === index && index < traces.length);
             const meta = trace.querySelector('.trace-meta');
-            meta.textContent = i < index ? 'done' : i === index ? 'running' : 'queued';
+            meta.textContent = i < index ? 'done' : i === index && index < traces.length ? 'running' : 'queued';
           });
-          const percent = Math.round((index / (steps.length - 1)) * 100);
+          const percent = index >= steps.length ? 100 : Math.round((index / (steps.length - 1)) * 100);
           progressBar.style.width = percent + '%';
           progressLabel.textContent = percent + '%';
-          statusTitle.textContent = messages[index][0];
-          statusDetail.textContent = messages[index][1];
-          traceCounter.textContent = `${index} actions / ${index === steps.length - 1 ? 'complete' : 'live'}`;
+          const message = messages[Math.min(index, messages.length - 1)];
+          statusTitle.textContent = message[0];
+          statusDetail.textContent = message[1];
+          traceCounter.textContent = `${Math.min(index, steps.length)} actions / ${index >= steps.length ? 'complete' : 'live'}`;
         }
 
         function reset() {
@@ -383,7 +385,7 @@
               state.running = false;
               runButton.textContent = '完了 — もう一度実行';
               runButton.disabled = false;
-              paint(steps.length - 1);
+              paint(steps.length);
               showToast('自律対応デモが完了しました');
               return;
             }
