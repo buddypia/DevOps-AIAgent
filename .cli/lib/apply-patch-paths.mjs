@@ -1,30 +1,30 @@
 /**
- * apply-patch-paths.mjs — Codex `apply_patch` 대상 파일 경로 추출 (순수 lib SSOT)
+ * apply-patch-paths.mjs — Codex `apply_patch` 対象ファイルパス抽出 (純粋 lib SSOT)
  *
- * Codex CLI 는 파일 편집 시 항상 `tool_name: "apply_patch"` 를 보내며, 패치 본문은
- * `tool_input.command` 문자열에 담긴다 (codex 공식 spec: "Bash and apply_patch use
- * tool_input.command" — https://developers.openai.com/codex/hooks). 본 lib 는 그 패치
- * 문자열에서 대상 파일 경로를 추출한다.
+ * Codex CLI はファイル編集時に常に `tool_name: "apply_patch"` を送り、パッチ本文は
+ * `tool_input.command` 文字列に格納される (codex 公式 spec: "Bash and apply_patch use
+ * tool_input.command" — https://developers.openai.com/codex/hooks)。本 lib はそのパッチ
+ * 文字列から対象ファイルパスを抽出する。
  *
- * worktree-policy-guard (main 직접 편집 차단) 와 worktree-session-owner-guard
- * (cross-worktree 편집 차단) 가 공유한다. R-CM-037 Rule 5 (hook 간 직접 import 금지,
- * 순수 lib SSOT) 정합 — 두 hook 이 본 lib 를 import 한다.
+ * worktree-policy-guard (main 直接編集ブロック) と worktree-session-owner-guard
+ * (cross-worktree 編集ブロック) が共有する。R-CM-037 Rule 5 (hook 間の直接 import 禁止、
+ * 純粋 lib SSOT) 整合 — 両 hook が本 lib を import する。
  *
- * 레퍼런스: trip-jarvis `.agents/hooks/lib/worktree-policy-core.mjs#extractApplyPatchFilePaths`
- * (운영 검증된 구현). apply_patch heredoc 의 `*** Add|Update|Delete File:` / `*** Move to:`
- * 라인 파싱 + invocation fallback.
+ * リファレンス: trip-jarvis `.agents/hooks/lib/worktree-policy-core.mjs#extractApplyPatchFilePaths`
+ * (運用検証済みの実装)。apply_patch heredoc の `*** Add|Update|Delete File:` / `*** Move to:`
+ * 行のパース + invocation fallback。
  *
- * Boundary: 관점 1 (brief2dev 자체) 전용 — worktree 가드 hook 은 scaffold 미배포 (R-CM-028).
+ * Boundary: 観点 1 (brief2dev 自体) 専用 — worktree ガード hook は scaffold 未配備 (R-CM-028)。
  */
 
 import { isAbsolute, join } from 'path';
 
 /**
- * apply_patch command 문자열에서 대상 파일 abs 경로 배열 추출.
+ * apply_patch command 文字列から対象ファイルの abs パス配列を抽出。
  *
- * @param {string} command - apply_patch 패치 본문 (tool_input.command)
- * @param {string} [baseDir] - 상대 경로 정규화 기준 (절대 경로면 그대로)
- * @returns {string[]} 중복 제거된 abs 경로 배열 (입력 부적합 시 빈 배열)
+ * @param {string} command - apply_patch パッチ本文 (tool_input.command)
+ * @param {string} [baseDir] - 相対パス正規化の基準 (絶対パスならそのまま)
+ * @returns {string[]} 重複除去された abs パス配列 (入力が不適合の場合は空配列)
  */
 export function extractApplyPatchFilePaths(command, baseDir = '') {
   if (typeof command !== 'string' || !command.trim()) return [];
@@ -37,8 +37,8 @@ export function extractApplyPatchFilePaths(command, baseDir = '') {
     paths.push(isAbsolute(p) ? p : (baseDir ? join(baseDir, p) : p));
   };
 
-  // CRLF 안전: split('\n') 후 잔여 \r 제거. JS 정규식 `.` 는 \r 을 매칭하지 않으므로
-  // \r 제거 없이는 CRLF 패치 라인의 `(.+)$` 가 통째로 fail → 경로 0건 → 가드 우회 (CRITICAL).
+  // CRLF 安全: split('\n') 後に残った \r を除去。JS 正規表現 `.` は \r をマッチしないため、
+  // \r 除去なしでは CRLF パッチ行の `(.+)$` が丸ごと fail → パス 0 件 → ガード回避 (CRITICAL)。
   for (const rawLine of command.split('\n')) {
     const line = rawLine.replace(/\r$/, '');
     const hunk = line.match(/^\*\*\* (?:Add|Update|Delete) File: (.+)$/);
@@ -50,10 +50,10 @@ export function extractApplyPatchFilePaths(command, baseDir = '') {
     if (move) addPath(move[1]);
   }
 
-  // invocation fallback 제거 (HIGH 오탐 차단): `(?:apply_patch|patch)\s+...` 정규식은
-  // 패치 본문 diff 라인의 'patch' 키워드에서 오탐 경로를 추출 → policy-guard false deny.
-  // codex apply_patch 는 항상 heredoc (`*** ... File:` 마커) 형식이므로 File 라인 0건이면
-  // fail-open (빈 배열 → passthrough, R-CM-006 Rule 2) 이 footgun fallback 보다 안전.
+  // invocation fallback を削除 (HIGH 誤検知ブロック): `(?:apply_patch|patch)\s+...` 正規表現は
+  // パッチ本文の diff 行の 'patch' キーワードから誤検知パスを抽出 → policy-guard false deny。
+  // codex apply_patch は常に heredoc (`*** ... File:` マーカー) 形式なので File 行が 0 件なら
+  // fail-open (空配列 → passthrough, R-CM-006 Rule 2) の方が footgun fallback より安全。
 
   return [...new Set(paths)];
 }

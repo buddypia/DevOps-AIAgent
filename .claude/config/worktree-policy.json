@@ -5,7 +5,7 @@
   "protected_branches": ["main", "master"],
   "tiers": {
     "tier1_main_allowed": {
-      "description": "main 直接 Edit/Write を許容 — git-ignored 実行時/ビル드成果物 + settings.json (hook 登録 codegen 特殊) 限定 (PR 対象外または codegen 管理 → split-brain 無関係)。以下はエコシステム中立な共通ディレクトリ。プロジェクト別の成果物パスは所有者が加減可能。",
+      "description": "main 直接 Edit/Write を許容 — git-ignored 実行時/ビルド成果物 + settings.json (hook 登録 codegen 特殊) 限定 (PR 対象外または codegen 管理 → split-brain 無関係)。以下はエコシステム中立な共通ディレクトリ。プロジェクト別の成果物パスは所有者が加減可能。",
       "patterns": [
         ".tmp/**",
         ".cache/**",

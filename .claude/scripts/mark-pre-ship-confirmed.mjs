@@ -85,7 +85,7 @@ export function resolveMainRoot(cwd = process.cwd()) {
 export function resolveBranch(arg) {
   if (!arg) return null;
   if (arg === '--staged' || arg === 'staged') return null; // ship-feature mode → safeBranchKey('') = 'staged'
-  // worktree path (절대/상대 모두 .worktrees/ 포함) → inferBranchFromWorktreePath
+  // worktree path (絶対/相対いずれも .worktrees/ を含む) → inferBranchFromWorktreePath
   if (arg.includes('.worktrees/') || arg.includes('.worktrees\\')) {
     return inferBranchFromWorktreePath(arg);
   }

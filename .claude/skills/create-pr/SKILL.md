@@ -12,9 +12,9 @@ AI が並行して変更した結果を Feature PR → main 同期まで自動�
 
 > **推奨 (強制ではない)**: 本スキル呼び出しの直前、変更 size に応じて `/pre-ship-quality-advisor` の実行を推奨する。`/code-review --fix` (Claude Code, simplification + correctness が最優先) / `code-standards-aligner` (ポータブルな fallback) / final-review (すべての PR) / `/code-review high` (実質的な変更の review-only correctness verdict オプション) ツールの優先順位とマニュアルチェックリストを提案。他の CLI (Gemini CLI, Codex など) 環境でもマニュアルチェックリストに fallback して動作。
 
-### 핵심 불변식 + 금지 사항
+### 核心不変式 + 禁止事項
 
-**불변식**: unstaged/untracked는 실행 전후로 정확히 동일해야 한다.
+**不変式**: unstaged/untracked は実行前後で正確に同一でなければならない。
 - Mode A Phase 1: worktree 隔離 → オリジナル HEAD 不変
 - Mode A Phase 2: dirty main は自動 stash せずに sync を中断 (`sync_status: local_changes`) する。オリジナル working tree に手を加えず、ユーザーが手動で commit/stash させた後に再試行する。
 
@@ -26,7 +26,7 @@ AI が並行して変更した結果を Feature PR → main 同期まで自動�
 
 **禁止**: オリジナル working tree の修正 · `git reset --hard` · `git checkout .` · `git restore .` · `git clean -f` · `git stash clear` (R-CM-008 Rule 7 — clear のみ遮断、その他 stash 許容) · `--force` push · main 削除 · 衝突の自動解決
 
-### v2 응답 계약 (모든 명령 공통)
+### v2 応答契約 (すべてのコマンド共通)
 
 ```jsonc
 {
@@ -49,7 +49,7 @@ AI が並行して変更した結果を Feature PR → main 同期まで自動�
 
 **承認後の完了報告義務 (`completion_report_markdown`)**: `ship-worktree` は PR/cleanup 後に `completion_report_markdown` フィールドを包含する。AI はユーザー承認後に ship を実行したならば、このフィールドをユーザーに出力しなければならない。生成 SSOT は `.cli/lib/worktree-ship-report.mjs#buildPostApprovalCompletionReport` であり、PR URL/merge commit/CI status、cleanup 状況、反映ファイル tree、残りの対応、問題/改善メモを包含する。
 
-### ops.mjs 사용
+### ops.mjs 使用
 
 ```
 node .claude/scripts/create-pr/ops.mjs <command> [--key value ...]
@@ -57,7 +57,7 @@ node .claude/scripts/create-pr/ops.mjs <command> [--key value ...]
 
 設定: `.claude/skills/create-pr/config.json` — `github_account`、`base_branch` (基本 `main`)、`enforce_ssh_remote` (基本 false)。ops.mjs が `gh auth token -u` で `GH_TOKEN` を自動注入。
 
-| 명령 | Mode | 인자 | 역할 |
+| コマンド | Mode | 引数 | 役割 |
 |---|---|---|---|
 | `init` | staged | — | base 確認 + 同時実行保護 (30min mtime) + CI Mirror Gate (60min stamp) + staged 抽出 + 機密遮断 + gh auth |
 | `isolate` | staged | `--branch <b>` | worktree + feature ブランチ生成 + staged `apply --index` |
@@ -68,7 +68,7 @@ node .claude/scripts/create-pr/ops.mjs <command> [--key value ...]
 | `ship-worktree` | worktree | `--worktree <p> --title <t> [--body <b>] [--force-plan] [--no-merge] [--no-cleanup]` | PLAN.md 検証 + committed/clean worktree 検証 + push + べき等 PR + auto full cleanup (デフォルト値 — `cleanup-worktree` に委譲: worktree・branch 除去 + auto-checkpoint stash drop + CONTEXT.json 整理 + main 同期) |
 | `cleanup-worktree` | worktree | `--worktree <p>` | worktree 除去 + branch 削除 + auto-checkpoint stash drop + CONTEXT.json 整理 + main 同期 (fail-loud)。`--no-cleanup` で ship した場合に別途呼び出し |
 
-### AI 실행 시퀀스 — Mode A (Staged 隔離)
+### AI 実行シーケンス — Mode A (Staged 隔離)
 
 各応答が `ok: false` ならば即時中断 + エラー報告 + `finalize` 呼び出し。
 
@@ -84,7 +84,7 @@ $OPS finalize                                         # Step 5
 #   (local_changes: dirty main → 手動で commit/stash させた後に再試行)
 ```
 
-### AI 실행 시퀀스 — Mode B (Worktree, feature-pilot 連動)
+### AI 実行シーケンス — Mode B (Worktree, feature-pilot 連動)
 
 `.worktrees/<branch>` で作業した機能を PR に出して整理する際に使用。PLAN.md チェックボックス検証の後に進行。
 
@@ -94,7 +94,7 @@ $OPS finalize                                         # Step 5
 OPS="node .claude/scripts/create-pr/ops.mjs"
 WT_PATH=".worktrees/feature/add-login"
 
-# 1. PLAN.md 검증 (선택, ship-worktree 내부에서도 자동 검증)
+# 1. PLAN.md 検証 (選択、ship-worktree 内部でも自動検証)
 $OPS verify-plan --worktree "$WT_PATH"
 
 # 2. 品質検査およびコミット (必須: ship-worktree は uncommitted 変更があれば commit_required エラー)
@@ -102,7 +102,7 @@ $OPS verify-plan --worktree "$WT_PATH"
 #   ($QUALITY_GATE_CMD = project-config.json#commands.quality_gate, null ならスキップ — R-CM-009 Rule 3)
 
 # 3. Push および PR 生成 (squash merge、既存の PR があればべき等再利用)
-# 옵션: --force-plan (PLAN 미완료 우회), --no-merge (PR만 생성), --no-cleanup (자동 full cleanup opt-out)
+# オプション: --force-plan (PLAN 未完了迂回), --no-merge (PR のみ生成), --no-cleanup (自動 full cleanup opt-out)
 # デフォルト値: マージ成功時に cleanup-worktree に委譲し、worktree・branch 除去 +
 #         auto-checkpoint stash drop + CONTEXT.json 整理 + main 同期まで一括遂行
 $OPS ship-worktree --worktree "$WT_PATH" --title "$FT" --body "$FB"
@@ -111,9 +111,9 @@ $OPS ship-worktree --worktree "$WT_PATH" --title "$FT" --body "$FB"
 $OPS cleanup-worktree --worktree "$WT_PATH"
 ```
 
-AI 판단 영역: BRANCH (Conventional Commits, 30文字以内)、コミットメッセージ、PR タイトル/本文、PLAN.md キャンセル項目の明示判断。
+AI 判断領域: BRANCH (Conventional Commits, 30文字以内)、コミットメッセージ、PR タイトル/本文、PLAN.md キャンセル項目の明示判断。
 
-## 훅 연동 (commit-guard / destructive-git-guard)
+## フック連動 (commit-guard / destructive-git-guard)
 
 `init` / `isolate` / `commit` が更新する `.tmp/create-pr-active` フラグ (mtime 基準 30分 freshness — ship-feature 5min polling + finalize 1min カバー) により、2つのフックが自動緩和:
 - **commit-guard**: `/create-pr` 以外の直接の `git commit` / ブランチ生成を遮断 → フラグ freshness 時に通過
@@ -128,7 +128,7 @@ worktree 作業が終わったが PR、保管、廃棄のうちどの終了経�
 
 ## Not For / Boundaries
 
-| 상황 | 처리 |
+| 状況 | 処理 |
 |---|---|
 | feature ブランチで `init` 実行 | エラー (main のみ許容) |
 | ローカル main が origin/main より **先行** | エラー (自動 push は意図しないコミット伝播の危険のため非活性) |
@@ -145,7 +145,7 @@ worktree 作業が終わったが PR、保管、廃棄のうちどの終了経�
 
 ## Pre-flight Checklist
 
-| ID | 항목 | 필수 | 담당 |
+| ID | 項目 | 必須 | 担当 |
 |----|------|------|------|
 | PF-001 | init: main 最新性 + staged 存在 + 機密ファイル遮断 + gh auth + 同時実行保護 (30min flag mtime) | ✅ | ops.mjs |
 | PF-002 | init: CI Mirror Gate (make q.ci-mirror, 60min stamp freshness) | ✅ | ops.mjs |
@@ -153,7 +153,7 @@ worktree 作業が終わったが PR、保管、廃棄のうちどの終了経�
 
 ## Post-flight Checklist
 
-| ID | 항목 | 필수 |
+| ID | 項目 | 必須 |
 |----|------|------|
 | POF-001 | ship-feature 完了 (`merged === true` または `pending === true` graceful) | ✅ |
 | POF-002 | finalize 完了 (`sync_status === 'synced'` または意図された fail-loud 応答) | ✅ |

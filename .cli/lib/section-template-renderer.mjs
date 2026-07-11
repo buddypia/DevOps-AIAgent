@@ -3,26 +3,26 @@
  * worktree-plan-template.mjs (8-section PLAN.md) and worktree-ship-report.mjs
  * (11-section Pre-Ship Human Review Panel).
  *
- * 목적 (옵션 C — 엔진 공유 + 데이터 분리, 사용자 결정): 두 템플릿의 렌더링 *로직*은
- * 하나의 순수 함수로 공유하되, brief2dev 자신은 데이터를 JS 상수(DEFAULT_*_SECTIONS)로
- * 유지해 라이브 shipping 경로에 파일 I/O 를 추가하지 않는다. 이식(transplant) 대상
- * 프로젝트는 같은 스키마의 JSON(data/registry/transplant-templates/*.generic.json)을
- * 커스터마이징 seed 로 받는다 — brief2dev 는 그 JSON 을 읽지 않는다.
+ * 目的 (オプション C — エンジン共有 + データ分離、ユーザー決定): 両テンプレートのレンダリング *ロジック*は
+ * 一つの純粋関数として共有しつつ、brief2dev 自身はデータを JS 定数(DEFAULT_*_SECTIONS)として
+ * 保持し、ライブ shipping 経路にファイル I/O を追加しない。移植(transplant) 対象の
+ * プロジェクトは、同じスキーマの JSON(data/registry/transplant-templates/*.generic.json)を
+ * カスタマイズ用の seed として受け取る — brief2dev はその JSON を読まない。
  *
- * 5 프리미티브로 두 템플릿(8섹션/11섹션)의 기존 출력을 100% 표현한다:
- *   - static: 고정 텍스트 라인 ({{var}} 치환 지원)
- *   - checklist_group: `### 부제목` + `- [ ] item` 목록
- *   - field_list: `- Label: value` 목록 (value 는 valueOrDash 처리)
- *   - fenced_block: ```lang\n<content 또는 fallback>\n``` (trim 옵션)
- *   - table: header 라인 + rows_key 배열을 row_template 으로 전개 (빈 배열 시 empty_rows)
+ * 5 つのプリミティブで両テンプレート(8 セクション/11 セクション)の既存出力を 100% 表現する:
+ *   - static: 固定テキスト行 ({{var}} 置換に対応)
+ *   - checklist_group: `### 副見出し` + `- [ ] item` のリスト
+ *   - field_list: `- Label: value` のリスト (value は valueOrDash 処理)
+ *   - fenced_block: ```lang\n<content または fallback>\n``` (trim オプション)
+ *   - table: header 行 + rows_key 配列を row_template で展開 (空配列時は empty_rows)
  *
- * heading 라인(`section.heading` 또는 `checklist_group.subheading`) 앞에는 문서 첫 줄이
- * 아닌 한 항상 빈 줄 1개가 자동 삽입된다 — 원본 두 템플릿 모두 이 규칙 하나로 전체
- * blank-line 배치가 설명된다. heading 여부는 *구조*(어느 필드에서 왔는지)로 판정하며
- * 렌더링된 텍스트 내용을 정규식으로 재추론하지 않는다 — static 블록의 본문 텍스트가
- * 우연히 `#`로 시작해도(예: "# 참고" 같은 자유 텍스트) 오탐 없이 그대로 렌더된다.
+ * heading 行(`section.heading` または `checklist_group.subheading`) の前には、文書の先頭行
+ * でない限り常に空行 1 個が自動挿入される — 元の両テンプレートともこの規則一つで全体の
+ * blank-line 配置が説明できる。heading か否かは *構造*(どのフィールドから来たか)で判定し、
+ * レンダリング後のテキスト内容を正規表現で再推論しない — static ブロックの本文テキストが
+ * 偶然 `#` で始まっても(例: "# 参考" のような自由テキスト)、誤検知なくそのままレンダリングされる。
  *
- * 회귀: tests/unit/section-template-renderer.test.mjs.
+ * 回帰: tests/unit/section-template-renderer.test.mjs。
  */
 
 function interpolate(str, context) {
@@ -76,9 +76,9 @@ const BLOCK_RENDERERS = {
 };
 
 /**
- * block 을 렌더링해 `rawLines` 에 push 하고, heading 으로 취급할 라인의 인덱스를
- * `headingAt` 에 기록한다. `checklist_group` 의 `subheading` 만 block 레벨에서 heading
- * 취급 대상 — 다른 블록 타입은 heading 을 생성하지 않는다(구조적 판정, 텍스트 정규식 아님).
+ * block をレンダリングして `rawLines` に push し、heading として扱う行のインデックスを
+ * `headingAt` に記録する。`checklist_group` の `subheading` のみが block レベルでの heading
+ * 扱いの対象 — 他のブロックタイプは heading を生成しない(構造的な判定であり、テキストの正規表現ではない)。
  */
 function appendBlockLines(block, context, rawLines, headingAt) {
   if (!block) return;
@@ -95,7 +95,7 @@ function appendBlockLines(block, context, rawLines, headingAt) {
 }
 
 /**
- * sections 배열을 Markdown 문자열로 렌더링한다 (trailing newline 없음 — 호출자 책임).
+ * sections 配列を Markdown 文字列にレンダリングする (trailing newline なし — 呼び出し側の責任)。
  * @param {Array<{heading?: string, blocks?: Array<object>}>} sections
  * @param {Record<string, unknown>} [context]
  * @returns {string}

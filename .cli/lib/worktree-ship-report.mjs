@@ -67,30 +67,30 @@ export function parseNameStatusRows(nameStatusText) {
 }
 
 /**
- * brief2dev 자신이 쓰는 11섹션 Pre-Ship Human Review Panel 기본 구조
- * (JS 상수 — 옵션 C, 라이브 경로 파일 I/O 없음). 이식용 customizable 버전:
+ * brief2dev 自身が使用する 11 セクションの Pre-Ship Human Review Panel 基本構造
+ * (JS 定数 — オプション C、ライブパスのファイル I/O なし)。移植用 customizable 版:
  * data/registry/transplant-templates/pre-ship-review-panel.generic.json
- * (brief2dev 는 이 JSON 을 읽지 않는다 — 대상 프로젝트가 직접 편집/wiring).
+ * (brief2dev はこの JSON を読まない — 対象プロジェクトが直接編集/wiring する)。
  */
 export const DEFAULT_REVIEW_SECTIONS = [
   {
-    heading: '## 1. 승인 요청',
+    heading: '## 1. 承認リクエスト',
     blocks: [
       {
         type: 'static',
         lines: [
-          '다음 worktree 작업이 완료된 상태입니다.',
-          '내용을 확인하고, merge / cleanup을 진행해도 좋을지 승인해 주십시오.',
-          '선택해 주세요:',
-          '- 승인하고 진행',
-          '- 수정 필요',
-          '- 중단',
+          '次の worktree 作業が完了した状態です。',
+          '内容を確認し、merge / cleanup を進めてよいか承認してください。',
+          '選択してください:',
+          '- 承認して進行',
+          '- 修正が必要',
+          '- 中断',
         ],
       },
     ],
   },
   {
-    heading: '## 2. 상태 요약',
+    heading: '## 2. 状態サマリー',
     blocks: [
       {
         type: 'field_list',
@@ -109,7 +109,7 @@ export const DEFAULT_REVIEW_SECTIONS = [
     ],
   },
   {
-    heading: '## 3. Worktree 커밋 정보',
+    heading: '## 3. Worktree コミット情報',
     blocks: [
       {
         type: 'fenced_block',
@@ -142,92 +142,92 @@ export const DEFAULT_REVIEW_SECTIONS = [
     ],
   },
   {
-    heading: '## 5. 수정 / 추가된 파일',
+    heading: '## 5. 修正 / 追加されたファイル',
     blocks: [
       {
         type: 'fenced_block',
         content_key: 'changedFilesTree',
-        fallback: '(수집 필요)',
+        fallback: '(収集が必要)',
         trim: false,
       },
     ],
   },
   {
-    heading: '## 6. 변경 내용',
+    heading: '## 6. 変更内容',
     blocks: [
       {
         type: 'table',
         rows_key: 'changedRows',
         header_lines: [
-          ' Path               종류    역할    변경 이유',
+          ' Path               種別    役割    変更理由',
           '━━━━━━  ━━━━━━━━━━━━━━━━━  ━━━━━━  ━━━━━━━━━━',
         ],
-        row_template: ' {path}    {kind}    리뷰 시 기입    리뷰 시 기입',
-        empty_rows: [{ path: '(수집 필요)', kind: 'NEW/EDIT/DELETE' }],
+        row_template: ' {path}    {kind}    レビュー時に記入    レビュー時に記入',
+        empty_rows: [{ path: '(収集が必要)', kind: 'NEW/EDIT/DELETE' }],
       },
     ],
   },
   {
-    heading: '## 7. 수정한 이유',
+    heading: '## 7. 修正した理由',
     blocks: [
       {
         type: 'static',
-        lines: ['- 배경:', '- 해결한 문제:', '- 채택한 방침:', '- 사용자 요구사항과의 대응:'],
+        lines: ['- 背景:', '- 解決した問題:', '- 採用した方針:', '- ユーザー要求事項との対応:'],
       },
     ],
   },
   {
-    heading: '## 8. 트레이드오프 (Trade-off)',
+    heading: '## 8. トレードオフ (Trade-off)',
     blocks: [
       {
         type: 'static',
-        lines: ['- 채택안:', '- 대체안:', '- 채택 이유:', '- 희생한 점:', '- 향후 재검토 조건:'],
+        lines: ['- 採用案:', '- 代替案:', '- 採用理由:', '- 犠牲にした点:', '- 今後の再検討条件:'],
       },
     ],
   },
   {
-    heading: '## 9. 리스크 / 롤백 (Rollback)',
+    heading: '## 9. リスク / ロールバック (Rollback)',
     blocks: [
       {
         type: 'static',
-        lines: ['- 영향 범위:', '- 기지(알려진) 리스크:', '- 미검증 사항:', '- Rollback 방법:'],
+        lines: ['- 影響範囲:', '- 既知のリスク:', '- 未検証事項:', '- Rollback 方法:'],
       },
     ],
   },
   {
-    heading: '## 10. 세션 내 남은 작업',
-    blocks: [{ type: 'static', lines: ['- 없음 / 있음:', '- 다음에 필요한 작업:'] }],
+    heading: '## 10. セッション内の残作業',
+    blocks: [{ type: 'static', lines: ['- なし / あり:', '- 次に必要な作業:'] }],
   },
   {
-    heading: '## 11. 세션 내 문제점 및 개선점',
-    blocks: [{ type: 'static', lines: ['- 문제점:', '- 개선안:', '- 다음 작업 시 주의사항:'] }],
+    heading: '## 11. セッション内の問題点および改善点',
+    blocks: [{ type: 'static', lines: ['- 問題点:', '- 改善案:', '- 次回作業時の注意事項:'] }],
   },
 ];
 
 /**
  * @param {object} params
- * @param {Array<object>} [params.sections] — 미지정 시 `DEFAULT_REVIEW_SECTIONS` 사용
- *   (기존 함수 시그니처/반환값 무변경).
+ * @param {Array<object>} [params.sections] — 未指定時は `DEFAULT_REVIEW_SECTIONS` を使用
+ *   (既存の関数シグネチャ/戻り値は無変更)。
  */
 export function buildPreShipApprovalReview({
   worktreePath,
   branch,
   baseBranch = 'main',
   planPath,
-  planChecklist = '완료',
+  planChecklist = '完了',
   worktreeStatus = 'clean',
-  qualityGate = '리뷰 작성 시 실제 결과 기입',
-  testVerify = '리뷰 작성 시 실제 결과 기입',
-  draftPr = '미생성',
+  qualityGate = 'レビュー作成時に実際の結果を記入',
+  testVerify = 'レビュー作成時に実際の結果を記入',
+  draftPr = '未生成',
   gitLog = '',
   commitCount = null,
   commitRange = null,
   latestCommit = null,
-  prUrl = '미생성',
-  prStatus = 'Draft PR 생성 전',
-  mergeStatus = '승인 전',
-  ciStatus = '승인 전',
-  changedFilesTree = '(수집 필요)',
+  prUrl = '未生成',
+  prStatus = 'Draft PR 生成前',
+  mergeStatus = '承認前',
+  ciStatus = '承認前',
+  changedFilesTree = '(収集が必要)',
   changedRows = [],
   sections = DEFAULT_REVIEW_SECTIONS,
 } = {}) {
@@ -282,32 +282,32 @@ export function buildPostApprovalCompletionReport({
   const changedTree = result.changed_files_tree || buildFileTree(result.changed_files || []);
 
   return [
-    '# PR 승인 후 완료 보고',
+    '# PR 承認後の完了報告',
     '## 1. PR',
     `- PR URL: ${valueOrDash(result.prUrl)}`,
-    `- PR Merged 상황: ${mergedSituation}`,
+    `- PR Merged 状況: ${mergedSituation}`,
     `- Merge commit / squash commit: ${valueOrDash(result.sha)}`,
     `- CI status: ${result.merged ? 'merge accepted by GitHub; detailed CI status not collected' : 'pending / not collected'}`,
     '',
-    '## 2. Cleanup 상황',
+    '## 2. Cleanup 状況',
     `- Worktree cleanup: ${cleanupSituation}${wtPath ? ` (${wtPath})` : ''}`,
     `- Branch cleanup: ${branchCleanup}`,
     `- Remote branch cleanup: ${result.merged ? 'delete requested when auto-merge ran' : 'not performed'}`,
-    `- main으로의 ff(Fast-Forward) 상황: ${mainStatus}`,
+    `- main への ff(Fast-Forward) 状況: ${mainStatus}`,
     '',
-    '## 3. 반영된 파일',
+    '## 3. 反映されたファイル',
     '```text',
     changedTree,
     '```',
     '',
-    '## 4. 남은 대응',
-    `- 남은 작업: ${result.pending ? 'CI/리뷰 통과 후 merge 재시도 또는 수동 확인' : '없음'}`,
-    `- 수동 대응이 필요한 항목: ${cr.ok === false ? valueOrDash(cr.hint) : '없음'}`,
-    `- 다음 세션으로의 인수인계 사항: ${postMergeMainStatus?.status === 'dirty' ? `main dirty 상태 확인 필요 (${postMergeMainStatus.dirty_paths?.join(', ') || 'paths unknown'})` : '없음'}`,
+    '## 4. 残りの対応',
+    `- 残作業: ${result.pending ? 'CI/レビュー通過後に merge 再試行または手動確認' : 'なし'}`,
+    `- 手動対応が必要な項目: ${cr.ok === false ? valueOrDash(cr.hint) : 'なし'}`,
+    `- 次セッションへの引き継ぎ事項: ${postMergeMainStatus?.status === 'dirty' ? `main dirty 状態の確認が必要 (${postMergeMainStatus.dirty_paths?.join(', ') || 'paths unknown'})` : 'なし'}`,
     '',
-    '## 5. 문제 / 개선 메모',
-    `- 발생한 문제: ${Array.isArray(result.warnings) && result.warnings.length ? result.warnings.join('; ') : '없음'}`,
-    `- 회피책(우회 방법): ${cr.hint || '없음'}`,
-    '- 시스템/프로세스에 반영하고 싶은 개선점:',
+    '## 5. 問題 / 改善メモ',
+    `- 発生した問題: ${Array.isArray(result.warnings) && result.warnings.length ? result.warnings.join('; ') : 'なし'}`,
+    `- 回避策(ワークアラウンド): ${cr.hint || 'なし'}`,
+    '- システム/プロセスに反映したい改善点:',
   ].join('\n');
 }
