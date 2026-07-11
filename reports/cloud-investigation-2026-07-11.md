@@ -1,6 +1,6 @@
 # Cloud実測調査レポート（2026-07-11）
 
-対象: `sixth-oath-502008-u3` / `asia-northeast1` / Cloud Run `a2a-agent-marketplace`  
+対象: `sixth-oath-502008-u3` / `asia-northeast1` / Cloud Run `a2a-agent-marketplace`
 調査時点: 2026-07-11 13:04 UTC（22:04 JST前後）
 
 ## 6項目の回答
