@@ -15,7 +15,7 @@ export function stripIgnoredPlanSections(content) {
 }
 
 const UNCHECKED_RE =
-  /^[\s]*[-*]\s\[\s\](?!.*(?:\(취소됨[^)]*\)|\(dropped[^)]*\)|\(Dropped[^)]*\)|\(deferred[^)]*\)|\(Deferred[^)]*\)|~~)).*$/gm;
+  /^[\s]*[-*]\s\[\s\](?!.*(?:\(取消済み[^)]*\)|\(dropped[^)]*\)|\(Dropped[^)]*\)|\(deferred[^)]*\)|\(Deferred[^)]*\)|~~)).*$/gm;
 
 export function parseUncheckedPlanItems(content) {
   return stripIgnoredPlanSections(content).match(UNCHECKED_RE) || [];
@@ -60,8 +60,8 @@ export function readWorktreePlanChecklistStatus(worktreePath, branch = null, opt
 }
 
 export function formatPlanChecklistStatus(status) {
-  if (!status || status.present === false) return 'PLAN.md 없음';
-  if (status.unreadable) return 'PLAN.md 읽기 실패';
-  if (status.complete) return '완료';
-  return `미완료 ${status.unchecked_count ?? '?'}건`;
+  if (!status || status.present === false) return 'PLAN.md なし';
+  if (status.unreadable) return 'PLAN.md 読み取り失敗';
+  if (status.complete) return '完了';
+  return `未完了 ${status.unchecked_count ?? '?'}件`;
 }
