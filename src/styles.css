@@ -810,41 +810,6 @@ code {
   color: var(--ink);
 }
 
-/* Mission audit log */
-
-.mc-phases {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--panel-2);
-  padding: 10px 14px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.mc-phases summary {
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.mc-phase-row {
-  padding: 5px 0;
-  border-bottom: 1px dashed var(--line);
-  line-height: 1.6;
-}
-
-.mc-phase-row:last-child {
-  border-bottom: none;
-}
-
-.mc-phase-row.is-error {
-  color: var(--red);
-}
-
-.mc-phase-row code {
-  color: var(--accent);
-  margin-right: 6px;
-}
-
 .mc-empty {
   color: var(--muted);
   font-size: 13px;
@@ -1422,34 +1387,172 @@ code {
   color: var(--amber);
 }
 
-.ops-evidence {
+/* ---- Result inspector -------------------------------------------------- */
+
+.result-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-top: 1px solid var(--line-strong);
+  padding-top: 16px;
+}
+
+.result-inspector-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.result-inspector-head h3 {
+  font-size: 14px;
+  margin-top: 3px;
+}
+
+.result-inspector-head p:last-child {
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.6;
+  margin-top: 4px;
+}
+
+.result-inspector-kicker {
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.result-inspector-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 9px;
   background: var(--panel);
-  padding: 10px 14px;
-  font-size: 12px;
+}
+
+.result-inspector-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 11.5px;
+}
+
+.result-inspector-tabs button:hover,
+.result-inspector-tabs button.is-active {
+  color: var(--ink);
+  background: var(--panel-3);
+}
+
+.result-inspector-tabs button.is-active {
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.result-log-list {
+  list-style: none;
+  margin: 0;
+  padding: 2px 0 2px 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-left: 1px solid var(--line-strong);
+}
+
+.result-log-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 12px;
+  padding: 8px 12px 8px 18px;
   color: var(--muted);
 }
 
-.ops-evidence summary {
-  cursor: pointer;
-  font-weight: 600;
+.result-log-marker {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  left: -4px;
+  top: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--panel-2);
 }
 
-.ops-evidence-row {
-  padding: 4px 0;
-  border-bottom: 1px dashed var(--line);
+.result-log-row time {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.result-log-row strong {
+  display: block;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.result-log-row p {
+  margin-top: 2px;
+  font-size: 11.5px;
   line-height: 1.6;
   word-break: break-word;
 }
 
-.ops-evidence-row:last-child {
-  border-bottom: none;
+.result-log-error .result-log-marker {
+  background: var(--red);
 }
 
-.ops-evidence-row code {
-  color: var(--accent);
-  margin-right: 6px;
+.result-log-error strong {
+  color: #fecaca;
+}
+
+.result-log-success .result-log-marker {
+  background: var(--green);
+}
+
+.result-log-warning .result-log-marker {
+  background: var(--amber);
+}
+
+.result-log-empty {
+  color: var(--muted);
+  padding: 10px 14px;
+  font-size: 12px;
+}
+
+.result-json {
+  max-height: 360px;
+  overflow: auto;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: #c9d7ee;
+  background: #09111f;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.65;
+  white-space: pre;
+  tab-size: 2;
+}
+
+@media (max-width: 640px) {
+  .result-log-row {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
 }
 
 /* ---- Network / proof ----------------------------------------------------- */

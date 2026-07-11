@@ -3,8 +3,9 @@ import { CircleAlert, ClipboardCheck, GitBranchPlus, Radar, Rocket, ShieldCheck 
 
 import AgentAvatar from "./AgentAvatar.js";
 import { MISSION_TEMPLATES } from "./missionTemplates.js";
+import ResultInspector from "./ResultInspector.js";
 
-import type { MissionView } from "./missionTypes.js";
+import type { MissionReportFindingView, MissionView } from "./missionTypes.js";
 
 export type AgentIdentity = { agentId: string; name: string; handle: string; color: string };
 
@@ -27,6 +28,13 @@ const VERDICT_META: Record<string, { label: string; icon: typeof Rocket }> = {
   achieved: { label: "目標達成", icon: ClipboardCheck },
   partial: { label: "部分達成", icon: Radar },
   blocked: { label: "ブロック", icon: CircleAlert }
+};
+
+const SEVERITY_LABELS: Record<MissionReportFindingView["severity"], string> = {
+  critical: "最優先",
+  high: "高",
+  medium: "中",
+  low: "低"
 };
 
 function missionIsStale(mission: MissionView, activeMissionId: string | null): boolean {
@@ -115,14 +123,14 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
       });
       const body = (await response.json()) as { missionId?: string; error?: string; message?: string };
       if (!response.ok || !body.missionId) {
-        setMessage(body.message ?? body.error ?? "ミッションを開始できませんでした。");
+        setMessage(body.message ?? body.error ?? "調査を開始できませんでした。");
         return;
       }
       setActiveMissionId(body.missionId);
       setSelectedMissionId(body.missionId);
       await refreshList();
     } catch {
-      setMessage("ミッションAPIへの接続に失敗しました。");
+      setMessage("調査APIへの接続に失敗しました。");
     } finally {
       setStarting(false);
     }
@@ -131,9 +139,9 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
   const agentOf = (agentId: string): AgentIdentity => agents.get(agentId) ?? { agentId, name: agentId, handle: "", color: "#3b82f6" };
 
   return (
-    <section className="mission-control" aria-label="Mission Control">
+    <section className="mission-control" aria-label="まとめて調査">
       <div className="mc-input-panel">
-        <div className="mc-template-row" role="group" aria-label="ミッションテンプレート">
+        <div className="mc-template-row" role="group" aria-label="調査テンプレート">
           {MISSION_TEMPLATES.map((template) => (
             <button
               key={template.id}
@@ -152,23 +160,23 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
           rows={3}
           maxLength={2000}
           onChange={(event) => setGoal(event.target.value)}
-          placeholder="達成したい目標を書く。例: 本番サービスの稼働リスクを総点検して"
-          aria-label="ミッションの目標"
+          placeholder="確認したいことを書く。例: 本番サービスの稼働リスクを総点検して"
+          aria-label="調査の目的"
         />
         <div className="mc-start-row">
           <button type="button" className="btn-primary mc-start" onClick={handleStart} disabled={starting || missionActive || goal.trim().length < 8}>
-            <Rocket size={16} /> {missionActive ? "ミッション実行中…" : starting ? "起動中…" : "ミッション開始"}
+            <Rocket size={16} /> {missionActive ? "調査中…" : starting ? "準備中…" : "調査を開始"}
           </button>
           <p className="mc-start-hint">
-            オーケストレーターが専門エージェントを自律選抜し、実実行 → 観察 → 適応 → 統合レポートまで回します。
-            A2Aからも <code>mission.execute</code> で起動可能。
+            入力内容に合わせて調査役を選び、調査 → 再確認 → 結果の整理まで自動で進めます。
+            外部連携からは <code>mission.execute</code> でも起動できます。
           </p>
         </div>
         {message ? <p className="mc-message">{message}</p> : null}
       </div>
 
       {missions.length > 0 ? (
-        <div className="mc-history" role="tablist" aria-label="ミッション履歴">
+        <div className="mc-history" role="tablist" aria-label="調査履歴">
           {missions.map((mission) => (
             <button
               key={mission.id}
@@ -223,7 +231,7 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
                       <strong>{agent.name}</strong>
                       {step.origin === "adaptive" ? (
                         <span className="mc-origin-badge">
-                          <GitBranchPlus size={12} /> 適応追加
+                          <GitBranchPlus size={12} /> 追加調査
                         </span>
                       ) : null}
                       <StepStatusBadge status={step.status} />
@@ -232,7 +240,7 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
                     <p className="mc-step-reason">{step.reason}</p>
                     {step.observed ? (
                       <p className="mc-step-observed">
-                        所見 {step.observed.findingsTotal} 件中 {step.observed.accepted} 件受入
+                        {step.observed.findingsTotal} 件を確認、{step.observed.accepted} 件を採用
                         {step.observed.topFinding ? `。${step.observed.topFinding}` : ""}
                       </p>
                     ) : null}
@@ -262,7 +270,7 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
                 <ul className="mc-findings">
                   {selectedMission.report.keyFindings.map((finding, index) => (
                     <li key={`${finding.runId}-${index}`} className={finding.citationValid ? "" : "is-invalid"}>
-                      <span className={`ops-severity ops-severity-${finding.severity}`}>{finding.severity}</span>
+                      <span className={`ops-severity ops-severity-${finding.severity}`}>{SEVERITY_LABELS[finding.severity]}</span>
                       <span className="mc-finding-agent">{agentOf(finding.agentId).name}</span>
                       <span className="mc-finding-title">{finding.title}</span>
                       <code className="mc-run-id">{finding.runId.slice(0, 8)}</code>
@@ -284,17 +292,26 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
             </div>
           ) : null}
 
-          <details className="mc-phases">
-            <summary>オーケストレーターの監査ログ ({selectedMission.phases.length}件)</summary>
-            {selectedMission.phases.map((phase, index) => (
-              <p key={`${phase.phase}-${index}`} className={`mc-phase-row${phase.status === "error" ? " is-error" : ""}`}>
-                <code>{new Date(phase.at).toLocaleTimeString("ja-JP")}</code> <strong>{phase.phase}</strong> {phase.detail}
-              </p>
-            ))}
-          </details>
+          <ResultInspector
+            data={selectedMission}
+            logs={[
+              ...selectedMission.phases.map((phase) => ({
+                at: phase.at,
+                label: phase.phase,
+                detail: phase.detail,
+                tone: phase.status === "error" ? ("error" as const) : ("default" as const)
+              })),
+              ...selectedMission.steps.map((step) => ({
+                at: selectedMission.finishedAt ?? selectedMission.startedAt,
+                label: `${agentOf(step.agentId).name} / ${STEP_STATUS_LABELS[step.status] ?? step.status}`,
+                detail: step.decision ?? step.observed?.summary ?? step.reason,
+                tone: step.status === "failed" ? ("error" as const) : step.status === "completed" ? ("success" as const) : ("default" as const)
+              }))
+            ]}
+          />
         </div>
       ) : (
-        <p className="mc-empty">まだミッションがありません。目標を書いて「ミッション開始」を押すと、オーケストレーターが動き出します。</p>
+        <p className="mc-empty">まだ調査履歴がありません。目的を書いて「調査を開始」を押すと、調査役が動き始めます。</p>
       )}
     </section>
   );
