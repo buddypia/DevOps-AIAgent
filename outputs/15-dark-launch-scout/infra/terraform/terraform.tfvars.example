@@ -1,0 +1,20 @@
+# Copy this file to terraform.tfvars and set your real Google Cloud project.
+project_id = "your-gcp-project-id"
+region     = "asia-northeast1"
+
+# Defaults are already project-specific.
+service_name  = "dark-launch-scout"
+repository_id = "dark-launch-scout-repo"
+image_tag     = "hackathon"
+
+# Change this on each redeploy so Terraform reruns Cloud Build.
+source_revision = "manual"
+
+# For public judging demos, fallback analysis works without a key.
+# For Gemini-backed judging, prefer an existing Secret Manager secret:
+# existing_gemini_api_secret_id = "dark-launch-scout-gemini-api-key"
+# require_gemini                = true
+#
+# Quick demo alternative, less ideal for long-lived state because the secret
+# value is stored in Terraform state:
+# gemini_api_key = "..."

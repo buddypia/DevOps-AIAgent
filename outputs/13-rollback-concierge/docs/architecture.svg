@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc" viewBox="0 0 1200 520">
+  <title id="title">Rollback Concierge Cloud Run Terraform Architecture</title>
+  <desc id="desc">Terraform provisions Google Cloud APIs, Artifact Registry, Cloud Build image build, Secret Manager, a runtime service account, and a Cloud Run service that calls Gemini API.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#53606d"/>
+    </marker>
+    <linearGradient id="header" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#b45309"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+    <style>
+      .bg { fill: #f8fafc; }
+      .band { fill: url(#header); }
+      .card { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; }
+      .primary { stroke: #b45309; stroke-width: 3; }
+      .title { font: 800 30px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #ffffff; }
+      .subtitle { font: 600 15px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #e5eef8; }
+      .label { font: 800 19px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #17202a; }
+      .small { font: 600 13px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #53606d; }
+      .tiny { font: 600 12px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #53606d; }
+      .arrow { stroke: #53606d; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect class="bg" width="1200" height="520" rx="18"/>
+  <rect class="band" width="1200" height="112" rx="18"/>
+  <text class="title" x="40" y="48">Rollback Concierge</text>
+  <text class="subtitle" x="40" y="78">Terraform deploys rollback-concierge to Cloud Run with Gemini-ready configuration</text>
+
+  <rect class="card primary" x="40" y="164" width="190" height="112" rx="10"/>
+  <text class="label" x="135" y="205" text-anchor="middle">Developer</text>
+  <text class="small" x="135" y="232" text-anchor="middle">terraform apply</text>
+  <text class="tiny" x="135" y="253" text-anchor="middle">gcloud auth + project id</text>
+
+  <path class="arrow" d="M232 220 H300"/>
+  <rect class="card primary" x="306" y="146" width="220" height="148" rx="10"/>
+  <text class="label" x="416" y="186" text-anchor="middle">Terraform</text>
+  <text class="small" x="416" y="213" text-anchor="middle">enables APIs</text>
+  <text class="small" x="416" y="236" text-anchor="middle">creates IAM and service</text>
+  <text class="tiny" x="416" y="259" text-anchor="middle">infra/terraform</text>
+
+  <path class="arrow" d="M528 194 H604"/>
+  <rect class="card" x="610" y="136" width="220" height="112" rx="10"/>
+  <text class="label" x="720" y="176" text-anchor="middle">Artifact Registry</text>
+  <text class="small" x="720" y="202" text-anchor="middle">Docker repository</text>
+  <text class="tiny" x="720" y="224" text-anchor="middle">rollback-concierge</text>
+
+  <path class="arrow" d="M528 252 H604"/>
+  <rect class="card" x="610" y="274" width="220" height="112" rx="10"/>
+  <text class="label" x="720" y="314" text-anchor="middle">Cloud Build</text>
+  <text class="small" x="720" y="340" text-anchor="middle">builds Dockerfile</text>
+  <text class="tiny" x="720" y="362" text-anchor="middle">source_revision controls rebuild</text>
+
+  <path class="arrow" d="M832 220 H902"/>
+  <rect class="card primary" x="908" y="152" width="240" height="136" rx="10"/>
+  <text class="label" x="1028" y="192" text-anchor="middle">Cloud Run</text>
+  <text class="small" x="1028" y="220" text-anchor="middle">Express API + Vite UI</text>
+  <text class="small" x="1028" y="244" text-anchor="middle">/api/health and /api/ready</text>
+  <text class="tiny" x="1028" y="266" text-anchor="middle">ROLLBACK READY / MANUAL CHECK / DO NOT ROLLBACK</text>
+
+  <path class="arrow" d="M1028 290 V352"/>
+  <rect class="card" x="908" y="364" width="240" height="96" rx="10"/>
+  <text class="label" x="1028" y="402" text-anchor="middle">Gemini API</text>
+  <text class="small" x="1028" y="428" text-anchor="middle">via @google/genai</text>
+  <text class="tiny" x="1028" y="448" text-anchor="middle">fallback works without key</text>
+
+  <rect class="card" x="306" y="340" width="220" height="96" rx="10"/>
+  <text class="label" x="416" y="378" text-anchor="middle">Secret Manager</text>
+  <text class="small" x="416" y="404" text-anchor="middle">optional Gemini key</text>
+  <text class="tiny" x="416" y="424" text-anchor="middle">optional API auth token</text>
+  <path class="arrow" d="M528 388 H902"/>
+
+  <text class="tiny" x="40" y="492">Hackathon fit: Cloud Run application runtime, Google Cloud AI through Gemini, GitHub-ready repository URL, deployed URL, and ProtoPedia system diagram.</text>
+</svg>
