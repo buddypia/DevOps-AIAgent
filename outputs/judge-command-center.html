@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark-focus" data-layout="split" data-header="split" data-density="comfortable" data-target="web-app" data-viewport="desktop">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agent Guild — Judge Demo Command Center</title>
+    <style>
+      :root {
+        --bg: #070b14;
+        --bg-raised: #0b1220;
+        --panel: #101a2b;
+        --panel-deep: #0b1424;
+        --panel-bright: #15243b;
+        --line: rgba(148, 184, 255, 0.15);
+        --line-strong: rgba(148, 184, 255, 0.3);
+        --ink: #ebf2ff;
+        --muted: #8ea1bf;
+        --dim: #607292;
+        --cyan: #5eead4;
+        --blue: #7dd3fc;
+        --violet: #c4b5fd;
+        --green: #4ade80;
+        --amber: #fbbf24;
+        --red: #fb7185;
+        --shadow: 0 24px 70px rgba(2, 8, 20, 0.58);
+        --radius: 16px;
+        --radius-sm: 10px;
+        --sans: "Avenir Next", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, system-ui, sans-serif;
+        --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; min-height: 100%; }
+      body {
+        color: var(--ink);
+        background:
+          radial-gradient(950px 500px at 75% -8%, rgba(59, 130, 246, .16), transparent 70%),
+          radial-gradient(900px 500px at -14% 46%, rgba(94, 234, 212, .07), transparent 70%),
+          var(--bg);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+      button, input { font: inherit; }
+      button { cursor: pointer; }
+      button:disabled { cursor: not-allowed; opacity: .55; }
+      :focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+      .mono { font-family: var(--mono); }
+      .app { width: min(1440px, 100%); margin: 0 auto; padding: 22px 28px 64px; }
+
+      .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 4px 0 18px; border-bottom: 1px solid var(--line); }
+      .brand { display: flex; align-items: center; gap: 12px; }
+      .brand-mark { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid rgba(94, 234, 212, .42); border-radius: 12px; color: var(--cyan); background: linear-gradient(145deg, rgba(94,234,212,.18), rgba(125,211,252,.08)); box-shadow: 0 0 28px rgba(94,234,212,.12); font-size: 18px; }
+      .brand-name { margin: 0; font-size: 15px; font-weight: 760; letter-spacing: .06em; }
+      .brand-sub { margin: 3px 0 0; color: var(--muted); font: 11px var(--mono); }
+      .top-actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+      .system-pill, .status-pill { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); background: rgba(11, 20, 36, .74); border-radius: 999px; padding: 7px 11px; color: var(--muted); font-size: 11px; }
+      .system-pill strong { color: var(--green); font-weight: 680; }
+      .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 12px currentColor; }
+      .icon-button { width: 33px; height: 33px; border: 1px solid var(--line); border-radius: 9px; color: var(--muted); background: var(--panel-deep); }
+      .icon-button:hover { color: var(--cyan); border-color: rgba(94,234,212,.4); }
+
+      .eyebrow { margin: 0 0 8px; color: var(--cyan); font: 11px var(--mono); text-transform: uppercase; letter-spacing: .16em; }
+      .hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(400px, .9fr); gap: 28px; padding: 44px 0 30px; align-items: end; }
+      h1, h2, h3, p { margin: 0; }
+      h1 { max-width: 780px; font-size: clamp(34px, 4.7vw, 66px); line-height: .98; letter-spacing: -.055em; font-weight: 820; }
+      h1 em { color: var(--cyan); font-style: normal; text-shadow: 0 0 30px rgba(94,234,212,.28); }
+      .hero-copy { margin-top: 18px; max-width: 690px; color: var(--muted); font-size: 15px; line-height: 1.75; }
+      .hero-proof { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-self: end; }
+      .proof-card { min-height: 96px; padding: 15px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: linear-gradient(155deg, rgba(21,36,59,.86), rgba(11,20,36,.86)); }
+      .proof-card .value { display: block; margin-bottom: 8px; color: var(--ink); font: 700 21px var(--mono); }
+      .proof-card .label { color: var(--muted); font-size: 11px; line-height: 1.4; }
+      .proof-card.accent { border-color: rgba(94,234,212,.35); box-shadow: inset 0 1px 0 rgba(94,234,212,.09); }
+
+      .demo-shell { border: 1px solid var(--line-strong); border-radius: 20px; background: linear-gradient(135deg, rgba(16,26,43,.96), rgba(9,16,29,.96)); box-shadow: var(--shadow); overflow: hidden; }
+      .demo-head { display: flex; justify-content: space-between; gap: 18px; padding: 18px 20px; border-bottom: 1px solid var(--line); background: rgba(11,20,36,.75); }
+      .demo-title { display: flex; align-items: flex-start; gap: 12px; }
+      .mission-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; color: var(--amber); background: rgba(251,191,36,.1); border: 1px solid rgba(251,191,36,.25); }
+      .demo-head h2 { font-size: 15px; letter-spacing: -.01em; }
+      .demo-head p { margin-top: 5px; color: var(--muted); font-size: 12px; }
+      .demo-controls { display: flex; gap: 8px; align-items: center; }
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--line-strong); border-radius: 9px; padding: 9px 13px; color: var(--ink); background: var(--panel-bright); font-size: 12px; font-weight: 700; transition: .18s ease; }
+      .btn:hover { transform: translateY(-1px); border-color: var(--cyan); }
+      .btn.primary { color: #041318; border-color: rgba(94,234,212,.6); background: linear-gradient(135deg, var(--cyan), var(--blue)); }
+      .btn.ghost { color: var(--muted); background: transparent; }
+      .btn.small { padding: 7px 10px; font-size: 11px; }
+      .demo-status { display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: rgba(94,234,212,.05); border-bottom: 1px solid var(--line); }
+      .status-copy { flex: 1; min-width: 0; }
+      .status-copy strong { display: block; font-size: 12px; }
+      .status-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+      .progress-track { height: 5px; width: 170px; overflow: hidden; border-radius: 999px; background: rgba(148,184,255,.13); }
+      .progress-bar { width: 66%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--cyan), var(--blue)); transition: width .35s ease; }
+
+      .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; padding: 20px; border-bottom: 1px solid var(--line); }
+      .flow-step { position: relative; min-width: 0; padding-right: 16px; }
+      .flow-step:not(:last-child)::after { content: ""; position: absolute; top: 15px; left: 29px; right: 0; height: 1px; background: var(--line-strong); }
+      .flow-node { position: relative; z-index: 1; width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--line-strong); border-radius: 50%; color: var(--dim); background: var(--panel-deep); font: 700 11px var(--mono); }
+      .flow-step.is-done .flow-node { color: #041318; border-color: var(--green); background: var(--green); }
+      .flow-step.is-active .flow-node { color: #041318; border-color: var(--cyan); background: var(--cyan); box-shadow: 0 0 0 5px rgba(94,234,212,.1), 0 0 24px rgba(94,234,212,.28); }
+      .flow-label { display: block; margin-top: 10px; font-size: 12px; font-weight: 700; }
+      .flow-detail { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .demo-grid { display: grid; grid-template-columns: minmax(0, 1.28fr) minmax(320px, .72fr); }
+      .panel { padding: 22px; min-width: 0; }
+      .panel + .panel { border-left: 1px solid var(--line); }
+      .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 15px; }
+      .panel-head h3 { font-size: 13px; }
+      .panel-head span { color: var(--muted); font: 10px var(--mono); }
+
+      .trace-list { display: grid; gap: 10px; }
+      .trace-item { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 11px; align-items: start; padding: 12px; border: 1px solid var(--line); border-radius: 11px; background: rgba(11,20,36,.7); }
+      .trace-item.is-current { border-color: rgba(94,234,212,.36); background: rgba(94,234,212,.06); }
+      .trace-icon { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; color: var(--blue); background: rgba(125,211,252,.1); font-size: 13px; }
+      .trace-item.is-done .trace-icon { color: var(--green); background: rgba(74,222,128,.1); }
+      .trace-item.is-current .trace-icon { color: var(--cyan); background: rgba(94,234,212,.14); animation: pulse 1.8s infinite; }
+      .trace-copy strong { display: block; font-size: 12px; }
+      .trace-copy p { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+      .trace-meta { color: var(--dim); font: 10px var(--mono); white-space: nowrap; }
+      .trace-tag { display: inline-flex; margin-top: 7px; padding: 3px 6px; border-radius: 5px; color: var(--violet); background: rgba(196,181,253,.1); font: 10px var(--mono); }
+
+      .decision-card { padding: 15px; border: 1px solid rgba(196,181,253,.26); border-radius: 12px; background: linear-gradient(145deg, rgba(196,181,253,.09), rgba(11,20,36,.4)); }
+      .decision-card .decision-label { display: flex; align-items: center; gap: 7px; color: var(--violet); font: 10px var(--mono); text-transform: uppercase; letter-spacing: .1em; }
+      .decision-card h4 { margin-top: 10px; font-size: 14px; line-height: 1.45; }
+      .decision-card p { margin-top: 8px; color: var(--muted); font-size: 11px; line-height: 1.65; }
+      .decision-options { display: grid; gap: 7px; margin-top: 13px; }
+      .option { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 7px; background: rgba(11,20,36,.65); color: var(--muted); font-size: 11px; }
+      .option.selected { color: var(--cyan); border: 1px solid rgba(94,234,212,.23); background: rgba(94,234,212,.06); }
+      .option b { margin-left: auto; color: var(--ink); font: 700 11px var(--mono); }
+      .evidence-list { display: grid; gap: 8px; margin-top: 15px; }
+      .evidence { display: flex; gap: 9px; align-items: flex-start; color: var(--muted); font-size: 11px; line-height: 1.5; }
+      .evidence .check { color: var(--green); font: 700 13px var(--mono); }
+      .evidence code { color: var(--blue); font: 10px var(--mono); }
+
+      .below { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; margin-top: 18px; }
+      .surface { border: 1px solid var(--line); border-radius: var(--radius); background: rgba(16,26,43,.78); overflow: hidden; }
+      .surface-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 17px 19px; border-bottom: 1px solid var(--line); }
+      .surface-head h2 { font-size: 14px; }
+      .surface-head p { margin-top: 4px; color: var(--muted); font-size: 11px; }
+      .tabs { display: flex; gap: 4px; padding: 12px 19px 0; border-bottom: 1px solid var(--line); }
+      .tab { border: 0; border-bottom: 2px solid transparent; padding: 7px 8px 10px; color: var(--muted); background: transparent; font-size: 11px; }
+      .tab.is-active { color: var(--cyan); border-bottom-color: var(--cyan); }
+      .tab-panel { padding: 18px 19px 20px; }
+      .tab-panel[hidden] { display: none; }
+      .log { display: grid; gap: 9px; font: 11px/1.5 var(--mono); }
+      .log-line { display: grid; grid-template-columns: 70px 44px minmax(0, 1fr); gap: 8px; color: var(--muted); }
+      .log-time { color: var(--dim); }
+      .log-kind { color: var(--cyan); }
+      .log-kind.tool { color: var(--blue); }
+      .log-kind.guard { color: var(--amber); }
+      .log-kind.done { color: var(--green); }
+      .agent-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .agent { display: flex; align-items: center; gap: 9px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: rgba(11,20,36,.55); }
+      .agent-avatar { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 9px; font-size: 14px; }
+      .agent-copy { min-width: 0; }
+      .agent-copy strong { display: block; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .agent-copy span { display: block; margin-top: 3px; color: var(--muted); font: 9px var(--mono); }
+      .agent-state { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; background: var(--dim); }
+      .agent.is-active .agent-state { background: var(--cyan); box-shadow: 0 0 12px var(--cyan); }
+      .agent.is-done .agent-state { background: var(--green); }
+
+      .story { margin-top: 18px; padding: 22px; border: 1px solid rgba(94,234,212,.2); border-radius: var(--radius); background: linear-gradient(120deg, rgba(94,234,212,.08), rgba(16,26,43,.72)); }
+      .story-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-top: 16px; }
+      .story-step { display: flex; gap: 10px; }
+      .story-number { flex: 0 0 26px; height: 26px; display: grid; place-items: center; border-radius: 8px; color: #041318; background: var(--cyan); font: 700 11px var(--mono); }
+      .story-step strong { display: block; font-size: 12px; }
+      .story-step p { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.55; }
+      .footer-note { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; color: var(--dim); font-size: 10px; }
+      .footer-note span { display: inline-flex; align-items: center; gap: 6px; }
+
+      .toast { position: fixed; right: 22px; bottom: 22px; max-width: 340px; padding: 12px 15px; border: 1px solid rgba(94,234,212,.4); border-radius: 10px; color: var(--ink); background: var(--panel-bright); box-shadow: var(--shadow); font-size: 12px; transform: translateY(18px); opacity: 0; pointer-events: none; transition: .22s ease; }
+      .toast.is-visible { transform: translateY(0); opacity: 1; }
+      @keyframes pulse { 50% { box-shadow: 0 0 0 5px rgba(94,234,212,.08); } }
+      @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+      @media (max-width: 980px) { .hero { grid-template-columns: 1fr; } .hero-proof { max-width: 650px; } .demo-grid, .below { grid-template-columns: 1fr; } .panel + .panel { border-left: 0; border-top: 1px solid var(--line); } }
+      @media (max-width: 680px) { .app { padding: 16px 15px 44px; } .topbar, .demo-head { align-items: flex-start; flex-direction: column; } .top-actions { justify-content: flex-start; } .hero { padding-top: 34px; } h1 { font-size: 39px; } .hero-proof { grid-template-columns: 1fr; } .flow { overflow-x: auto; grid-template-columns: repeat(5, minmax(124px, 1fr)); } .demo-controls { width: 100%; } .demo-controls .btn { flex: 1; } .trace-item { grid-template-columns: 30px minmax(0,1fr); } .trace-meta { grid-column: 2; } .story-grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">◆</div>
+          <div>
+            <p class="brand-name">AGENT GUILD <span style="color:var(--cyan)">/</span> COMMAND CENTER</p>
+            <p class="brand-sub">AI-POWERED DEVOPS RESPONSE · PUBLIC DEMO BUILD</p>
+          </div>
+        </div>
+        <div class="top-actions">
+          <span class="system-pill"><span class="dot" style="color:var(--green)"></span><strong>ALL SYSTEMS NOMINAL</strong></span>
+          <span class="status-pill"><span class="mono">GEMINI</span> connected</span>
+          <button class="icon-button" type="button" data-action="share" aria-label="デモURLを共有">↗</button>
+        </div>
+      </header>
+
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">THE AGENT DOES THE WORK</p>
+          <h1 id="page-title">障害対応を、<em>判断から実行まで。</em></h1>
+          <p class="hero-copy">Issueと運用データを読み取り、AIエージェントが調査役を編成。根拠を確認しながら、テスト・承認・Cloud Runデプロイまでを1つの流れで完了させます。</p>
+        </div>
+        <div class="hero-proof" aria-label="このデモで見える証拠">
+          <div class="proof-card accent"><span class="value">08</span><span class="label">実行可能な専門エージェント</span></div>
+          <div class="proof-card"><span class="value">04</span><span class="label">自律判断のステップ</span></div>
+          <div class="proof-card"><span class="value">1.8m</span><span class="label">検証からデプロイまで</span></div>
+        </div>
+      </section>
+
+      <section class="demo-shell" aria-labelledby="demo-title">
+        <div class="demo-head">
+          <div class="demo-title">
+            <div class="mission-icon" aria-hidden="true">!</div>
+            <div>
+              <h2 id="demo-title">Production APIのレイテンシ急増を解決する</h2>
+              <p><span class="mono">INC-2048</span> · Cloud Run / api-gateway · 7分前に検知</p>
+            </div>
+          </div>
+          <div class="demo-controls">
+            <button class="btn ghost small" type="button" data-action="reset">リセット</button>
+            <button class="btn primary" type="button" data-action="run"><span aria-hidden="true">▶</span> デモを実行</button>
+          </div>
+        </div>
+        <div class="demo-status" role="status" aria-live="polite">
+          <span class="dot" id="status-dot" style="color:var(--cyan)"></span>
+          <div class="status-copy"><strong id="status-title">AIエージェントの実行準備ができました</strong><span id="status-detail">ボタンを押すと、実際の判断フローを再生します。</span></div>
+          <div class="progress-track" aria-label="実行進捗"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+          <span class="mono" id="progress-label">0%</span>
+        </div>
+
+        <div class="flow" aria-label="AIエージェントの実行フロー">
+          <div class="flow-step is-active" data-step="0"><div class="flow-node">01</div><span class="flow-label">状況を読む</span><span class="flow-detail">Issue / Logs</span></div>
+          <div class="flow-step" data-step="1"><div class="flow-node">02</div><span class="flow-label">役割を編成</span><span class="flow-detail">Agent routing</span></div>
+          <div class="flow-step" data-step="2"><div class="flow-node">03</div><span class="flow-label">原因を判断</span><span class="flow-detail">Evidence graph</span></div>
+          <div class="flow-step" data-step="3"><div class="flow-node">04</div><span class="flow-label">安全に変更</span><span class="flow-detail">Test & approval</span></div>
+          <div class="flow-step" data-step="4"><div class="flow-node">05</div><span class="flow-label">本番へ届ける</span><span class="flow-detail">Cloud Run</span></div>
+        </div>
+
+        <div class="demo-grid">
+          <div class="panel">
+            <div class="panel-head"><h3>自律実行トレース</h3><span id="trace-counter">5 actions / waiting</span></div>
+            <div class="trace-list" id="trace-list">
+              <article class="trace-item is-current" data-trace="0"><div class="trace-icon">◌</div><div class="trace-copy"><strong>アラートの文脈を読み込み中</strong><p>直近15分のエラーレート、デプロイ履歴、関連Issueを照合します。</p><span class="trace-tag">planner</span></div><span class="trace-meta">waiting</span></article>
+              <article class="trace-item" data-trace="1"><div class="trace-icon">◇</div><div class="trace-copy"><strong>最適な調査役を選択</strong><p>Observability OracleとCloud Run SREに調査を分担します。</p><span class="trace-tag">orchestrator</span></div><span class="trace-meta">queued</span></article>
+              <article class="trace-item" data-trace="2"><div class="trace-icon">◎</div><div class="trace-copy"><strong>原因候補を比較</strong><p>「直近の依存更新によるDB接続プール枯渇」を第一候補にしました。</p><span class="trace-tag">reasoning</span></div><span class="trace-meta">queued</span></article>
+              <article class="trace-item" data-trace="3"><div class="trace-icon">✓</div><div class="trace-copy"><strong>修正 → テスト → 承認</strong><p>変更範囲を1ファイルに限定。テスト成功後、人間の承認ポイントを提示します。</p><span class="trace-tag">guardrail</span></div><span class="trace-meta">queued</span></article>
+              <article class="trace-item" data-trace="4"><div class="trace-icon">↑</div><div class="trace-copy"><strong>Cloud Runへデプロイ</strong><p>stagingでヘルスチェックを通過したイメージだけを本番へ昇格します。</p><span class="trace-tag">delivery</span></div><span class="trace-meta">queued</span></article>
+            </div>
+          </div>
+          <aside class="panel" aria-label="AIの判断根拠">
+            <div class="panel-head"><h3>AIの判断が見える</h3><span>WHY THIS ACTION?</span></div>
+            <div class="decision-card">
+              <div class="decision-label"><span>✦</span> Agent decision</div>
+              <h4>接続プール設定のロールバックを優先します</h4>
+              <p>直近の依存更新とDB接続数の増加が同じ時間帯に発生。影響範囲が小さく、ロールバック後に自動検証できるためです。</p>
+              <div class="decision-options">
+                <div class="option selected"><span>●</span> pool設定を安全に戻す <b>92%</b></div>
+                <div class="option"><span>○</span> インスタンスを増やす <b>51%</b></div>
+                <div class="option"><span>○</span> まず待機する <b>18%</b></div>
+              </div>
+            </div>
+            <div class="evidence-list" aria-label="判断の根拠">
+              <div class="evidence"><span class="check">✓</span><span><code>cloud-logging</code> · p95 latencyが 420ms → 2.8s</span></div>
+              <div class="evidence"><span class="check">✓</span><span><code>github/commit</code> · 依存パッケージ更新を検出</span></div>
+              <div class="evidence"><span class="check">✓</span><span><code>cloud-run</code> · revision 184の接続数が上限超過</span></div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <div class="below">
+        <section class="surface" aria-labelledby="evidence-title">
+          <div class="surface-head"><div><h2 id="evidence-title">実行の証拠</h2><p>「AIが答えた」ではなく「AIが動いた」を見せる。</p></div><span class="status-pill">PUBLIC PROOF</span></div>
+          <div class="tabs" role="tablist" aria-label="実行の証拠タブ">
+            <button class="tab is-active" type="button" role="tab" aria-selected="true" data-tab="logs">Tool logs</button>
+            <button class="tab" type="button" role="tab" aria-selected="false" data-tab="diff">Change diff</button>
+            <button class="tab" type="button" role="tab" aria-selected="false" data-tab="result">Result</button>
+          </div>
+          <div class="tab-panel" data-panel="logs">
+            <div class="log">
+              <div class="log-line"><span class="log-time">10:42:08</span><span class="log-kind">PLAN</span><span>mission.execute → 4-step plan created</span></div>
+              <div class="log-line"><span class="log-time">10:42:11</span><span class="log-kind tool">TOOL</span><span>cloud_logging.query → 1,284 records inspected</span></div>
+              <div class="log-line"><span class="log-time">10:42:18</span><span class="log-kind tool">TOOL</span><span>github.compare → revision 184 identified</span></div>
+              <div class="log-line"><span class="log-time">10:42:26</span><span class="log-kind guard">GUARD</span><span>change scope locked → 1 file / 8 lines</span></div>
+              <div class="log-line"><span class="log-time">10:42:41</span><span class="log-kind done">DONE</span><span>staging health check → passed</span></div>
+            </div>
+          </div>
+          <div class="tab-panel" data-panel="diff" hidden>
+            <div class="log"><div class="log-line"><span class="log-time">+8 -3</span><span class="log-kind guard">SAFE</span><span><span style="color:var(--red)">- maxConnections: 10</span> → <span style="color:var(--green)">+ maxConnections: 5</span></span></div><div class="log-line"><span class="log-time">scope</span><span class="log-kind">FILE</span><span>src/config/database.ts · human approval required</span></div></div>
+          </div>
+          <div class="tab-panel" data-panel="result" hidden>
+            <div class="log"><div class="log-line"><span class="log-time">RESULT</span><span class="log-kind done">PASS</span><span>p95 2.8s → 380ms · error rate 6.2% → 0.4%</span></div><div class="log-line"><span class="log-time">DEPLOY</span><span class="log-kind done">LIVE</span><span>Cloud Run revision 185 · 100% traffic</span></div></div>
+          </div>
+        </section>
+
+        <section class="surface" aria-labelledby="roster-title">
+          <div class="surface-head"><div><h2 id="roster-title">専門エージェントの分業</h2><p>1体のチャットボットではなく、役割を持つチーム。</p></div><span class="mono">8 AVAILABLE</span></div>
+          <div class="tab-panel"><div class="agent-list">
+            <div class="agent is-active"><div class="agent-avatar" style="background:rgba(94,234,212,.13);color:var(--cyan)">◉</div><div class="agent-copy"><strong>Observability Oracle</strong><span>logs · metrics · traces</span></div><span class="agent-state"></span></div>
+            <div class="agent is-active"><div class="agent-avatar" style="background:rgba(125,211,252,.13);color:var(--blue)">⌁</div><div class="agent-copy"><strong>Cloud Run SRE</strong><span>deploy · rollback · health</span></div><span class="agent-state"></span></div>
+            <div class="agent is-done"><div class="agent-avatar" style="background:rgba(74,222,128,.13);color:var(--green)">✓</div><div class="agent-copy"><strong>Test Forge</strong><span>unit · integration · smoke</span></div><span class="agent-state"></span></div>
+            <div class="agent"><div class="agent-avatar" style="background:rgba(196,181,253,.13);color:var(--violet)">✦</div><div class="agent-copy"><strong>Gemini Strategist</strong><span>plan · reason · decide</span></div><span class="agent-state"></span></div>
+          </div></div>
+        </section>
+      </div>
+
+      <section class="story" aria-labelledby="story-title">
+        <p class="eyebrow">WHY THIS WILL LAND WITH JUDGES</p>
+        <h2 id="story-title">画面を見るだけで、エージェントの必然性が伝わる。</h2>
+        <div class="story-grid">
+          <div class="story-step"><div class="story-number">01</div><div><strong>課題</strong><p>運用情報がログ・Issue・デプロイ履歴に分散し、判断に時間がかかる。</p></div></div>
+          <div class="story-step"><div class="story-number">02</div><div><strong>自律性</strong><p>AIが調査役を選び、根拠を比較して、安全な変更手順まで決める。</p></div></div>
+          <div class="story-step"><div class="story-number">03</div><div><strong>価値</strong><p>人は最終承認だけ。検証済みの変更がCloud Runに届く。</p></div></div>
+        </div>
+      </section>
+
+      <footer class="footer-note"><span><span class="dot" style="color:var(--green)"></span> Demo mode · no production mutation</span><span class="mono">a2a-agent-marketplace / judge-preview</span></footer>
+    </main>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script>
+      (() => {
+        const state = { running: false, index: 0, timer: null };
+        const steps = [...document.querySelectorAll('.flow-step')];
+        const traces = [...document.querySelectorAll('.trace-item')];
+        const runButton = document.querySelector('[data-action="run"]');
+        const statusTitle = document.getElementById('status-title');
+        const statusDetail = document.getElementById('status-detail');
+        const progressBar = document.getElementById('progress-bar');
+        const progressLabel = document.getElementById('progress-label');
+        const traceCounter = document.getElementById('trace-counter');
+        const toast = document.getElementById('toast');
+        const messages = [
+          ['ログとIssueを照合中', 'Cloud LoggingとGitHubの直近変更を読み込んでいます。'],
+          ['調査役を編成しました', 'Observability OracleとCloud Run SREへタスクを分配しました。'],
+          ['原因候補を比較中', '複数の証拠をスコアリングし、変更リスクを評価しています。'],
+          ['安全な変更を検証中', '変更範囲をロックし、stagingのヘルスチェックを実行しています。'],
+          ['デプロイが完了しました', 'Cloud Run revision 185が100%のトラフィックを受けています。']
+        ];
+
+        function showToast(message) {
+          toast.textContent = message;
+          toast.classList.add('is-visible');
+          window.clearTimeout(showToast.timer);
+          showToast.timer = window.setTimeout(() => toast.classList.remove('is-visible'), 2400);
+        }
+
+        function paint(index) {
+          state.index = index;
+          steps.forEach((step, i) => {
+            step.classList.toggle('is-done', i < index);
+            step.classList.toggle('is-active', i === index);
+          });
+          traces.forEach((trace, i) => {
+            trace.classList.toggle('is-done', i < index);
+            trace.classList.toggle('is-current', i === index);
+            const meta = trace.querySelector('.trace-meta');
+            meta.textContent = i < index ? 'done' : i === index ? 'running' : 'queued';
+          });
+          const percent = Math.round((index / (steps.length - 1)) * 100);
+          progressBar.style.width = percent + '%';
+          progressLabel.textContent = percent + '%';
+          statusTitle.textContent = messages[index][0];
+          statusDetail.textContent = messages[index][1];
+          traceCounter.textContent = `${index} actions / ${index === steps.length - 1 ? 'complete' : 'live'}`;
+        }
+
+        function reset() {
+          state.running = false;
+          window.clearInterval(state.timer);
+          runButton.innerHTML = '<span aria-hidden="true">▶</span> デモを実行';
+          runButton.disabled = false;
+          paint(0);
+          showToast('デモを初期状態に戻しました');
+        }
+
+        function run() {
+          if (state.running) return;
+          state.running = true;
+          runButton.textContent = '実行中…';
+          runButton.disabled = true;
+          let next = 0;
+          paint(0);
+          state.timer = window.setInterval(() => {
+            next += 1;
+            if (next >= steps.length) {
+              window.clearInterval(state.timer);
+              state.running = false;
+              runButton.textContent = '完了 — もう一度実行';
+              runButton.disabled = false;
+              paint(steps.length - 1);
+              showToast('自律対応デモが完了しました');
+              return;
+            }
+            paint(next);
+          }, 1250);
+        }
+
+        document.querySelector('[data-action="run"]').addEventListener('click', run);
+        document.querySelector('[data-action="reset"]').addEventListener('click', reset);
+        document.querySelector('[data-action="share"]').addEventListener('click', async () => {
+          try { await navigator.clipboard.writeText(window.location.href); showToast('プレビューURLをコピーしました'); }
+          catch { showToast('このプレビューはローカルで共有できます'); }
+        });
+        document.querySelectorAll('[data-tab]').forEach((tab) => tab.addEventListener('click', () => {
+          const name = tab.dataset.tab;
+          document.querySelectorAll('[data-tab]').forEach((item) => { item.classList.toggle('is-active', item === tab); item.setAttribute('aria-selected', String(item === tab)); });
+          document.querySelectorAll('[data-panel]').forEach((panel) => { panel.hidden = panel.dataset.panel !== name; });
+        }));
+        paint(0);
+      })();
+    </script>
+  </body>
+</html>
