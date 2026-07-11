@@ -20,6 +20,12 @@ coverage/
 .env
 .env.*
 !.env.example
+.envrc
+.envrc.local
+.env.local
+.direnv/
+!.envrc.example
+!.env.local.example
 
 # Tooling working dirs
 .playwright-cli/

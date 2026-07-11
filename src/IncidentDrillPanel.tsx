@@ -38,12 +38,12 @@ export default function IncidentDrillPanel() {
     <section id="safe-demo" className="drill-panel" aria-labelledby="safe-demo-title">
       <div className="drill-panel-head">
         <div>
-          <p className="section-kicker">安全なデモ実験</p>
+          <p className="section-kicker">変更なしで試す</p>
           <h2 id="safe-demo-title">
             <FlaskConical size={20} /> 模擬インシデント注入
           </h2>
           <p className="drill-lede">
-            本番データや決済APIは変更せず、ランダムな合成障害ログだけをCloud Loggingへ追加します。
+            本番データや決済APIには触れず、合成した障害ログだけをCloud Loggingに追加します。
           </p>
         </div>
         <div className="drill-safety-note">
@@ -60,21 +60,21 @@ export default function IncidentDrillPanel() {
           <div className="drill-step">
             <span className="drill-step-index">01</span>
             <div>
-              <strong>ケースをランダム選択</strong>
+              <strong>障害ケースを選ぶ</strong>
               <p>レイテンシやリトライなど、毎回異なる演習ログを選びます。</p>
             </div>
           </div>
           <div className="drill-step">
             <span className="drill-step-index">02</span>
             <div>
-              <strong>Cloud Loggingへ記録</strong>
+              <strong>ログに記録する</strong>
               <p>約15秒後からCloud Run SREの実ログ監査で確認できます。</p>
             </div>
           </div>
           <div className="drill-step">
             <span className="drill-step-index">03</span>
             <div>
-              <strong>実行履歴と照合</strong>
+              <strong>結果を画面で確認</strong>
               <p>生成されたIDとシナリオを、この画面の結果で確認できます。</p>
             </div>
           </div>
@@ -84,9 +84,9 @@ export default function IncidentDrillPanel() {
           <div className="drill-action-icon" aria-hidden="true">
             <Shuffle size={24} />
           </div>
-          <p>審査員向けの安全な見せ場</p>
+          <p>サービスを止めずに、ログ連携だけを試せます</p>
           <button type="button" className="btn-demo" onClick={runDrill} disabled={busy}>
-            <Cloud size={16} /> {busy ? "ログを準備中..." : "ランダムな障害を注入"}
+            <Cloud size={16} /> {busy ? "ログを追加中..." : "合成ログを追加"}
           </button>
           <small>1分に1回まで。アプリの機能停止や外部API呼び出しはありません。</small>
         </div>

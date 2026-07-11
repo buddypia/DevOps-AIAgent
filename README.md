@@ -89,6 +89,20 @@ npm install
 npm run dev            # http://localhost:8080
 ```
 
+### Project-local environment (recommended)
+
+このプロジェクトは、他のプロジェクトのGemini / Google Cloud環境変数を読み込みません。`direnv`を使う場合は、プロジェクト内の`.envrc`だけが設定を読み込みます。
+
+```bash
+cp .envrc.example .envrc
+cp .env.local.example .env.local
+# .env.local にこのプロジェクト用の GEMINI_API_KEY を設定する
+direnv allow .
+direnv exec . npm run dev
+```
+
+`.envrc`、`.env.local`、`.envrc.local`はGit管理対象外です。`.envrc`は`~/.zshrc`をsourceせず、プロジェクト用の値だけを設定します。Vertex AIを使う場合は、`GOOGLE_CLOUD_PROJECT`と`GOOGLE_CLOUD_LOCATION`を`.envrc`または`.env.local`で指定し、ADCを別途設定してください。
+
 実行エージェントまで動かす場合（Vertex AI + ADC、`docs/infra.md` のプロジェクトを使用）:
 
 ```bash

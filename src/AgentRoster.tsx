@@ -41,26 +41,26 @@ export default function AgentRoster({ agents, stats, hiredIds, busy, onToggleHir
                 <p className="roster-name">{agent.name}</p>
                 <p className="roster-handle">{agent.handle}</p>
               </div>
-              <span className={`roster-rank roster-rank-${record?.rank ?? "-"}`} title="ランクは実行履歴 (受入所見数×受入率) から自動算出">
+              <span className={`roster-rank roster-rank-${record?.rank ?? "-"}`} title="ランクは実行履歴の採用した指摘数と採用率から算出">
                 <Award size={13} /> {record?.rank ?? "-"}
               </span>
             </div>
             <p className="roster-headline">{market?.headline ?? ""}</p>
             <dl className="roster-stats">
               <div>
-                <dt>実行ラン</dt>
+                <dt>実行回数</dt>
                 <dd>{record?.runs ?? 0}</dd>
               </div>
               <div>
-                <dt>受入所見</dt>
+                <dt>採用した指摘</dt>
                 <dd>{record?.accepted ?? 0}</dd>
               </div>
               <div>
-                <dt>受入率</dt>
+                <dt>採用率</dt>
                 <dd>{formatRate(record?.acceptRate ?? null)}</dd>
               </div>
               <div>
-                <dt>checker確認率</dt>
+                <dt>再確認一致率</dt>
                 <dd>{formatRate(record?.confirmRate ?? null)}</dd>
               </div>
             </dl>
@@ -70,7 +70,7 @@ export default function AgentRoster({ agents, stats, hiredIds, busy, onToggleHir
               </span>
               <span className="roster-cost">{record?.avgCostUsd != null ? `~$${record.avgCostUsd.toFixed(4)}/run` : "コスト実績なし"}</span>
               <button type="button" className={`btn-hire${hired ? " is-active" : ""}`} onClick={() => onToggleHire(agent.agentId)} disabled={busy}>
-                {hired ? "解雇" : "雇う"}
+                {hired ? "無効にする" : "有効にする"}
               </button>
             </div>
           </article>
