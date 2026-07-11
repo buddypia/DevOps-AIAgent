@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, ExternalLink, Network } from "lucide-react";
+import { CheckCircle2, ExternalLink, FileCheck2, FlaskConical, Network, Target, Workflow } from "lucide-react";
 
 import AgentRoster from "./AgentRoster.js";
+import IncidentDrillPanel from "./IncidentDrillPanel.js";
 import MissionControl from "./MissionControl.js";
 import OpsAgentConsole from "./OpsAgentConsole.js";
 import { MAX_CUSTOM_AGENTS } from "./customAgent.js";
@@ -134,13 +135,21 @@ export default function AppHome() {
 
       <section className="hero-copy">
         <div className="hero-text">
+          <p className="hero-kicker">審査員向けの実演コマンドセンター</p>
           <h1>
-            目標を渡す。<span className="hero-accent">AIギルド</span>が実働する。
+            実データで、<span className="hero-accent">答え</span>を出す。
           </h1>
           <p>
-            Geminiオーケストレーターが専門エージェントを自律選抜し、実ログ・実CI・実脆弱性DB・実HTMLに対して本当に実行。
-            引用ゲートと独立checkerを通過した結果だけが、あなたへのレポートになる。
+            1つの目標からGeminiが専門エージェントを選び、実システムの証拠を集めてレポートします。
           </p>
+          <div className="hero-actions">
+            <a className="btn-primary" href="#mission-control">
+              <Target size={16} /> 本番監査を試す
+            </a>
+            <a className="btn-secondary" href="#safe-demo">
+              <FlaskConical size={16} /> 安全デモを見る
+            </a>
+          </div>
         </div>
         <img
           className="hero-image"
@@ -153,20 +162,54 @@ export default function AppHome() {
         />
       </section>
 
-      <MissionControl agents={agentsById} onMissionSettled={handleActivitySettled} />
+      <section className="how-it-works" aria-labelledby="how-it-works-title">
+        <div className="section-head compact-head">
+          <p className="section-kicker">この画面で起きること</p>
+          <h2 id="how-it-works-title">見る順番は、目標 → 実行 → 根拠</h2>
+          <p>最初は本番監査を開始してください。模擬インシデントは下の安全なデモ実験から別に試せます。</p>
+        </div>
+        <div className="process-rail">
+          <div className="process-step">
+            <Target size={18} />
+            <div><strong>1. 目標を書く</strong><span>何を確認したいかを入力</span></div>
+          </div>
+          <div className="process-connector" aria-hidden="true" />
+          <div className="process-step">
+            <Workflow size={18} />
+            <div><strong>2. AIが分担する</strong><span>専門エージェントを自律選抜</span></div>
+          </div>
+          <div className="process-connector" aria-hidden="true" />
+          <div className="process-step">
+            <FileCheck2 size={18} />
+            <div><strong>3. 根拠で判断する</strong><span>引用ゲートとcheckerで検証</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="mission-control" className="surface-section" aria-labelledby="mission-control-title">
+        <div className="section-head">
+          <p className="section-kicker">本番監査</p>
+          <h2 id="mission-control-title">実システムに目標を渡す</h2>
+          <p>Cloud Run、CI、依存パッケージ、配信HTMLなど、実際の対象へミッションを実行します。</p>
+        </div>
+        <MissionControl agents={agentsById} onMissionSettled={handleActivitySettled} />
+      </section>
+
+      <IncidentDrillPanel />
 
       <section aria-label="ギルド名鑑">
         <div className="section-head">
           <h2>ギルド名鑑</h2>
-          <p>能力値の演出はなし — 数字とランクはすべて、Firestoreに記録された実行履歴から自動算出された実績。</p>
+          <p>能力値の演出はありません。数字とランクはFirestoreの実行履歴から自動算出されます。</p>
         </div>
         <AgentRoster agents={agents} stats={stats} hiredIds={hiredIds} busy={hireBusy} onToggleHire={handleToggleHire} />
       </section>
 
-      <section aria-label="手動実行コンソール">
+      <section aria-label="個別エージェント実行">
         <div className="section-head">
-          <h2>手動実行コンソール</h2>
-          <p>1体ずつ指名して実行し、実証拠の収集 → Gemini maker → 引用ゲート → 独立checker → 受入判定の全過程を追跡する。</p>
+          <p className="section-kicker">個別実行</p>
+          <h2>エージェントを1体ずつ試す</h2>
+          <p>雇用したエージェントを指名して、証拠収集からcheckerまでの実行履歴を確認します。</p>
         </div>
         <OpsAgentConsole refreshSignal={refreshSignal} onRunSettled={handleActivitySettled} />
       </section>
@@ -203,7 +246,7 @@ export default function AppHome() {
           <ul className="imported-list">
             {importedAgents.map((agent) => (
               <li key={agent.id}>
-                <strong>{agent.name}</strong> — {agent.headline} <span className="imported-tag">外部 / A2Aスキル {agent.a2aSkillIds.length}件</span>
+                <strong>{agent.name}</strong> - {agent.headline} <span className="imported-tag">外部 / A2Aスキル {agent.a2aSkillIds.length}件</span>
               </li>
             ))}
           </ul>

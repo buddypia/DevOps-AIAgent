@@ -185,17 +185,6 @@ export default function OpsAgentConsole({ refreshSignal, onRunSettled }: OpsAgen
     }
   }
 
-  async function handleDrill() {
-    setBusy(true);
-    try {
-      const response = await fetch("/api/ops-agent/incident-drill", { method: "POST" });
-      const body = (await response.json()) as { note?: string; message?: string };
-      setMessage(body.note ?? body.message ?? "");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   const acceptedTotal = runs.reduce((sum, run) => sum + run.findings.filter((f) => f.accepted).length, 0);
   const costTotal = runs.reduce((sum, run) => sum + (run.usage?.estimatedCostUsd ?? 0), 0);
   const costPerAccepted = acceptedTotal > 0 ? costTotal / acceptedTotal : null;
@@ -206,11 +195,11 @@ export default function OpsAgentConsole({ refreshSignal, onRunSettled }: OpsAgen
     <div className="ops-console">
       <div className="ops-console-head">
         <div>
-          <h3>
-            <Activity size={16} /> 8体すべて、本物のシステムに対して実行
+            <h3>
+            <Activity size={16} /> 選んだエージェントを実行
           </h3>
           <p className="ops-console-sub">
-            全エージェント共通の実パイプライン: 実証拠の収集 → Gemini maker → 引用ゲート(証拠ID照合) → 独立checker → Firestore記録。レート制限・時間予算のハードストップ付き。
+            実証拠の収集からGemini分析、引用ゲート、独立checker、Firestore記録までを1つの履歴で追跡します。
           </p>
         </div>
       </div>
@@ -234,7 +223,7 @@ export default function OpsAgentConsole({ refreshSignal, onRunSettled }: OpsAgen
       {selectedJob ? (
         <div className="ops-job-panel">
           <p className="ops-job-title">
-            <strong>{selectedJob.name}</strong>（{selectedJob.handle}） — {selectedJob.title}
+            <strong>{selectedJob.name}</strong>（{selectedJob.handle}） - {selectedJob.title}
           </p>
           {selectedJob.inputKind !== "none" ? (
             <label className="ops-job-input">
@@ -262,11 +251,6 @@ export default function OpsAgentConsole({ refreshSignal, onRunSettled }: OpsAgen
             <button type="button" className="btn-primary" onClick={handleExecute} disabled={busy || !hired}>
               実行する
             </button>
-            {selectedJob.agentId === "cloud-run-sre" ? (
-              <button type="button" className="btn-secondary" onClick={handleDrill} disabled={busy} title="実ログとしてERROR/WARNINGを注入するSREドリル">
-                模擬インシデント注入
-              </button>
-            ) : null}
           </div>
           {!hired ? <p className="ops-console-hint">「雇う」で契約がサーバーに保存され、実行が解放されます。</p> : null}
         </div>
@@ -288,7 +272,7 @@ export default function OpsAgentConsole({ refreshSignal, onRunSettled }: OpsAgen
           <span className="ops-metric-label">概算コスト</span>
         </div>
         <div className="ops-metric">
-          <span className="ops-metric-value">{costPerAccepted === null ? "—" : `$${costPerAccepted.toFixed(4)}`}</span>
+          <span className="ops-metric-value">{costPerAccepted === null ? "未計測" : `$${costPerAccepted.toFixed(4)}`}</span>
           <span className="ops-metric-label">受入1件あたり</span>
         </div>
       </div>
@@ -371,7 +355,7 @@ export default function OpsAgentConsole({ refreshSignal, onRunSettled }: OpsAgen
               </p>
               {selectedRun.escalations.map((escalation, index) => (
                 <p key={`${escalation.title}-${index}`} className="ops-run-text">
-                  [{escalation.severity}] {escalation.title} — {escalation.recommendedAction}
+                  [{escalation.severity}] {escalation.title} - {escalation.recommendedAction}
                 </p>
               ))}
             </div>
