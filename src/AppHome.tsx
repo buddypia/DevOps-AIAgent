@@ -1,79 +1,85 @@
-import { useMemo, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
-import { recommendSquad } from "./agentEngine.js";
-import { MAX_CUSTOM_AGENTS, mergeAgentCatalog, type AgentCardImportResult } from "./customAgent.js";
-import { DEFAULT_PROJECT_BRIEF } from "./market.js";
-import { ONBOARDING_TEMPLATES } from "./onboardingTemplates.js";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { CheckCircle2, ExternalLink, Network } from "lucide-react";
+
+import AgentRoster from "./AgentRoster.js";
+import MissionControl from "./MissionControl.js";
 import OpsAgentConsole from "./OpsAgentConsole.js";
-import type { GeminiRecommendation, MarketAgent, SquadScore } from "./types.js";
+import { MAX_CUSTOM_AGENTS } from "./customAgent.js";
+import { SUBMISSION_PROOF } from "./submission.js";
 
-function ScoreBar({ label, before, after }: { label: string; before: number; after: number }) {
-  const delta = after - before;
-  return (
-    <div className="score-row">
-      <span className="score-label">{label}</span>
-      <div className="score-track">
-        <span className="score-fill score-fill-before" style={{ width: `${before}%` }} />
-        <span className="score-fill score-fill-after" style={{ width: `${after}%` }} />
-      </div>
-      <span className="score-delta">{delta >= 0 ? `+${delta}` : delta}</span>
-    </div>
-  );
-}
+import type { AgentCardImportResult } from "./customAgent.js";
+import type { AgentIdentity } from "./MissionControl.js";
+import type { AgentTrackRecordView } from "./missionTypes.js";
+import type { MarketAgent } from "./types.js";
 
-const SCORE_ROWS: Array<{ key: keyof SquadScore; label: string }> = [
-  { key: "planning", label: "企画設計" },
-  { key: "delivery", label: "実装力" },
-  { key: "reliability", label: "信頼性" },
-  { key: "usability", label: "UX" },
-  { key: "governance", label: "統治(A2A/MCP)" }
-];
+type HealthInfo = {
+  geminiMode?: string;
+  opsAgent?: { enabled?: boolean; runStore?: string; executableAgents?: number };
+  missionControl?: { enabled?: boolean };
+};
 
 export default function AppHome() {
-  const [brief, setBrief] = useState(DEFAULT_PROJECT_BRIEF);
-  const [customAgents, setCustomAgents] = useState<MarketAgent[]>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [gemini, setGemini] = useState<GeminiRecommendation | null>(null);
-  const [geminiLoading, setGeminiLoading] = useState(false);
+  const [agents, setAgents] = useState<AgentIdentity[]>([]);
+  const [stats, setStats] = useState<Map<string, AgentTrackRecordView>>(new Map());
+  const [hiredIds, setHiredIds] = useState<Set<string>>(new Set());
+  const [health, setHealth] = useState<HealthInfo | null>(null);
+  const [refreshSignal, setRefreshSignal] = useState(0);
+  const [hireBusy, setHireBusy] = useState(false);
   const [cardUrl, setCardUrl] = useState("");
   const [cardResult, setCardResult] = useState<AgentCardImportResult | null>(null);
+  const [importedAgents, setImportedAgents] = useState<MarketAgent[]>([]);
   const [cardLoading, setCardLoading] = useState(false);
 
-  const agentCatalog = useMemo(() => mergeAgentCatalog(customAgents), [customAgents]);
-  const recommendation = useMemo(
-    () => recommendSquad(brief, selectedIds, 140, agentCatalog),
-    [brief, selectedIds, agentCatalog]
-  );
-  const hiredIds = useMemo(() => new Set(recommendation.selected.map((agent) => agent.id)), [recommendation]);
+  const agentsById = useMemo(() => new Map(agents.map((agent) => [agent.agentId, agent])), [agents]);
 
-  function toggleAgent(id: string) {
-    setSelectedIds((prev) => {
-      const base = prev.length > 0 ? prev : recommendation.selected.map((agent) => agent.id);
-      return base.includes(id) ? base.filter((item) => item !== id) : [...base, id];
-    });
-  }
+  useEffect(() => {
+    void (async () => {
+      try {
+        const [jobsRes, healthRes] = await Promise.all([fetch("/api/agent-jobs"), fetch("/api/healthz")]);
+        const jobs = (await jobsRes.json()) as { jobs?: Array<AgentIdentity & { title: string }> };
+        setAgents((jobs.jobs ?? []).map(({ agentId, name, handle, color }) => ({ agentId, name, handle, color })));
+        setHealth((await healthRes.json()) as HealthInfo);
+      } catch {
+        // 初期ロード失敗時は各セクションが空表示のまま (サーバー復帰後のリロードで回復)
+      }
+    })();
+  }, []);
 
-  function applyTemplate(templateId: string) {
-    const template = ONBOARDING_TEMPLATES.find((item) => item.id === templateId);
-    if (!template) return;
-    setBrief(template.brief);
-    setSelectedIds(template.selectedAgentIds);
-    setGemini(null);
-  }
-
-  async function runGeminiRecommend() {
-    setGeminiLoading(true);
+  const refreshRecords = useCallback(async () => {
     try {
-      const response = await fetch("/api/recommend", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ projectBrief: brief, selectedAgentIds: recommendation.selected.map((agent) => agent.id) })
-      });
-      setGemini((await response.json()) as GeminiRecommendation);
+      const [statsRes, hiresRes] = await Promise.all([fetch("/api/agent-stats"), fetch("/api/hires")]);
+      const statsBody = (await statsRes.json()) as { stats?: AgentTrackRecordView[] };
+      const hiresBody = (await hiresRes.json()) as { hires?: Array<{ agentId: string }> };
+      setStats(new Map((statsBody.stats ?? []).map((record) => [record.agentId, record])));
+      setHiredIds(new Set((hiresBody.hires ?? []).map((hire) => hire.agentId)));
     } catch {
-      setGemini(null);
+      // 統計取得失敗は次のrefreshで回復
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshRecords();
+  }, [refreshRecords, refreshSignal]);
+
+  const handleActivitySettled = useCallback(() => {
+    setRefreshSignal((value) => value + 1);
+  }, []);
+
+  async function handleToggleHire(agentId: string) {
+    setHireBusy(true);
+    try {
+      if (hiredIds.has(agentId)) {
+        await fetch(`/api/hires/${agentId}`, { method: "DELETE" });
+      } else {
+        await fetch("/api/hires", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ agentId })
+        });
+      }
+      await refreshRecords();
     } finally {
-      setGeminiLoading(false);
+      setHireBusy(false);
     }
   }
 
@@ -88,8 +94,8 @@ export default function AppHome() {
       });
       const result = (await response.json()) as AgentCardImportResult;
       setCardResult(result);
-      if (result.status === "accepted" && customAgents.length < MAX_CUSTOM_AGENTS) {
-        setCustomAgents((prev) => [...prev, result.agent]);
+      if (result.status === "accepted" && importedAgents.length < MAX_CUSTOM_AGENTS) {
+        setImportedAgents((prev) => [...prev, result.agent]);
       }
     } catch {
       setCardResult({ status: "rejected", error: "Agent Cardの取得に失敗しました。", warnings: [], signals: [] });
@@ -100,173 +106,124 @@ export default function AppHome() {
 
   return (
     <main className="app-shell">
-      <header className="hero-header">
+      <header className="top-bar">
         <div className="brand">
-          <span className="brand-mark">◆</span>
+          <span className="brand-mark" aria-hidden="true">
+            ◆
+          </span>
           <div>
-            <p className="brand-name">Agent Market</p>
-            <p className="brand-tag">必要なAIを、探して雇う。</p>
+            <p className="brand-name">Agent Guild</p>
+            <p className="brand-tag">A2A Agent Marketplace / Mission Control</p>
           </div>
         </div>
-        <span className="live-badge">
-          <CheckCircle2 size={14} /> A2A Agent Card ・ Cloud Run 稼働中
-        </span>
+        <div className="top-status">
+          {health ? (
+            <>
+              <span className="status-pill">
+                <CheckCircle2 size={13} /> Gemini {health.geminiMode ?? "none"}
+              </span>
+              <span className="status-pill">store: {health.opsAgent?.runStore ?? "-"}</span>
+              <span className="status-pill">{health.opsAgent?.executableAgents ?? 8}体 実行可能</span>
+            </>
+          ) : null}
+          <a className="status-pill status-link" href="/.well-known/agent-card.json" target="_blank" rel="noreferrer">
+            Agent Card <ExternalLink size={11} />
+          </a>
+        </div>
       </header>
 
-      <section className="onboarding">
-        <p className="section-eyebrow">はじめる</p>
-        <div className="template-row">
-          {ONBOARDING_TEMPLATES.map((template) => (
-            <button key={template.id} type="button" className="template-chip" onClick={() => applyTemplate(template.id)}>
-              <span className="template-label">{template.label}</span>
-              <span className="template-audience">{template.audience}</span>
-            </button>
-          ))}
+      <section className="hero-copy">
+        <div className="hero-text">
+          <h1>
+            目標を渡す。<span className="hero-accent">AIギルド</span>が実働する。
+          </h1>
+          <p>
+            Geminiオーケストレーターが専門エージェントを自律選抜し、実ログ・実CI・実脆弱性DB・実HTMLに対して本当に実行。
+            引用ゲートと独立checkerを通過した結果だけが、あなたへのレポートになる。
+          </p>
         </div>
+        <img
+          className="hero-image"
+          src="/assets/agent-marketplace-hero.webp"
+          alt="8体の専門エージェントがコマンドコンソールを囲むエンブレムネットワーク"
+          width={1200}
+          height={669}
+          loading="eager"
+          fetchPriority="high"
+        />
       </section>
 
-      <ol className="flow">
-        <li className="flow-step">
-          <div className="flow-badge">1</div>
-          <div className="flow-body">
-            <h2>プロジェクトのブリーフを入力</h2>
-            <p className="flow-desc">解きたい課題を書くだけ。</p>
-            <textarea className="brief-input" value={brief} onChange={(event) => setBrief(event.target.value)} rows={4} />
-          </div>
-        </li>
+      <MissionControl agents={agentsById} onMissionSettled={handleActivitySettled} />
 
-        <li className="flow-step">
-          <div className="flow-badge">2</div>
-          <div className="flow-body">
-            <h2>AIがブリーフを診断</h2>
-            <p className="flow-desc">語句から必要な能力を抽出する。</p>
-            <div className="chip-row">
-              {recommendation.profile.matchedTerms.length === 0 ? (
-                <span className="chip-empty">一致する語句なし（既定の重みで診断）</span>
-              ) : (
-                recommendation.profile.matchedTerms.map((term) => (
-                  <span key={term} className="chip">
-                    {term}
-                  </span>
-                ))
-              )}
-            </div>
-          </div>
-        </li>
+      <section aria-label="ギルド名鑑">
+        <div className="section-head">
+          <h2>ギルド名鑑</h2>
+          <p>能力値の演出はなし — 数字とランクはすべて、Firestoreに記録された実行履歴から自動算出された実績。</p>
+        </div>
+        <AgentRoster agents={agents} stats={stats} hiredIds={hiredIds} busy={hireBusy} onToggleHire={handleToggleHire} />
+      </section>
 
-        <li className="flow-step">
-          <div className="flow-badge">3</div>
-          <div className="flow-body">
-            <h2>エージェント市場をランキング表示</h2>
-            <p className="flow-desc">価値スコア順。「雇う」で編成に加える。</p>
-            <div className="agent-grid">
-              {recommendation.ranked.map(({ agent, valueScore }) => {
-                const hired = hiredIds.has(agent.id);
-                return (
-                  <div key={agent.id} className="agent-card" style={{ borderColor: agent.color }}>
-                    <div className="agent-card-head">
-                      {agent.avatarUrl ? (
-                        <img className="agent-avatar-img" src={agent.avatarUrl} alt={agent.name} style={{ borderColor: agent.color }} />
-                      ) : (
-                        <span className="agent-avatar" style={{ background: agent.color }}>
-                          {agent.name.slice(0, 1)}
-                        </span>
-                      )}
-                      <div>
-                        <p className="agent-name">{agent.name}</p>
-                        <p className="agent-headline">{agent.headline}</p>
-                      </div>
-                    </div>
-                    <div className="agent-card-foot">
-                      <span className="agent-value">value {valueScore}</span>
-                      <span className="agent-price">¥{agent.price}</span>
-                      <button type="button" className={`btn-hire${hired ? " is-active" : ""}`} onClick={() => toggleAgent(agent.id)}>
-                        {hired ? "解雇" : "雇う"}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </li>
+      <section aria-label="手動実行コンソール">
+        <div className="section-head">
+          <h2>手動実行コンソール</h2>
+          <p>1体ずつ指名して実行し、実証拠の収集 → Gemini maker → 引用ゲート → 独立checker → 受入判定の全過程を追跡する。</p>
+        </div>
+        <OpsAgentConsole refreshSignal={refreshSignal} onRunSettled={handleActivitySettled} />
+      </section>
 
-        <li className="flow-step">
-          <div className="flow-badge">4</div>
-          <div className="flow-body">
-            <h2>雇うと、プロジェクトのスコアが上がる</h2>
-            <p className="flow-desc">購入前 → 購入後の改善量を可視化する。</p>
-            <div className="score-panel">
-              {SCORE_ROWS.map((row) => (
-                <ScoreBar key={row.key} label={row.label} before={recommendation.before[row.key]} after={recommendation.after[row.key]} />
-              ))}
-            </div>
-          </div>
-        </li>
-
-        <li className="flow-step">
-          <div className="flow-badge">5</div>
-          <div className="flow-body">
-            <h2>雇ったエージェントが本物の仕事を実行 — 8体すべて実データで動く</h2>
-            <p className="flow-desc">
-              デモではなく実実行 — 実ログ/実CI/実脆弱性DB/実HTML/実A2A委任を証拠に、Geminiが自律判断し、独立checkerの検証を経てFirestoreへ記録する。
-            </p>
-            <OpsAgentConsole projectBrief={brief} />
-          </div>
-        </li>
-
-        <li className="flow-step">
-          <div className="flow-badge">6</div>
-          <div className="flow-body">
-            <h2>Gemini 3.5 Flash が戦略をまとめる</h2>
-            <p className="flow-desc">APIキー未設定でもローカル推論でフォールバックする。</p>
-            <button type="button" className="btn-primary" onClick={runGeminiRecommend} disabled={geminiLoading}>
-              {geminiLoading ? "分析中…" : "Geminiで分析する"}
-            </button>
-            {gemini ? (
-              <div className="gemini-panel">
-                <span className="gemini-tag">
-                  {gemini.model} ・ {gemini.source === "gemini" ? "live" : "fallback"}
-                </span>
-                <p>
-                  <strong>要約</strong> — {gemini.executiveSummary}
-                </p>
-                <p>
-                  <strong>勝ち筋</strong> — {gemini.winningAngle}
-                </p>
-                <p>
-                  <strong>ピッチ</strong> — {gemini.pitchScript}
-                </p>
-              </div>
-            ) : null}
-          </div>
-        </li>
-      </ol>
-
-      <section className="agent-card-import">
-        <p className="section-eyebrow">Agent Cardを取り込む</p>
+      <section className="network" aria-label="A2Aネットワーク">
+        <div className="section-head">
+          <h2>
+            <Network size={18} /> A2Aネットワーク
+          </h2>
+          <p>このギルド自身もA2Aエージェント。外部エージェントのAgent Cardを検証付きで取り込み、A2A委任の相手として評価できる。</p>
+        </div>
         <div className="import-row">
           <input
             className="import-input"
             placeholder="https://example.com/.well-known/agent-card.json"
             value={cardUrl}
             onChange={(event) => setCardUrl(event.target.value)}
+            aria-label="Agent Card URL"
           />
           <button type="button" className="btn-secondary" onClick={importAgentCard} disabled={cardLoading}>
-            {cardLoading ? "取込中…" : "取り込む"}
+            {cardLoading ? "取込中…" : "Agent Cardを取り込む"}
           </button>
         </div>
         {cardResult ? (
           cardResult.status === "accepted" ? (
             <p className="import-ok">
-              <CheckCircle2 size={14} /> {cardResult.agent.name} を市場に追加しました。
+              <CheckCircle2 size={14} /> {cardResult.agent.name} を検証して取り込みました（評価のみ・実行対象は自ギルドの8体）。
             </p>
           ) : (
             <p className="import-error">{cardResult.error}</p>
           )
         ) : null}
+        {importedAgents.length > 0 ? (
+          <ul className="imported-list">
+            {importedAgents.map((agent) => (
+              <li key={agent.id}>
+                <strong>{agent.name}</strong> — {agent.headline} <span className="imported-tag">外部 / A2Aスキル {agent.a2aSkillIds.length}件</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <div className="proof-row">
+          <a href={SUBMISSION_PROOF.publicGitHubUrl} target="_blank" rel="noreferrer">
+            GitHub <ExternalLink size={11} />
+          </a>
+          <a href={SUBMISSION_PROOF.ciWorkflowUrl} target="_blank" rel="noreferrer">
+            CI <ExternalLink size={11} />
+          </a>
+          <a href="/api/healthz" target="_blank" rel="noreferrer">
+            healthz <ExternalLink size={11} />
+          </a>
+          <a href="/api/agent-stats" target="_blank" rel="noreferrer">
+            実績API <ExternalLink size={11} />
+          </a>
+          <span className="proof-note">Cloud Run + Firestore + Cloud Logging + Gemini で稼働中</span>
+        </div>
       </section>
-
     </main>
   );
 }

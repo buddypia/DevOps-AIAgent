@@ -37,7 +37,6 @@ export type MarketAgent = {
   color: string;
   accent: string;
   capabilities: Record<CapabilityKey, number>;
-  avatarUrl?: string;
   skills: AgentSkill[];
   mcp: McpCapability[];
   a2aSkillIds: string[];

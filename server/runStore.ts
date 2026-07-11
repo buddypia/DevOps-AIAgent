@@ -1,5 +1,6 @@
 import { GoogleAuth } from "google-auth-library";
 
+import type { Mission } from "./missionAgent.js";
 import type { OpsAgentRun } from "./opsAgent.js";
 
 export type HireRecord = { agentId: string; hiredAt: string };
@@ -9,6 +10,9 @@ export type RunStore = {
   saveRun(run: OpsAgentRun): Promise<void>;
   getRun(id: string): Promise<OpsAgentRun | null>;
   listRuns(limit: number): Promise<OpsAgentRun[]>;
+  saveMission(mission: Mission): Promise<void>;
+  getMission(id: string): Promise<Mission | null>;
+  listMissions(limit: number): Promise<Mission[]>;
   saveHire(agentId: string): Promise<HireRecord>;
   removeHire(agentId: string): Promise<void>;
   listHires(): Promise<HireRecord[]>;
@@ -20,6 +24,7 @@ export type RunStore = {
 
 export function createMemoryRunStore(): RunStore {
   const runs = new Map<string, OpsAgentRun>();
+  const missions = new Map<string, Mission>();
   const hires = new Map<string, HireRecord>();
   return {
     backend: "memory",
@@ -35,6 +40,19 @@ export function createMemoryRunStore(): RunStore {
         .sort((a, b) => b.startedAt.localeCompare(a.startedAt))
         .slice(0, limit)
         .map((run) => structuredClone(run));
+    },
+    async saveMission(mission) {
+      missions.set(mission.id, structuredClone(mission));
+    },
+    async getMission(id) {
+      const mission = missions.get(id);
+      return mission ? structuredClone(mission) : null;
+    },
+    async listMissions(limit) {
+      return [...missions.values()]
+        .sort((a, b) => b.startedAt.localeCompare(a.startedAt))
+        .slice(0, limit)
+        .map((mission) => structuredClone(mission));
     },
     async saveHire(agentId) {
       const record = hires.get(agentId) ?? { agentId, hiredAt: new Date().toISOString() };
@@ -56,6 +74,7 @@ export function createMemoryRunStore(): RunStore {
 // ---------------------------------------------------------------------------
 
 const RUNS_COLLECTION = "agent_runs";
+const MISSIONS_COLLECTION = "agent_missions";
 const HIRES_COLLECTION = "agent_hires";
 
 type FirestoreDoc = { name?: string; fields?: Record<string, { stringValue?: string }> };
@@ -118,6 +137,33 @@ export function createFirestoreRunStore(
       return rows
         .map((row) => (row.document ? parseJsonField<OpsAgentRun>(row.document) : null))
         .filter((run): run is OpsAgentRun => run !== null);
+    },
+    async saveMission(mission) {
+      await request("PATCH", `${baseUrl}/${MISSIONS_COLLECTION}/${mission.id}`, {
+        fields: {
+          json: { stringValue: JSON.stringify(mission) },
+          status: { stringValue: mission.status },
+          startedAt: { stringValue: mission.startedAt }
+        }
+      });
+    },
+    async getMission(id) {
+      const response = await request("GET", `${baseUrl}/${MISSIONS_COLLECTION}/${id}`);
+      if (response.status === 404) return null;
+      return parseJsonField<Mission>((await response.json()) as FirestoreDoc);
+    },
+    async listMissions(limit) {
+      const response = await request("POST", `${baseUrl.replace(/\/documents$/, "/documents")}:runQuery`, {
+        structuredQuery: {
+          from: [{ collectionId: MISSIONS_COLLECTION }],
+          orderBy: [{ field: { fieldPath: "startedAt" }, direction: "DESCENDING" }],
+          limit
+        }
+      });
+      const rows = (await response.json()) as Array<{ document?: FirestoreDoc }>;
+      return rows
+        .map((row) => (row.document ? parseJsonField<Mission>(row.document) : null))
+        .filter((mission): mission is Mission => mission !== null);
     },
     async saveHire(agentId) {
       const record: HireRecord = { agentId, hiredAt: new Date().toISOString() };
