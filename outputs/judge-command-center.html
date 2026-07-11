@@ -54,6 +54,9 @@
       .brand-name { margin: 0; font-size: 15px; font-weight: 760; letter-spacing: .06em; }
       .brand-sub { margin: 3px 0 0; color: var(--muted); font: 11px var(--mono); }
       .top-actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+      .nav-links { display: flex; align-items: center; gap: 14px; margin-left: auto; margin-right: 2px; }
+      .nav-links a { color: var(--muted); text-decoration: none; font-size: 11px; }
+      .nav-links a:hover { color: var(--cyan); }
       .system-pill, .status-pill { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); background: rgba(11, 20, 36, .74); border-radius: 999px; padding: 7px 11px; color: var(--muted); font-size: 11px; }
       .system-pill strong { color: var(--green); font-weight: 680; }
       .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 12px currentColor; }
@@ -71,6 +74,35 @@
       .proof-card .value { display: block; margin-bottom: 8px; color: var(--ink); font: 700 21px var(--mono); }
       .proof-card .label { color: var(--muted); font-size: 11px; line-height: 1.4; }
       .proof-card.accent { border-color: rgba(94,234,212,.35); box-shadow: inset 0 1px 0 rgba(94,234,212,.09); }
+
+      .marketplace { scroll-margin-top: 20px; margin-top: 6px; padding: 20px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(11,20,36,.64); }
+      .market-head { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 16px; }
+      .market-head h2 { font-size: 20px; letter-spacing: -.02em; }
+      .market-head p { margin-top: 6px; color: var(--muted); font-size: 12px; }
+      .market-label { color: var(--violet); font: 10px var(--mono); text-transform: uppercase; letter-spacing: .13em; }
+      .market-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+      .market-card { position: relative; min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 13px; background: linear-gradient(150deg, rgba(21,36,59,.86), rgba(11,20,36,.82)); transition: .18s ease; }
+      .market-card:hover, .market-card.is-selected { transform: translateY(-2px); border-color: rgba(94,234,212,.38); box-shadow: 0 14px 32px rgba(2,8,20,.28); }
+      .market-card.is-hired { border-color: rgba(74,222,128,.35); }
+      .market-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+      .market-avatar { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; font-size: 17px; }
+      .market-rarity { color: var(--muted); font: 9px var(--mono); letter-spacing: .08em; }
+      .market-card h3 { margin-top: 13px; font-size: 13px; }
+      .market-card .handle { margin-top: 4px; color: var(--dim); font: 10px var(--mono); }
+      .market-card .headline { min-height: 34px; margin-top: 11px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+      .capability-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+      .capability { padding: 4px 6px; border-radius: 5px; color: var(--blue); background: rgba(125,211,252,.09); font: 9px var(--mono); }
+      .market-card-actions { display: flex; gap: 6px; margin-top: 14px; }
+      .market-card-actions .btn { flex: 1; min-width: 0; padding-left: 7px; padding-right: 7px; font-size: 10px; }
+      .hire-state { display: none; position: absolute; top: 11px; right: 11px; color: var(--green); font: 9px var(--mono); }
+      .market-card.is-hired .hire-state { display: block; }
+      .agent-detail { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 15px; align-items: center; margin-top: 12px; padding: 14px; border: 1px solid rgba(196,181,253,.27); border-radius: 11px; background: rgba(196,181,253,.07); }
+      .agent-detail[hidden] { display: none; }
+      .agent-detail h3 { font-size: 13px; }
+      .agent-detail p { margin-top: 5px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+      .agent-detail-tools { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+      .agent-detail-tools span { color: var(--violet); font: 9px var(--mono); }
+      .agent-detail-actions { display: flex; gap: 7px; }
 
       .demo-shell { border: 1px solid var(--line-strong); border-radius: 20px; background: linear-gradient(135deg, rgba(16,26,43,.96), rgba(9,16,29,.96)); box-shadow: var(--shadow); overflow: hidden; }
       .demo-head { display: flex; justify-content: space-between; gap: 18px; padding: 18px 20px; border-bottom: 1px solid var(--line); background: rgba(11,20,36,.75); }
@@ -170,8 +202,9 @@
       .toast.is-visible { transform: translateY(0); opacity: 1; }
       @keyframes pulse { 50% { box-shadow: 0 0 0 5px rgba(94,234,212,.08); } }
       @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+      @media (max-width: 1120px) { .market-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
       @media (max-width: 980px) { .hero { grid-template-columns: 1fr; } .hero-proof { max-width: 650px; } .demo-grid, .below { grid-template-columns: 1fr; } .panel + .panel { border-left: 0; border-top: 1px solid var(--line); } }
-      @media (max-width: 680px) { .app { padding: 16px 15px 44px; } .topbar, .demo-head { align-items: flex-start; flex-direction: column; } .top-actions { justify-content: flex-start; } .hero { padding-top: 34px; } h1 { font-size: 39px; } .hero-proof { grid-template-columns: 1fr; } .flow { overflow-x: auto; grid-template-columns: repeat(5, minmax(124px, 1fr)); } .demo-controls { width: 100%; } .demo-controls .btn { flex: 1; } .trace-item { grid-template-columns: 30px minmax(0,1fr); } .trace-meta { grid-column: 2; } .story-grid { grid-template-columns: 1fr; } }
+      @media (max-width: 680px) { .app { padding: 16px 15px 44px; } .topbar, .demo-head, .market-head { align-items: flex-start; flex-direction: column; } .top-actions { justify-content: flex-start; } .nav-links { order: 2; margin: 0; } .hero { padding-top: 34px; } h1 { font-size: 39px; } .hero-proof { grid-template-columns: 1fr; } .flow { overflow-x: auto; grid-template-columns: repeat(5, minmax(124px, 1fr)); } .demo-controls { width: 100%; } .demo-controls .btn { flex: 1; } .trace-item { grid-template-columns: 30px minmax(0,1fr); } .trace-meta { grid-column: 2; } .story-grid { grid-template-columns: 1fr; } .market-grid { grid-template-columns: 1fr; } .agent-detail { grid-template-columns: 1fr; } .agent-detail-actions { width: 100%; } .agent-detail-actions .btn { flex: 1; } }
     </style>
   </head>
   <body>
@@ -185,6 +218,10 @@
           </div>
         </div>
         <div class="top-actions">
+          <nav class="nav-links" aria-label="メインナビゲーション">
+            <a href="#marketplace">Marketplace</a>
+            <a href="#demo">Mission Control</a>
+          </nav>
           <span class="system-pill"><span class="dot" style="color:var(--green)"></span><strong>ALL SYSTEMS NOMINAL</strong></span>
           <span class="status-pill"><span class="mono">GEMINI</span> connected</span>
           <button class="icon-button" type="button" data-action="share" aria-label="デモURLを共有">↗</button>
@@ -204,13 +241,62 @@
         </div>
       </section>
 
-      <section class="demo-shell" aria-labelledby="demo-title">
+      <section class="marketplace" id="marketplace" aria-labelledby="marketplace-title">
+        <div class="market-head">
+          <div>
+            <p class="market-label">AGENT MARKETPLACE · DISCOVER → HIRE → TRY</p>
+            <h2 id="marketplace-title">能力を選んで、すぐ試す</h2>
+            <p>専門エージェントの能力・担当ツール・実績を見て、必要な役割だけをチームに追加します。</p>
+          </div>
+          <span class="status-pill"><span class="dot" style="color:var(--cyan)"></span> 08 AGENTS AVAILABLE</span>
+        </div>
+        <div class="market-grid">
+          <article class="market-card" data-agent-card="observability">
+            <span class="hire-state">✓ HIRED</span>
+            <div class="market-card-top"><div class="market-avatar" style="color:var(--cyan);background:rgba(94,234,212,.13)">◉</div><span class="market-rarity">EPIC · OPERATE</span></div>
+            <h3>Observability Oracle</h3><p class="handle">@observability-oracle</p>
+            <p class="headline">ログ・メトリクス・トレースから、異常の兆候と根拠を集める。</p>
+            <div class="capability-row"><span class="capability">logs</span><span class="capability">metrics</span><span class="capability">traces</span></div>
+            <div class="market-card-actions"><button class="btn ghost small" type="button" data-agent-detail="observability">能力を見る</button><button class="btn primary small" type="button" data-agent-hire="observability">雇って試す</button></div>
+          </article>
+          <article class="market-card" data-agent-card="cloud-run">
+            <span class="hire-state">✓ HIRED</span>
+            <div class="market-card-top"><div class="market-avatar" style="color:var(--blue);background:rgba(125,211,252,.13)">⌁</div><span class="market-rarity">LEGENDARY · DEPLOY</span></div>
+            <h3>Cloud Run SRE</h3><p class="handle">@cloud-run-sre</p>
+            <p class="headline">ヘルスチェック、ロールバック、段階デプロイを安全に進める。</p>
+            <div class="capability-row"><span class="capability">deploy</span><span class="capability">rollback</span><span class="capability">health</span></div>
+            <div class="market-card-actions"><button class="btn ghost small" type="button" data-agent-detail="cloud-run">能力を見る</button><button class="btn primary small" type="button" data-agent-hire="cloud-run">雇って試す</button></div>
+          </article>
+          <article class="market-card" data-agent-card="test-forge">
+            <span class="hire-state">✓ HIRED</span>
+            <div class="market-card-top"><div class="market-avatar" style="color:var(--green);background:rgba(74,222,128,.13)">✓</div><span class="market-rarity">RARE · BUILD</span></div>
+            <h3>Test Forge</h3><p class="handle">@test-forge</p>
+            <p class="headline">変更の影響範囲を見極め、ユニット・統合・smoke testを回す。</p>
+            <div class="capability-row"><span class="capability">unit</span><span class="capability">integration</span><span class="capability">smoke</span></div>
+            <div class="market-card-actions"><button class="btn ghost small" type="button" data-agent-detail="test-forge">能力を見る</button><button class="btn primary small" type="button" data-agent-hire="test-forge">雇って試す</button></div>
+          </article>
+          <article class="market-card" data-agent-card="gemini-strategist">
+            <span class="hire-state">✓ HIRED</span>
+            <div class="market-card-top"><div class="market-avatar" style="color:var(--violet);background:rgba(196,181,253,.13)">✦</div><span class="market-rarity">EPIC · PLAN</span></div>
+            <h3>Gemini Strategist</h3><p class="handle">@gemini-strategist</p>
+            <p class="headline">目的を分解し、調査役の編成と安全な実行計画を決める。</p>
+            <div class="capability-row"><span class="capability">plan</span><span class="capability">reason</span><span class="capability">decide</span></div>
+            <div class="market-card-actions"><button class="btn ghost small" type="button" data-agent-detail="gemini-strategist">能力を見る</button><button class="btn primary small" type="button" data-agent-hire="gemini-strategist">雇って試す</button></div>
+          </article>
+        </div>
+        <div class="agent-detail" id="agent-detail" hidden>
+          <div><h3 id="detail-title">Agent details</h3><p id="detail-copy"></p><div class="agent-detail-tools" id="detail-tools"></div></div>
+          <div class="agent-detail-actions"><button class="btn ghost small" type="button" data-action="close-detail">閉じる</button><button class="btn primary small" type="button" data-action="trial">このAgentを試す</button></div>
+        </div>
+      </section>
+
+      <section class="demo-shell" id="demo" aria-labelledby="demo-title">
         <div class="demo-head">
           <div class="demo-title">
             <div class="mission-icon" aria-hidden="true">!</div>
             <div>
               <h2 id="demo-title">Production APIのレイテンシ急増を解決する</h2>
-              <p><span class="mono">INC-2048</span> · Cloud Run / api-gateway · 7分前に検知</p>
+              <p><span class="mono">INC-2048</span> · Cloud Run / api-gateway · <span id="selected-agent">choose an agent from Marketplace</span></p>
             </div>
           </div>
           <div class="demo-controls">
@@ -326,6 +412,18 @@
         const progressLabel = document.getElementById('progress-label');
         const traceCounter = document.getElementById('trace-counter');
         const toast = document.getElementById('toast');
+        const detailPanel = document.getElementById('agent-detail');
+        const detailTitle = document.getElementById('detail-title');
+        const detailCopy = document.getElementById('detail-copy');
+        const detailTools = document.getElementById('detail-tools');
+        const selectedAgentLabel = document.getElementById('selected-agent');
+        let selectedAgentId = null;
+        const agents = {
+          observability: { name: 'Observability Oracle', copy: 'Cloud Logging・Metrics・Traceを横断し、症状と根拠をひとつの調査結果にまとめます。', tools: ['cloud_logging.query', 'metrics.range', 'trace.inspect'] },
+          'cloud-run': { name: 'Cloud Run SRE', copy: 'Revision・トラフィック・ヘルスチェックを確認し、ロールバックや段階デプロイを安全に実行します。', tools: ['cloud_run.revisions', 'health.check', 'traffic.shift'] },
+          'test-forge': { name: 'Test Forge', copy: '変更範囲を推定し、必要なテストだけを選んで実行。結果をデプロイ判断の証拠にします。', tools: ['test.select', 'vitest.run', 'smoke.check'] },
+          'gemini-strategist': { name: 'Gemini Strategist', copy: '目的を分解し、調査役の編成・判断基準・安全な実行順序を決めるオーケストレーターです。', tools: ['mission.plan', 'agent.route', 'decision.score'] }
+        };
         const messages = [
           ['ログとIssueを照合中', 'Cloud LoggingとGitHubの直近変更を読み込んでいます。'],
           ['調査役を編成しました', 'Observability OracleとCloud Run SREへタスクを分配しました。'],
@@ -393,11 +491,43 @@
           }, 1250);
         }
 
+        function openAgentDetail(agentId) {
+          const agent = agents[agentId];
+          if (!agent) return;
+          selectedAgentId = agentId;
+          detailTitle.textContent = `${agent.name} · capability card`;
+          detailCopy.textContent = agent.copy;
+          detailTools.innerHTML = agent.tools.map((tool) => `<span>${tool}</span>`).join('<span> · </span>');
+          detailPanel.hidden = false;
+          detailPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function hireAgent(agentId) {
+          const agent = agents[agentId];
+          if (!agent) return;
+          selectedAgentId = agentId;
+          document.querySelectorAll('[data-agent-card]').forEach((card) => card.classList.toggle('is-selected', card.dataset.agentCard === agentId));
+          const card = document.querySelector(`[data-agent-card="${agentId}"]`);
+          card?.classList.add('is-hired');
+          const button = card?.querySelector('[data-agent-hire]');
+          if (button) button.textContent = '採用済み · 試す';
+          selectedAgentLabel.textContent = `${agent.name} hired · mission ready`;
+          showToast(`${agent.name}をチームに追加しました`);
+          document.getElementById('demo').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         document.querySelector('[data-action="run"]').addEventListener('click', run);
         document.querySelector('[data-action="reset"]').addEventListener('click', reset);
         document.querySelector('[data-action="share"]').addEventListener('click', async () => {
           try { await navigator.clipboard.writeText(window.location.href); showToast('プレビューURLをコピーしました'); }
           catch { showToast('このプレビューはローカルで共有できます'); }
+        });
+        document.querySelectorAll('[data-agent-detail]').forEach((button) => button.addEventListener('click', () => openAgentDetail(button.dataset.agentDetail)));
+        document.querySelectorAll('[data-agent-hire]').forEach((button) => button.addEventListener('click', () => hireAgent(button.dataset.agentHire)));
+        document.querySelector('[data-action="close-detail"]').addEventListener('click', () => { detailPanel.hidden = true; });
+        document.querySelector('[data-action="trial"]').addEventListener('click', () => {
+          if (selectedAgentId) hireAgent(selectedAgentId);
+          document.querySelector('[data-action="run"]').focus();
         });
         document.querySelectorAll('[data-tab]').forEach((tab) => tab.addEventListener('click', () => {
           const name = tab.dataset.tab;
