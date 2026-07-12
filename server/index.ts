@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { ipAllowlistMiddleware, ipAllowlistSummary } from "./ipAllowlist.js";
 import { discoverAgentCardFromUrl } from "./agentCardDiscovery.js";
+import { delegateExternalAgent } from "./externalAgent.js";
 
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js";
 import { MARKET_AGENTS } from "../src/market.js";
@@ -237,6 +238,12 @@ const AgentCardDiscoverySchema = z.object({
   url: z.string().trim().min(1).max(1000)
 });
 
+const ExternalDelegationSchema = z.object({
+  agentCardUrl: z.string().trim().min(1).max(1000),
+  skillId: z.string().trim().min(1).max(120).optional(),
+  message: z.string().trim().min(1).max(4000)
+});
+
 function publicBaseUrl(req: express.Request) {
   const configured = process.env.PUBLIC_BASE_URL;
   if (configured) return configured.replace(/\/$/, "");
@@ -460,6 +467,20 @@ app.post("/api/agent-card/discover", async (req, res) => {
     return;
   }
   const result = await discoverAgentCardFromUrl(parsed.data.url);
+  res.json(result);
+});
+
+app.post("/api/external-agent/delegate", async (req, res) => {
+  const parsed = ExternalDelegationSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ ok: false, error: "invalid_request", message: "Agent Card URLと依頼文を確認してください。", issues: parsed.error.issues });
+    return;
+  }
+  const result = await delegateExternalAgent(parsed.data, opsConfig);
+  if (!result.ok) {
+    res.status(result.httpStatus).json({ ok: false, error: result.code, message: result.message });
+    return;
+  }
   res.json(result);
 });
 

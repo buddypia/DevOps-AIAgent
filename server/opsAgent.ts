@@ -16,6 +16,9 @@ const OpsConfigSchema = z.object({
   targetAllowlist: z
     .array(z.string().regex(/^(?:[a-z][a-z0-9-]{4,28}[a-z0-9]\/)?[a-z0-9-]{1,63}$/))
     .default(["agent-guild", "aitech-good-a13973/vibementor-ai"]),
+  // 外部A2A POSTは明示的に許可したoriginだけへ送信する。空配列は委任無効。
+  externalA2AAllowlist: z.array(z.string().url()).default([]),
+  externalA2ATimeoutMs: z.number().int().min(1000).max(15000).default(6000),
   lookbackMinutes: z.number().int().min(5).max(1440).default(180),
   // 概算単価 (USD / 1M tokens)。実測請求ではなく見積り表示用
   costInputPerMTok: z.number().nonnegative().default(0.3),
@@ -31,6 +34,8 @@ export function getOpsConfig(env: NodeJS.ProcessEnv = process.env): OpsConfig {
     model: env.GEMINI_MODEL || undefined,
     targetService: env.OPS_TARGET_SERVICE || undefined,
     targetAllowlist: env.OPS_TARGET_ALLOWLIST ? env.OPS_TARGET_ALLOWLIST.split(",").map((s) => s.trim()).filter(Boolean) : undefined,
+    externalA2AAllowlist: env.OPS_EXTERNAL_A2A_ALLOWLIST ? env.OPS_EXTERNAL_A2A_ALLOWLIST.split(",").map((s) => s.trim()).filter(Boolean) : undefined,
+    externalA2ATimeoutMs: env.OPS_EXTERNAL_A2A_TIMEOUT_MS ? Number(env.OPS_EXTERNAL_A2A_TIMEOUT_MS) : undefined,
     lookbackMinutes: env.OPS_LOOKBACK_MINUTES ? Number(env.OPS_LOOKBACK_MINUTES) : undefined,
     costInputPerMTok: env.OPS_COST_INPUT_PER_MTOK ? Number(env.OPS_COST_INPUT_PER_MTOK) : undefined,
     costOutputPerMTok: env.OPS_COST_OUTPUT_PER_MTOK ? Number(env.OPS_COST_OUTPUT_PER_MTOK) : undefined

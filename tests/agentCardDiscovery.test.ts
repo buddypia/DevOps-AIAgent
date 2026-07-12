@@ -54,7 +54,7 @@ describe("Agent Card discovery guard", () => {
     const result = await discoverAgentCardFromUrl("https://agents.example.com", {
       resolveHost: async () => PUBLIC_RECORDS,
       fetchImpl: async (url) =>
-        new Response(JSON.stringify({ ...AGENT_CARD, url: String(url) }), {
+        new Response(JSON.stringify({ ...AGENT_CARD, url: "https://agents.example.com/a2a" }), {
           status: 200,
           headers: { "content-type": "application/json" }
         })
@@ -63,6 +63,7 @@ describe("Agent Card discovery guard", () => {
     expect(result.status).toBe("accepted");
     if (result.status !== "accepted") return;
     expect(result.discoveredUrl).toBe("https://agents.example.com/.well-known/agent-card.json");
+    expect(result.a2aEndpoint).toBe("https://agents.example.com/a2a");
     expect(result.agent.name).toBe("Remote Agent Card Auditor");
     expect(result.agent.a2aSkillIds).toContain("agent-card.audit");
     expect(result.agent.capabilities.a2a).toBeGreaterThanOrEqual(60);

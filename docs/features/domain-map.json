@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-07-12T00:00:00+09:00",
+  "domains": [
+    {
+      "id": "agent-orchestration",
+      "name": "エージェント編成・委任",
+      "responsibility": "Agent CardからAI能力を発見・評価し、A2Aで安全にタスクを委任して結果を検証・統合する。",
+      "keywords": ["agent card", "a2a", "agent-to-agent", "委任", "編成", "marketplace", "外部エージェント"],
+      "aliases": ["Agent Interoperability", "Agent Marketplace"],
+      "out_of_scope": ["個別エージェント内部の業務ロジック", "認証基盤そのもの", "外部サービスの破壊的操作"]
+    }
+  ],
+  "features": [
+    {
+      "id": "001-external-agent-delegation",
+      "title": "外部Agent Cardの実委任",
+      "domain": "agent-orchestration",
+      "src_dir": null,
+      "status": "done"
+    }
+  ]
+}
