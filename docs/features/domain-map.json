@@ -1,7 +1,7 @@
 {
   "$comment": "Feature Architect により現行コードベースの機能を登録した Domain Map SSOT",
   "schema_version": "1.0",
-  "updated_at": "2026-07-12T19:12:07+09:00",
+  "updated_at": "2026-07-12T22:50:00+09:00",
   "domains": [
     {"id":"release-governance","name":"リリースガバナンス","responsibility":"リリース可否、変更影響、デプロイ前後の判断を所有する。","keywords":["release","change impact","privacy","decision","リリース","変更影響"],"aliases":["Release Governance"],"out_of_scope":["障害の初動対応は incident-response が所有する"]},
     {"id":"incident-response","name":"インシデント対応","responsibility":"障害の初動、復旧確認、指揮訓練を所有する。","keywords":["incident","triage","recovery","commander","障害","復旧"],"aliases":["Incident Response"],"out_of_scope":["トラフィック配分そのものは deployment-safety が所有する"]},
@@ -34,6 +34,7 @@
     {"id":"019-chaos-drill-agent","title":"Chaos Drill Agent","domain":"incident-response","src_dir":"outputs/19-chaos-drill-agent","status":"implemented"},
     {"id":"020-incident-commander-karaoke","title":"Incident Commander Karaoke","domain":"incident-response","src_dir":"outputs/20-incident-commander-karaoke","status":"implemented"},
     {"id":"021-agent-guild-platform","title":"Agent Guild プラットフォーム","domain":"agent-platform","src_dir":"src + server","status":"implemented"},
-    {"id":"001-external-agent-delegation","title":"外部Agent Cardの実委任","domain":"agent-orchestration","src_dir":null,"status":"done"}
+    {"id":"001-external-agent-delegation","title":"外部Agent Cardの実委任","domain":"agent-orchestration","src_dir":null,"status":"done"},
+    {"id":"022-merge-steward","title":"Merge Steward","domain":"agent-platform","src_dir":"src + server","status":"planned"}
   ]
 }
