@@ -23,7 +23,7 @@ export const DEFAULT_PROJECT_BRIEF = [
 export const MARKET_AGENTS: MarketAgent[] = [
   {
     id: "brief-cartographer",
-    name: "Brief Cartographer",
+    name: "企画地図師",
     handle: "企画地図師",
     stage: "plan",
     rarity: "epic",
@@ -58,7 +58,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
   },
   {
     id: "market-broker",
-    name: "A2A Market Broker",
+    name: "A2A連携仲介役",
     handle: "連携仲介役",
     stage: "govern",
     rarity: "legendary",
@@ -128,7 +128,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
   },
   {
     id: "gemini-strategist",
-    name: "Gemini Strategist",
+    name: "Gemini審査参謀",
     handle: "審査突破参謀",
     stage: "plan",
     rarity: "legendary",
@@ -163,7 +163,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
   },
   {
     id: "test-forge",
-    name: "Test Forge",
+    name: "テスト検証役",
     handle: "品質鍛冶",
     stage: "build",
     rarity: "rare",
@@ -198,7 +198,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
   },
   {
     id: "security-sentinel",
-    name: "Security Sentinel",
+    name: "セキュリティ監査役",
     handle: "安全監査役",
     stage: "govern",
     rarity: "rare",
@@ -233,7 +233,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
   },
   {
     id: "ux-guildmaster",
-    name: "UX Guildmaster",
+    name: "UX設計役",
     handle: "UI設計役",
     stage: "build",
     rarity: "epic",
@@ -268,7 +268,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
   },
   {
     id: "observability-oracle",
-    name: "Observability Oracle",
+    name: "運用観測役",
     handle: "観測担当",
     stage: "operate",
     rarity: "rare",
