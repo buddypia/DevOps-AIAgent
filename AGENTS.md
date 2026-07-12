@@ -16,6 +16,15 @@
 詳細は `docs/01_hackathon/devops_ai_agent_hackathon_notion.md` を参照。
 インフラ構成や移行方法については [docs/infra.md](file:///Users/a13973/dev/buddypia/hackathon/DevOps×AIAgent/docs/infra.md) を参照。
 
+## Pull Request（必須ルール）
+
+**すべての PR は `.github/PULL_REQUEST_TEMPLATE.md` の構成に従って本文を書く。Codex CLI・Claude Code 双方で必須。**
+
+- PR 本文を生成するとき（`/create-pr` の `--body`、`gh pr create --body`、Web UI いずれも）は、テンプレートの全セクション（概要 / 変更種別 / 関連 Issue / 検証 / スコープ / チェックリスト）を維持する。該当しないセクションは削除せず「なし」と明記する。
+- **検証セクション**は R-CM-010 に従い、実行した検証コマンドと結果を証拠として記載する。未実行なら「未実行」と明記し、推測で埋めない。
+- PR タイトルは Conventional Commits 形式（`feat:` / `fix:` / `docs:` / `refactor:` / `test:` / `chore:`）。
+- `gh pr create` を `--body` なしで実行するとテンプレートが自動適用される。本文を用意する場合もテンプレート構成を踏襲する。
+
 ---
 
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
