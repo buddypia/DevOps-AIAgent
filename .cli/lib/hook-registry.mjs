@@ -1,46 +1,46 @@
 /**
  * hook-registry.mjs — Single SSOT Hook Registry (R-CM-006 Rule 4)
  *
- * 본 파일은 brief2dev 의 모든 Hook 정보의 **단일 진실 원천 (Single SSOT)** 이다.
- * - settings.json#hooks 는 이 registry 로부터 codegen 된다 (regen-hooks-settings.mjs)
- * - profile 멤버십은 entry 의 `profile` 필드에서 직접 derive
- * - hook-flags.mjs 의 PROFILE_MAP 은 이 registry 로부터 build
+ * 本ファイルは brief2dev のすべての Hook 情報の **単一の信頼できる情報源 (Single SSOT)** である。
+ * - settings.json#hooks はこの registry から codegen される (regen-hooks-settings.mjs)
+ * - profile メンバーシップは entry の `profile` フィールドから直接 derive
+ * - hook-flags.mjs の PROFILE_MAP はこの registry から build
  *
- * settings.json 직접 편집 금지 — settings-codegen-guard hook 이 차단.
- * profile 변경 시 entry 의 `profile` 필드만 수정 후 `node .claude/scripts/regen-hooks-settings.mjs` 실행.
+ * settings.json の直接編集禁止 — settings-codegen-guard hook がブロックする。
+ * profile 変更時は entry の `profile` フィールドのみ修正後 `node .claude/scripts/regen-hooks-settings.mjs` を実行。
  *
- * 각 hook entry 필드:
- *   id                — hookId (safeHookMainWithProfile 의 인자)
- *   module            — `.mjs` 경로 (../scripts/ 또는 ./)
- *   priority          — 실행 순서 (낮을수록 먼저)
- *   profile           — 'minimal' | 'standard' | 'none' (프로파일 미적용; strict 티어 제거 2026-06-11 → 2-tier)
- *   profileChecked    — false 면 safeHookMain 사용 (profile 우회)
- *   orchestrated      — true 면 hook-orchestrator 경유 in-process 실행
- *   description       — AI 컨텍스트 인식용
- *   timeout           — settings.json command 타임아웃 (초)
- *   if                — Bash conditional matcher (예: 'Bash(git *)')
- *   statusMessage     — 사용자 표시 상태 메시지
- *   async             — true 면 비동기 실행
- *   commandArgs       — node module.mjs 의 추가 인자 (예: 'SessionStart')
- *   type              — 'command' (기본) 또는 'prompt'
- *   prompt            — type='prompt' 시 LLM 프롬프트 본문
- *   hookType          — PROMPT_AGENT_HOOKS 의 'prompt' | 'agent'
+ * 各 hook entry フィールド:
+ *   id                — hookId (safeHookMainWithProfile の引数)
+ *   module            — `.mjs` パス (../scripts/ または ./)
+ *   priority          — 実行順序 (小さいほど先)
+ *   profile           — 'minimal' | 'standard' | 'none' (プロファイル未適用; strict ティア削除 2026-06-11 → 2-tier)
+ *   profileChecked    — false なら safeHookMain を使用 (profile 迂回)
+ *   orchestrated      — true なら hook-orchestrator 経由の in-process 実行
+ *   description       — AI コンテキスト認識用
+ *   timeout           — settings.json command タイムアウト (秒)
+ *   if                — Bash conditional matcher (例: 'Bash(git *)')
+ *   statusMessage     — ユーザー表示ステータスメッセージ
+ *   async             — true なら非同期実行
+ *   commandArgs       — node module.mjs の追加引数 (例: 'SessionStart')
+ *   type              — 'command' (デフォルト) または 'prompt'
+ *   prompt            — type='prompt' 時の LLM プロンプト本文
+ *   hookType          — PROMPT_AGENT_HOOKS の 'prompt' | 'agent'
  *
  * @see .claude/rules/common/hooks.md (R-CM-006 Rule 4 — Single SSOT)
  * @see .claude/scripts/regen-hooks-settings.mjs (codegen)
- * @see .claude/hooks/settings-codegen-guard.mjs (직접 편집 차단)
+ * @see .claude/hooks/settings-codegen-guard.mjs (直接編集ブロック)
  */
 
-/** 유효한 hook 이벤트 타입 (Claude Code 플랫폼 이벤트 vocabulary — 등록 hook 유무와 무관). */
+/** 有効な hook イベントタイプ (Claude Code プラットフォームイベント vocabulary — 登録 hook の有無と無関係)。 */
 export const VALID_EVENT_TYPES = new Set([
   'PreToolUse', 'PostToolUse', 'PostToolUseFailure', 'Stop', 'SessionStart', 'SessionEnd',
   'PreCompact', 'UserPromptSubmit', 'SubagentStart', 'SubagentStop',
   'TaskCreated', 'TaskCompleted', 'PermissionRequest', 'FileChanged', 'Notification', 'ConfigChange',
-  // WorktreeCreate/WorktreeRemove 는 유효 이벤트지만 현재 등록 hook 0 (agent-worktree-guard retire 2026-06-26).
+  // WorktreeCreate/WorktreeRemove は有効なイベントだが現在は登録 hook が 0 (agent-worktree-guard retire 2026-06-26)。
   'WorktreeCreate', 'WorktreeRemove',
 ]);
 
-/** orchestrator dispatcher entries (settings.json 에서 1 matcher = 1 호출) */
+/** orchestrator dispatcher entries (settings.json では 1 matcher = 1 呼び出し) */
 export const ORCHESTRATOR_DISPATCHERS = [
   {
     "event": "Stop",
@@ -61,26 +61,26 @@ export const ORCHESTRATOR_DISPATCHERS = [
 
 /** prompt/agent type hooks (PROMPT_AGENT_HOOKS) */
 export const PROMPT_AGENT_HOOKS = {
-  // completion-evidence-guard 는 HOOK_REGISTRY.Stop 에 command-type (priority 58) 으로 실행된다.
-  // 과거 PROMPT_AGENT_HOOKS.Stop 의 prompt-type entry 는 `prompt` 본문 필드가 없어 codegen
-  // (regen-hooks-settings.mjs#appendPromptHooks `if (!ph.prompt) continue;`) 에서 settings.json 진입이
-  // 영구 skip 되던 죽은 메타데이터였다 (#109 prompt→command 전환 잔재). flattenRegistry/getRegistryStats
-  // 통계만 +1 오염시키고 실행 영향 0 → 삭제.
+  // completion-evidence-guard は HOOK_REGISTRY.Stop に command-type (priority 58) として実行される。
+  // 過去の PROMPT_AGENT_HOOKS.Stop の prompt-type entry は `prompt` 本文フィールドがなく codegen
+  // (regen-hooks-settings.mjs#appendPromptHooks `if (!ph.prompt) continue;`) で settings.json への進入が
+  // 恒久的に skip される死んだメタデータだった (#109 prompt→command 転換の残滓)。flattenRegistry/getRegistryStats
+  // の統計だけを +1 汚染し実行への影響は 0 → 削除。
   "Stop": [],
   "PreToolUse": [],
   "TaskCompleted": [],
-  // SubagentStop 은 prompt-type hook 을 등록하지 않는다 (codegen 가드가 강제 — regen-hooks-settings.mjs).
-  // 근거: prompt-type SubagentStop 은 검증 지시문을 subagent context 에 주입하므로,
-  //       subagent 가 그 지시에 응답({"decision":"allow"})하면서 실제 산출물
-  //       (예: code-reviewer 의 리뷰 결과) 을 최종 결과로 덮어쓰는 구조적 오염을 일으킨다.
-  //       의도였던 R-PL-002 Rule 7 stage closure 검증은 R-PL-002 Rule 7 prompt-level audit
-  //       (stage skills) + handoff-consistency-guard (PostToolUse, handoff 구조 검증) 가
-  //       각자의 home 에서 커버하므로, allow-biased 한 본 hook 은 중복 + 오염만 일으킨다.
-  //       SubagentStop 검증이 필요하면 command-type hook 으로만 작성한다 (R-CM-006 Rule 1).
+  // SubagentStop は prompt-type hook を登録しない (codegen ガードが強制 — regen-hooks-settings.mjs)。
+  // 根拠: prompt-type SubagentStop は検証指示文を subagent context に注入するため、
+  //       subagent がその指示に応答({"decision":"allow"})しながら実際の産出物
+  //       (例: code-reviewer のレビュー結果) を最終結果で上書きする構造的な汚染を引き起こす。
+  //       意図であった R-PL-002 Rule 7 stage closure 検証は R-PL-002 Rule 7 prompt-level audit
+  //       (stage skills) + handoff-consistency-guard (PostToolUse、handoff 構造検証) が
+  //       それぞれの home でカバーするため、allow-biased な本 hook は重複 + 汚染だけを引き起こす。
+  //       SubagentStop 検証が必要なら command-type hook としてのみ作成する (R-CM-006 Rule 1)。
   "SubagentStop": []
 };
 
-/** Single SSOT — settings.json hooks 섹션은 이 registry 의 codegen */
+/** Single SSOT — settings.json hooks セクションはこの registry の codegen */
 export const HOOK_REGISTRY = {
   "PreToolUse": [
     {
@@ -91,7 +91,7 @@ export const HOOK_REGISTRY = {
           "module": "../scripts/pre-tool-enforcer.mjs",
           "priority": 10,
           "profile": "minimal",
-          "description": "파이프라인 컨텍스트 주입 + Skill 실행 전 검증",
+          "description": "パイプラインコンテキスト注入 + Skill 実行前検証",
           "orchestrated": false,
           "timeout": 5
         }
@@ -105,7 +105,7 @@ export const HOOK_REGISTRY = {
           "module": "./settings-codegen-guard.mjs",
           "priority": 6,
           "profile": "minimal",
-          "description": "[R-CM-006 Rule 4] settings.json#hooks 직접 편집 차단 (Single SSOT)",
+          "description": "[R-CM-006 Rule 4] settings.json#hooks 直接編集ブロック (Single SSOT)",
           "orchestrated": false,
           "timeout": 5
         },
@@ -114,7 +114,7 @@ export const HOOK_REGISTRY = {
           "module": "./phase-boundary-file-guard.mjs",
           "priority": 10,
           "profile": "standard",
-          "description": "파이프라인 산출물 Write 시 requiredInputs 유효성 검증 (3-Layer L1)",
+          "description": "パイプライン産出物 Write 時に requiredInputs の有効性を検証 (3-Layer L1)",
           "orchestrated": true
         },
         {
@@ -122,7 +122,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/secret-leak-guard.mjs",
           "priority": 5,
           "profile": "minimal",
-          "description": "API 키/시크릿 하드코딩 감지 + DENY",
+          "description": "API キー/シークレットのハードコーディング検知 + DENY",
           "orchestrated": true,
           "cliTargets": ["codex", "antigravity"],
           "cliMatcherTools": ["Edit", "Write", "MultiEdit"]
@@ -132,7 +132,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/worktree-policy-guard.mjs",
           "priority": 8,
           "profile": "minimal",
-          "description": "main 직접 작업 Tier 정책 강제 (Tier 1/2/3 + hotfix/* escape hatch). SSOT: .claude/config/worktree-policy.json",
+          "description": "main 直接作業の Tier ポリシー強制 (Tier 1/2/3 + hotfix/* escape hatch)。SSOT: .claude/config/worktree-policy.json",
           "orchestrated": true,
           "cliTargets": ["codex", "antigravity", "gemini"],
           "cliMatcherTools": ["Edit", "Write", "MultiEdit"]
@@ -142,7 +142,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/worktree-session-owner-guard.mjs",
           "priority": 9,
           "profile": "standard",
-          "description": "[R-CM-036] 멀티세션 cross-worktree 편집 차단 (Layer 1 cwd-confinement + Layer 2 session_id 사이드카). Edit|Write|MultiEdit 대상",
+          "description": "[R-CM-036] マルチセッション cross-worktree 編集ブロック (Layer 1 cwd-confinement + Layer 2 session_id サイドカー)。Edit|Write|MultiEdit 対象",
           "orchestrated": true,
           "cliTargets": ["codex", "antigravity"],
           "cliMatcherTools": ["Edit", "Write", "MultiEdit"]
@@ -152,7 +152,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/coverage-threshold-guard.mjs",
           "priority": 40,
           "profile": "standard",
-          "description": "커버리지 threshold 하향 방지 (Ratchet: up-only)",
+          "description": "カバレッジ threshold の低下防止 (Ratchet: up-only)",
           "orchestrated": true,
           "cliTargets": ["codex", "antigravity"],
           "cliMatcherTools": ["Edit", "Write", "MultiEdit"]
@@ -162,7 +162,7 @@ export const HOOK_REGISTRY = {
           "module": "./health-ratchet-guard.mjs",
           "priority": 41,
           "profile": "standard",
-          "description": "Code Health 7-축 baseline (data/registry/code-health-ratchet-baseline.json) 직접 수정 시 score 하향 감지 + warning (R-CM-016 Rule 10 정합)",
+          "description": "Code Health 7 軸 baseline (data/registry/code-health-ratchet-baseline.json) の直接修正時に score 低下を検知 + warning (R-CM-016 Rule 10 整合)",
           "orchestrated": true
         }
       ]
@@ -175,7 +175,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/merge-guard.mjs",
           "priority": 10,
           "profile": "standard",
-          "description": "Git merge 충돌 방지",
+          "description": "Git merge の衝突防止",
           "orchestrated": false,
           "timeout": 30,
           "if": "Bash(git *)",
@@ -186,7 +186,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/destructive-git-guard.mjs",
           "priority": 5,
           "profile": "minimal",
-          "description": "reset --hard, force push 등 파괴적 Git 명령 차단",
+          "description": "reset --hard, force push など破壊的な Git コマンドをブロック",
           "orchestrated": false,
           "timeout": 30,
           "if": "Bash(git *)",
@@ -197,7 +197,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/commit-guard.mjs",
           "priority": 20,
           "profile": "standard",
-          "description": "Conventional Commits 형식 + 변경 범위 검증",
+          "description": "Conventional Commits 形式 + 変更範囲の検証",
           "orchestrated": false,
           "timeout": 30,
           "if": "Bash(git *)",
@@ -208,7 +208,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/worktree-session-owner-guard.mjs",
           "priority": 25,
           "profile": "standard",
-          "description": "[R-CM-036] 멀티세션 cross-worktree git commit 차단 (Layer 1 cwd-confinement). Bash git commit 대상",
+          "description": "[R-CM-036] マルチセッション cross-worktree git commit ブロック (Layer 1 cwd-confinement)。Bash git commit 対象",
           "orchestrated": false,
           "timeout": 5,
           "if": "Bash(git *)",
@@ -219,7 +219,7 @@ export const HOOK_REGISTRY = {
           "module": "./dev-server-guard.mjs",
           "priority": 30,
           "profile": "standard",
-          "description": "dev server 실행 시 tmux 세션 사용 권장",
+          "description": "dev server 実行時に tmux セッションの使用を推奨",
           "orchestrated": false,
           "timeout": 30
         },
@@ -228,7 +228,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/git-push-warning.mjs",
           "priority": 35,
           "profile": "standard",
-          "description": "[OSS] git push 전 변경 사항 리뷰 알림",
+          "description": "[OSS] git push 前の変更内容レビュー通知",
           "orchestrated": false,
           "timeout": 30,
           "if": "Bash(git push*)",
@@ -239,7 +239,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/guardrail-guard.mjs",
           "priority": 40,
           "profile": "standard",
-          "description": "Bash 도구 위험도 분류 + 파이프라인 중 high 도구 차단",
+          "description": "Bash ツールのリスク度分類 + パイプライン中の high ツールをブロック",
           "orchestrated": false,
           "timeout": 30,
           "statusMessage": "Guardrail: checking tool risk level",
@@ -265,7 +265,7 @@ export const HOOK_REGISTRY = {
           "module": "./model-routing-guard.mjs",
           "priority": 10,
           "profile": "standard",
-          "description": "Task 실행 시 모델 적합성 검증 + 비용 최적화",
+          "description": "Task 実行時のモデル適合性検証 + コスト最適化",
           "orchestrated": false,
           "timeout": 5
         },
@@ -274,7 +274,7 @@ export const HOOK_REGISTRY = {
           "module": "./agent-review-readiness-guard.mjs",
           "priority": 20,
           "profile": "standard",
-          "description": "review/code-simplifier agent 호출 시 uncommitted + zero commits 차단 (wrong-scope review 방지). 2026-05-27 사용자 결정으로 /simplify 폐기 + simplifit 스킬 deprecate 후 /code-review 단일 진입점",
+          "description": "review/code-simplifier agent 呼び出し時に uncommitted + zero commits をブロック (wrong-scope review 防止)。2026-05-27 のユーザー決定で /simplify を廃止 + simplifit スキルを deprecate した後は /code-review が単一エントリポイント",
           "orchestrated": false,
           "timeout": 5
         }
@@ -288,7 +288,7 @@ export const HOOK_REGISTRY = {
           "module": "./new-run-guard.mjs",
           "priority": 2,
           "profile": "standard",
-          "description": "새 비즈니스 아이디어 시작 직전(business-analyzer 진입 시) boundary 자동 차단 (R-CM-014/028)",
+          "description": "新規ビジネスアイデア開始の直前(business-analyzer 進入時)に boundary を自動ブロック (R-CM-014/028)",
           "orchestrated": false,
           "timeout": 5
         },
@@ -297,7 +297,7 @@ export const HOOK_REGISTRY = {
           "module": "./pipeline-boundary-guard.mjs",
           "priority": 5,
           "profile": "minimal",
-          "description": "brief2dev 리포에서 개발 스킬 실행 차단 + Saga State 주입",
+          "description": "brief2dev リポでの開発スキル実行をブロック + Saga State 注入",
           "orchestrated": false,
           "timeout": 5
         },
@@ -306,7 +306,7 @@ export const HOOK_REGISTRY = {
           "module": "./pipeline-context-awareness-guard.mjs",
           "priority": 25,
           "profile": "standard",
-          "description": "파이프라인 상태 인식 + AI 컨텍스트 안내 (SSOT: SKILL_TO_STAGE)",
+          "description": "パイプライン状態の認識 + AI コンテキスト案内 (SSOT: SKILL_TO_STAGE)",
           "orchestrated": false,
           "timeout": 5
         },
@@ -315,7 +315,7 @@ export const HOOK_REGISTRY = {
           "module": "./constraint-injector.mjs",
           "priority": 35,
           "profile": "standard",
-          "description": "이전 스테이지 제약 조건 주입 (Rule 6-9)",
+          "description": "前ステージの制約条件を注入 (Rule 6-9)",
           "orchestrated": false,
           "timeout": 10,
           "statusMessage": "Constraint Injector: injecting previous stage constraints (Rule 6-9)"
@@ -325,7 +325,7 @@ export const HOOK_REGISTRY = {
           "module": "./inbox-guard.mjs",
           "priority": 3,
           "profile": "standard",
-          "description": "Skill 실행 전 inbox 미처리 항목 감지",
+          "description": "Skill 実行前に inbox の未処理項目を検知",
           "orchestrated": false,
           "timeout": 5,
           "commandArgs": "PreToolUse"
@@ -340,7 +340,7 @@ export const HOOK_REGISTRY = {
           "module": "./auto-gate-visual.mjs",
           "priority": 5,
           "profile": "standard",
-          "description": "[관점1] native 게이트 결정 직전 시각 패널 자동 생성+브라우저 open (deny 없음, 보강). build.mjs spawn 여유 위해 timeout 10",
+          "description": "[観点1] native ゲート決定の直前に視覚パネルを自動生成 + ブラウザ open (deny なし、補強)。build.mjs の spawn 余裕のため timeout 10",
           "orchestrated": false,
           "timeout": 10
         }
@@ -356,7 +356,7 @@ export const HOOK_REGISTRY = {
           "module": "./edit-error-recovery.mjs",
           "priority": 10,
           "profile": "standard",
-          "description": "Edit 실패 시 자동 복구 안내",
+          "description": "Edit 失敗時の自動復旧ガイド",
           "orchestrated": false,
           "timeout": 5
         }
@@ -370,7 +370,7 @@ export const HOOK_REGISTRY = {
           "module": "./websearch-evidence-extractor.mjs",
           "priority": 10,
           "profile": "standard",
-          "description": "[R-CM-035] WebSearch 결과를 runs/{active}/research/web-search/ 에 markdown + meta JSON 영속화 (Observatory 의사결정 근거)",
+          "description": "[R-CM-035] WebSearch 結果を runs/{active}/research/web-search/ に markdown + meta JSON として永続化 (Observatory 意思決定の根拠)",
           "orchestrated": false,
           "timeout": 5
         }
@@ -384,7 +384,7 @@ export const HOOK_REGISTRY = {
           "module": "./wisdom-ref-tracker.mjs",
           "priority": 10,
           "profile": "standard",
-          "description": "Wisdom 파일 참조 추적 (last_referenced 갱신 — session-extractor confidence scoring 입력)",
+          "description": "Wisdom ファイルの参照追跡 (last_referenced を更新 — session-extractor confidence scoring の入力)",
           "orchestrated": false,
           "timeout": 3
         },
@@ -393,7 +393,7 @@ export const HOOK_REGISTRY = {
           "module": "./prompt-injection-guard.mjs",
           "priority": 20,
           "profile": "standard",
-          "description": "[ECC] 읽은 파일 콘텐츠의 프롬프트 인젝션 패턴 탐지. standalone: settings.json 직접 호출",
+          "description": "[ECC] 読み込んだファイル内容のプロンプトインジェクションパターンを検知。standalone: settings.json から直接呼び出し",
           "orchestrated": false,
           "timeout": 5
         }
@@ -407,7 +407,7 @@ export const HOOK_REGISTRY = {
           "module": "./pipeline-change-tracker.mjs",
           "priority": 10,
           "profile": "standard",
-          "description": "파이프라인 산출물 변경 추적 + Schema 검증 + Saga 업데이트",
+          "description": "パイプライン産出物の変更追跡 + Schema 検証 + Saga 更新",
           "orchestrated": true
         },
         {
@@ -415,7 +415,7 @@ export const HOOK_REGISTRY = {
           "module": "./esp-consistency-guard.mjs",
           "priority": 30,
           "profile": "standard",
-          "description": "ESP(Enforced Skill Pattern) 일관성 검증",
+          "description": "ESP(Enforced Skill Pattern) の一貫性検証",
           "orchestrated": true
         },
         {
@@ -423,7 +423,7 @@ export const HOOK_REGISTRY = {
           "module": "./handoff-consistency-guard.mjs",
           "priority": 40,
           "profile": "standard",
-          "description": "Confidence Ratchet + Handoff 구조 검증",
+          "description": "Confidence Ratchet + Handoff 構造の検証",
           "orchestrated": true
         },
         {
@@ -431,7 +431,7 @@ export const HOOK_REGISTRY = {
           "module": "./docs-consistency-guard.mjs",
           "priority": 45,
           "profile": "standard",
-          "description": "Input→Output Staleness 감지",
+          "description": "Input→Output Staleness を検知",
           "orchestrated": true,
           "async": true
         },
@@ -440,7 +440,7 @@ export const HOOK_REGISTRY = {
           "module": "./compact-warning.mjs",
           "priority": 80,
           "profile": "standard",
-          "description": "Saga State 인식 전략적 /compact 제안",
+          "description": "Saga State を認識した戦略的 /compact 提案",
           "orchestrated": true,
           "async": true
         },
@@ -449,7 +449,7 @@ export const HOOK_REGISTRY = {
           "module": "./complexity-threshold-warning.mjs",
           "priority": 96,
           "profile": "standard",
-          "description": "[Code Health Pipeline Step 2] cyclomatic complexity > 15 감지 (PostToolUse). 약한 알림 (R-CM-022 -warning). SSOT: code-health-axes.json#axes.cognitive-complexity. v1: ESLint fallback. v2: sonarjs/cognitive",
+          "description": "[Code Health Pipeline Step 2] cyclomatic complexity > 15 を検知 (PostToolUse)。弱い通知 (R-CM-022 -warning)。SSOT: code-health-axes.json#axes.cognitive-complexity。v1: ESLint fallback。v2: sonarjs/cognitive",
           "orchestrated": true
         },
         {
@@ -457,7 +457,7 @@ export const HOOK_REGISTRY = {
           "module": "./skill-structure-check.mjs",
           "priority": 90,
           "profile": "standard",
-          "description": "[R-CM-018] SKILL.md 구조 유효성 검증",
+          "description": "[R-CM-018] SKILL.md 構造の有効性検証",
           "orchestrated": true,
           "timeout": 5,
           "statusMessage": "R-CM-018: validating SKILL.md structure"
@@ -467,7 +467,7 @@ export const HOOK_REGISTRY = {
           "module": "./scaffold-artifact-schema-warning.mjs",
           "priority": 92,
           "profile": "standard",
-          "description": "scaffold 산출물(project-brief/config) schema drift 알림",
+          "description": "scaffold 産出物(project-brief/config)の schema drift 通知",
           "orchestrated": false,
           "timeout": 5,
           "statusMessage": "P13: scaffold artifact schema check"
@@ -477,7 +477,7 @@ export const HOOK_REGISTRY = {
           "module": "./scaffold-validation-warning.mjs",
           "priority": 93,
           "profile": "standard",
-          "description": "output scaffold validation report staleness 알림",
+          "description": "output scaffold validation report の staleness 通知",
           "orchestrated": false,
           "timeout": 5,
           "statusMessage": "P20: scaffold validation staleness check"
@@ -502,7 +502,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/worktree-owner-tracker.mjs",
           "priority": 90,
           "profile": "standard",
-          "description": "[R-CM-036] worktree 생성 성공 시 세션 소유권 사이드카(.session-owner) 기록 (safeHookMain — profile 무관, 절대 BLOCK 안 함)",
+          "description": "[R-CM-036] worktree 生成成功時にセッション所有権サイドカー(.session-owner)を記録 (safeHookMain — profile 無関係、絶対に BLOCK しない)",
           "orchestrated": false,
           "timeout": 5,
           "profileChecked": false,
@@ -513,7 +513,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/bash-file-integrity-guard.mjs",
           "priority": 70,
           "profile": "standard",
-          "description": "sed -i / awk -i inplace 이후 0바이트 파일 손상 감지",
+          "description": "sed -i / awk -i inplace 実行後の 0 バイトファイル破損を検知",
           "orchestrated": false,
           "timeout": 5,
           "statusMessage": "Bash File Integrity: detecting 0-byte corruption from sed -i / awk -i inplace (R-CM-019)",
@@ -524,7 +524,7 @@ export const HOOK_REGISTRY = {
           "module": "./governance-capture.mjs",
           "priority": 80,
           "profile": "minimal",
-          "description": "검증 명령 실행 증거를 governance event로 캡처",
+          "description": "検証コマンド実行の証拠を governance event としてキャプチャ",
           "orchestrated": false,
           "timeout": 3,
           "statusMessage": "P15: capturing verification command for R-CM-010 evidence"
@@ -551,7 +551,7 @@ export const HOOK_REGISTRY = {
           "module": "./mcp-failure-tracker.mjs",
           "priority": 10,
           "profile": "standard",
-          "description": "MCP 도구 실패 시 명시적 실패 정보로 건강 상태 갱신. standalone: settings.json 직접 호출",
+          "description": "MCP ツール失敗時に明示的な失敗情報でヘルス状態を更新。standalone: settings.json から直接呼び出し",
           "orchestrated": false,
           "timeout": 5
         }
@@ -567,7 +567,7 @@ export const HOOK_REGISTRY = {
           "module": "./quality-gate-stop-guard.mjs",
           "priority": 5,
           "profile": "standard",
-          "description": "품질 게이트 (make q.check) 통과 강제",
+          "description": "品質ゲート (make q.check) の通過を強制",
           "orchestrated": true
         },
         {
@@ -575,7 +575,7 @@ export const HOOK_REGISTRY = {
           "module": "../scripts/stop-handler.mjs",
           "priority": 10,
           "profile": "none",
-          "description": "ECC instincts 추출 (파이프라인 스테이지 학습)",
+          "description": "ECC instincts の抽出 (パイプラインステージの学習)",
           "orchestrated": true,
           "profileChecked": false
         },
@@ -584,7 +584,7 @@ export const HOOK_REGISTRY = {
           "module": "../scripts/analyze-guard.mjs",
           "priority": 20,
           "profile": "none",
-          "description": "분석 결과 요약 + 컨텍스트 주입",
+          "description": "分析結果の要約 + コンテキスト注入",
           "orchestrated": true,
           "profileChecked": false
         },
@@ -593,7 +593,7 @@ export const HOOK_REGISTRY = {
           "module": "./pipeline-drift-guard.mjs",
           "priority": 30,
           "profile": "standard",
-          "description": "Drift + 구조 + 콘텐츠 + 스키마 정합성 + Saga 일관성 검증 (L3)",
+          "description": "Drift + 構造 + コンテンツ + スキーマ整合性 + Saga 一貫性の検証 (L3)",
           "orchestrated": true
         },
         {
@@ -601,7 +601,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/worktree-shipping-guard.mjs",
           "priority": 35,
           "profile": "standard",
-          "description": "[R-CM-030] worktree commit + unmerged 시 /create-pr ship-worktree 자동 유도 (5min 시도 마커)",
+          "description": "[R-CM-030] worktree commit + unmerged 時に /create-pr ship-worktree を自動誘導 (5min 試行マーカー)",
           "orchestrated": true,
           "cliTargets": ["codex", "antigravity"],
           "cliTimeout": 10
@@ -611,7 +611,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/security-scan-guard.mjs",
           "priority": 40,
           "profile": "standard",
-          "description": "보안 취약점 스캔",
+          "description": "セキュリティ脆弱性スキャン",
           "orchestrated": true,
           "cliTargets": ["codex", "antigravity"]
         },
@@ -620,7 +620,7 @@ export const HOOK_REGISTRY = {
           "module": "./ecosystem-health-guard.mjs",
           "priority": 50,
           "profile": "standard",
-          "description": ".claude/ 에코시스템 내부 일관성 검증",
+          "description": ".claude/ エコシステム内部の一貫性検証",
           "orchestrated": true
         },
         {
@@ -628,7 +628,7 @@ export const HOOK_REGISTRY = {
           "module": "./inbox-guard.mjs",
           "priority": 5,
           "profile": "standard",
-          "description": "Stop 시 inbox 미처리 항목 감지",
+          "description": "Stop 時に inbox の未処理項目を検知",
           "orchestrated": false,
           "timeout": 5,
           "commandArgs": "Stop"
@@ -638,7 +638,7 @@ export const HOOK_REGISTRY = {
           "module": "./completion-evidence-guard.mjs",
           "priority": 58,
           "profile": "standard",
-          "description": "[R-CM-010] 검증 증거 없이 완료 주장 차단 (command type)",
+          "description": "[R-CM-010] 検証証拠なしの完了主張をブロック (command type)",
           "orchestrated": false,
           "timeout": 10,
           "statusMessage": "R-CM-010: verifying code changes have test/lint evidence"
@@ -648,7 +648,7 @@ export const HOOK_REGISTRY = {
           "module": "./docs-index-guard.mjs",
           "priority": 55,
           "profile": "standard",
-          "description": "docs/ 변경 시 docs/index.md 자동 인덱스(AUTO 마커) stale 차단 + 갱신 유도 (main + 소유 worktree)",
+          "description": "docs/ 変更時に docs/index.md の自動インデックス(AUTO マーカー)の stale をブロック + 更新を誘導 (main + 所有 worktree)",
           "orchestrated": false,
           "timeout": 15,
           "statusMessage": "docs-index-guard: checking docs/index.md AUTO section freshness"
@@ -665,7 +665,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/trunk-start-warning.mjs",
           "priority": 5,
           "profile": "minimal",
-          "description": "main 브랜치에서 AI 세션 진입 시 worktree 안내를 컨텍스트로 주입 (R-CM-006 Rule 1 정합 — SessionStart 는 차단 불가)",
+          "description": "main ブランチで AI セッション進入時に worktree の案内をコンテキストとして注入 (R-CM-006 Rule 1 整合 — SessionStart はブロック不可)",
           "orchestrated": false,
           "timeout": 10,
           "cliTargets": ["codex", "gemini"]
@@ -675,7 +675,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/ownership-context-injector.mjs",
           "priority": 7,
           "profile": "standard",
-          "description": "Claude Code 전용 (SessionStart 는 공식 Antigravity 이벤트가 아님 — 실측 확인 2026-07-09, agy v1.1.0 임베드 문서). UserPromptSubmit 미지원 경계와 ownership query 절차를 컨텍스트로 주입. cliTargets 비움 — Antigravity 대체 이벤트(PreInvocation invocationNum===0 게이팅) 매핑은 후속 검토",
+          "description": "Claude Code 専用 (SessionStart は公式 Antigravity イベントではない — 実測確認 2026-07-09、agy v1.1.0 埋め込みドキュメント)。UserPromptSubmit 非対応の境界と ownership query 手順をコンテキストとして注入。cliTargets は空 — Antigravity の代替イベント(PreInvocation invocationNum===0 ゲーティング)のマッピングは後続検討",
           "orchestrated": false,
           "timeout": 5
         },
@@ -684,7 +684,7 @@ export const HOOK_REGISTRY = {
           "module": "../scripts/session-start.mjs",
           "priority": 10,
           "profile": "none",
-          "description": "이전 세션 컨텍스트 로드 + 파이프라인 상태 감지",
+          "description": "前セッションのコンテキスト読み込み + パイプライン状態の検知",
           "orchestrated": false,
           "profileChecked": false,
           "timeout": 10
