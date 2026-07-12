@@ -68,7 +68,7 @@ if [ ${#FAILED_COMMANDS[@]} -ne 0 ]; then
      }'
   exit 0 # フックプロセス自体は正常終了して JSON を受け渡す
 else
-  # すべて成功した場合
-  jq -n '{ "continue": true, "decision": "allow" }'
+  # すべて成功した場合 (decision は "approve"/"block" のみ有効なため成功時は省略する)
+  jq -n '{ "continue": true }'
   exit 0
 fi

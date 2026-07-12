@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./.claude/hooks/destructive-git-guard.sh"
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/destructive-git-guard.mjs\""
           }
         ]
       },
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./.claude/hooks/secret-leak-guard.sh"
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/secret-leak-guard.mjs\""
           }
         ]
       }
@@ -78,9 +78,13 @@
     ],
     "Stop": [
       {
-        "type": "command",
-        "command": "./scripts/autonomous-gate.sh",
-        "timeout": 120
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/autonomous-gate.sh",
+            "timeout": 120
+          }
+        ]
       }
     ]
   }
