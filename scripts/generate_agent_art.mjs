@@ -23,22 +23,22 @@ const MODELS = [
 ];
 
 const STYLE = [
-  'Flat geometric vector emblem style, stylized robot bust portrait, centered and facing forward.',
-  'Dark navy background (#0b1220), clean crisp silhouette, subtle glow around the head.',
-  'Professional sci-fi command-center dashboard aesthetic: confident, competent, not cute, suitable for an enterprise ops dashboard.',
-  'Single accent color used as the highlight/rim light. Limited palette. Square 1:1 composition, subject fully inside the frame with margin, not cropped.',
+  'Pokemon-style cute creature/monster bust portrait, centered and facing forward.',
+  'Flat geometric vector art, emblem style.',
+  'Warm off-white background (#fffaf3), clean crisp silhouette, subtle soft glow around the subject.',
+  'Limited palette. Square 1:1 composition, subject fully inside the frame with margin, not cropped.',
   'Absolutely no text, no letters, no numbers, no words, no watermark, no logo, no signature.',
 ].join(' ');
 
 const AGENTS = [
-  { id: 'brief-cartographer', accent: '#f9c74f', desc: 'A planner robot that decomposes requirements like a mapmaker. Motifs: a compass rose, an unfurled cartography map with contour lines, drafting/surveying tools. Thoughtful, methodical expression.' },
-  { id: 'market-broker', accent: '#b7f7d7', desc: 'A broker robot that mediates between other agents over an A2A protocol. Motifs: a glowing network of connected nodes, a handshake, a trading/exchange floor. Poised, diplomatic expression.' },
-  { id: 'cloud-run-sre', accent: '#8ecae6', desc: 'An SRE robot guarding a production Cloud Run service. Motifs: a stylized cloud, a ship steering wheel/helm, status signal lights (traffic-light beacons). Steady, vigilant expression.' },
-  { id: 'gemini-strategist', accent: '#81b29a', desc: 'A strategist mastermind robot. Motifs: a chess knight/king piece, a constellation star map, twin/gemini stars. Calm, calculating expression.' },
-  { id: 'test-forge', accent: '#ffc8dd', desc: 'A blacksmith robot that forges quality. Motifs: an anvil, a hammer, flying sparks, interlocking gears. Focused, industrious expression.' },
-  { id: 'security-sentinel', accent: '#ffb3c1', desc: 'A guardian robot for security auditing. Motifs: a heater shield, a padlock, a watchtower. Alert, protective expression.' },
-  { id: 'ux-guildmaster', accent: '#f6bd60', desc: 'A guild-master robot that refines user experience. Motifs: an artist brush, a ruler/straightedge, a light-refracting prism with a soft rainbow. Warm, discerning expression.' },
-  { id: 'observability-oracle', accent: '#86bbd8', desc: 'An oracle robot that reads metrics. Motifs: a single all-seeing eye, a radar sweep, an oscilloscope waveform / line graph. Perceptive, insightful expression.' },
+  { id: 'brief-cartographer', accent: '#f9c74f', desc: 'A Pokemon-style cute bird monster that decomposes requirements, representing a cartographer. Motifs: a compass rose pattern on its feathers, holding a tiny roll of map. Cozy amber and yellow accent colors. Thoughtful, methodical expression.' },
+  { id: 'market-broker', accent: '#b7f7d7', desc: 'A Pokemon-style cute psychic cat-like monster representing a network broker. Motifs: glowing connection nodes floating around it, two hands clasping. Soft mint green and teal accent colors. Poised, diplomatic expression.' },
+  { id: 'cloud-run-sre', accent: '#8ecae6', desc: 'A Pokemon-style cute turtle monster representing an SRE guarding a cloud service. Motifs: shell resembling a fluffy cloud with a ship steering wheel motif, three small glowing beacon lights on its back. Sky blue and navy accent colors. Steady, vigilant expression.' },
+  { id: 'gemini-strategist', accent: '#81b29a', desc: 'A Pokemon-style cute rabbit monster representing a strategist mastermind. Motifs: starry ears like a constellation, holding a tiny chess knight piece. Sage green and gold accent colors. Calm, calculating expression.' },
+  { id: 'test-forge', accent: '#ffc8dd', desc: 'A Pokemon-style cute squirrel monster representing a blacksmith forge robot. Motifs: holding a tiny golden hammer, standing next to a tiny anvil with gear-like ears. Soft pink and rose accent colors. Focused, industrious expression.' },
+  { id: 'security-sentinel', accent: '#ffb3c1', desc: 'A Pokemon-style cute armadillo-like monster representing a security sentinel. Motifs: a protective shield pattern on its shell, a small padlock motif on its forehead. Rose and warm red accent colors. Alert, protective expression.' },
+  { id: 'ux-guildmaster', accent: '#f6bd60', desc: 'A Pokemon-style cute fairy-like squirrel monster representing a user experience guildmaster. Motifs: holding a tiny paint brush, surrounded by a subtle light prism showing a soft rainbow glow. Soft gold and orange accent colors. Warm, discerning expression.' },
+  { id: 'observability-oracle', accent: '#86bbd8', desc: 'A Pokemon-style cute cosmic owl monster representing an observability oracle. Motifs: a single prominent glowing eye emblem on its chest, surrounded by subtle circular radar sweeps and green line waveforms. Steel blue and cyan accent colors. Perceptive, insightful expression.' },
 ];
 
 function buildPrompt(a) {
@@ -68,12 +68,12 @@ async function generateOne(ai, model, agent) {
 }
 
 const HERO_PROMPT = [
-  'Wide 16:9 hero banner illustration for an AI agent marketplace / mission-control dashboard.',
-  'Flat geometric vector style matching a set of stylized robot-bust emblems: clean shapes, crisp silhouettes, subtle glow.',
-  'Dark navy background (#0b1220) fading to deep indigo. A central mission-control command console with a large holographic world/network map, radiating connection lines (A2A links) between eight glowing agent nodes arranged around it.',
-  'Each of the eight nodes hints at a distinct accent color: warm gold, mint green, sky blue, sage green, soft pink, rose, amber, and steel blue.',
-  'Motifs subtly woven into the nodes: compass, handshake/network, cloud with a ship helm, chess piece and constellation, anvil with sparks, shield with padlock, prism with brush, and an all-seeing eye with a waveform.',
-  'Professional enterprise sci-fi aesthetic, cinematic depth, soft rim lighting, thin glowing grid lines on the floor. Balanced composition with visual breathing room.',
+  'A wide 16:9 Pokemon-style hero banner illustration for an AI agent marketplace / mission-control dashboard.',
+  'Warm off-white background (#fffaf3) fading to soft cream.',
+  'A central playground-like command console. Eight cute Pokemon-style monsters (representing the agents) gathered around it, interacting playfully.',
+  'Each of the eight monsters has a distinct colorful accent (warm gold, mint green, sky blue, sage green, soft pink, rose, amber, and steel blue).',
+  'Small motifs subtly integrated: miniature compass, glowing star, toy hammer, shield, brush, lock.',
+  'Cute, colorful, clean vector art style, soft lighting, friendly and premium feel.',
   'Absolutely no text, no letters, no numbers, no words, no watermark, no logo, no UI labels.',
 ].join(' ');
 

@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, ExternalLink, FileCheck2, FlaskConical, Network, Target, Workflow } from "lucide-react";
 
 import AgentRoster from "./AgentRoster.js";
-import EvidenceDashboard from "./EvidenceDashboard.js";
+import EvidenceDashboard, { EvidenceKpiHighlights } from "./EvidenceDashboard.js";
 import IncidentDrillPanel from "./IncidentDrillPanel.js";
 import MissionControl from "./MissionControl.js";
 import OpsAgentConsole from "./OpsAgentConsole.js";
+import RosterHighlights from "./RosterHighlights.js";
 import { MAX_CUSTOM_AGENTS } from "./customAgent.js";
 import { SUBMISSION_PROOF } from "./submission.js";
 
@@ -134,34 +135,27 @@ export default function AppHome() {
         </div>
       </header>
 
-      <section className="hero-copy">
-        <div className="hero-text">
-          <p className="hero-kicker">A2A Agent Marketplace for DevOps Mission Control</p>
-          <h1>
-            必要なAIを選び、<span className="hero-accent">任せて検証する。</span>
-          </h1>
-          <p>
-            目標に合う専門エージェントを選抜し、A2Aで実行を委任。Cloud Run、CI、ログの証拠から次の対応を整理します。
-          </p>
-          <div className="hero-actions">
-            <a className="btn-primary" href="#mission-control">
+      <div className="bento" aria-label="状態サマリー">
+        <div className="bento-hero">
+          <div>
+            <span className="bento-hero-kicker">A2A Agent Marketplace for DevOps Mission Control</span>
+            <h1>必要なAIを選び、任せて検証する。</h1>
+            <p>目標に合う専門エージェントを選抜し、A2Aで実行を委任。Cloud Run、CI、ログの証拠から次の対応を整理します。</p>
+          </div>
+          <div className="bento-hero-actions">
+            <a className="is-primary" href="#mission-control">
               <Target size={16} /> 調査を始める
             </a>
-            <a className="btn-secondary" href="#safe-demo">
+            <a href="#safe-demo">
               <FlaskConical size={16} /> 安全なデモを見る
             </a>
           </div>
         </div>
-        <img
-          className="hero-image"
-          src="/assets/agent-marketplace-hero.webp"
-          alt="8体の専門エージェントがコマンドコンソールを囲むエンブレムネットワーク"
-          width={1200}
-          height={669}
-          loading="eager"
-          fetchPriority="high"
-        />
-      </section>
+        <RosterHighlights agents={agents} stats={stats} />
+        <div className="bento-kpi-row">
+          <EvidenceKpiHighlights />
+        </div>
+      </div>
 
       <EvidenceDashboard />
 
