@@ -68,74 +68,123 @@ export function EvidenceKpiHighlights({ summary }: EvidenceProps) {
   );
 }
 
-// 実行の成否を実データの積み上げバーで表示する
+// 実行の成否をドーナツグラフで表示する
 function OutcomeChart({ completed, failed }: { completed: number; failed: number }) {
   const total = completed + failed;
-  const scale = total > 0 ? 420 / total : 0;
-  const completedWidth = completed * scale;
-  const failedWidth = failed * scale;
+  const completedRate = total > 0 ? (completed / total) * 100 : 0;
+  const failedRate = total > 0 ? (failed / total) * 100 : 0;
+  
+  // 円周: r=38 => 2 * PI * 38 = 238.76
+  const C = 238.76;
+  const completedOffset = C - (completedRate / 100) * C;
+  const failedOffset = C - (failedRate / 100) * C;
 
   return (
-    <div className="evidence-chart-wrap">
-      <svg className="evidence-chart" viewBox="0 0 560 150" role="img" aria-labelledby="outcome-chart-title outcome-chart-desc">
-        <title id="outcome-chart-title">実行の成否</title>
-        <desc id="outcome-chart-desc">
-          完了{completed}件、失敗{failed}件。
-        </desc>
-        <text className="evidence-chart-axis" x="0" y="20">
-          {total} runs
-        </text>
-        <rect className="evidence-chart-track" x="0" y="34" width="420" height="30" rx="10" />
-        <rect className="evidence-chart-bar evidence-chart-bar-accent" x="0" y="34" width={completedWidth} height="30" rx="10" />
-        <rect className="evidence-chart-bar evidence-chart-bar-gold" x={completedWidth} y="34" width={failedWidth} height="30" rx="10" />
-        <text className="evidence-chart-value" x="0" y="94">
-          完了 {completed}件（{total > 0 ? Math.round((completed / total) * 100) : 0}%）
-        </text>
-        {failed > 0 ? (
-          <text className="evidence-chart-value" x="0" y="120">
-            失敗 {failed}件（{Math.round((failed / total) * 100)}%）
-          </text>
-        ) : (
-          <text className="evidence-chart-success" x="0" y="120">
-            失敗 0件
-          </text>
+    <div className="evidence-chart-wrap" style={{ display: "flex", alignItems: "center", gap: "20px", padding: "12px 16px", background: "var(--panel-2)", borderRadius: "var(--radius)", border: "1px solid var(--line)" }}>
+      <svg width="84" height="84" viewBox="0 0 100 100" style={{ transform: "rotate(-90deg)" }}>
+        {/* 背景円 */}
+        <circle cx="50" cy="50" r="38" fill="none" stroke="var(--line-strong)" strokeWidth="10" opacity="0.3" />
+        
+        {/* 完了 (Green) */}
+        {completed > 0 && (
+          <circle 
+            cx="50" 
+            cy="50" 
+            r="38" 
+            fill="none" 
+            stroke="var(--green)" 
+            strokeWidth="10" 
+            strokeDasharray={`${C} ${C}`} 
+            strokeDashoffset={completedOffset} 
+            style={{ transition: "stroke-dashoffset 0.8s ease" }}
+            strokeLinecap="round"
+          />
+        )}
+        
+        {/* 失敗 (Red) */}
+        {failed > 0 && (
+          <circle 
+            cx="50" 
+            cy="50" 
+            r="38" 
+            fill="none" 
+            stroke="var(--red)" 
+            strokeWidth="10" 
+            strokeDasharray={`${C} ${C}`} 
+            strokeDashoffset={C - (failedOffset - completedOffset)} 
+            style={{ transition: "stroke-dashoffset 0.8s ease" }}
+            strokeLinecap="round"
+          />
         )}
       </svg>
-      <p className="evidence-chart-note">runStore の実行履歴から集計したラン成否</p>
+      <div className="evidence-chart-legend" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ width: "12px", height: "12px", borderRadius: "50%", background: "var(--green)", display: "inline-block" }} />
+          <span style={{ fontSize: "13.5px" }}>完了: <strong>{completed}</strong>件 ({Math.round(completedRate)}%)</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ width: "12px", height: "12px", borderRadius: "50%", background: "var(--red)", display: "inline-block" }} />
+          <span style={{ fontSize: "13.5px" }}>失敗: <strong>{failed}</strong>件 ({Math.round(failedRate)}%)</span>
+        </div>
+        <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "4px", fontFamily: "var(--mono)" }}>
+          総実行数: {total} runs
+        </div>
+      </div>
     </div>
   );
 }
 
-// 所見の質 (総数 / 採用 / 再確認一致) を実データの積み上げバーで表示する
+// 所見の質 (総数 / 採用 / 再確認一致) をドーナツグラフで表示する
 function FindingChart({ total, accepted, confirmed }: { total: number; accepted: number; confirmed: number }) {
-  const scale = total > 0 ? 420 / total : 0;
-  const acceptedWidth = accepted * scale;
-  const restWidth = (total - accepted) * scale;
+  const acceptRate = total > 0 ? (accepted / total) * 100 : 0;
+  const restRate = total > 0 ? ((total - accepted) / total) * 100 : 0;
+  
+  // 円周: r=38 => 2 * PI * 38 = 238.76
+  const C = 238.76;
+  const acceptOffset = C - (acceptRate / 100) * C;
 
   return (
-    <div className="evidence-chart-wrap">
-      <svg className="evidence-chart" viewBox="0 0 560 150" role="img" aria-labelledby="finding-chart-title finding-chart-desc">
-        <title id="finding-chart-title">所見の採用状況</title>
-        <desc id="finding-chart-desc">
-          所見{total}件中、採用{accepted}件、独立チェック一致{confirmed}件。
-        </desc>
-        <text className="evidence-chart-axis" x="0" y="20">
-          {total} findings
-        </text>
-        <rect className="evidence-chart-track" x="0" y="34" width="420" height="30" rx="10" />
-        <rect className="evidence-chart-bar evidence-chart-bar-accent" x="0" y="34" width={acceptedWidth} height="30" rx="10" />
-        <rect className="evidence-chart-bar evidence-chart-bar-blue" x={acceptedWidth} y="34" width={restWidth} height="30" rx="10" />
-        <text className="evidence-chart-value" x="0" y="94">
-          採用 {accepted}件 / 未採用 {total - accepted}件
-        </text>
-        <text className="evidence-chart-value" x="0" y="120">
-          独立チェック一致 {confirmed}件
-        </text>
+    <div className="evidence-chart-wrap" style={{ display: "flex", alignItems: "center", gap: "20px", padding: "12px 16px", background: "var(--panel-2)", borderRadius: "var(--radius)", border: "1px solid var(--line)" }}>
+      <svg width="84" height="84" viewBox="0 0 100 100" style={{ transform: "rotate(-90deg)" }}>
+        {/* 背景円 */}
+        <circle cx="50" cy="50" r="38" fill="none" stroke="var(--line-strong)" strokeWidth="10" opacity="0.3" />
+        
+        {/* 採用 (Accent) */}
+        {accepted > 0 && (
+          <circle 
+            cx="50" 
+            cy="50" 
+            r="38" 
+            fill="none" 
+            stroke="var(--accent)" 
+            strokeWidth="10" 
+            strokeDasharray={`${C} ${C}`} 
+            strokeDashoffset={acceptOffset} 
+            style={{ transition: "stroke-dashoffset 0.8s ease" }}
+            strokeLinecap="round"
+          />
+        )}
       </svg>
-      <p className="evidence-chart-note">引用ゲート通過後、独立 checker で反証されなかった所見のみを採用</p>
+      <div className="evidence-chart-legend" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ width: "12px", height: "12px", borderRadius: "50%", background: "var(--accent)", display: "inline-block" }} />
+          <span style={{ fontSize: "13.5px" }}>採用: <strong>{accepted}</strong>件 ({Math.round(acceptRate)}%)</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ width: "12px", height: "12px", borderRadius: "50%", background: "var(--line-strong)", display: "inline-block" }} />
+          <span style={{ fontSize: "13.5px" }}>未採用: <strong>{total - accepted}</strong>件 ({Math.round(restRate)}%)</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "2px" }}>
+          <span style={{ fontSize: "12px", color: "var(--blue)" }}>✓ 独立チェック一致: <strong>{confirmed}</strong>件</span>
+        </div>
+        <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "2px", fontFamily: "var(--mono)" }}>
+          総所見数: {total} findings
+        </div>
+      </div>
     </div>
   );
 }
+
 
 export default function EvidenceDashboard({ summary }: EvidenceProps) {
   const s = summary ?? EMPTY_SUMMARY;
