@@ -2,7 +2,7 @@
  * Common Utilities Module
  *
  * Hook スクリプトが共有するユーティリティ関数。
- * stdin 読み取り、stdout 出力、安全チェックなど。
+ * stdin 読み込み、stdout 出力、安全チェックなど。
  */
 
 import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync, renameSync, unlinkSync } from 'fs';
@@ -13,17 +13,17 @@ import { randomBytes } from 'crypto';
 import { isHookEnabled } from './hook-flags.mjs';
 
 // ═══════════════════════════════════════════════════════════════
-// 安全な JSON ファイル読み取り (中央化)
+// 安全な JSON ファイル読み込み（一元化）
 //
-// existsSync + readFileSync + JSON.parse + try/catch パターンが
-// 82回以上繰り返されていたものを単一関数に統合。
+// existsSync + readFileSync + JSON.parse + try/catch のパターンが
+// 82回以上重複していたものを単一関数に統合。
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * JSON ファイルを安全に読み取ってパースする。
+ * JSON ファイルを安全に読み込んでパースする。
  *
- * ファイル未存在、読み取りエラー、JSON パースエラー時は defaultValue を返す。
- * throw しないため、すべての呼び出し元で try/catch が不要である。
+ * ファイル不在、読み込みエラー、JSON パースエラー時は defaultValue を返す。
+ * throw しないため、すべての呼び出し元で try/catch が不要。
  *
  * @param {string} filePath - 絶対パス
  * @param {*} [defaultValue=null] - 失敗時に返すデフォルト値
@@ -39,14 +39,14 @@ export function safeReadJson(filePath, defaultValue = null) {
 }
 
 /**
- * handoff.confidence が object {score, level, ...} または number (legacy) 形式の両方を
+ * handoff.confidence が object {score, level, ...} または number（legacy）どちらの形式も
  * サポートする score 抽出 helper。finite な数値でなければ null を返す。
  *
- * R-CM-026 整合: handoff (skill detail) SSOT の confidence 表現が多様な形式を
- * 取り得る boundary 関数。saga-manager.syncStageFromHandoff +
- * stage-output-aggregator.mergeHandoffConfidence の 2 つの進入点で共有。
+ * R-CM-026 整合: handoff（skill detail）SSOT の confidence 表現が多様な形式を
+ * 取りうる boundary 関数。saga-manager.syncStageFromHandoff +
+ * stage-output-aggregator.mergeHandoffConfidence の2つのエントリポイントで共有。
  *
- * @param {*} conf - handoff.confidence 値 (object|number|undefined|null)
+ * @param {*} conf - handoff.confidence の値（object|number|undefined|null）
  * @returns {number|null} finite な score または null
  */
 export function extractConfidenceScore(conf) {
@@ -60,24 +60,24 @@ export function extractConfidenceScore(conf) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 原子的ファイル書き込み (中央化)
+// アトミックなファイル書き込み（一元化）
 //
-// 6 箇所で重複していた tmp+rename パターンを単一関数に統合。
-// すべての状態管理モジュール(state.mjs, saga-manager.mjs など)がこの関数を使用。
+// 6箇所で重複していた tmp+rename パターンを単一関数に統合。
+// すべての状態管理モジュール（state.mjs, saga-manager.mjs など）がこの関数を使用。
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * JSON データをファイルに原子的に書き込む (tmp + rename パターン)。
+ * JSON データをファイルにアトミックに書き込む（tmp + rename パターン）。
  *
- * POSIX では同一ファイルシステム内の rename は原子的であるため、
- * 対象ファイルと同じディレクトリに tmp ファイルを生成してクロスパーティション問題を防止する。
+ * POSIX では同一ファイルシステム内の rename はアトミックであるため、
+ * 対象ファイルと同じディレクトリに tmp ファイルを作成してクロスパーティション問題を防ぐ。
  *
  * @param {string} filePath - 対象ファイルの絶対パス
- * @param {object|string} data - JSON シリアライズするオブジェクトまたは既にシリアライズされた文字列
+ * @param {object|string} data - JSON シリアライズするオブジェクトまたはすでにシリアライズされた文字列
  * @param {object} [options]
- * @param {boolean} [options.ensureDir=true] - ディレクトリ自動生成の可否
- * @param {number} [options.indent=2] - JSON.stringify indent (data が文字列なら無視)
- * @returns {boolean} 成功の可否
+ * @param {boolean} [options.ensureDir=true] - ディレクトリ自動作成の有無
+ * @param {number} [options.indent=2] - JSON.stringify の indent（data が文字列の場合は無視）
+ * @returns {boolean} 成功したかどうか
  */
 export function atomicWriteJson(filePath, data, options = {}) {
   const { ensureDir = true, indent = 2 } = options;
@@ -92,22 +92,22 @@ export function atomicWriteJson(filePath, data, options = {}) {
     renameSync(tmpPath, filePath);
     return true;
   } catch {
-    // 一時ファイルの整理を試行
+    // 一時ファイルの削除を試みる
     try { if (existsSync(tmpPath)) unlinkSync(tmpPath); } catch { /* ignore */ }
     return false;
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Git ユーティリティ (中央化)
+// Git ユーティリティ（一元化）
 // ═══════════════════════════════════════════════════════════════
 
-/** git repo か否かのキャッシュ (プロセスライフサイクル内で不変) */
+/** git repo かどうかのキャッシュ（プロセスのライフサイクル内で不変） */
 const _gitRepoCache = new Map();
 
 /**
  * 指定ディレクトリが git リポジトリかどうかを確認する。
- * 結果をキャッシュして同一プロセス内での反復 fork を防止。
+ * 結果をキャッシュして同一プロセス内での繰り返し fork を防ぐ。
  *
  * @param {string} cwd - 確認するディレクトリ
  * @returns {boolean}
@@ -130,17 +130,17 @@ export function isGitRepo(cwd) {
 }
 
 /**
- * シェルコマンドを安全に実行する (中央化)。
+ * シェルコマンドを安全に実行する（一元化）。
  *
- * - stdio を常にパイプして stderr が親プロセス(Claude Code)へ漏出しないようにする
- * - 失敗時は null を返す (throw しない)
- * - すべての hook スクリプトはこの関数を使用しなければならない
+ * - stdio を常にパイプして stderr が親プロセス（Claude Code）に漏れないようにする
+ * - 失敗時は null を返す（throw しない）
+ * - すべての hook スクリプトはこの関数を使用すべき
  *
  * @param {string} cmd - 実行するコマンド
  * @param {string} cwd - 作業ディレクトリ
  * @param {object} [options]
  * @param {number} [options.timeout=10000] - タイムアウト(ms)
- * @returns {string|null} stdout (trimmed) または null
+ * @returns {string|null} stdout（trimmed）または null
  */
 export function safeExec(cmd, cwd, options = {}) {
   try {
@@ -157,9 +157,9 @@ export function safeExec(cmd, cwd, options = {}) {
 
 /**
  * git コマンドを安全に実行する。
- * git リポジトリでなければ即座に null を返す (fork なしで)。
+ * git リポジトリでなければ即座に null を返す（fork なしで）。
  *
- * @param {string} gitArgs - git サブコマンド + 引数 (例: "status --porcelain")
+ * @param {string} gitArgs - git サブコマンド + 引数（例: "status --porcelain"）
  * @param {string} cwd - 作業ディレクトリ
  * @param {object} [options]
  * @param {number} [options.timeout=10000] - タイムアウト(ms)
@@ -171,11 +171,11 @@ export function safeGit(gitArgs, cwd, options = {}) {
 }
 
 /**
- * プロジェクトルートディレクトリを解決する。(Worktree-aware)
+ * プロジェクトルートディレクトリを解決する。（Worktree-aware）
  * 優先順位: CLAUDE_PROJECT_DIR > hookData.cwd > process.cwd()
- * Worktree 内部で実行された場合 (.worktrees/...) 元のプロジェクトルートへ resolve する。
+ * Worktree 内部で実行された場合（.worktrees/...）は元のプロジェクトルートに resolve する。
  *
- * @param {object} [hookData] - Hook stdin データ (data.cwd を含み得る)
+ * @param {object} [hookData] - Hook stdin データ（data.cwd を含む場合がある）
  * @returns {string} プロジェクトルートの絶対パス
  */
 export function resolveProjectDir(hookData) {
@@ -188,7 +188,7 @@ export function resolveProjectDir(hookData) {
 }
 
 /**
- * stdin から JSON データを読み取る
+ * stdin から JSON データを読み込む
  * Claude Code Hooks は stdin でイベントデータを渡す。
  *
  * @returns {Promise<object>}
@@ -207,8 +207,8 @@ export async function readStdin() {
 }
 
 /**
- * stdout へ JSON 結果を出力
- * Hook 結果は必ず stdout JSON で渡す。
+ * stdout に JSON 結果を出力
+ * Hook の結果は必ず stdout JSON で渡す。
  *
  * @param {object} data - 出力するデータ
  */
@@ -217,10 +217,10 @@ export function output(data) {
 }
 
 /**
- * Context Limit による Stop の検知
- * Context が満杯の場合は絶対にブロックしない (deadlock 防止)
+ * Context Limit による Stop の検出
+ * Context が満杯の場合は絶対にブロックしない（deadlock 防止）
  *
- * Claude Code Hooks では Stop 入力のメタデータで判断。
+ * Claude Code Hooks では Stop 入力のメタデータで判断する。
  */
 export function isContextLimitStop(data) {
   const reason = (data.stop_reason || data.stopReason || '').toLowerCase();
@@ -242,7 +242,7 @@ export function isContextLimitStop(data) {
 }
 
 /**
- * ユーザーによるキャンセルの検知
+ * ユーザーによるキャンセルの検出
  */
 export function isUserAbort(data) {
   if (data.user_requested || data.userRequested) return true;
@@ -298,13 +298,13 @@ export function parsePlanProgress(planFilePath) {
 }
 
 /**
- * パイプライン産出物の progress を実際のファイル存在有無と交差検証。
- * ファイルが存在するのに status が "pending" である項目を不一致として検知。
+ * パイプライン成果物の progress を実際のファイル存在有無と突き合わせ検証する。
+ * ファイルは存在するが status が "pending" の項目を不整合として検出。
  *
- * Stop Hook で進捗率の更新漏れを検知するのに使用。
+ * Stop Hook で進捗率更新の漏れを検出するために使用。
  *
  * @param {string} projectDir - プロジェクトルートディレクトリ
- * @param {string} contextRelPath - 産出物 JSON の相対パス
+ * @param {string} contextRelPath - 成果物 JSON の相対パス
  * @returns {{ mismatches: number, details: Array<{stage: string, status: string, existingCount: number}> }}
  */
 export function validatePipelineProgress(projectDir, contextRelPath) {
@@ -346,9 +346,9 @@ export function validatePipelineProgress(projectDir, contextRelPath) {
 
 
 /**
- * Claude Code Task システムで未完了タスクをカウント
+ * Claude Code Task システムにおける未完了タスク数のカウント
  *
- * Claude Code の Task ファイルは ~/.claude/tasks/{sessionId}/ に保存。
+ * Claude Code の Task ファイルは ~/.claude/tasks/{sessionId}/ に保存される。
  */
 export function countIncompleteTasks(sessionId) {
   if (!sessionId || typeof sessionId !== 'string') return 0;
@@ -379,11 +379,11 @@ export function countIncompleteTasks(sessionId) {
  * Hook main 関数の安全ラッパー
  *
  * Node.js 22 の unhandled rejection 防止のための必須ラッパー。
- * 1. 例外時の deadlock 防止 (空 JSON 出力で passthrough)
- * 2. stderr 出力なしで空 JSON(passthrough) を出力
+ * 1. 例外発生時の deadlock 防止（空 JSON 出力で passthrough）
+ * 2. stderr 出力なしで空 JSON（passthrough）を出力
  * 3. stdout パイプ破損も安全に処理
  *
- * 使用法:
+ * 使い方:
  *   import { safeHookMain } from './lib/utils.mjs';
  *   safeHookMain(main);
  *
@@ -403,10 +403,10 @@ export function safeHookMain(fn) {
 /**
  * Hook Profile ベースの安全ラッパー
  *
- * safeHookMain + isHookEnabled チェックを結合。
- * hookId が現在のプロファイルで非活性なら即座に passthrough (空 JSON)。
+ * safeHookMain + isHookEnabled チェックを組み合わせる。
+ * hookId が現在のプロファイルで無効なら即座に passthrough（空 JSON）。
  *
- * 使用法:
+ * 使い方:
  *   import { safeHookMainWithProfile } from './lib/utils.mjs';
  *   safeHookMainWithProfile('coverage-threshold-guard', main);
  *

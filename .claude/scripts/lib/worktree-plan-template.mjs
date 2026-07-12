@@ -1,16 +1,16 @@
 /**
  * worktree-plan-template.mjs — `worktree-init.mjs` が初回実行時に作成する
- * PLAN.md の標準テンプレート helper。
+ * PLAN.md の標準テンプレートhelper。
  *
  * 目的 (R-CM-030 worktree フロー + 直前の振り返り項目 #1 #5 #6 の根本解決):
- *   - PLAN.md の位置を `worktree-plan-path.mjs#resolveWorktreePlanPath` SSOT に
- *     合わせて自動生成 → AI が worktree ごとに mkdir + Write を行う際の位置の混乱パターンを遮断。
- *   - verify セクションを「AI 自動」 / 「ユーザー手動」の2つのカテゴリに分離 → AI が作成時点で
- *     ユーザー依存の検証と自動検証を意識的に区分するように強制。
- *   - べき等 — 既存の PLAN.md があれば保存 (ユーザーが作成中の PLAN 上書き禁止)。
+ *   - PLAN.md の配置場所を `worktree-plan-path.mjs#resolveWorktreePlanPath` SSOT に
+ *     合わせて自動生成 → AI が worktree ごとに mkdir + Write で配置場所を混同するパターンを防止。
+ *   - verify セクションを「AI自動」/「ユーザー手動」の2カテゴリに分離 → AI が作成時点で
+ *     ユーザー依存verifyと自動verifyを意識的に区別することを強制。
+ *   - 冪等 — 既存のPLAN.mdがあれば保存する（ユーザー作成中のPLANを上書き禁止）。
  *
- * 本モジュールは pure helper のため単体テスト可能。
- * デグレード: tests/unit/worktree-plan-template.test.mjs。
+ * 本モジュールはpure helperなので単体テスト可能。
+ * リグレッション: tests/unit/worktree-plan-template.test.mjs。
  */
 
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -22,65 +22,65 @@ import {
 import { renderTemplateFromSections } from '../../../.cli/lib/section-template-renderer.mjs';
 
 /**
- * brief2dev 自身が使用する 8セクション PLAN.md 基本構造 (JS 定数 — オプション C、ライブパスのファイル I/O なし)。
- * 移植用 customizable バージョン: data/registry/transplant-templates/worktree-plan.generic.json
- * (brief2dev はこの JSON を読み込まない — 対象プロジェクトが直接編集/wiring)。
+ * brief2dev自身が使用する8セクションPLAN.mdの基本構造（JS定数 — オプションC、ライブ経路のファイルI/Oなし）。
+ * 移植用customizableバージョン: data/registry/transplant-templates/worktree-plan.generic.json
+ * （brief2devはこのJSONを読まない — 対象プロジェクトが直接編集/wiringする）。
  */
 export const DEFAULT_PLAN_SECTIONS = [
   { heading: '# PLAN — {{branch}}', blocks: [] },
   {
     heading: '## Goal',
-    blocks: [{ type: 'static', lines: ['(作成必要 — この worktree で達成する目標を1文で記載)'] }],
+    blocks: [{ type: 'static', lines: ['(要記入 — この worktree で達成する目標を一文で)'] }],
   },
   {
     heading: '## Why',
-    blocks: [{ type: 'static', lines: ['(作成必要 — なぜ今この変更が必要なのか？ 既存のギャップ/問題)'] }],
+    blocks: [{ type: 'static', lines: ['(要記入 — なぜ今この変更が必要か？既存のギャップ/問題)'] }],
   },
   {
     heading: '## Scope (Surgical — R-CM-029 Rule 4)',
-    blocks: [{ type: 'static', lines: ['(作成必要 — 変更対象のファイル/モジュール一覧)'] }],
+    blocks: [{ type: 'static', lines: ['(要記入 — 変更対象のファイル/モジュール一覧)'] }],
   },
   {
     heading: '## Out of scope',
-    blocks: [{ type: 'static', lines: ['(作成必要 — 意図的にタッチしない領域)'] }],
+    blocks: [{ type: 'static', lines: ['(要記入 — 意図的に触れない範囲)'] }],
   },
   {
     heading: '## Verify',
     blocks: [
       {
         type: 'checklist_group',
-        subheading: '### AI 自動 (このターン内に実行)',
+        subheading: '### AI自動（このターン内に実行）',
         items: [
-          '(作成必要 — `npm test` / `npx vitest run <paths>` などのコマンド)',
-          '(作成必要 — lint / audit / smoke などの自動検証)',
+          '(要記入 — `npm test` / `npx vitest run <paths>` のようなコマンド)',
+          '(要記入 — lint / audit / smoke などの自動検証)',
         ],
       },
       {
         type: 'checklist_group',
         subheading: '### ユーザー手動',
         items: [
-          '(該当なしの場合は項目自体を削除または (dropped) マーカー。UI 変更であれば \"ブラウザで X を確認\" などのユーザーの決定に依存する検証)',
+          '(該当なしなら項目自体を削除、または(dropped)マーカー。UI変更なら「ブラウザでXを確認」のようなユーザー判断依存の検証)',
         ],
       },
     ],
   },
   {
     heading: '## Status',
-    blocks: [{ type: 'static', lines: ['- {{createdAt}}: worktree 作成 + PLAN 草案。'] }],
+    blocks: [{ type: 'static', lines: ['- {{createdAt}}: worktree生成 + PLAN草案。'] }],
   },
-  { heading: '## Outstanding', blocks: [{ type: 'static', lines: ['- なし (開始時点)'] }] },
+  { heading: '## Outstanding', blocks: [{ type: 'static', lines: ['- なし（開始時点）'] }] },
   {
     heading: '## Decisions',
-    blocks: [{ type: 'static', lines: ['- (作成必要 — AI デフォルト / ユーザー明示決定の区分)'] }],
+    blocks: [{ type: 'static', lines: ['- (要記入 — AI default / ユーザー明示決定の区別)'] }],
   },
 ];
 
 /**
- * PLAN.md 標準テンプレート本文を算出。Pure — fs 非タッチ。
+ * PLAN.md標準テンプレート本文を算出。Pure — fs非アクセス。
  *
- * @param {string} branch — `feature/cmux-surface-select` のような branch 名。
+ * @param {string} branch — `feature/cmux-surface-select` のようなbranch名。
  * @param {{ createdAt?: string, sections?: Array<object> }} [options] — `sections` 未指定時は
- *   `DEFAULT_PLAN_SECTIONS` を使用 (既存の関数シグネチャ/返却値は変更なし)。
+ *   `DEFAULT_PLAN_SECTIONS` を使用（既存の関数シグネチャ/戻り値は無変更）。
  * @returns {string}
  */
 export function renderPlanTemplate(branch, options = {}) {
@@ -91,17 +91,17 @@ export function renderPlanTemplate(branch, options = {}) {
 }
 
 /**
- * worktree 内に PLAN.md がなければ標準テンプレートで作成。あれば保存。
+ * worktree内にPLAN.mdがなければ標準テンプレートで生成。あれば保存。
  *
- * **`options.branch` override に注意** — branch を明示的に override すると PLAN.md が
- * `resolveWorktreePlanPath(worktreePath, options.branch)` の位置に作成される。
- * このパスは `inferBranchFromWorktreePath(worktreePath)` で取得するデフォルトパスと
- * **異なる場合がある** (worktree の物理ディレクトリ名と branch override 名が異なる場合)。
- * 結果として、同一の worktree 内に `.tmp/worktree-<inferred>/PLAN.md` と
- * `.tmp/worktree-<override>/PLAN.md` の2つのファイルが共存する可能性がある。
- * 呼び出し元が意図的に branch alias を使用する場合のみ override を推奨する。
+ * **`options.branch` overrideの注意** — branchを明示的にoverrideすると、PLAN.mdが
+ * `resolveWorktreePlanPath(worktreePath, options.branch)` の位置に生成される。
+ * このpathは `inferBranchFromWorktreePath(worktreePath)` で得られるdefault pathと
+ * **異なる場合がある**（worktreeの物理ディレクトリ名とbranch override名が異なる時）。
+ * 結果として同じworktree内に `.tmp/worktree-<inferred>/PLAN.md` と
+ * `.tmp/worktree-<override>/PLAN.md` の2ファイルが共存する場合がある。
+ * 呼び出し側が意図的にbranch aliasを使う場合のみoverrideを推奨する。
  *
- * @param {string} worktreePath — worktree の絶対パス。
+ * @param {string} worktreePath — worktreeの絶対パス。
  * @param {{ branch?: string, createdAt?: string }} [options]
  * @returns {{ created: boolean, path: string }}
  */
