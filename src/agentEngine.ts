@@ -214,11 +214,11 @@ export function recommendSquad(brief: string, selectedIds: string[] = [], budget
     after,
     uplift: subtractScore(after, before),
     devopsPlan: [
-      "Agent Cardを公開し、市場ブローカーが能力・MCP成熟度・価格を読み取る",
-      "Gemini 3.5 Flashでプロジェクトブリーフを診断し、雇うべき能力を更新する",
+      "Agent Cardを公開し、マーケットプレイスが能力・MCP成熟度・実績を読み取る",
+      "Gemini 3.5 Flashでプロジェクトブリーフを診断し、任せるべき能力を更新する",
       "選ばれたエージェントへA2A message/send形式で実装・検証・運用タスクを委任する",
       "Cloud Runに公開し、/api/healthz とログ確認コマンドを提出物へ添える",
-      "ユーザーの購入履歴を改善量として可視化し、次の買い足しを推薦する"
+      "エージェントの実行履歴を実績として可視化し、次に任せるべき能力を推薦する"
     ],
     mcpMatrix: selected.flatMap((agent) =>
       agent.mcp.map((mcp) => ({
@@ -239,18 +239,18 @@ export function localGeminiRecommendation(recommendation: Recommendation, reason
     model: "gemini-3.5-flash",
     executiveSummary: `${names} により、プロジェクト総合値は ${recommendation.before.total} から ${recommendation.after.total} へ改善します。`,
     winningAngle:
-      "単なるチャットではなく、必要能力を市場で購入し、A2Aで委任し、Cloud Run運用まで閉じるエージェント体験として見せる。",
+      "単なるチャットではなく、Agent Guildで必要な能力を選び、A2Aで委任し、Cloud Run運用まで閉じるエージェント体験として見せる。",
     risks: [
       `Gemini API未設定時はローカル推論で代替中: ${reason}`,
       "A2Aはデモ用の最小JSON-RPC互換エンドポイントなので、本番連携では認証とタスク状態永続化を足す",
-      "購入効果は能力モデルに基づくため、実運用ログで重みを継続更新する"
+      "編成効果は能力モデルに基づくため、実運用ログで重みを継続更新する"
     ],
     nextActions: [
-      "ProtoPedia用に市場画面、A2A Agent Card、Cloud Run URLの3点を短い動画に収める",
+      "ProtoPedia用にAgent Guildの編成画面、A2A Agent Card、Cloud Run URLの3点を短い動画に収める",
       "Cloud Runにデプロイし、/api/healthz と /.well-known/agent-card.json を確認する",
       "GitHub READMEにGemini 3.5 Flash、A2A、MCP能力値、Cloud Runの説明を固定する"
     ],
     pitchScript:
-      "必要なAIを探して雇う市場です。能力、スキル、MCP成熟度を数値化し、購入するとプロジェクトの企画・実装・運用スコアが上がります。裏側ではA2A Agent Cardで発見し、Gemini 3.5 Flashが次に雇うべき能力を判断し、Cloud Runで提出可能な形まで届けます。"
+      "Agent Guildは、必要なAIエージェントを選び、A2Aで任せ、実行結果を検証するDevOpsミッションコントロールです。Agent Cardと実行実績から編成を決め、Gemini 3.5 Flashが次に任せるべき能力を判断し、Cloud Runで証拠つきの結果を届けます。"
   };
 }

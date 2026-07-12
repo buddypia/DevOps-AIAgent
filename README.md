@@ -76,7 +76,7 @@
 | `GOOGLE_CLOUD_PROJECT` | Vertex AI / Cloud Logging / Firestore の対象プロジェクト | ログ系2エージェント無効、runStore は memory |
 | `GOOGLE_CLOUD_LOCATION` | Vertex ロケーション | `asia-northeast1` |
 | `GEMINI_MODEL` | モデル名 | `gemini-3.5-flash` |
-| `OPS_TARGET_SERVICE` / `OPS_TARGET_ALLOWLIST` | ログトリアージ対象の Cloud Run サービス | `a2a-agent-marketplace` |
+| `OPS_TARGET_SERVICE` / `OPS_TARGET_ALLOWLIST` | ログトリアージ対象の Cloud Run サービス | `agent-guild` |
 | `OPS_RUN_STORE` | `memory` 指定で Firestore を使わない | project があれば firestore |
 | `PUBLIC_BASE_URL` | 自己プローブ・A2A委任の基準URL | リクエストヘッダーから推定 |
 

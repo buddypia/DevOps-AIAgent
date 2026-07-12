@@ -1,9 +1,9 @@
 {
-  "name": "a2a-agent-marketplace",
+  "name": "agent-guild",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "A2A agent marketplace for buyer workflow proof, public receipts, and deployable agent operations.",
+  "description": "Agent Guild: an A2A agent marketplace for DevOps Mission Control, public proof, and deployable agent operations.",
   "scripts": {
     "dev": "tsx watch server/index.ts",
     "build": "vite build && node scripts/check_build_assets.mjs && tsc -p tsconfig.server.json",

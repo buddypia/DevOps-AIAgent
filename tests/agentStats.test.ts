@@ -20,7 +20,7 @@ function makeRun(agentId: string, overrides: Partial<OpsAgentRun> = {}): OpsAgen
   return {
     id: `run-${agentId}-${Math.random().toString(36).slice(2, 8)}`,
     agentId,
-    targetService: "a2a-agent-marketplace",
+    targetService: "agent-guild",
     trigger: "web",
     status: "completed",
     phases: [],

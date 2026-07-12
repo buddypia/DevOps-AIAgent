@@ -3,7 +3,7 @@
 PACKAGE_MANAGER ?= npm
 
 help:
-	@echo "a2a-agent-marketplace — 品質ゲート"
+	@echo "agent-guild — 品質ゲート"
 	@echo "  make q.check               全品質ゲート (typecheck + test) を実行"
 	@echo "  make q.typecheck           型チェックのみ"
 	@echo "  make q.test                テストのみ"

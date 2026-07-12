@@ -104,7 +104,7 @@ describe("cloud-run-sre job", () => {
   it("should resolve cross-project targets and widen the window when the first fetch is empty", async () => {
     const seen: Array<{ project?: string; lookbackMinutes: number }> = [];
     const ctx = makeCtx({
-      config: makeConfig({ targetAllowlist: ["a2a-agent-marketplace", "other-project/remote-svc"] }),
+      config: makeConfig({ targetAllowlist: ["agent-guild", "other-project/remote-svc"] }),
       fetchLoggingEvidence: async ({ project, lookbackMinutes }) => {
         seen.push({ project, lookbackMinutes });
         return lookbackMinutes === 1440 ? [{ id: "log-1", timestamp: "", severity: "ERROR", service: "remote-svc", message: "boom" }] : [];
