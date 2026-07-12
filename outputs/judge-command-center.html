@@ -254,7 +254,7 @@
           <article class="market-card" data-agent-card="observability">
             <span class="hire-state">✓ HIRED</span>
             <div class="market-card-top"><div class="market-avatar" style="color:var(--cyan);background:rgba(94,234,212,.13)">◉</div><span class="market-rarity">EPIC · OPERATE</span></div>
-            <h3>Observability Oracle</h3><p class="handle">@observability-oracle</p>
+            <h3>運用観測役</h3><p class="handle">@observability-oracle</p>
             <p class="headline">ログ・メトリクス・トレースから、異常の兆候と根拠を集める。</p>
             <div class="capability-row"><span class="capability">logs</span><span class="capability">metrics</span><span class="capability">traces</span></div>
             <div class="market-card-actions"><button class="btn ghost small" type="button" data-agent-detail="observability">能力を見る</button><button class="btn primary small" type="button" data-agent-hire="observability">雇って試す</button></div>
@@ -270,7 +270,7 @@
           <article class="market-card" data-agent-card="test-forge">
             <span class="hire-state">✓ HIRED</span>
             <div class="market-card-top"><div class="market-avatar" style="color:var(--green);background:rgba(74,222,128,.13)">✓</div><span class="market-rarity">RARE · BUILD</span></div>
-            <h3>Test Forge</h3><p class="handle">@test-forge</p>
+            <h3>テスト検証役</h3><p class="handle">@test-forge</p>
             <p class="headline">変更の影響範囲を見極め、ユニット・統合・smoke testを回す。</p>
             <div class="capability-row"><span class="capability">unit</span><span class="capability">integration</span><span class="capability">smoke</span></div>
             <div class="market-card-actions"><button class="btn ghost small" type="button" data-agent-detail="test-forge">能力を見る</button><button class="btn primary small" type="button" data-agent-hire="test-forge">雇って試す</button></div>
@@ -278,7 +278,7 @@
           <article class="market-card" data-agent-card="gemini-strategist">
             <span class="hire-state">✓ HIRED</span>
             <div class="market-card-top"><div class="market-avatar" style="color:var(--violet);background:rgba(196,181,253,.13)">✦</div><span class="market-rarity">EPIC · PLAN</span></div>
-            <h3>Gemini Strategist</h3><p class="handle">@gemini-strategist</p>
+            <h3>Gemini審査参謀</h3><p class="handle">@gemini-strategist</p>
             <p class="headline">目的を分解し、調査役の編成と安全な実行計画を決める。</p>
             <div class="capability-row"><span class="capability">plan</span><span class="capability">reason</span><span class="capability">decide</span></div>
             <div class="market-card-actions"><button class="btn ghost small" type="button" data-agent-detail="gemini-strategist">能力を見る</button><button class="btn primary small" type="button" data-agent-hire="gemini-strategist">雇って試す</button></div>
@@ -324,7 +324,7 @@
             <div class="panel-head"><h3>自律実行トレース</h3><span id="trace-counter">5 actions / waiting</span></div>
             <div class="trace-list" id="trace-list">
               <article class="trace-item is-current" data-trace="0"><div class="trace-icon">◌</div><div class="trace-copy"><strong>アラートの文脈を読み込み中</strong><p>直近15分のエラーレート、デプロイ履歴、関連Issueを照合します。</p><span class="trace-tag">planner</span></div><span class="trace-meta">waiting</span></article>
-              <article class="trace-item" data-trace="1"><div class="trace-icon">◇</div><div class="trace-copy"><strong>最適な調査役を選択</strong><p>Observability OracleとCloud Run SREに調査を分担します。</p><span class="trace-tag">orchestrator</span></div><span class="trace-meta">queued</span></article>
+              <article class="trace-item" data-trace="1"><div class="trace-icon">◇</div><div class="trace-copy"><strong>最適な調査役を選択</strong><p>運用観測役とCloud Run SREに調査を分担します。</p><span class="trace-tag">orchestrator</span></div><span class="trace-meta">queued</span></article>
               <article class="trace-item" data-trace="2"><div class="trace-icon">◎</div><div class="trace-copy"><strong>原因候補を比較</strong><p>「直近の依存更新によるDB接続プール枯渇」を第一候補にしました。</p><span class="trace-tag">reasoning</span></div><span class="trace-meta">queued</span></article>
               <article class="trace-item" data-trace="3"><div class="trace-icon">✓</div><div class="trace-copy"><strong>修正 → テスト → 承認</strong><p>変更範囲を1ファイルに限定。テスト成功後、人間の承認ポイントを提示します。</p><span class="trace-tag">guardrail</span></div><span class="trace-meta">queued</span></article>
               <article class="trace-item" data-trace="4"><div class="trace-icon">↑</div><div class="trace-copy"><strong>Cloud Runへデプロイ</strong><p>stagingでヘルスチェックを通過したイメージだけを本番へ昇格します。</p><span class="trace-tag">delivery</span></div><span class="trace-meta">queued</span></article>
@@ -379,10 +379,10 @@
         <section class="surface" aria-labelledby="roster-title">
           <div class="surface-head"><div><h2 id="roster-title">専門エージェントの分業</h2><p>1体のチャットボットではなく、役割を持つチーム。</p></div><span class="mono">8 AVAILABLE</span></div>
           <div class="tab-panel"><div class="agent-list">
-            <div class="agent is-active"><div class="agent-avatar" style="background:rgba(94,234,212,.13);color:var(--cyan)">◉</div><div class="agent-copy"><strong>Observability Oracle</strong><span>logs · metrics · traces</span></div><span class="agent-state"></span></div>
+            <div class="agent is-active"><div class="agent-avatar" style="background:rgba(94,234,212,.13);color:var(--cyan)">◉</div><div class="agent-copy"><strong>運用観測役</strong><span>logs · metrics · traces</span></div><span class="agent-state"></span></div>
             <div class="agent is-active"><div class="agent-avatar" style="background:rgba(125,211,252,.13);color:var(--blue)">⌁</div><div class="agent-copy"><strong>Cloud Run SRE</strong><span>deploy · rollback · health</span></div><span class="agent-state"></span></div>
-            <div class="agent is-done"><div class="agent-avatar" style="background:rgba(74,222,128,.13);color:var(--green)">✓</div><div class="agent-copy"><strong>Test Forge</strong><span>unit · integration · smoke</span></div><span class="agent-state"></span></div>
-            <div class="agent"><div class="agent-avatar" style="background:rgba(196,181,253,.13);color:var(--violet)">✦</div><div class="agent-copy"><strong>Gemini Strategist</strong><span>plan · reason · decide</span></div><span class="agent-state"></span></div>
+            <div class="agent is-done"><div class="agent-avatar" style="background:rgba(74,222,128,.13);color:var(--green)">✓</div><div class="agent-copy"><strong>テスト検証役</strong><span>unit · integration · smoke</span></div><span class="agent-state"></span></div>
+            <div class="agent"><div class="agent-avatar" style="background:rgba(196,181,253,.13);color:var(--violet)">✦</div><div class="agent-copy"><strong>Gemini審査参謀</strong><span>plan · reason · decide</span></div><span class="agent-state"></span></div>
           </div></div>
         </section>
       </div>
@@ -419,14 +419,14 @@
         const selectedAgentLabel = document.getElementById('selected-agent');
         let selectedAgentId = null;
         const agents = {
-          observability: { name: 'Observability Oracle', copy: 'Cloud Logging・Metrics・Traceを横断し、症状と根拠をひとつの調査結果にまとめます。', tools: ['cloud_logging.query', 'metrics.range', 'trace.inspect'] },
+          observability: { name: '運用観測役', copy: 'Cloud Logging・Metrics・Traceを横断し、症状と根拠をひとつの調査結果にまとめます。', tools: ['cloud_logging.query', 'metrics.range', 'trace.inspect'] },
           'cloud-run': { name: 'Cloud Run SRE', copy: 'Revision・トラフィック・ヘルスチェックを確認し、ロールバックや段階デプロイを安全に実行します。', tools: ['cloud_run.revisions', 'health.check', 'traffic.shift'] },
-          'test-forge': { name: 'Test Forge', copy: '変更範囲を推定し、必要なテストだけを選んで実行。結果をデプロイ判断の証拠にします。', tools: ['test.select', 'vitest.run', 'smoke.check'] },
-          'gemini-strategist': { name: 'Gemini Strategist', copy: '目的を分解し、調査役の編成・判断基準・安全な実行順序を決めるオーケストレーターです。', tools: ['mission.plan', 'agent.route', 'decision.score'] }
+          'test-forge': { name: 'テスト検証役', copy: '変更範囲を推定し、必要なテストだけを選んで実行。結果をデプロイ判断の証拠にします。', tools: ['test.select', 'vitest.run', 'smoke.check'] },
+          'gemini-strategist': { name: 'Gemini審査参謀', copy: '目的を分解し、調査役の編成・判断基準・安全な実行順序を決めるオーケストレーターです。', tools: ['mission.plan', 'agent.route', 'decision.score'] }
         };
         const messages = [
           ['ログとIssueを照合中', 'Cloud LoggingとGitHubの直近変更を読み込んでいます。'],
-          ['調査役を編成しました', 'Observability OracleとCloud Run SREへタスクを分配しました。'],
+          ['調査役を編成しました', '運用観測役とCloud Run SREへタスクを分配しました。'],
           ['原因候補を比較中', '複数の証拠をスコアリングし、変更リスクを評価しています。'],
           ['安全な変更を検証中', '変更範囲をロックし、stagingのヘルスチェックを実行しています。'],
           ['デプロイが完了しました', 'Cloud Run revision 185が100%のトラフィックを受けています。']
