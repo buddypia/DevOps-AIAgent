@@ -81,7 +81,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/autonomous-gate.sh",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/scripts/autonomous-gate.sh\"",
             "timeout": 120
           }
         ]

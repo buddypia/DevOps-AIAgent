@@ -8,6 +8,10 @@
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 CONFIG_FILE="${PROJECT_ROOT}/project-config.json"
 
+# 検証コマンド (npm / make) を project root で実行するため CWD を固定する。
+# Stop フックが worktree やサブディレクトリから起動されても結果が変わらないようにする。
+cd "$PROJECT_ROOT" 2>/dev/null || true
+
 # エラー出力と結果を格納する変数
 ERROR_LOG=""
 FAILED_COMMANDS=()
