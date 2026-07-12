@@ -1,13 +1,15 @@
 ---
 title: "DevOps x AI Agent Hackathon Notion"
 source_url: https://findy.notion.site/devops-ai-agent-hackathon-2026
-collected_at: 2026-05-11T19:23:06+09:00
+collected_at: 2026-07-12T12:00:00+09:00
 source_type: "notion_public_api"
 block_count: 403
 chunk_stats: [{"chunk": 0, "blocks": 112, "total": 110}, {"chunk": 1, "blocks": 112, "total": 187}, {"chunk": 2, "blocks": 53, "total": 208}]
 ---
 
 > This file was generated from the public Notion block data because generic HTML extraction only returned the first part of the page.
+
+> **最新更新（2026/7/12確認）**: 公式ProtoPediaイベントページおよび作品提出フォームの案内に基づき、作品提出締切を **2026/7/12（日）23:59** に更新しています。保存済みの原文に残る7/10表記は旧締切です。
 
 ## Source Links
 
@@ -561,7 +563,7 @@ AI/ML 担当のデベロッパーアドボケイトとして Google Cloud US 本
 | **③Boot Camp** | 2026/6月上旬～下旬 | 【概要】グーグル・クラウド・ジャパン主催のAI エージェント ハンズオンシリーズ「Agentic AI Bootcamp 2026」に加え、各ツールベンダー様による実践的なオンラインコンテンツを提供。無料で受講できます。（事前申込制）
 【開催形式】オンライン
 ※開催日時等の詳細は決定次第、本サイト内で発表いたします |
-| **④プロジェクト提出 〆切** | 2026/7/10（金）23:59まで | ハッカソン作品提出プラットフォーム「[Proto Pedia](https://protopedia.net/)」から作品をご提出いただきます。
+| **④プロジェクト提出 〆切** | **2026/7/12（日）23:59まで（延長）** | ハッカソン作品提出プラットフォーム「[Proto Pedia](https://protopedia.net/)」への作品登録と、[作品提出フォーム（Google Form）](https://docs.google.com/forms/d/e/1FAIpQLScYR-nIwo2Fglx1Srlui2dDt5rN_iIS6YYeLfMrRHvUpoMuFg/viewform)からの最終応募が必要です。
 ※事前にProto Pediaのアカウント作成が必要となりますのでご注意下さい |
 | **⑤一次審査** | 2026/7/13（月）～7/17（金） | ハッカソン運営事務局による審査。 |
 | **⑥二次審査** | 2026/7/21（火）～7/24（金） | 外部有識者による審査。 |
@@ -616,7 +618,7 @@ AI/ML 担当のデベロッパーアドボケイトとして Google Cloud US 本
 
 →　[作品提出フォーム（Google Form）](https://docs.google.com/forms/d/e/1FAIpQLScYR-nIwo2Fglx1Srlui2dDt5rN_iIS6YYeLfMrRHvUpoMuFg/viewform)
 
-なお応募にあたって、***下記3点***の提出が必要となります。
+なお応募にあたって、***下記3点***の提出が必要となります。締切は **2026/7/12（日）23:59** です。
 
 1. GitHubリポジトリのURL（公開リポジトリ）
 

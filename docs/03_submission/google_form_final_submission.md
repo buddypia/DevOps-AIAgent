@@ -1,7 +1,7 @@
 ---
 title: "DevOps × AI Agent Hackathon 作品提出フォーム"
 source_url: https://docs.google.com/forms/d/e/1FAIpQLScYR-nIwo2Fglx1Srlui2dDt5rN_iIS6YYeLfMrRHvUpoMuFg/viewform
-collected_at: 2026-05-11T19:23:22+09:00
+collected_at: 2026-07-12T12:00:00+09:00
 source_type: "google_forms_public_data"
 ---
 
@@ -9,7 +9,7 @@ source_type: "google_forms_public_data"
 
 ## Description
 
-作品提出期間：2026年7月10日（金）23:59まで
+作品提出期間：**2026年7月12日（日）23:59まで**
 ※期日を過ぎて提出いただいた作品は審査の対象外となります
 ※同一作品、同一メンバーでのご応募は1回限りとさせていただきます
 
