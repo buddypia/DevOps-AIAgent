@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CircleAlert, ClipboardCheck, GitBranchPlus, Radar, Rocket, ShieldCheck } from "lucide-react";
+import { CircleAlert, ClipboardCheck, GitBranchPlus, GitPullRequest, Globe, Package, Radar, Rocket, Server, ShieldCheck } from "lucide-react";
 
 import AgentAvatar from "./AgentAvatar.js";
 import { MISSION_TEMPLATES } from "./missionTemplates.js";
@@ -141,6 +141,16 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
   return (
     <section className="mission-control" aria-label="まとめて調査">
       <div className="mc-input-panel">
+        <div className="mc-target" aria-label="調査対象">
+          <span className="mc-target-label">調査対象</span>
+          <span className="mc-target-desc">このAgent Guild自身の本番環境</span>
+          <span className="mc-target-chips">
+            <span className="mc-target-chip"><Server size={12} /> Cloud Run</span>
+            <span className="mc-target-chip"><GitPullRequest size={12} /> CI</span>
+            <span className="mc-target-chip"><Package size={12} /> 依存パッケージ</span>
+            <span className="mc-target-chip"><Globe size={12} /> 配信中のHTML</span>
+          </span>
+        </div>
         <div className="mc-template-row" role="group" aria-label="調査テンプレート">
           {MISSION_TEMPLATES.map((template) => (
             <button

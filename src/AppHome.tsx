@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, ExternalLink, FileCheck2, FlaskConical, Network, Target, Workflow } from "lucide-react";
+import { ArrowRight, CheckCircle2, ExternalLink, FileCheck2, FlaskConical, Network, Target, Workflow } from "lucide-react";
 
 import AgentRoster from "./AgentRoster.js";
+import Callout from "./Callout.js";
 import EvidenceDashboard, { EvidenceKpiHighlights } from "./EvidenceDashboard.js";
 import IncidentDrillPanel from "./IncidentDrillPanel.js";
 import MissionControl from "./MissionControl.js";
@@ -169,8 +170,14 @@ export default function AppHome() {
               <span className="status-pill">調査役 {health.opsAgent?.executableAgents ?? 9}件</span>
             </>
           ) : null}
-          <a className="status-pill status-link" href="/.well-known/agent-card.json" target="_blank" rel="noreferrer">
-            Agent Card <ExternalLink size={11} />
+          <a
+            className="status-pill status-link"
+            href="/.well-known/agent-card.json"
+            target="_blank"
+            rel="noreferrer"
+            title="このアプリ自身のAgent Card（A2A標準の公開プロフィールJSON）"
+          >
+            自分のAgent Card <ExternalLink size={11} />
           </a>
         </div>
       </header>
@@ -207,18 +214,31 @@ export default function AppHome() {
         </div>
         <div className="process-rail">
           <div className="process-step">
-            <Target size={18} />
-            <div><strong>1. 目的を入力</strong><span>何を確認したいかを書く</span></div>
+            <span className="process-ico">
+              <span className="process-num">1</span>
+              <Target size={18} />
+            </span>
+            <div><strong>目的を入力</strong><span>確認したいことを1行で書く</span></div>
           </div>
-          <div className="process-connector" aria-hidden="true" />
-          <div className="process-step">
-            <Workflow size={18} />
-            <div><strong>2. 調査を分担</strong><span>内容に合う調査役が動く</span></div>
+          <div className="process-arrow" aria-hidden="true">
+            <ArrowRight size={22} />
           </div>
-          <div className="process-connector" aria-hidden="true" />
           <div className="process-step">
-            <FileCheck2 size={18} />
-            <div><strong>3. 根拠を確認</strong><span>ログと対応案を照らし合わせる</span></div>
+            <span className="process-ico">
+              <span className="process-num">2</span>
+              <Workflow size={18} />
+            </span>
+            <div><strong>調査を分担</strong><span>内容に合う調査役が自動で動く</span></div>
+          </div>
+          <div className="process-arrow" aria-hidden="true">
+            <ArrowRight size={22} />
+          </div>
+          <div className="process-step">
+            <span className="process-ico">
+              <span className="process-num">3</span>
+              <FileCheck2 size={18} />
+            </span>
+            <div><strong>根拠を確認</strong><span>ログと対応案を照らし合わせる</span></div>
           </div>
         </div>
       </section>
@@ -239,6 +259,10 @@ export default function AppHome() {
           <h2>調査役一覧</h2>
           <p>表示している数字は、実行履歴から計算した実績です。</p>
         </div>
+        <Callout tone="help" title="「有効にする」と「採用率」の違い">
+          <strong>有効にする</strong>＝この調査役を「まとめて調査」で使う候補に含めるスイッチです（オン/オフはいつでも切替可）。
+          <strong>採用率</strong>＝過去の所見のうち、<strong>引用チェックを通り、独立した再確認でも覆らなかった</strong>割合です。実行するたびに自動で記録・再計算され、ランクもここから決まります。
+        </Callout>
         <AgentRoster agents={agents} stats={stats} hiredIds={hiredIds} busy={hireBusy} onToggleHire={handleToggleHire} />
       </section>
 
@@ -258,6 +282,10 @@ export default function AppHome() {
           </h2>
           <p>外部エージェントのAgent Cardを読み込み、対応できる仕事と連携条件を確認します。</p>
         </div>
+        <Callout tone="note" title="Agent Card とは？">
+          エージェントの<strong>公開プロフィール（A2A標準のJSON）</strong>です。「何ができるか（スキル）」「どこに繋ぐか（URL）」「連携の条件」が書かれています。
+          下の欄にそのURLを貼ると、Agent Guildが内容を検証し、<strong>allowlist内なら試験タスクを委任</strong>できます。自分のカードはヘッダーの「自分のAgent Card」から確認できます。
+        </Callout>
         <div className="import-row">
           <input
             className="import-input"
