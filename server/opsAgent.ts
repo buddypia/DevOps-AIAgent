@@ -15,7 +15,7 @@ const OpsConfigSchema = z.object({
   // allowlist エントリ: "service" または "<gcp-project>/service" (別GCPプロジェクトのログを対象化)
   targetAllowlist: z
     .array(z.string().regex(/^(?:[a-z][a-z0-9-]{4,28}[a-z0-9]\/)?[a-z0-9-]{1,63}$/))
-    .default(["agent-guild", "aitech-good-a13973/vibementor-ai"]),
+    .default(["agent-guild"]),
   // 外部A2A POSTは明示的に許可したoriginだけへ送信する。空配列は委任無効。
   externalA2AAllowlist: z.array(z.string().url()).default([]),
   externalA2ATimeoutMs: z.number().int().min(1000).max(15000).default(6000),

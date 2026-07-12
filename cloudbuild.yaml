@@ -27,7 +27,8 @@ steps:
       - --allow-unauthenticated
       # Vertex AI + ADC で動作するためAPIキーSecretは不要 (最小権限SAで実行)
       - --service-account=${_RUNTIME_SA}@$PROJECT_ID.iam.gserviceaccount.com
-      - --set-env-vars=GEMINI_MODEL=gemini-3.5-flash,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=${_REGION},OPS_TARGET_SERVICE=${_SERVICE}
+      # リポジトリ外で設定した外部チェック対象などの環境変数を維持する
+      - --update-env-vars=GEMINI_MODEL=gemini-3.5-flash,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=${_REGION},OPS_TARGET_SERVICE=${_SERVICE}
       # コスパガード: scale-to-zero + 上限2インスタンス
       - --min-instances=0
       - --max-instances=2

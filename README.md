@@ -85,6 +85,8 @@
 
 どちらの認証も無い場合、ミッションと8エージェントの実行APIは 503 を返します（UIの名鑑・Agent Card 取り込みは動作）。
 
+外部GCPプロジェクトのCloud Runログを調査する場合は、対象をリポジトリに記載せず、Cloud Runの実行時設定またはSecret Managerから `OPS_TARGET_ALLOWLIST` に `agent-guild,external-project/remote-service` 形式で渡します。未設定時は自サービスのみが対象です。実行サービスアカウントには、外部プロジェクト側で `roles/logging.viewer` を付与してください。
+
 外部Agent Cardの実委任は、`OPS_EXTERNAL_A2A_ALLOWLIST` に公開originを設定した場合だけ有効です。外部へ送るのはユーザーの依頼文とskillIdだけで、Authorization・APIキー・ADCトークンは転送しません。allowlist未設定時はAgent Cardの評価のみ実行します。
 
 ## Local Development
