@@ -30,10 +30,7 @@ q.check-architecture:
 	@test -f CLAUDE.md
 	@test -d .claude/rules
 	@test -f .claude/settings.json
-	@test -f .github/workflows/deploy-cloud-run.yml
 	@test -f .github/workflows/verify-public-proof.yml
-	@grep -q "ops.triage.execute" .github/workflows/deploy-cloud-run.yml
-	@grep -q "executableAgents" .github/workflows/deploy-cloud-run.yml
 	@grep -q "ops.triage.execute" .github/workflows/verify-public-proof.yml
 	@grep -q "executableAgents" .github/workflows/verify-public-proof.yml
 	@grep -q "Answer Grounding" AGENTS.md || grep -q "統治" AGENTS.md || (echo "[FAIL] AGENTS.md から統治セクションが失われています" && exit 1)

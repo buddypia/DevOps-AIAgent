@@ -207,14 +207,7 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/external-evidence 
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/release-drift \
   -H 'Content-Type: application/json' \
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"targetUrl":"https://agent-guild-nxbw7of6cq-an.a.run.app"}'
-DRY_RUN=1 PROJECT_ID=$(gcloud config get-value project) REPO=buddypia/DevOps-AIAgent ./scripts/bootstrap_github_actions_deploy.sh
-PROJECT_ID=$(gcloud config get-value project) REPO=buddypia/DevOps-AIAgent ./scripts/bootstrap_github_actions_deploy.sh
-gh workflow run deploy-cloud-run.yml --ref main \
-  -f region=asia-northeast1 \
-  -f service=agent-guild \
-  -f repository=cloud-run-source-deploy \
-  -f gemini_secret=gemini-api-key-a2a-marketplace \
-  -f target_url=https://agent-guild-nxbw7of6cq-an.a.run.app
+gcloud builds submit --config=cloudbuild.yaml
 gh workflow run verify-public-proof.yml --ref main \
   -f target_url=https://agent-guild-nxbw7of6cq-an.a.run.app
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/deploy-recovery \
