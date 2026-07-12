@@ -20,6 +20,21 @@
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/destructive-git-guard.mjs\""
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.cli/hooks/commit-guard.mjs\"",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.cli/hooks/worktree-session-owner-guard.mjs\"",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.cli/hooks/pre-ship-review-guard.mjs\"",
+            "timeout": 5
           }
         ]
       },
@@ -29,6 +44,16 @@
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/secret-leak-guard.mjs\""
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.cli/hooks/worktree-policy-guard.mjs\"",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.cli/hooks/worktree-session-owner-guard.mjs\"",
+            "timeout": 5
           }
         ]
       }
@@ -83,6 +108,11 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PROJECT_DIR}/scripts/autonomous-gate.sh\"",
             "timeout": 120
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.cli/hooks/worktree-shipping-guard.mjs\"",
+            "timeout": 10
           }
         ]
       }
