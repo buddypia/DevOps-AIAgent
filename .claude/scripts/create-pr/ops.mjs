@@ -343,77 +343,6 @@ function collectChangedFilesViaPr(prNumber, repo) {
   }
 }
 
-/**
- * `/create-pr ship-worktree` post-merge 段階で followup-debt-tracker.mjs の
- * `register --pr <num> --json` を呼び出し、登録された DEBT 項目を応答として可視化する。
- *
- * R-CM-010 Iron Law 整合: silent execute 後「自動登録された」との推測を遮断 — 結果を
- * `count` + `items` として明示的に返却し、AI がユーザーに直接報告できるようにする。
- *
- * Fail-open (R-CM-033 #10 整合): スクリプト不在 / 無効な PR / 実行失敗 / stdout
- * parse 失敗すべて `{ error, count: 0, items: [] }` 返却 (throw しない) — ship-worktree
- * メインフロー遮断禁止。
- *
- * @param {number} prNumber
- * @returns {{ error: string | null, count: number, items: Array<object> }}
- */
-export function registerFollowupDebtFromPr(prNumber) {
-  if (!Number.isInteger(prNumber) || prNumber < 1) {
-    return {
-      error: `followup-debt registration skipped: invalid PR number (${prNumber})`,
-      count: 0,
-      items: [],
-    };
-  }
-  const scriptPath = join(PROJECT_DIR, '.claude', 'scripts', 'followup-debt-tracker.mjs');
-  if (!existsSync(scriptPath)) {
-    return {
-      error: `followup-debt-tracker script not found at ${scriptPath} — skipped`,
-      count: 0,
-      items: [],
-    };
-  }
-
-  let stdout;
-  try {
-    stdout = execFileSync(
-      process.execPath,
-      [scriptPath, 'register', '--pr', String(prNumber), '--json'],
-      {
-        cwd: PROJECT_DIR,
-        encoding: 'utf-8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-        timeout: 10_000,
-        env: process.env,
-      },
-    );
-  } catch (e) {
-    const stderr = (e.stderr || '').toString().trim();
-    const errStdout = (e.stdout || '').toString().trim();
-    const detail = stderr || errStdout || e.message;
-    return {
-      error: `followup-debt registration skipped: ${detail}`,
-      count: 0,
-      items: [],
-    };
-  }
-
-  try {
-    const parsed = JSON.parse((stdout || '').trim());
-    return {
-      error: null,
-      count: typeof parsed.registered === 'number' ? parsed.registered : 0,
-      items: Array.isArray(parsed.items) ? parsed.items : [],
-    };
-  } catch (e) {
-    return {
-      error: `followup-debt stdout parse failed: ${e.message}`,
-      count: 0,
-      items: [],
-    };
-  }
-}
-
 function deleteBranchAndStashes(branch) {
   if (!branch) return;
   try {
@@ -831,14 +760,10 @@ function createAndMergePr({ base, head, title, body, deleteBranch = null, noMerg
   // マージされたファイル一覧 + ツリー (失敗時は silent passthrough — 中核のマージ結果に影響なし)
   const changed_files = collectChangedFilesViaPr(prNumber, repo);
   const changed_files_tree = buildFileTree(changed_files);
-  const warnings = [];
-  const followupDebt = registerFollowupDebtFromPr(prNumber);
-  if (followupDebt.error) warnings.push(followupDebt.error);
 
   return {
     prNumber, prUrl, sha: resp.sha, merged: true, pending: false, existing,
-    changed_files, changed_files_tree, warnings,
-    followup_debt_registered: { count: followupDebt.count, items: followupDebt.items },
+    changed_files, changed_files_tree,
   };
 }
 
