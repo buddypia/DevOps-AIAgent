@@ -259,22 +259,22 @@ describe("getOpsConfig", () => {
     expect(config.model).toBe("gemini-3.5-flash");
   });
 
-  it("accepts project/service allowlist entries and defaults to the personal GCP target", () => {
+  it("accepts project/service allowlist entries and defaults to the local service only", () => {
     const config = getOpsConfig({ OPS_TARGET_ALLOWLIST: "svc-a,other-project/svc-b" } as NodeJS.ProcessEnv);
     expect(config.targetAllowlist).toEqual(["svc-a", "other-project/svc-b"]);
-    expect(getOpsConfig({} as NodeJS.ProcessEnv).targetAllowlist).toEqual(["agent-guild", "aitech-good-a13973/vibementor-ai"]);
+    expect(getOpsConfig({} as NodeJS.ProcessEnv).targetAllowlist).toEqual(["agent-guild"]);
   });
 });
 
 describe("resolveTarget", () => {
-  const config = makeConfig({ targetAllowlist: ["agent-guild", "aitech-good-a13973/vibementor-ai"] });
+  const config = makeConfig({ targetAllowlist: ["agent-guild", "external-project/remote-service"] });
 
   it("resolves a bare allowlist entry to the default project", () => {
     expect(resolveTarget(config, "agent-guild")).toEqual({ service: "agent-guild", project: "test-project" });
   });
 
   it("resolves a project/service entry to its own project", () => {
-    expect(resolveTarget(config, "vibementor-ai")).toEqual({ service: "vibementor-ai", project: "aitech-good-a13973" });
+    expect(resolveTarget(config, "remote-service")).toEqual({ service: "remote-service", project: "external-project" });
   });
 
   it("falls back to the default target when the requested service is not allowlisted", () => {
