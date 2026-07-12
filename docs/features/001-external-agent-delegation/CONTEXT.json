@@ -1,0 +1,164 @@
+{
+  "schema_version": 8,
+  "feature_id": "001-external-agent-delegation",
+  "title": "外部Agent Cardの実委任",
+  "feature_type": "backend_feature",
+  "domain": "agent-orchestration",
+  "characteristics": {
+    "involves_new_api": true,
+    "involves_external_api": true,
+    "db_schema_change": false,
+    "multi_screen": false,
+    "ai_ml_integration": false,
+    "security_sensitive": true,
+    "realtime_processing": false,
+    "offline_capability": false,
+    "payment_billing": false,
+    "pii_handling": false,
+    "novel_domain": false,
+    "cross_feature_impact": true
+  },
+  "quick_resume": {
+    "current_state": "Done",
+    "current_task": "外部Agent Cardのallowlist済みA2A委任とreceipt返却を実装・検証済み",
+    "next_actions": [],
+    "blockers": [],
+    "last_updated_at": "2026-07-12T00:25:00+09:00",
+    "last_decision": {
+      "summary": "外部委任はallowlist済み公開originに限定し、認証情報と破壊的操作は扱わない",
+      "at": "2026-07-12T00:00:00+09:00"
+    },
+    "current_rationale": "Agent Cardを能力表示だけで終わらせず、A2A message/sendの実行とtask receiptまで提供するため",
+    "active_constraints": [
+      "AGENTS.mdのZod入力検証と外部操作の安全境界",
+      "外部originはOPS_EXTERNAL_A2A_ALLOWLISTで許可する",
+      "Authorizationや秘密情報を外部payloadへ転送しない",
+      "Feature-First + Simplified Clean Architecture",
+      "TypeScript interface + Zodスキーマ"
+    ],
+    "previous_state": "Briefing",
+    "question_count": 0
+  },
+  "progress": {
+    "percentage": 100,
+    "fr_total": 6,
+    "fr_completed": 6,
+    "fr_in_progress": 0,
+    "details": {
+      "FR-00101": { "status": "completed", "weight": 2, "files": ["server/agentCardDiscovery.ts", "server/externalAgent.ts"], "test_passed": true, "last_verified_at": "2026-07-12T00:23:00+09:00" },
+      "FR-00102": { "status": "completed", "weight": 2, "files": ["server/opsAgent.ts", "server/externalAgent.ts"], "test_passed": true, "last_verified_at": "2026-07-12T00:23:00+09:00" },
+      "FR-00103": { "status": "completed", "weight": 2, "files": ["server/externalAgent.ts", "server/index.ts"], "test_passed": true, "last_verified_at": "2026-07-12T00:23:00+09:00" },
+      "FR-00104": { "status": "completed", "weight": 1, "files": ["server/index.ts", "src/AppHome.tsx"], "test_passed": true, "last_verified_at": "2026-07-12T00:23:00+09:00" },
+      "FR-00105": { "status": "completed", "weight": 1, "files": ["tests/externalAgent.test.ts"], "test_passed": true, "last_verified_at": "2026-07-12T00:23:00+09:00" },
+      "FR-00106": { "status": "completed", "weight": 1, "files": ["README.md", ".env.example"], "test_passed": true, "last_verified_at": "2026-07-12T00:23:00+09:00" }
+    }
+  },
+  "why": "Agent Cardの能力情報を実際の外部A2A委任につなげ、発見だけで終わらないDevOps作業の短縮を実現するため。",
+  "success_criteria": [
+    "allowlist内の公開Agent Cardから安全にA2A message/sendを実行できる",
+    "task ID・状態・応答のreceiptを返し、受付済みと完了済みを区別できる",
+    "private host、allowlist外、未知skill、タイムアウト、巨大入力を外部接続前に拒否できる",
+    "秘密情報を外部へ送信せず、主要経路のテストが通る"
+  ],
+  "constraints": [
+    "外部originはOPS_EXTERNAL_A2A_ALLOWLISTで明示許可する",
+    "公開ホストのDNS検証とredirect制限を維持する",
+    "OAuth/mTLS/署名検証は別機能とする",
+    "非同期taskの長期pollingとWebhookは実装しない",
+    "破壊的な外部操作は自動実行しない"
+  ],
+  "artifacts": {
+    "brief": "docs/features/001-external-agent-delegation/BRIEF.md",
+    "brief_format_version": "v2.0",
+    "spec": "docs/features/001-external-agent-delegation/SPEC-001-external-agent-delegation.md",
+    "spec_version": "1.0",
+    "spec_locked_at": "2026-07-12T00:05:00+09:00",
+    "spec_validation": { "last_run_at": "2026-07-12T00:25:00+09:00", "verdict": "passed", "blocking_count": 0, "warning_count": 1 },
+    "screens": [],
+    "design_assets": null,
+    "index": "docs/features/001-external-agent-delegation/index.md"
+  },
+  "references": {
+    "priority_order": ["spec", "brief"],
+    "current_focus": { "document": "SPEC-001-external-agent-delegation.md", "section": "§0.5 API Contract", "reason": "実装対象と安全境界を固定する" },
+    "documents": { "spec": { "path": "docs/features/001-external-agent-delegation/SPEC-001-external-agent-delegation.md", "sections_to_read": [], "focus": [] }, "screens": { "paths": [], "focus": [] } },
+    "related_specs": [],
+    "related_code": {
+      "types": ["src/types.ts"],
+      "hooks": [],
+      "api": ["server/index.ts", "server/agentCardDiscovery.ts", "server/opsAgent.ts"],
+      "components": ["src/AppHome.tsx"]
+    },
+    "api_routes": ["POST /api/external-agent/delegate", "GET /.well-known/agent-card.json", "POST /a2a"],
+    "dependencies": { "features": [], "packages": [] },
+    "research_links": { "research_ids": [], "id_format": "R-YYYYMMDD-NNN", "comp_ids": [] }
+  },
+  "competitive_data": { "comp_ids": [], "gap_severity": "high", "is_industry_standard": true, "app_count": 0, "linked_at": null },
+  "architecture": { "domain_model": null, "adr": null, "system_design": null, "discovery_gate": null, "discovery_rationale": null },
+  "execution": {
+    "lock": { "locked": false, "locked_by": null, "locked_at": null },
+    "active_branch": "feature/external-agent-delegation",
+    "rollback_point": "bb5d80f6e68e08f12f9f2a8fc89afbbff892a148",
+    "worktree": { "branch": "feature/external-agent-delegation", "worktree_path": ".worktrees/feature/external-agent-delegation", "plan_path": ".tmp/worktree-feature__external-agent-delegation/PLAN.md", "status": "active", "last_updated": "2026-07-12T00:00:00+09:00", "handoff": null }
+  },
+  "decisions": [
+    { "at": "2026-07-12T00:00:00+09:00", "summary": "既存のagent-orchestrationドメインを拡張する", "rationale": "既存のAgent Card discoveryと同一オリジンA2A委任を外部originへ拡張する機能であり、新業務ドメインではない。" },
+    { "at": "2026-07-12T00:00:00+09:00", "summary": "allowlist必須の公開endpoint委任に限定する", "rationale": "任意URLへのPOSTによるSSRFと意図しない副作用を防ぐため。" }
+  ],
+  "open_questions": [],
+  "history": [
+    { "at": "2026-07-12T00:00:00+09:00", "from_state": "Idle", "to_state": "Briefing", "triggered_by": "feature-architect", "note": "ユーザー要求と既存Agent Card/A2A実装を収集" },
+    { "at": "2026-07-12T00:00:00+09:00", "from_state": "Briefing", "to_state": "SpecDrafting", "triggered_by": "feature-architect", "note": "BRIEF.md作成後、CONTEXT.jsonを生成" }
+  ],
+  "autonomy_control": {
+    "max_questions_per_session": 7,
+    "auto_stop_conditions": ["7問上限", "blocking pattern", "security_sensitive変更の未承認", "外部API契約不一致"],
+    "current_autonomy_level": "supervised",
+    "risk_level": "high",
+    "risk_factors": ["external network call", "SSRF boundary", "untrusted response"],
+    "claude_md_checked": true,
+    "claude_md_version": "AGENTS.md"
+  },
+  "traceability": {
+    "user_story_to_fr": [
+      { "user_story": "US-01", "fr": ["FR-00101", "FR-00102"] },
+      { "user_story": "US-02", "fr": ["FR-00103", "FR-00104"] },
+      { "user_story": "US-03", "fr": ["FR-00105"] }
+    ],
+    "bdd_to_fr": [
+      { "bdd": "AC-01", "fr": ["FR-00103", "FR-00105"] },
+      { "bdd": "AC-02", "fr": ["FR-00101", "FR-00102"] },
+      { "bdd": "AC-03", "fr": ["FR-00103"] },
+      { "bdd": "AC-04", "fr": ["FR-00103", "FR-00105"] },
+      { "bdd": "AC-05", "fr": ["FR-00104"] },
+      { "bdd": "AC-06", "fr": ["FR-00105"] }
+    ],
+    "unmapped_user_stories": [],
+    "unmapped_bdd_scenarios": [],
+    "validated_at": "2026-07-12T00:00:00+09:00"
+  },
+  "priority": { "version": "3.0", "schema": "rice-v2", "last_updated": null, "phase": "mvp", "rice_inputs": { "reach": { "score": 5, "evidence": {}, "rationale": "外部Agent Cardを利用する全ユーザーに影響" }, "impact": { "score": 3, "evidence": {}, "rationale": "発見から実行への価値転換" }, "confidence": { "score": 0.7, "factors": {} }, "effort": { "score": 2, "unit": "person-weeks", "evidence": {}, "rationale": "既存discovery/A2Aを再利用" } }, "competitive_adjustment": { "adjustment": 1, "has_data": false, "evidence": {}, "rationale": "未評価" }, "calculated": { "rice_score": 0, "adjusted_score": 0, "competitive_adjustment": 1, "manual_override_applied": 1, "formula": "(Reach × Impact × Confidence) / Effort × CompAdj × ManualOverride", "component_breakdown": {} }, "data_sources_read": [], "manual_override": { "value": 1, "reason": null }, "ai_rationale": "", "history": [] },
+  "completion_summary": { "produces": { "types": ["ExternalDelegationConfig", "ExternalDelegationRequest", "ExternalDelegationReceipt", "ExternalDelegationResult"], "exports": ["delegateExternalAgent"], "api_endpoints": ["POST /api/external-agent/delegate"], "patterns_established": ["allowlist-gated external A2A dispatch", "JSON-RPC receipt with no credential forwarding"] }, "consumes": { "from_features": [] }, "files_created": ["server/externalAgent.ts", "tests/externalAgent.test.ts", "docs/features/001-external-agent-delegation/SPEC-001-external-agent-delegation.md"], "generated_at": "2026-07-12T00:25:00+09:00", "generated_by": "feature-status-sync" },
+  "completion_contract": {
+    "version": "1.0",
+    "work_type": "feature",
+    "source": "BRIEF §7",
+    "last_verified_at": null,
+    "verdict": "passed",
+    "items": [
+      { "id": "DOD-01", "description": "外部origin allowlistと公開host検証", "status": "passed" },
+      { "id": "DOD-02", "description": "外部A2A message/sendとreceipt", "status": "passed" },
+      { "id": "DOD-03", "description": "拒否・タイムアウト・秘密情報非転送テスト", "status": "passed" },
+      { "id": "DOD-04", "description": "品質ゲート実行証拠", "status": "passed" }
+    ],
+    "summary": { "total": 4, "passed": 4, "failed": 0, "skipped": 0, "pass_rate": 1 }
+  },
+  "brief_context": {
+    "core_goal": "Agent Cardから発見した外部エージェントへ安全にA2Aタスクを委任し、受領結果を確認可能にする",
+    "user_value": "外部の専門AIを実際の作業に使える",
+    "business_metrics": ["delegation success rate", "receipt confirmation rate"],
+    "user_story": "外部エージェントを選んで、目的を任せ、task receiptを確認したい",
+    "priority_label": "MVP"
+  },
+  "esp_execution_log": { "schema_version": 1, "summary": { "total_esp_calls": 0, "preflight_completed": 0, "postflight_completed": 0, "violations": 0, "compliance_rate": null }, "executions": [], "violations_history": [] }
+}

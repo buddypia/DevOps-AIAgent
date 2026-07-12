@@ -21,6 +21,20 @@ type HealthInfo = {
   missionControl?: { enabled?: boolean };
 };
 
+type ExternalDelegationResponse =
+  | {
+      ok: true;
+      receipt: {
+        status: "accepted" | "completed";
+        taskId: string | null;
+        taskState: string | null;
+        agentName: string;
+        skillId: string;
+        responseMessage: string | null;
+      };
+    }
+  | { ok: false; error?: string; message?: string };
+
 export default function AppHome() {
   const [agents, setAgents] = useState<AgentIdentity[]>([]);
   const [stats, setStats] = useState<Map<string, AgentTrackRecordView>>(new Map());
@@ -32,6 +46,9 @@ export default function AppHome() {
   const [cardResult, setCardResult] = useState<AgentCardImportResult | null>(null);
   const [importedAgents, setImportedAgents] = useState<MarketAgent[]>([]);
   const [cardLoading, setCardLoading] = useState(false);
+  const [delegationMessage, setDelegationMessage] = useState("このAgent Cardが担当できる範囲を証明してください。");
+  const [delegationLoading, setDelegationLoading] = useState(false);
+  const [delegationResult, setDelegationResult] = useState<ExternalDelegationResponse | null>(null);
 
   const agentsById = useMemo(() => new Map(agents.map((agent) => [agent.agentId, agent])), [agents]);
 
@@ -97,6 +114,7 @@ export default function AppHome() {
       });
       const result = (await response.json()) as AgentCardImportResult;
       setCardResult(result);
+      setDelegationResult(null);
       if (result.status === "accepted" && importedAgents.length < MAX_CUSTOM_AGENTS) {
         setImportedAgents((prev) => [...prev, result.agent]);
       }
@@ -104,6 +122,28 @@ export default function AppHome() {
       setCardResult({ status: "rejected", error: "Agent Cardの取得に失敗しました。", warnings: [], signals: [] });
     } finally {
       setCardLoading(false);
+    }
+  }
+
+  async function delegateAgentCard() {
+    if (cardResult?.status !== "accepted" || !delegationMessage.trim()) return;
+    setDelegationLoading(true);
+    setDelegationResult(null);
+    try {
+      const response = await fetch("/api/external-agent/delegate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          agentCardUrl: cardUrl.trim(),
+          skillId: cardResult.agent.a2aSkillIds[0],
+          message: delegationMessage.trim()
+        })
+      });
+      setDelegationResult((await response.json()) as ExternalDelegationResponse);
+    } catch {
+      setDelegationResult({ ok: false, error: "external_agent_error", message: "外部エージェントへの接続に失敗しました。" });
+    } finally {
+      setDelegationLoading(false);
     }
   }
 
@@ -233,17 +273,45 @@ export default function AppHome() {
         {cardResult ? (
           cardResult.status === "accepted" ? (
             <p className="import-ok">
-              <CheckCircle2 size={14} /> {cardResult.agent.name} の情報を確認しました（この画面では評価のみ）。
+              <CheckCircle2 size={14} /> {cardResult.agent.name} の情報を確認しました。allowlist内なら試験タスクを委任できます。
             </p>
           ) : (
             <p className="import-error">{cardResult.error}</p>
           )
         ) : null}
+        {cardResult?.status === "accepted" ? (
+          <>
+            <div className="import-row">
+              <input
+                className="import-input"
+                value={delegationMessage}
+                onChange={(event) => setDelegationMessage(event.target.value)}
+                aria-label="外部エージェントへの委任メッセージ"
+                maxLength={4000}
+              />
+              <button type="button" className="btn-secondary" onClick={delegateAgentCard} disabled={delegationLoading || !delegationMessage.trim()}>
+                {delegationLoading ? "委任中…" : "試験タスクを委任"}
+              </button>
+            </div>
+            {delegationResult ? (
+              delegationResult.ok ? (
+                <>
+                  <p className="import-ok">
+                    <CheckCircle2 size={14} /> {delegationResult.receipt.status === "completed" ? "外部タスクが完了しました" : "外部タスクを受け付けました"}（{delegationResult.receipt.skillId} / task {delegationResult.receipt.taskId ?? "-"}）
+                  </p>
+                  {delegationResult.receipt.responseMessage ? <p className="import-ok">応答: {delegationResult.receipt.responseMessage}</p> : null}
+                </>
+              ) : (
+                <p className="import-error">{delegationResult.message ?? "外部エージェントから安全に結果を取得できませんでした。"}</p>
+              )
+            ) : null}
+          </>
+        ) : null}
         {importedAgents.length > 0 ? (
           <ul className="imported-list">
             {importedAgents.map((agent) => (
               <li key={agent.id}>
-                <strong>{agent.name}</strong> - {agent.headline} <span className="imported-tag">外部 / A2Aスキル {agent.a2aSkillIds.length}件</span>
+                <strong>{agent.name}</strong> - {agent.headline} <span className="imported-tag">外部 / A2Aスキル {agent.a2aSkillIds.length}件 / 委任対応</span>
               </li>
             ))}
           </ul>
