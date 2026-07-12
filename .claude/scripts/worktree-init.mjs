@@ -2,31 +2,31 @@
 /**
  * worktree-init.mjs — R-CM-030 system_persistent worktree share helper
  *
- * 目的: 現在のworktreeの `.brief2dev/system/` ディレクトリを、main worktreeの
- *       同一ディレクトリを指すsymlinkにする。すべてのworktreeが単一SSOT
- *       (system_persistent root — git common-dirの親) を共有するようにする。
+ * 目的: 現在の worktree の `.brief2dev/system/` ディレクトリを main worktree の
+ *       同一ディレクトリに向けた symlink にする。すべての worktree が単一の SSOT
+ *       (system_persistent root — git common-dir の親) を共有するようにする。
  *
- * 冪等性:
- *   - core.hooksPath が `.husky` 相対パスでなければrepo-local設定を正規化
- *   - すでに正しいsymlink → no-op (exit 0)
- *   - 空ディレクトリ → 安全に削除後symlink生成
- *   - 不在 → 親ディレクトリ生成後symlink
- *   - ファイルがあるディレクトリ → STOP + エラー（silentデータ損失回避、R-CM-029 Rule 5）
- *   - 別のsymlink → STOP + エラー
+ * べき等性:
+ *   - core.hooksPath が `.husky` 相対パスでなければ repo-local 設定正規化
+ *   - すでに正確な symlink → no-op (exit 0)
+ *   - 空ディレクトリ → 安全に除去した後に symlink 生成
+ *   - 不在 → 親ディレクトリ作成後に symlink
+ *   - ファイルがあるディレクトリ → STOP + エラー (サイレントデータ損失を回避、R-CM-029 Rule 5)
+ *   - 異なる symlink → STOP + エラー
  *
- * 使用法:
- *   node .claude/scripts/worktree-init.mjs                  # 現在のcwd
+ * 使用:
+ *   node .claude/scripts/worktree-init.mjs                  # 現在の cwd
  *   node .claude/scripts/worktree-init.mjs --worktree <path>
  *   node .claude/scripts/worktree-init.mjs --dry-run        # 検査のみ
  *
  * exit code:
- *   0 — symlink正常（生成 / 既存）
- *   1 — 競合（手動解決が必要）/ git外部 / main worktree自体
+ *   0 — symlink 正常 (生成 / すでに存在)
+ *   1 — 衝突 (手動解決が必要) / git 外部 / main worktree 自体
  *   2 — 引数 / ユーザーエラー
  *
- * AI / ユーザー向け案内:
- *   本スクリプトはR-CM-031 Consequentialカテゴリ（ディレクトリ変更 + データlifecycle影響）なので
- *   SessionStart guardが自動呼び出ししない。ユーザーが明示的に呼び出す。
+ * AI / ユーザーへの案内:
+ *   本スクリプトは R-CM-031 Consequential カテゴリ (ディレクトリ修正 + データ lifecycle 影響) のため、
+ *   SessionStart guard が自動呼び出ししない。ユーザーが明示的に呼び出す。
  */
 
 import { existsSync, lstatSync, readlinkSync, readdirSync, rmdirSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
@@ -56,8 +56,8 @@ function info(msg) {
 }
 
 /**
- * git rev-parse --git-common-dirでmain worktreeのrootを算出。
- * 失敗時はnullを返す（呼び出し側が処理）。
+ * git rev-parse --git-common-dir により main worktree ルートを算出。
+ * 失敗時は null 返却 (呼び出し元が処理)。
  */
 function resolveMainWorktreeRoot(cwd) {
   try {
@@ -67,8 +67,8 @@ function resolveMainWorktreeRoot(cwd) {
       stdio: ['ignore', 'pipe', 'ignore'],
     }).trim();
     if (!commonDir) return null;
-    // common-dirはmain repoの.gitディレクトリ（worktree内では絶対パス、
-    // main内では".git"）。その親がmain worktreeのroot。
+    // common-dir は main repo の .git ディレクトリ (worktree 内では絶対パス、
+    // main 内では ".git")。その親が main worktree ルート。
     const absoluteCommonDir = resolve(cwd, commonDir);
     return dirname(absoluteCommonDir);
   } catch {
@@ -95,16 +95,16 @@ function normalizeHooksPath(cwd) {
     return;
   }
 
-  // .huskyを使わないプロジェクト（移植対象など）に強制すると、既存/将来の他のhooksメカニズム
-  // (lefthook / simple-git-hooks / 手動hooksPathなど) がsilentに無効化される可能性がある。
-  // .huskyディレクトリが実在する時のみ正規化対象とする。
+  // .husky を使用しないプロジェクト (移植対象など) に強制すると、既存/将来的な他の hooks メカニズム
+  // (lefthook / simple-git-hooks / 手動 hooksPath など) がサイレントに無効化される可能性がある。
+  // .husky ディレクトリが実在する場合のみ正規化の対象とする。
   if (!existsSync(join(cwd, '.husky'))) {
-    info(`[worktree-init] .huskyディレクトリ不在 — core.hooksPath正規化をSKIP（husky未使用プロジェクト、既存設定を保存）。`);
+    info(`[worktree-init] .husky ディレクトリ不在 — core.hooksPath 正規化 SKIP (husky 未使用プロジェクト、既存設定を保存)。`);
     return;
   }
 
   if (DRY_RUN) {
-    info(`[worktree-init] (dry-run) core.hooksPath正規化予定: ${current || '(unset)'} → .husky`);
+    info(`[worktree-init] (dry-run) core.hooksPath 正規化予定: ${current || '(unset)'} → .husky`);
     return;
   }
 
@@ -112,39 +112,39 @@ function normalizeHooksPath(cwd) {
     cwd,
     stdio: ['ignore', 'ignore', 'pipe'],
   });
-  info(`[worktree-init] core.hooksPath正規化: ${current || '(unset)'} → .husky`);
+  info(`[worktree-init] core.hooksPath 正規化: ${current || '(unset)'} → .husky`);
 }
 
 const mainRoot = resolveMainWorktreeRoot(WORKTREE);
 if (!mainRoot) {
-  fail(1, `[worktree-init] git common-dir解決失敗。cwd=${WORKTREE} がgit外部の可能性。`);
+  fail(1, `[worktree-init] git common-dir 解決失敗。cwd=${WORKTREE} が git 外部である可能性。`);
 }
 
 normalizeHooksPath(WORKTREE);
 
 if (mainRoot === WORKTREE) {
-  info(`[worktree-init] 現在の位置(${WORKTREE}) はmain worktreeです。systemディレクトリはすでにSSOT本体なのでsymlink不要。SKIP。`);
+  info(`[worktree-init] 現在の位置 (${WORKTREE}) は main worktree です。system ディレクトリはすでに SSOT 本体のため symlink 不要。SKIP。`);
   process.exit(0);
 }
 
-// @layout-resolver-allow — 本スクリプトはlayout-resolverの依存関係（symlink生成）を
-// 自ら bootstrap する責務を持つ。resolver呼び出し時に本worktreeのsystem pathが
-// すでにmain symlinkを指してしまうため、hardcodeが意図的。
+// @layout-resolver-allow — 本スクリプトは layout-resolver の依存関係 (symlink 生成) を
+// 自主的にブートストラップする責任を持つ。resolver 呼び出し時に本 worktree の system path が
+// すでに main symlink に向いているため、hardcode は意図的。
 const mainSystemDir = join(mainRoot, '.brief2dev', 'system'); // @layout-resolver-allow
 const localBriefDir = join(WORKTREE, '.brief2dev'); // @layout-resolver-allow
 const localSystemPath = join(localBriefDir, 'system');
 
-// mainのsystemディレクトリ不在 → symlink対象がないためgraceful SKIP（failではない）。
-//  - 外部移植target: cross-aidea SSOT (.brief2dev/system) 未使用が正常（transplant
-//    bundle adaptation_notes[0] が約束した動作 — 過去のfail(1)はその約束と矛盾していた）。
-//  - brief2dev自体: 初回orchestrator run前のfresh cloneなどsystem未生成状態。
-//  両ケースとも「共有するsystemがない → symlink no-op」で同じ意味（boundary-uniform）。
-//  PLAN.md自動生成 + git env注入はworktree隔離に有効なのでfinishInitへ進む。
-//  (brief2devでその後systemが生成されたらworktree-system-symlink-guardが不在を検知・案内する。)
+// main の system ディレクトリ不在 → symlink 対象がないため graceful に SKIP (fail しない)。
+//  - 外部移植 target: cross-aidea SSOT (.brief2dev/system) 未使用が正常 (transplant
+//    bundle adaptation_notes[0] が約束した動作 — 過去の fail(1) はその約束と矛盾していた)。
+//  - brief2dev 自体: 初回 orchestrator run 前の fresh clone など system 未生成状態。
+//  両ケースともに「共有する system なし → symlink no-op」で同一の意味 (boundary-uniform)。
+//  PLAN.md 自動生成 + git env 注入は worktree 隔離に有効なため finishInit に進行。
+//  (brief2dev で以降に system が生成された場合、worktree-system-symlink-guard が不在を検知・案内)。
 if (!existsSync(mainSystemDir)) {
   info(
-    `[worktree-init] mainのsystemディレクトリ不在 (${mainSystemDir}) — symlink段階をSKIP ` +
-      `（共有するcross-aidea SSOTなし）。PLAN.md + git env注入は続行。`,
+    `[worktree-init] main の system ディレクトリ不在 (${mainSystemDir}) — symlink 段階 SKIP ` +
+      `(共有する cross-aidea SSOT なし)。PLAN.md + git env 注入は継続進行。`,
   );
   finishInit();
 }
@@ -154,7 +154,7 @@ let status; // 'absent' | 'correct_symlink' | 'wrong_symlink' | 'empty_dir' | 'n
 let detail = null;
 
 if (!existsSync(localSystemPath)) {
-  // lstatもthrowすれば不在。ただし壊れたsymlinkもlstatは通過 → 別途処理。
+  // lstat も throw すれば不在。ただし、壊れた symlink も lstat は通過する → 別途処理。
   try {
     const st = lstatSync(localSystemPath);
     if (st.isSymbolicLink()) {
@@ -163,7 +163,7 @@ if (!existsSync(localSystemPath)) {
       status = resolved === mainSystemDir ? 'correct_symlink' : 'wrong_symlink';
       detail = { target, resolved };
     } else {
-      // existsSyncがfalseなのにlstat成功 = ほぼ発生しない。安全なfallback。
+      // existsSync が false なのに lstat が成功 = ほぼ発生しない。安全な fallback。
       status = 'absent';
     }
   } catch {
@@ -190,48 +190,48 @@ const relTargetFromLink = relative(dirname(localSystemPath), mainSystemDir);
 
 function createSymlink() {
   if (DRY_RUN) {
-    info(`[worktree-init] (dry-run) symlink生成予定: ${relSystemFromWorktree} → ${relTargetFromLink}`);
+    info(`[worktree-init] (dry-run) symlink 生成予定: ${relSystemFromWorktree} → ${relTargetFromLink}`);
     return;
   }
   if (!existsSync(localBriefDir)) {
     mkdirSync(localBriefDir, { recursive: true });
   }
-  // 相対パスsymlink — worktreeが別のマシンに移動しても動作するように（ただし
-  // 同じディレクトリ構造を前提。絶対パスより堅牢）。
+  // 相対パス symlink — worktree が別のマシンに移動しても動作するように (ただし、
+  // 同一のディレクトリ構造を想定。絶対パスより堅牢)。
   symlinkSync(relTargetFromLink, localSystemPath);
   info(`[worktree-init] 生成: ${relSystemFromWorktree} → ${relTargetFromLink}`);
 }
 
 /**
- * PLAN.mdがなければ標準テンプレートで自動生成。あれば保存。
- * DRY_RUNではSKIP。失敗はfail-open（worktree-initのsymlink責務には影響なし）。
+ * PLAN.md がなければ標準テンプレートで自動生成。あれば保存。
+ * DRY_RUN では SKIP。失敗は fail-open (worktree-init の symlink 責任には影響なし)。
  *
- * リグレッション項目: 直前の振り返り #1「PLAN.mdの配置場所の混同」— AIがworktreeごとに
- * mkdir + Writeサイクルを繰り返していたパターンをSSOT呼び出し1回で防止。
+ * デグレード項目: 直前の振り返り #1 "PLAN.md 位置の混乱" — AI が worktree ごとに mkdir
+ * + Write のサイクルを繰り返していたパターンを SSOT 呼び出し 1回で遮断。
  */
 function ensurePlanIfApplicable() {
   if (DRY_RUN) return;
   try {
     const result = ensureWorktreePlan(WORKTREE);
     if (result.created) {
-      info(`[worktree-init] PLAN.md自動生成: ${relative(WORKTREE, result.path)}`);
+      info(`[worktree-init] PLAN.md 自動生成: ${relative(WORKTREE, result.path)}`);
     } else {
-      info(`[worktree-init] PLAN.mdはすでに存在（保存）: ${relative(WORKTREE, result.path)}`);
+      info(`[worktree-init] PLAN.md すでに存在 (保存): ${relative(WORKTREE, result.path)}`);
     }
   } catch (e) {
-    info(`[worktree-init] PLAN.md自動生成をSKIP: ${e.message}`);
+    info(`[worktree-init] PLAN.md 自動生成 SKIP: ${e.message}`);
   }
 }
 
 const MAIN_LOG_LINES = 5;
 
 /**
- * mainの最近N件のcommitを表示する。AIが作業開始時にmainのhook/script CLIの
- * 変化（例: PR #309 `mark-pre-ship-confirmed --quality` 強制）を事前に把握できるようにする。
- * fetchは実行しない — ユーザーがfetchした時点のmainを表示するだけ。
+ * main の最近の N コミットを表示する。AI が作業開始時に main の hook/script CLI
+ * 変化 (例: PR #309 `mark-pre-ship-confirmed --quality` 強制) を事前認知できるように
+ * する。fetch は実行しない — ユーザーが fetch させた時点の main を表示するのみ。
  *
- * fail-open: git log失敗（worktreeがgit外部 / origin/main不在 / 権限不足など）
- * 時はsilent skip。worktree-initのsymlink責務には影響なし。
+ * fail-open: git log 失敗 (worktree が git 外部 / origin/main 不在 / 権限不足など)
+ * 時は silent skip。worktree-init の symlink 責任には影響なし。
  */
 function showMainRecentCommits() {
   if (DRY_RUN) return;
@@ -243,10 +243,10 @@ function showMainRecentCommits() {
     }).trim();
     if (log) {
       const indented = log.split('\n').map((l) => `  ${l}`).join('\n');
-      info(`[worktree-init] mainの最近${MAIN_LOG_LINES}件のcommit（作業開始前のレビュー推奨）:\n${indented}`);
+      info(`[worktree-init] main 最近の ${MAIN_LOG_LINES} コミット (作業開始前の確認を推奨):\n${indented}`);
     }
   } catch {
-    // origin/main不在 / git fetch未実行 / 権限不足 → silent fail-open
+    // origin/main 不在 / git fetch されていない / 権限不足 → silent fail-open
   }
 }
 
@@ -284,7 +284,7 @@ function injectGitEnv(worktreePath) {
 
     mkdirSync(dirname(settingsLocalPath), { recursive: true });
     writeFileSync(settingsLocalPath, JSON.stringify(merged, null, 2) + '\n');
-    info(`[worktree-init] settings.local.json環境変数(GIT_WORK_TREE, GIT_DIR)注入完了: ${relative(worktreePath, settingsLocalPath)}`);
+    info(`[worktree-init] settings.local.json 環境変数 (GIT_WORK_TREE, GIT_DIR) 注入完了: ${relative(worktreePath, settingsLocalPath)}`);
 
     // 2. Codex env injection (.codex/config.toml)
     const codexConfigPath = join(worktreePath, '.codex', 'config.toml');
@@ -321,7 +321,7 @@ function injectGitEnv(worktreePath) {
 
     mkdirSync(dirname(codexConfigPath), { recursive: true });
     writeFileSync(codexConfigPath, codexContent);
-    info(`[worktree-init] .codex/config.toml環境変数注入完了: ${relative(worktreePath, codexConfigPath)}`);
+    info(`[worktree-init] .codex/config.toml 環境変数注入完了: ${relative(worktreePath, codexConfigPath)}`);
 
     // 3. Antigravity CLI config injection (.agents/config.json)
     const agentsConfigPath = join(worktreePath, '.agents', 'config.json');
@@ -345,7 +345,7 @@ function injectGitEnv(worktreePath) {
 
     mkdirSync(dirname(agentsConfigPath), { recursive: true });
     writeFileSync(agentsConfigPath, JSON.stringify(agentsMerged, null, 2) + '\n');
-    info(`[worktree-init] .agents/config.json環境変数注入完了: ${relative(worktreePath, agentsConfigPath)}`);
+    info(`[worktree-init] .agents/config.json 環境変数注入完了: ${relative(worktreePath, agentsConfigPath)}`);
 
   } catch (e) {
     info(`[worktree-init] 環境変数注入失敗: ${e.message}`);
@@ -353,7 +353,7 @@ function injectGitEnv(worktreePath) {
 }
 
 /**
- * 成功caseの共通終了トリオ。新caseの追加時に呼び出し漏れを防止 (DRY)。
+ * 成功ケースの共通終了トリオ。新規ケース追加時の呼び出し漏れを遮断 (DRY)。
  */
 function finishInit() {
   injectGitEnv(WORKTREE);
@@ -364,7 +364,7 @@ function finishInit() {
 
 switch (status) {
   case 'correct_symlink':
-    info(`[worktree-init] すでに正常なsymlink: ${relSystemFromWorktree} → ${relTargetFromLink} (no-op)`);
+    info(`[worktree-init] すでに正常な symlink: ${relSystemFromWorktree} → ${relTargetFromLink} (no-op)`);
     finishInit();
     break;
 
@@ -375,7 +375,7 @@ switch (status) {
 
   case 'empty_dir':
     if (DRY_RUN) {
-      info(`[worktree-init] (dry-run) 空ディレクトリ削除後symlink生成予定`);
+      info(`[worktree-init] (dry-run) 空ディレクトリ除去のうえ symlink 生成予定`);
       process.exit(0);
     }
     rmdirSync(localSystemPath);
@@ -386,10 +386,10 @@ switch (status) {
   case 'wrong_symlink':
     fail(
       1,
-      `[worktree-init] CONFLICT: ${relSystemFromWorktree} はすでに別のsymlinkです。\n` +
-        `  現在のtarget : ${detail.target} (= ${detail.resolved})\n` +
-        `  必要なtarget: ${relTargetFromLink} (= ${mainSystemDir})\n` +
-        `解決: 意図されたlinkであればSKIP。そうでなければ次のコマンドで手動修正:\n` +
+      `[worktree-init] CONFLICT: ${relSystemFromWorktree} はすでに異なる symlink です。\n` +
+        `  現在の target : ${detail.target} (= ${detail.resolved})\n` +
+        `  必要な target: ${relTargetFromLink} (= ${mainSystemDir})\n` +
+        `解決: 意図された link であれば SKIP。そうでなければ次のコマンドで手動修正してください:\n` +
         `  rm '${localSystemPath}' && node ${process.argv[1]} --worktree '${WORKTREE}'`,
     );
     break;
@@ -397,24 +397,24 @@ switch (status) {
   case 'non_empty_dir':
     fail(
       1,
-      `[worktree-init] CONFLICT: ${relSystemFromWorktree} はファイルが存在する実ディレクトリです。\n` +
+      `[worktree-init] CONFLICT: ${relSystemFromWorktree} はファイルが存在する実際のディレクトリです。\n` +
         `  内容: ${detail.entries.slice(0, 5).join(', ')}${detail.entries.length > 5 ? ' ...' : ''}\n` +
-        `silentなデータ損失を防ぐため、自動変換は行いません。\n` +
+        `サイレントなデータ損失防止のため、自動変換は行いません。\n` +
         `解決オプション:\n` +
-        `  (a) このworktreeのsystem/の内容が不要なら — rm -rf '${localSystemPath}' 後に再実行\n` +
-        `  (b) mainのsystem/への統合が必要なら — 手動比較後mainへコピー、その後rm -rf '${localSystemPath}' 後に再実行\n` +
-        `  (c) 本worktreeのみ隔離されたsystemが必要なら — symlinkメカニズム不使用。R-CM-030違反となるため非推奨。`,
+        `  (a) この worktree の system/ の内容が不要な場合 — rm -rf '${localSystemPath}' の後に再実行\n` +
+        `  (b) main の system/ へのマージが必要な場合 — 手動で比較した後に main へコピーし、その後に rm -rf '${localSystemPath}' して再実行\n` +
+        `  (c) 本 worktree のみで隔離された system が必要な場合 — symlink メカニズムを使用しない。R-CM-030 違反となるため非推奨。`,
     );
     break;
 
   case 'file':
     fail(
       1,
-      `[worktree-init] CONFLICT: ${relSystemFromWorktree} はファイルです（ディレクトリまたはsymlinkを想定）。\n` +
-        `解決: rm '${localSystemPath}' 後に再実行。`,
+      `[worktree-init] CONFLICT: ${relSystemFromWorktree} はファイルです (ディレクトリまたは symlink を想定)。\n` +
+        `解決: rm '${localSystemPath}' の後に再実行。`,
     );
     break;
 
   default:
-    fail(2, `[worktree-init] internal: 不明な状態 — ${status}`);
+    fail(2, `[worktree-init] internal: 未知の状態 — ${status}`);
 }
