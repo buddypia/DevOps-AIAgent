@@ -13,7 +13,8 @@ describe("market agent display names", () => {
       { id: "security-sentinel", name: "セキュリティ監査役" },
       { id: "ux-guildmaster", name: "UX設計役" },
       { id: "observability-oracle", name: "運用観測役" },
-      { id: "release-guardian", name: "リリース守護者" }
+      { id: "release-guardian", name: "リリース守護者" },
+      { id: "merge-steward", name: "マージ執事" }
     ]);
   });
 });

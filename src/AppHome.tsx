@@ -6,6 +6,7 @@ import Callout from "./Callout.js";
 import EvidenceDashboard, { EvidenceKpiHighlights } from "./EvidenceDashboard.js";
 import IncidentDrillPanel from "./IncidentDrillPanel.js";
 import MissionControl from "./MissionControl.js";
+import MergeStewardPanel from "./MergeStewardPanel.js";
 import OpsAgentConsole from "./OpsAgentConsole.js";
 import RosterHighlights from "./RosterHighlights.js";
 import WorkflowDiagram from "./WorkflowDiagram.js";
@@ -22,6 +23,7 @@ type HealthInfo = {
   geminiMode?: string;
   opsAgent?: { enabled?: boolean; runStore?: string; executableAgents?: number };
   missionControl?: { enabled?: boolean };
+  mergeSteward?: { configured?: boolean; repository?: string };
 };
 
 type ExternalDelegationResponse =
@@ -279,6 +281,8 @@ export default function AppHome() {
         </div>
         <OpsAgentConsole refreshSignal={refreshSignal} onRunSettled={handleActivitySettled} />
       </section>
+
+      <MergeStewardPanel configured={health?.mergeSteward?.configured} repository={health?.mergeSteward?.repository} />
 
       <section className="network" aria-label="外部エージェント連携">
         <div className="section-head">

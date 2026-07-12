@@ -1,7 +1,7 @@
 # 022-merge-steward: Merge Steward
 
-> **状態**: UI承認待ち | **優先度**: P0 | **更新日**: 2026-07-12
-> **SPECバージョン**: v1.0 | **機能タイプ**: UI / GitHub lifecycle / Gemini checker
+> **状態**: 実装・最終検証 | **優先度**: P0 | **更新日**: 2026-07-13
+> **SPECバージョン**: v1.2 | **機能タイプ**: UI / GitHub lifecycle / Gemini checker
 
 ## 0. AI実装契約
 
@@ -29,7 +29,7 @@ Vite + React + TypeScriptのUI、ExpressのAPI、Zodの入力契約、既存Gemi
 | Agent Job | `server/agentJobs.ts` | 🔄 | maker/checker用のread-only評価job |
 | Market | `src/market.ts` | 🔄 | Merge Stewardカード |
 | UI | `src/MergeStewardPanel.tsx` | 🆕 | Issue/PR lifecycle panel |
-| UI wiring | `src/AppHome.tsx`, `src/styles.css` | 🔄 | 既存画面への配置・既存tokenによる表示 |
+| UI wiring | `src/AppHome.tsx`, `src/styles.css` | 🔄 | 既存画面への配置・操作承認コードによる書き込み保護 |
 | Asset | `public/assets/agents/merge-steward.png` | 🆕 | 1024px正方形ポートレート |
 | Config | `.env.example` | 🔄 | token/repositoryの説明のみ、値なし |
 | Test | `tests/mergeSteward.test.ts`, `tests/market.test.ts`, `tests/agentJobs.test.ts` | 🆕/🔄 | gate、API契約、カタログ |
@@ -66,20 +66,21 @@ data(READY) → confirmation → loading → merged/error
 data(HUMAN REVIEW/BLOCKED) ─X→ merge
 ```
 
-**境界**: UIはtokenを知らない。RouteはZod検証とrate limitを担当する。`mergeSteward.ts` はGitHub通信とpure gateを分離する。GitHubのレスポンスは必要フィールドだけへ正規化し、ログへbody/tokenを出さない。
+**境界**: UIはGitHub tokenを知らない。書き込み時だけ別管理の操作承認コードをheaderでRouteへ送る。RouteはZod検証、承認コードの定数時間比較、rate limitを担当する。`mergeSteward.ts` はGitHub通信とpure gateを分離する。GitHubのレスポンスは必要フィールドだけへ正規化し、ログへbody/token/承認コードを出さない。
 
 ### 0.3 Error Handling / Error & Rescue Map
 
 | Method/Path | Failure | Rescued | Test | User sees |
 |---|---|:---:|:---:|---|
 | Issue preview | 入力不正 | Y | Y | 対象フィールドと修正方法 |
+| POST issues/merge | 操作承認コード不足/不一致 | Y | Y | 401、GitHub APIを呼ばず停止 |
 | POST issues | token未設定/403/410/422 | Y | Y | Issueを作成できない理由と設定確認 |
-| PR evaluate | 404/timeout/rate limit/partial evidence | Y | Y | BLOCKEDまたはPARTIAL、再試行 |
+| PR evaluate | 404/timeout/rate limit/件数不完全 | Y | Y | API失敗は安全エラー、件数不完全はBLOCKED |
 | PR merge | non-READY | Y | Y | gate阻害条件、API非呼出し |
 | PR merge | head SHA変化 | Y | Y | 再評価が必要 |
 | PR merge | 403/405/409/422 | Y | Y | GitHub保護条件により停止 |
 
-Silent failureは許可しない。外部APIの一部取得だけ失敗した場合もREADYにせず、`partial` + `blocked` とする。
+Silent failureは許可しない。外部API取得が1つでも失敗した場合は評価を失敗させ、GitHub書き込みを呼ばない。取得成功後に合計件数の不一致を検出した場合はBLOCKEDとする。
 
 ### 0.4 Data Schema
 
@@ -95,6 +96,7 @@ interface MergeEvaluationReceipt {
   checks: { total: number; successful: number; pending: number; failed: number };
   approvals: number;
   mergeable: boolean | null;
+  mergeState: string;
   highRiskFiles: string[];
   blockers: string[];
   evidence: string[];
@@ -108,20 +110,20 @@ interface MergeEvaluationReceipt {
 
 | Method | Path | Auth | Request | Success |
 |---|---|---|---|---|
-| POST | `/api/merge-steward/issues/preview` | 既存API境界 | title 1-160、problem/evidence/acceptance各上限 | draft body、duplicate query、writeなし |
-| POST | `/api/merge-steward/issues` | 既存API境界 + server token | preview payload、`confirm:true` | issue number/url、receipt |
+| POST | `/api/merge-steward/issues/preview` | 既存API境界 | title 4-160、problem 8-4000、evidence/acceptance各上限 | draft body、duplicate query、writeなし |
+| POST | `/api/merge-steward/issues` | `x-merge-steward-token` + server GitHub token | preview payload、`confirm:true` | issue number/url、receipt |
 | POST | `/api/merge-steward/pulls/evaluate` | 既存API境界 | pullNumber | normalized evidence、verdict、receipt |
-| POST | `/api/merge-steward/pulls/merge` | 既存API境界 + server token | pullNumber、headSha、receipt、`confirm:true` | merged、merge SHA、url |
+| POST | `/api/merge-steward/pulls/merge` | `x-merge-steward-token` + server GitHub token | pullNumber、headSha、baseBranch、receipt、`confirm:true` | merged、merge SHA、url |
 
-共通エラーは `{ ok:false, error:{ code, message, retryable } }`。400入力不正、401/403設定/権限、404対象なし、409 SHA/状態競合、422 GitHub拒否、429 rate limit、502外部API不正、503未設定/一時障害。
+共通エラーは `{ ok:false, error:{ code, message, retryable } }`。400入力不正、401 `action_unauthorized`（操作承認失敗）、403 GitHub権限、404対象なし、409 SHA/状態競合、422 GitHub拒否、429 rate limit、502外部API不正、503未設定/一時障害。
 
 ### 0.6 NFR
 
-- GitHub fetchは6秒timeout、最大ページ件数を制限する。
-- 書き込みは10分あたり5回、mergeは10分あたり2回を上限にする。
+- GitHub fetchは6秒timeout、1種類100件まで取得する。files/checksは合計件数と一致せず、reviewsが100件に達したらBLOCKEDにする。
+- プロセス内のbest-effort guardとして、PR評価は10分あたり30回、Issue書き込みは5回、mergeは2回を上限にする。Cloud Run instance横断の厳密な上限ではない。
 - Issue createにはclient-generated idempotency markerを本文へ含め、実行前にopen issueを検索する。
-- token値はレスポンス、receipt、ログ、Gemini promptに含めない。
-- evaluationは同じPR/head SHAで再生成可能なdeterministic verdictを返す。
+- GitHub tokenと操作承認コードはレスポンス、receipt、ログ、Gemini promptに含めない。操作成功後はUI stateから消去する。
+- evaluationは同じPR/head SHA/base branch/GitHub保護状態で再生成可能なdeterministic verdictを返す。
 - UIはキーボード操作、focus-visible、reduced-motion、モバイル1列を維持する。
 
 ### 0.7 AI Logic & Prompts
@@ -130,12 +132,13 @@ makerは正規化済みのPR証拠のみから変更リスクと説明文を作�
 
 ### 0.8 Safety & Guardrails
 
-- 自動マージ禁止: `.github/workflows/**`, `infra/**`, `**/*auth*`, `**/*secret*`, `**/migrations/**`, lockfileを含む依存更新。
-- 競合、draft、mergeable=false/null、失敗/保留check、approvals不足、変更ファイル取得失敗はREADY不可。
-- merge APIには評価時head SHAを渡し、直前再取得結果と一致させる。
+- 自動マージ禁止: `.github/workflows/**`, GitHubが認識する各`CODEOWNERS`、`infra/**`, `**/*auth*`, `**/*permission*`, `**/*secret*`, `**/migrations/**`, `package.json`, lockfileを含む依存更新。
+- 競合、draft、mergeable=false/null、GitHub `mergeable_state != clean`、失敗/保留check、approvals不足、証拠不完全はREADY不可。`mergeable_state=clean`をbranch protection/rulesetの必須check・必要review数の満足証拠とする。
+- merge APIには評価時head SHA/base branch/receiptを渡し、直前再取得結果と一致させる。
 - GitHub APIの保護拒否を再試行で迂回しない。
 - same actorのmaker/checker結果だけでreview approvalを代替しない。
 - 任意repository入力は受けず、`OPS_GITHUB_REPO` allowlistの1リポジトリに限定する。
+- Issue作成とmergeは、GitHub tokenと別の32文字以上の`OPS_MERGE_STEWARD_ACTION_TOKEN`を必須とし、ハッシュの定数時間比較で照合する。
 
 ### 0.9 Design Tokens
 
@@ -192,7 +195,7 @@ BRIEF AC-01〜AC-06を同一IDで継承する。各ACは §0.1.1 のテストへ
 ### Exception Flows / Business Rules
 
 1. Issue書き込みはpreviewなし、`confirm !== true`、duplicate検出時に実行しない。
-2. PR evidenceのpartial responseは画面表示できるが最終verdictはBLOCKED。
+2. 取得件数が不完全なPR evidenceはBLOCKEDと根拠を表示する。GitHub API自体の失敗/形式不正は書き込みせず502の安全エラーとする。
 3. high-risk fileはHUMAN REVIEW。CI失敗、競合、draft、SHA不一致はBLOCKED。
 4. GitHub review approvalはAI checkerとは別物であり、必要数を満たすまでREADYにしない。
 5. merge成功後はreceiptとGitHub URLを表示し、同じreceiptの再実行を拒否する。
@@ -203,7 +206,7 @@ BRIEF AC-01〜AC-06を同一IDで継承する。各ACは §0.1.1 のテストへ
 |---|:---:|---|---|
 | GitHub Issues REST API | yes | GitHub Docs / 2026-07-12 | Issues: write、410/422、secondary rate limit |
 | GitHub Pull Requests REST API | yes | GitHub Docs / 2026-07-12 | Contents: write、SHA 409、merge 405/422 |
-| Protected branches / required checks | yes | GitHub Docs / 2026-07-12 | 保護条件を迂回せずGitHub拒否を最終停止として扱う |
+| Protected branches / required checks | yes | GitHub Docs / 2026-07-12 | `mergeable_state=clean`を必須とし、保護条件を迂回できるtokenは使わない |
 | Gemini maker/checker | yes | `server/opsAgent.ts` | 未設定時はpure gateのみ、AIはmerge権限を持たない |
 
 ## 4. Screen Docs
@@ -232,6 +235,7 @@ BRIEF AC-01〜AC-06を同一IDで継承する。各ACは §0.1.1 のテストへ
 - `merge_steward.pull.blocked`: マージを停止しました
 - `merge_steward.pull.stale`: PRが更新されています。再評価してください
 - `merge_steward.token_missing`: GitHub連携が未設定です
+- `merge_steward.action_unauthorized`: 操作承認コードを確認してください
 
 ## 6.5 Product Requirements
 
@@ -253,3 +257,5 @@ BRIEF AC-01〜AC-06を同一IDで継承する。各ACは §0.1.1 のテストへ
 | 日付 | 版 | 変更 |
 |---|---|---|
 | 2026-07-12 | v1.0 | 承認済みBRIEFを実装契約へ変換 |
+| 2026-07-13 | v1.1 | 書き込み用操作承認コードと100件超の証拠不足をBLOCKEDにする安全契約を追加 |
+| 2026-07-13 | v1.2 | GitHub保護状態、review完全性、base branch receipt、高リスクパスをDeepレビューに合わせて強化 |

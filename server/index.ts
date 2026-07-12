@@ -6,6 +6,16 @@ import { z } from "zod";
 import { ipAllowlistMiddleware, ipAllowlistSummary } from "./ipAllowlist.js";
 import { discoverAgentCardFromUrl } from "./agentCardDiscovery.js";
 import { delegateExternalAgent } from "./externalAgent.js";
+import {
+  IssueCreateSchema,
+  IssueDraftSchema,
+  MergeStewardError,
+  PullEvaluateSchema,
+  PullMergeSchema,
+  actionTokenMatches,
+  createMergeSteward,
+  previewIssue
+} from "./mergeSteward.js";
 
 import { localGeminiRecommendation, recommendSquad } from "../src/agentEngine.js";
 import { MARKET_AGENTS } from "../src/market.js";
@@ -34,6 +44,49 @@ const logLister = opsConfig.project ? createLogLister() : null;
 const fetchOpsEvidence = opsConfig.project && logLister ? createLoggingEvidenceFetcher(opsConfig, logLister) : null;
 const readTextFile = createDefaultReadTextFile();
 const OPS_AGENT_ID = "cloud-run-sre";
+const MERGE_STEWARD_REPOSITORY = process.env.OPS_GITHUB_REPO || SUBMISSION_PROOF.publicGitHubUrl.replace(/^https:\/\/github\.com\//, "");
+
+function mergeSteward() {
+  return createMergeSteward({
+    repository: MERGE_STEWARD_REPOSITORY,
+    token: process.env.OPS_GITHUB_TOKEN || "",
+    fetchImpl: fetch
+  });
+}
+
+const MERGE_STEWARD_RATE_LIMITS = {
+  evaluate: { max: 30, starts: [] as number[] },
+  issue: { max: 5, starts: [] as number[] },
+  merge: { max: 2, starts: [] as number[] }
+};
+function mergeStewardRateLimited(kind: keyof typeof MERGE_STEWARD_RATE_LIMITS) {
+  const now = Date.now();
+  const limit = MERGE_STEWARD_RATE_LIMITS[kind];
+  while (limit.starts.length > 0 && now - limit.starts[0] > 10 * 60_000) limit.starts.shift();
+  if (limit.starts.length >= limit.max) return true;
+  limit.starts.push(now);
+  return false;
+}
+
+function sendMergeStewardError(res: express.Response, error: unknown) {
+  if (error instanceof MergeStewardError) {
+    res.status(error.httpStatus).json({ ok: false, error: { code: error.code, message: error.message, retryable: error.retryable } });
+    return;
+  }
+  if (error instanceof z.ZodError) {
+    res.status(400).json({ ok: false, error: { code: "invalid_request", message: "入力内容を確認してください。", retryable: false }, issues: error.issues });
+    return;
+  }
+  res.status(500).json({ ok: false, error: { code: "merge_steward_failed", message: "Merge Stewardの処理に失敗しました。", retryable: true } });
+}
+
+function mergeStewardWriteAuthorized(req: express.Request) {
+  return actionTokenMatches(req.header("x-merge-steward-token"), process.env.OPS_MERGE_STEWARD_ACTION_TOKEN);
+}
+
+function mergeStewardConfigured() {
+  return Boolean(process.env.OPS_GITHUB_TOKEN && (process.env.OPS_MERGE_STEWARD_ACTION_TOKEN?.length ?? 0) >= 32);
+}
 
 // ハードストップ: ラン生成レート制限 (10分窓で最大18ラン。broker委任の連鎖とミッションの自律実行分を含む)
 const RUN_RATE_LIMIT = { windowMs: 10 * 60_000, max: 18 };
@@ -429,6 +482,10 @@ app.get("/healthz", (_req, res) => {
       activeMission: activeMissionId,
       maxStepsPerMission: 5
     },
+    mergeSteward: {
+      configured: mergeStewardConfigured(),
+      repository: MERGE_STEWARD_REPOSITORY
+    },
     ipAllowlist: ipAllowlistSummary
   });
 });
@@ -451,6 +508,10 @@ app.get("/api/healthz", (_req, res) => {
       enabled: Boolean(opsGenAi),
       activeMission: activeMissionId,
       maxStepsPerMission: 5
+    },
+    mergeSteward: {
+      configured: mergeStewardConfigured(),
+      repository: MERGE_STEWARD_REPOSITORY
     },
     ipAllowlist: ipAllowlistSummary
   });
@@ -482,6 +543,75 @@ app.post("/api/external-agent/delegate", async (req, res) => {
     return;
   }
   res.json(result);
+});
+
+app.post("/api/merge-steward/issues/preview", (req, res) => {
+  const parsed = IssueDraftSchema.safeParse(req.body);
+  if (!parsed.success) {
+    sendMergeStewardError(res, parsed.error);
+    return;
+  }
+  res.json({ ok: true, preview: previewIssue(parsed.data), repository: MERGE_STEWARD_REPOSITORY });
+});
+
+app.post("/api/merge-steward/issues", async (req, res) => {
+  if (!mergeStewardWriteAuthorized(req)) {
+    res.status(401).json({ ok: false, error: { code: "action_unauthorized", message: "実行承認コードを確認してください。", retryable: false } });
+    return;
+  }
+  const parsed = IssueCreateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    sendMergeStewardError(res, parsed.error);
+    return;
+  }
+  if (mergeStewardRateLimited("issue")) {
+    res.status(429).json({ ok: false, error: { code: "merge_steward_rate_limited", message: "Issue作成は10分に5回までです。", retryable: true } });
+    return;
+  }
+  try {
+    const issue = await mergeSteward().createIssue(parsed.data);
+    res.status(issue.created ? 201 : 200).json({ ok: true, issue });
+  } catch (error) {
+    sendMergeStewardError(res, error);
+  }
+});
+
+app.post("/api/merge-steward/pulls/evaluate", async (req, res) => {
+  const parsed = PullEvaluateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    sendMergeStewardError(res, parsed.error);
+    return;
+  }
+  if (mergeStewardRateLimited("evaluate")) {
+    res.status(429).json({ ok: false, error: { code: "merge_steward_rate_limited", message: "PR評価は10分に30回までです。", retryable: true } });
+    return;
+  }
+  try {
+    res.json({ ok: true, evaluation: await mergeSteward().evaluatePull(parsed.data.pullNumber) });
+  } catch (error) {
+    sendMergeStewardError(res, error);
+  }
+});
+
+app.post("/api/merge-steward/pulls/merge", async (req, res) => {
+  if (!mergeStewardWriteAuthorized(req)) {
+    res.status(401).json({ ok: false, error: { code: "action_unauthorized", message: "実行承認コードを確認してください。", retryable: false } });
+    return;
+  }
+  const parsed = PullMergeSchema.safeParse(req.body);
+  if (!parsed.success) {
+    sendMergeStewardError(res, parsed.error);
+    return;
+  }
+  if (mergeStewardRateLimited("merge")) {
+    res.status(429).json({ ok: false, error: { code: "merge_steward_rate_limited", message: "マージ実行は10分に2回までです。", retryable: true } });
+    return;
+  }
+  try {
+    res.json({ ok: true, result: await mergeSteward().mergePull(parsed.data) });
+  } catch (error) {
+    sendMergeStewardError(res, error);
+  }
 });
 
 app.post("/api/recommend", async (req, res) => {
