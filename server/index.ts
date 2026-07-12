@@ -28,6 +28,7 @@ import { createMission, executeMission } from "./missionAgent.js";
 import { createGenAiClient, createLogLister, createLoggingEvidenceFetcher, createRun, executeAgentRun, getOpsConfig } from "./opsAgent.js";
 import { createRunStore } from "./runStore.js";
 import { INCIDENT_DRILL_SCENARIOS, toIncidentDrillScenarioView } from "./incidentDrill.js";
+import { A2A_AUTH_HEADER, a2aAuthConfigured, a2aRequestAuthorized } from "./a2aAuth.js";
 import type { JobContext } from "./agentJobs.js";
 import type { Mission, MissionCatalogEntry } from "./missionAgent.js";
 import type { OpsAgentRun } from "./opsAgent.js";
@@ -38,6 +39,7 @@ const host = process.env.HOST || "0.0.0.0";
 const model = process.env.GEMINI_MODEL || "gemini-3.5-flash";
 
 const opsConfig = getOpsConfig();
+const a2aEnabled = a2aAuthConfigured();
 const opsGenAi = createGenAiClient(opsConfig);
 const runStore = createRunStore(opsConfig.project, process.env.OPS_RUN_STORE);
 const logLister = opsConfig.project ? createLogLister() : null;
@@ -482,6 +484,7 @@ app.get("/healthz", (_req, res) => {
       activeMission: activeMissionId,
       maxStepsPerMission: 5
     },
+    a2a: { enabled: a2aEnabled, authHeader: A2A_AUTH_HEADER },
     mergeSteward: {
       configured: mergeStewardConfigured(),
       repository: MERGE_STEWARD_REPOSITORY
@@ -509,6 +512,7 @@ app.get("/api/healthz", (_req, res) => {
       activeMission: activeMissionId,
       maxStepsPerMission: 5
     },
+    a2a: { enabled: a2aEnabled, authHeader: A2A_AUTH_HEADER },
     mergeSteward: {
       configured: mergeStewardConfigured(),
       repository: MERGE_STEWARD_REPOSITORY
@@ -854,6 +858,14 @@ app.get("/.well-known/agent-card.json", (req, res) => {
 });
 
 app.post("/a2a", async (req, res) => {
+  if (!a2aEnabled) {
+    res.status(503).json({ jsonrpc: "2.0", id: req.body?.id ?? null, error: { code: "a2a_disabled", message: "A2A endpoint is disabled until an action token is configured." } });
+    return;
+  }
+  if (!a2aRequestAuthorized(req.header(A2A_AUTH_HEADER))) {
+    res.status(401).json({ jsonrpc: "2.0", id: req.body?.id ?? null, error: { code: "a2a_unauthorized", message: "A2A action token is required." } });
+    return;
+  }
   const id = typeof req.body?.id === "undefined" ? randomUUID() : req.body.id;
   const method = String(req.body?.method || "message/send");
   const text =

@@ -39,8 +39,11 @@ jobs:
           curl -fsSL "${target}/" | grep -E 'Agent Guild|A2A Agent Marketplace'
           # 実行ラン一覧API (Firestore永続化) が応答する
           curl -fsSL "${target}/api/agent-runs?limit=5" | jq -e 'has("runs")'
-          # A2A JSON-RPC契約: message/send が有効応答を返す
-          curl -fsSL -X POST "${target}/a2a" \
+          # A2Aは無認証の公開実行を拒否する（既定は停止）。
+          a2a_response="$(mktemp)"
+          a2a_status="$(curl -sS -o "${a2a_response}" -w '%{http_code}' -X POST "${target}/a2a" \
             -H 'Content-Type: application/json' \
-            --data '{"jsonrpc":"2.0","id":"verify","method":"message/send","params":{"message":{"role":"user","parts":[{"kind":"text","text":"A2A Cloud Run Gemini DevOps"}]}}}' \
-            | jq -e '.jsonrpc == "2.0" and .result.status == "completed" and (.result.message.parts[0].data.executableSkillIds | length) == 8'
+            --data '{"jsonrpc":"2.0","id":"verify","method":"message/send","params":{"message":{"role":"user","parts":[{"kind":"text","text":"A2A Cloud Run Gemini DevOps"}]}}}')"
+          test "${a2a_status}" = "503"
+          jq -e '.error.code == "a2a_disabled"' "${a2a_response}"
+          rm -f "${a2a_response}"
