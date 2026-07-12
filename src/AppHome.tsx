@@ -8,8 +8,10 @@ import IncidentDrillPanel from "./IncidentDrillPanel.js";
 import MissionControl from "./MissionControl.js";
 import OpsAgentConsole from "./OpsAgentConsole.js";
 import RosterHighlights from "./RosterHighlights.js";
+import WorkflowDiagram from "./WorkflowDiagram.js";
 import { MAX_CUSTOM_AGENTS } from "./customAgent.js";
 import { SUBMISSION_PROOF } from "./submission.js";
+
 
 import type { AgentCardImportResult } from "./customAgent.js";
 import type { AgentIdentity } from "./MissionControl.js";
@@ -206,8 +208,11 @@ export default function AppHome() {
 
       <EvidenceDashboard summary={evidence} />
 
+      <WorkflowDiagram />
+
       <section className="how-it-works" aria-labelledby="how-it-works-title">
         <div className="section-head compact-head">
+
           <p className="section-kicker">この画面で起きること</p>
           <h2 id="how-it-works-title">目的を入力すると、調査から結果まで進みます</h2>
           <p>画面上では、調査の進み具合・見つかったこと・その根拠を順番に確認できます。</p>
