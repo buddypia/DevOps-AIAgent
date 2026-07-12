@@ -546,7 +546,7 @@
 
 ## GCP Surface
 
-- Cloud Run service: `a2a-agent-marketplace`
+- Cloud Run service: `agent-guild`
 - Health check: `/api/healthz`
 - Market intel: `/api/market-intel`
 - Moat stress: `/api/moat-stress`

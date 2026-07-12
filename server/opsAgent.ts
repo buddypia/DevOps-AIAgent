@@ -11,11 +11,11 @@ const OpsConfigSchema = z.object({
   project: z.string().min(1).optional(),
   location: z.string().min(1).default("asia-northeast1"),
   model: z.string().min(1).default("gemini-3.5-flash"),
-  targetService: z.string().regex(/^[a-z0-9-]{1,63}$/).default("a2a-agent-marketplace"),
+  targetService: z.string().regex(/^[a-z0-9-]{1,63}$/).default("agent-guild"),
   // allowlist エントリ: "service" または "<gcp-project>/service" (別GCPプロジェクトのログを対象化)
   targetAllowlist: z
     .array(z.string().regex(/^(?:[a-z][a-z0-9-]{4,28}[a-z0-9]\/)?[a-z0-9-]{1,63}$/))
-    .default(["a2a-agent-marketplace", "aitech-good-a13973/vibementor-ai"]),
+    .default(["agent-guild", "aitech-good-a13973/vibementor-ai"]),
   lookbackMinutes: z.number().int().min(5).max(1440).default(180),
   // 概算単価 (USD / 1M tokens)。実測請求ではなく見積り表示用
   costInputPerMTok: z.number().nonnegative().default(0.3),

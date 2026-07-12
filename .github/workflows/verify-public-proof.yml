@@ -36,7 +36,7 @@ jobs:
             any(.skills[]; .id == "agent-card.discover")
           '
           # ホーム画面が配信されている
-          curl -fsSL "${target}/" | grep -E 'Agent Market'
+          curl -fsSL "${target}/" | grep -E 'Agent Guild|A2A Agent Marketplace'
           # 実行ラン一覧API (Firestore永続化) が応答する
           curl -fsSL "${target}/api/agent-runs?limit=5" | jq -e 'has("runs")'
           # A2A JSON-RPC契約: message/send が有効応答を返す

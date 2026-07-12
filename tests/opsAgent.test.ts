@@ -22,7 +22,7 @@ function makeEvidence(id: string, overrides: Partial<LogEvidence> = {}): LogEvid
     id,
     timestamp: "2026-07-10T00:00:00Z",
     severity: "ERROR",
-    service: "a2a-agent-marketplace",
+    service: "agent-guild",
     message: "upstream timeout to payments-api",
     ...overrides
   };
@@ -148,7 +148,7 @@ describe("executeAgentRun", () => {
   it("completes the full loop: evidence -> maker -> gate -> checker -> decide", async () => {
     const { genAi, calls } = makeGenAiStub([makerJson(["log-1"]), CHECKER_CONFIRM]);
     const store = createMemoryRunStore();
-    const run = createRun("cloud-run-sre", "a2a-agent-marketplace", "web", { config, genAi });
+    const run = createRun("cloud-run-sre", "agent-guild", "web", { config, genAi });
     const result = await executeAgentRun(run, {
       config,
       genAi,
@@ -173,7 +173,7 @@ describe("executeAgentRun", () => {
 
   it("rejects findings with fabricated citations via the objective gate", async () => {
     const { genAi } = makeGenAiStub([makerJson(["fake-id"]), CHECKER_CONFIRM]);
-    const run = createRun("cloud-run-sre", "a2a-agent-marketplace", "web", { config, genAi });
+    const run = createRun("cloud-run-sre", "agent-guild", "web", { config, genAi });
     const result = await executeAgentRun(run, {
       config,
       genAi,
@@ -189,7 +189,7 @@ describe("executeAgentRun", () => {
 
   it("drops findings the independent checker refutes (maker != checker)", async () => {
     const { genAi } = makeGenAiStub([makerJson(["log-1"]), CHECKER_REFUTE]);
-    const run = createRun("cloud-run-sre", "a2a-agent-marketplace", "web", { config, genAi });
+    const run = createRun("cloud-run-sre", "agent-guild", "web", { config, genAi });
     const result = await executeAgentRun(run, {
       config,
       genAi,
@@ -204,7 +204,7 @@ describe("executeAgentRun", () => {
 
   it("completes without calling Gemini when no evidence exists (cost 0)", async () => {
     const { genAi, calls } = makeGenAiStub([makerJson(["log-1"])]);
-    const run = createRun("cloud-run-sre", "a2a-agent-marketplace", "web", { config, genAi });
+    const run = createRun("cloud-run-sre", "agent-guild", "web", { config, genAi });
     const result = await executeAgentRun(run, {
       config,
       genAi,
@@ -221,7 +221,7 @@ describe("executeAgentRun", () => {
 
   it("fails with a hard stop when the time budget is exceeded", async () => {
     const { genAi } = makeGenAiStub([makerJson(["log-1"])]);
-    const run = createRun("cloud-run-sre", "a2a-agent-marketplace", "web", { config, genAi });
+    const run = createRun("cloud-run-sre", "agent-guild", "web", { config, genAi });
     const result = await executeAgentRun(run, {
       config,
       genAi,
@@ -237,7 +237,7 @@ describe("executeAgentRun", () => {
 
   it("marks findings uncertain instead of crashing when the checker call fails", async () => {
     const { genAi } = makeGenAiStub([makerJson(["log-1"]), "__THROW__"]);
-    const run = createRun("cloud-run-sre", "a2a-agent-marketplace", "web", { config, genAi });
+    const run = createRun("cloud-run-sre", "agent-guild", "web", { config, genAi });
     const result = await executeAgentRun(run, {
       config,
       genAi,
@@ -254,7 +254,7 @@ describe("executeAgentRun", () => {
 describe("getOpsConfig", () => {
   it("applies defaults and parses the allowlist", () => {
     const config = getOpsConfig({ OPS_TARGET_ALLOWLIST: "svc-a, svc-b" } as NodeJS.ProcessEnv);
-    expect(config.targetService).toBe("a2a-agent-marketplace");
+    expect(config.targetService).toBe("agent-guild");
     expect(config.targetAllowlist).toEqual(["svc-a", "svc-b"]);
     expect(config.model).toBe("gemini-3.5-flash");
   });
@@ -262,15 +262,15 @@ describe("getOpsConfig", () => {
   it("accepts project/service allowlist entries and defaults to the personal GCP target", () => {
     const config = getOpsConfig({ OPS_TARGET_ALLOWLIST: "svc-a,other-project/svc-b" } as NodeJS.ProcessEnv);
     expect(config.targetAllowlist).toEqual(["svc-a", "other-project/svc-b"]);
-    expect(getOpsConfig({} as NodeJS.ProcessEnv).targetAllowlist).toEqual(["a2a-agent-marketplace", "aitech-good-a13973/vibementor-ai"]);
+    expect(getOpsConfig({} as NodeJS.ProcessEnv).targetAllowlist).toEqual(["agent-guild", "aitech-good-a13973/vibementor-ai"]);
   });
 });
 
 describe("resolveTarget", () => {
-  const config = makeConfig({ targetAllowlist: ["a2a-agent-marketplace", "aitech-good-a13973/vibementor-ai"] });
+  const config = makeConfig({ targetAllowlist: ["agent-guild", "aitech-good-a13973/vibementor-ai"] });
 
   it("resolves a bare allowlist entry to the default project", () => {
-    expect(resolveTarget(config, "a2a-agent-marketplace")).toEqual({ service: "a2a-agent-marketplace", project: "test-project" });
+    expect(resolveTarget(config, "agent-guild")).toEqual({ service: "agent-guild", project: "test-project" });
   });
 
   it("resolves a project/service entry to its own project", () => {
@@ -278,12 +278,12 @@ describe("resolveTarget", () => {
   });
 
   it("falls back to the default target when the requested service is not allowlisted", () => {
-    expect(resolveTarget(config, "chiebukuro-app")).toEqual({ service: "a2a-agent-marketplace", project: "test-project" });
-    expect(resolveTarget(config, undefined)).toEqual({ service: "a2a-agent-marketplace", project: "test-project" });
+    expect(resolveTarget(config, "chiebukuro-app")).toEqual({ service: "agent-guild", project: "test-project" });
+    expect(resolveTarget(config, undefined)).toEqual({ service: "agent-guild", project: "test-project" });
   });
 
   it("handles an empty allowlist and empty service name without throwing", () => {
-    expect(resolveTarget(makeConfig({ targetAllowlist: [] }), "anything")).toEqual({ service: "a2a-agent-marketplace", project: "test-project" });
-    expect(resolveTarget(config, "")).toEqual({ service: "a2a-agent-marketplace", project: "test-project" });
+    expect(resolveTarget(makeConfig({ targetAllowlist: [] }), "anything")).toEqual({ service: "agent-guild", project: "test-project" });
+    expect(resolveTarget(config, "")).toEqual({ service: "agent-guild", project: "test-project" });
   });
 });

@@ -115,7 +115,7 @@ export default function AppHome() {
           </span>
           <div>
             <p className="brand-name">Agent Guild</p>
-            <p className="brand-tag">運用調査チーム / 実行結果ビュー</p>
+            <p className="brand-tag">A2A Agent Marketplace / DevOps Mission Control</p>
           </div>
         </div>
         <div className="top-status">
@@ -136,12 +136,12 @@ export default function AppHome() {
 
       <section className="hero-copy">
         <div className="hero-text">
-          <p className="hero-kicker">運用調査コンソール</p>
+          <p className="hero-kicker">A2A Agent Marketplace for DevOps Mission Control</p>
           <h1>
-            散らばった運用情報を、<span className="hero-accent">判断できる形</span>に。
+            必要なAIを選び、<span className="hero-accent">任せて検証する。</span>
           </h1>
           <p>
-            Cloud Run、CI、ログ、配信中の画面を調べ、何が起きているかと次の対応を根拠つきで整理します。
+            目標に合う専門エージェントを選抜し、A2Aで実行を委任。Cloud Run、CI、ログの証拠から次の対応を整理します。
           </p>
           <div className="hero-actions">
             <a className="btn-primary" href="#mission-control">

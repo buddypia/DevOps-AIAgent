@@ -1,6 +1,6 @@
 # brief2dev エコシステム移行記録
 
-`.tmp/ecosystem-extract`（brief2dev の `sample-web-app` から抽出されたエコシステム、622 ファイル / うち 564 ファイルが韓国語）から、本プロジェクト（**a2a-agent-marketplace** — Vite + React + Express + npm + TypeScript）に**コア統治セットを厳選し、日本語化・スタック適応して移行**した記録。
+`.tmp/ecosystem-extract`（brief2dev の `sample-web-app` から抽出されたエコシステム、622 ファイル / うち 564 ファイルが韓国語）から、本プロジェクト（**agent-guild** — Vite + React + Express + npm + TypeScript）に**コア統治セットを厳選し、日本語化・スタック適応して移行**した記録。
 
 移行プロトコルは `.tmp/ecosystem-extract/sample-web-app/.claude/rules/common/oss-transplant-protocol.md`（R-CM-015 = ユーザーが言及した「TRANSPLANT-GUIDE」に該当）に準拠:
 

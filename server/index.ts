@@ -281,13 +281,13 @@ function agentCard(baseUrl: string) {
 
   return {
     protocolVersion: "0.3.0",
-    name: "Agent-To-Agent Marketplace Broker",
+    name: "Agent Guild — A2A Marketplace Broker",
     description:
-      "必要な能力を持つAIエージェントを市場から探索し、スキル/MCP/A2A能力を数値化して、DevOps改善タスクを委任するブローカー。",
+      "Agent GuildのA2A Agent Marketplaceとして、必要な能力を持つAIエージェントを探索・編成し、DevOps改善タスクを委任するブローカー。",
     url: `${baseUrl}/a2a`,
     preferredTransport: "JSONRPC",
     provider: {
-      organization: "A2A Agent Marketplace",
+      organization: "Agent Guild",
       url: baseUrl
     },
     version: "0.1.0",
@@ -334,11 +334,11 @@ async function runGemini(projectBrief: string, selectedAgentIds: string[]): Prom
 
   const ai = opsGenAi.client;
   const prompt = [
-    "You are the strategy agent for an A2A AI agent marketplace product.",
+    "You are the strategy agent for Agent Guild, an A2A Agent Marketplace for DevOps Mission Control.",
     "Return strict JSON only. No markdown.",
     "",
     "Product:",
-    "Agent-To-Agent Marketplace | エージェント市場 | 必要な能力を持つAIを探し雇い連携する",
+    "Agent Guild | A2A Agent Marketplace for DevOps Mission Control | 必要なAIエージェントを選び、任せて検証する",
     "",
     "Mandatory technology:",
     "- A2A protocol style Agent Card and message delegation",
@@ -406,7 +406,7 @@ app.use(ipAllowlistMiddleware);
 app.get("/healthz", (_req, res) => {
   res.json({
     ok: true,
-    service: "a2a-agent-marketplace",
+    service: "agent-guild",
     model,
     agents: MARKET_AGENTS.length,
     geminiConfigured: Boolean(opsGenAi),
@@ -429,7 +429,7 @@ app.get("/healthz", (_req, res) => {
 app.get("/api/healthz", (_req, res) => {
   res.json({
     ok: true,
-    service: "a2a-agent-marketplace",
+    service: "agent-guild",
     model,
     agents: MARKET_AGENTS.length,
     geminiConfigured: Boolean(opsGenAi),
@@ -702,7 +702,7 @@ app.post("/a2a", async (req, res) => {
   const text =
     req.body?.params?.message?.parts?.find((part: { text?: string }) => typeof part.text === "string")?.text ||
     req.body?.params?.text ||
-    "AI agent marketplace request";
+    "Agent Guild mission request";
   const baseUrl = publicBaseUrl(req);
 
   // A2A実タスク: 実行済みラン/ミッションの状態照会 (state persistence 付き)
@@ -792,5 +792,5 @@ app.use((_req, res) => {
 
 app.listen(port, host, () => {
   const displayHost = host === "0.0.0.0" ? "127.0.0.1" : host;
-  console.log(`A2A Agent Marketplace listening on http://${displayHost}:${port}`);
+  console.log(`Agent Guild — A2A Agent Marketplace listening on http://${displayHost}:${port}`);
 });

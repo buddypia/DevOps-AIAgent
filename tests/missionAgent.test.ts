@@ -29,7 +29,7 @@ function makeRun(agentId: string, overrides: Partial<OpsAgentRun> = {}): OpsAgen
   return {
     id: `run-${agentId}`,
     agentId,
-    targetService: "a2a-agent-marketplace",
+    targetService: "agent-guild",
     trigger: "mission",
     status: "completed",
     phases: [],

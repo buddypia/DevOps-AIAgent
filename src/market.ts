@@ -14,10 +14,10 @@ export const CAPABILITY_LABELS: Record<CapabilityKey, string> = {
 };
 
 export const DEFAULT_PROJECT_BRIEF = [
-  "brief2dev を分析し、Agent-To-Agent Marketplace と組み合わせる。",
-  "必要な能力を持つAIを市場から探し、雇い、A2Aで連携させる。",
+  "brief2dev を分析し、Agent GuildのA2A Agent Marketplaceと組み合わせる。",
+  "必要な能力を持つAIエージェントを選び、A2Aで任せ、実行結果を検証する。",
   "Gemini 3.5 Flash でプロジェクトの弱点を診断し、Cloud Run へ届ける。",
-  "MCP/スキル/DevOps能力を数値化して、購入でプロジェクト改善が見える体験にする。"
+  "MCP/スキル/DevOps能力を数値化して、編成と実行によるプロジェクト改善が見える体験にする。"
 ].join("\n");
 
 export const MARKET_AGENTS: MarketAgent[] = [
@@ -187,7 +187,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
     skills: [
       { id: "contract-tests", label: "契約テスト", proof: "A2A/推薦エンジンの不変条件", score: 94 },
       { id: "fallback-tests", label: "鍵なし動作検証", proof: "Gemini未設定でもデモ継続", score: 91 },
-      { id: "score-tests", label: "数値化検証", proof: "購入前後の改善量を検査", score: 88 }
+      { id: "score-tests", label: "数値化検証", proof: "編成前後の改善量を検査", score: 88 }
     ],
     mcp: [
       { name: "vitest-runner", tools: ["run_unit", "coverage_summary"], maturity: 88 },
@@ -239,7 +239,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
     rarity: "epic",
     price: 34,
     headline: "調査結果を、迷わず読める画面に整える",
-    outcome: "能力値、購入効果、A2A連携が触った瞬間に伝わる",
+    outcome: "能力値、編成効果、A2A連携が触った瞬間に伝わる",
     color: "#b56576",
     accent: "#f6bd60",
     capabilities: {
@@ -256,7 +256,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
     },
     skills: [
       { id: "market-readable", label: "市場可視化", proof: "価格/レアリティ/能力バー", score: 98 },
-      { id: "game-loop", label: "購入ループ", proof: "雇う→改善→計画更新", score: 92 },
+      { id: "game-loop", label: "実行ループ", proof: "選ぶ→任せる→計画更新", score: 92 },
       { id: "dense-ui", label: "審査用密度", proof: "1画面で価値・技術・運用を見せる", score: 88 }
     ],
     mcp: [
@@ -291,7 +291,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
     },
     skills: [
       { id: "signal-radar", label: "シグナル抽出", proof: "ログ/CI/ユーザー入力を統合", score: 96 },
-      { id: "improvement-loop", label: "改善ループ", proof: "次に雇う能力を推薦", score: 89 },
+      { id: "improvement-loop", label: "改善ループ", proof: "次に任せる能力を推薦", score: 89 },
       { id: "runtime-evidence", label: "運用証跡", proof: "提出URLの稼働証拠を生成", score: 86 }
     ],
     mcp: [
