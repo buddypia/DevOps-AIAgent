@@ -34,7 +34,7 @@ Codex / Antigravity 向けの `.codex/hooks.json` / `.claude/hooks.json` は git
 * **概要**: エージェントが「実装完了」としてセッションを終了しようとした (`Stop` イベント) 瞬間に自動実行され、プログラムが品質基準を満たしているかを強制検証します。
 * **動作フロー**:
   1. `project-config.json` 内の `"commands"` キーをパースします。
-  2. 定義されている検証コマンド (`lint` / `typecheck` / `test` / `check_architecture` / `quality_check`) を順次実行します。
+  2. 定義されている検証コマンド (`typecheck` / `test` / `check_architecture`) を順次実行します。※ `quality_check` (= `make q.check`) は `typecheck` + `test` の再実行になり重複するため対象外。`lint` は現状 `null` のため実行されません。
   3. **[検証失敗時]**:
      * 失敗したエラーログとコマンド名をキャプチャします。
      * 各 CLI ツールが解釈できる差し戻し用 JSON（`{"decision": "block", "reason": "..."}`）を標準出力に返却します。
