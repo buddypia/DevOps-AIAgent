@@ -128,15 +128,10 @@ code {
 }
 
 .brand-mark {
-  display: grid;
-  place-items: center;
   width: 38px;
   height: 38px;
-  border-radius: 11px;
-  background: linear-gradient(140deg, var(--accent-dim), rgba(14, 116, 144, 0.16));
-  border: 1px solid var(--line-strong);
-  color: var(--accent);
-  font-size: 16px;
+  object-fit: contain;
+  flex: 0 0 auto;
 }
 
 .brand-name {
