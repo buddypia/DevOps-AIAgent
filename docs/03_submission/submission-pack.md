@@ -206,7 +206,7 @@ curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/external-evidence 
   --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"protopediaUrl":"https://protopedia.net/prototype/999999","videoUrl":"https://youtu.be/demo1234567"}'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/release-drift \
   -H 'Content-Type: application/json' \
-  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"targetUrl":"https://a2a-agent-marketplace-nxbw7of6cq-an.a.run.app"}'
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"targetUrl":"https://agent-guild-nxbw7of6cq-an.a.run.app"}'
 DRY_RUN=1 PROJECT_ID=$(gcloud config get-value project) REPO=buddypia/DevOps-AIAgent ./scripts/bootstrap_github_actions_deploy.sh
 PROJECT_ID=$(gcloud config get-value project) REPO=buddypia/DevOps-AIAgent ./scripts/bootstrap_github_actions_deploy.sh
 gh workflow run deploy-cloud-run.yml --ref main \
@@ -214,12 +214,12 @@ gh workflow run deploy-cloud-run.yml --ref main \
   -f service=agent-guild \
   -f repository=cloud-run-source-deploy \
   -f gemini_secret=gemini-api-key-a2a-marketplace \
-  -f target_url=https://a2a-agent-marketplace-nxbw7of6cq-an.a.run.app
+  -f target_url=https://agent-guild-nxbw7of6cq-an.a.run.app
 gh workflow run verify-public-proof.yml --ref main \
-  -f target_url=https://a2a-agent-marketplace-nxbw7of6cq-an.a.run.app
+  -f target_url=https://agent-guild-nxbw7of6cq-an.a.run.app
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/deploy-recovery \
   -H 'Content-Type: application/json' \
-  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"targetUrl":"https://a2a-agent-marketplace-nxbw7of6cq-an.a.run.app"}'
+  --data '{"projectBrief":"A2A Cloud Run Gemini DevOps","selectedAgentIds":["market-broker","gemini-strategist","cloud-run-sre"],"targetUrl":"https://agent-guild-nxbw7of6cq-an.a.run.app"}'
 curl -s ${PUBLIC_BASE_URL:-http://localhost:8080}/deploy-recovery | rg 'Deploy Recovery|Copy/Paste Commands'
 curl -s -X POST ${PUBLIC_BASE_URL:-http://localhost:8080}/api/demo-receipt \
   -H 'Content-Type: application/json' \
@@ -316,7 +316,7 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 
 - Public GitHub repository URL: <https://github.com/buddypia/DevOps-AIAgent>
 - GitHub Actions CI: <https://github.com/buddypia/DevOps-AIAgent/actions/workflows/ci.yml>
-- Deployed URL: <https://a2a-agent-marketplace-nxbw7of6cq-an.a.run.app>
+- Deployed URL: <https://agent-guild-nxbw7of6cq-an.a.run.app>
 - ProtoPedia work URL: needs final URL
 - Video URL: needs YouTube or Vimeo URL
 - Competitive Decision Matrix: `GET /competitive-decision-matrix`, `GET /api/competitive-decision-matrix`, `POST /api/competitive-decision-matrix`

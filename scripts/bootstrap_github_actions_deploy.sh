@@ -132,5 +132,5 @@ gh workflow run deploy-cloud-run.yml --ref main \\
   -f service=agent-guild \\
   -f repository=cloud-run-source-deploy \\
   -f gemini_secret=gemini-api-key-a2a-marketplace \\
-  -f target_url=https://a2a-agent-marketplace-xhdqpudx6a-an.a.run.app
+  -f target_url=https://agent-guild-nxbw7of6cq-an.a.run.app
 EOF
