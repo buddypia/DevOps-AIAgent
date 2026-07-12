@@ -49,3 +49,25 @@ raw/
 # --- end Worktree tooling ---
 
 .secret/
+
+# --- Transplanted local dev skill bundles (brief2dev) — not part of hackathon submission ---
+/.claude/.transplant-receipt.json
+/skills-lock.json
+/docs/_templates/
+/.claude/skills/feature-architect/
+/.claude/skills/feature-implementer/
+/.claude/skills/feature-spec-generator/
+/.claude/skills/feature-spec-updater/
+/.claude/skills/feature-status-sync/
+/.claude/skills/feature-wiring/
+/.claude/skills/mediabunny/
+/.claude/skills/remotion-best-practices/
+/.claude/skills/remotion-captions/
+/.claude/skills/remotion-create/
+/.claude/skills/remotion-interactivity/
+/.claude/skills/remotion-markup/
+/.claude/skills/remotion-render/
+/.claude/skills/remotion-saas/
+/.claude/skills/story-decomposer/
+/.claude/skills/ui-approval-gate/
+# --- end transplanted skill bundles ---
