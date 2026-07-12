@@ -71,3 +71,6 @@ raw/
 /.claude/skills/story-decomposer/
 /.claude/skills/ui-approval-gate/
 # --- end transplanted skill bundles ---
+
+# --- Standalone generated Remotion video project (not part of hackathon submission) ---
+/generated-video/
