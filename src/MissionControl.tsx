@@ -4,10 +4,12 @@ import { CircleAlert, ClipboardCheck, GitBranchPlus, GitPullRequest, Globe, Pack
 import AgentAvatar from "./AgentAvatar.js";
 import { MISSION_TEMPLATES } from "./missionTemplates.js";
 import ResultInspector from "./ResultInspector.js";
+import WorkflowDiagram from "./WorkflowDiagram.js";
 
 import type { MissionReportFindingView, MissionView } from "./missionTypes.js";
 
 export type AgentIdentity = { agentId: string; name: string; handle: string; color: string };
+
 
 const MISSION_STATUS_LABELS: Record<MissionView["status"], string> = {
   planning: "計画中",
@@ -73,6 +75,23 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
   const missionStale = selectedMission
     ? (selectedMission.status === "planning" || selectedMission.status === "running") && activeMissionId !== selectedMission.id
     : false;
+
+  const activeStepIndex = useMemo(() => {
+    if (!selectedMission) return null;
+    if (selectedMission.status === "completed") return 5; // すべて完了
+    if (selectedMission.status === "failed") return 5;
+    
+    // 実行中のステップを探す
+    const runningIdx = selectedMission.steps.findIndex((s) => s.status === "running");
+    if (runningIdx !== -1) return runningIdx;
+    
+    // 最初期または計画中の場合は、最初のステップ
+    const plannedIdx = selectedMission.steps.findIndex((s) => s.status === "planned");
+    if (plannedIdx !== -1) return plannedIdx;
+    
+    return null;
+  }, [selectedMission]);
+
 
   const refreshList = useCallback(async () => {
     try {
@@ -230,7 +249,10 @@ export default function MissionControl({ agents, onMissionSettled }: MissionCont
           ) : null}
           {selectedMission.error ? <p className="mc-message">{selectedMission.error}</p> : null}
 
+          <WorkflowDiagram activeStep={activeStepIndex} statusText={selectedMission.planSummary || undefined} />
+
           <ol className="mc-steps">
+
             {selectedMission.steps.map((step, index) => {
               const agent = agentOf(step.agentId);
               return (
