@@ -6,7 +6,7 @@ export const SUBMISSION_PROOF = {
   videoUrl: ""
 } as const;
 
-export const HACKATHON_SUBMISSION_DEADLINE = "2026-07-10T23:59:00+09:00";
+export const HACKATHON_SUBMISSION_DEADLINE = "2026-07-12T23:59:00+09:00";
 
 export type SubmissionUrlEvidence = {
   protopediaUrl?: string;

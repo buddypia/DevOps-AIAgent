@@ -231,7 +231,7 @@
 
 ## Final Submission Runway Surface
 
-- `POST /api/submission-runway`: 2026/7/10 23:59 JSTから逆算し、動画、ProtoPedia、構成図、Launch Gate、最終フォームをworkback planへ束ねる
+- `POST /api/submission-runway`: 2026/7/12 23:59 JSTから逆算し、動画、ProtoPedia、構成図、Launch Gate、最終フォームをworkback planへ束ねる
 - Tracks: winner proof、ProtoPedia assets、demo video、final launchをscore/status/due date/proof URL付きで返す
 - Evidence locks: Winner Packet、Submission Closeout、Submission Launch Gate、Release Drift Guardを提出直前の検収URLとして固定する
 - A2A payload: `submission.runway` skillとしてrunway score、readiness、days remaining、next action、endpoint群を返す
@@ -363,7 +363,7 @@
 - URL gate: ProtoPediaは `protopedia.net`、動画はYouTube/Vimeoのhttps URL形式を検証する
 - Final checklist: GitHub、Cloud Run、ProtoPedia、動画、findy_hackathonタグ、CI、MVP hard gates、本文、Judge Proof receiptを並べる
 - Submit packet: Findy提出フォームに貼るGitHub URL、デプロイ済みURL、ProtoPedia URL、動画URL、タグを返す
-- Final Submit Lock: GitHub URL、Cloud Run URL、ProtoPedia URL、ProtoPedia側の動画URL、findy_hackathonタグ、完成ステータス、Judge Proof receipt、2026/7/10 23:59 JST締切をready/missing/invalidで固定する
+- Final Submit Lock: GitHub URL、Cloud Run URL、ProtoPedia URL、ProtoPedia側の動画URL、findy_hackathonタグ、完成ステータス、Judge Proof receipt、2026/7/12 23:59 JST締切をready/missing/invalidで固定する
 - A2A payload: `submission.launch` skillとしてlaunch score、readiness、URL status、checklist、Final Submit Lock、submit packetを返す
 
 ## Submission Closeout Surface

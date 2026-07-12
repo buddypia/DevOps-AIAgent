@@ -46,7 +46,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Winner Proof Packetで、審査5項目ごとの主張、証拠URL、競合/SWOT反論、録画cue、提出copyを1枚に束ねる
 - Winner Proof Packetで、Winner Release Lockを同時に表示し、公開Cloud Run revisionが古い状態を勝ち証拠として扱わない
 - Prize Strategy Proofで、審査5項目のtarget score、Prize Usability Lock、Prize Criteria Lock、proof moves、pitch orderをGET証拠ページとして開き、優勝仮説をPOSTなしで確認できる
-- Final Submission Runwayで、2026/7/10 23:59 JSTから逆算し、動画、ProtoPedia、構成図、最終フォームを検収順にする
+- Final Submission Runwayで、2026/7/12 23:59 JSTから逆算し、動画、ProtoPedia、構成図、最終フォームを検収順にする
 - Judge Tourで、Judge Brief、Market Intel/SWOT、Impact Case、Security Review、Judge Proof、Submission Launch Gateを90秒の審査導線に束ねる
 - User Pilot Labで、開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証する
 - Squad Optimizerで、予算内のAI編成を総当たりし、現行維持、交換、追加予算ギャップを判断する
