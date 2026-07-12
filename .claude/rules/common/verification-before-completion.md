@@ -2,7 +2,7 @@
 
 ## ID: R-CM-010
 ## Severity: critical
-## Enforced by: completion-evidence-guard (Stop hook, settings.json)（本プロジェクトでは未配備 — prompt-level）
+## Enforced by: autonomous-gate.sh (Stop hook, .claude/settings.json — Stop 時に project-config.json の typecheck/test/check_architecture を強制実行) + prompt-level。※ brief2dev 実装の completion-evidence-guard 自体は未配備。
 
 ### Iron Law
 

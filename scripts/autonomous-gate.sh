@@ -17,7 +17,9 @@ ERROR_LOG=""
 FAILED_COMMANDS=()
 
 # 検証したいコマンドのキー一覧 (存在するものを順次実行)
-KEYS=("lint" "typecheck" "test" "check_architecture" "quality_check")
+# quality_check (= make q.check) は q.typecheck + q.test の再実行になり typecheck/test と重複するため除外する。
+# lint は project-config.json で null のため実行されない (必要になれば追加する)。
+KEYS=("typecheck" "test" "check_architecture")
 
 if [ -f "$CONFIG_FILE" ]; then
   for KEY in "${KEYS[@]}"; do
