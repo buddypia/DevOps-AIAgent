@@ -12,6 +12,7 @@ raw/
 outputs/
 .worktrees/
 *.log
+.secret/
 .env
 .env.*
 !.env.example

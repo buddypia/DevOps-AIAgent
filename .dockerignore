@@ -11,6 +11,7 @@ playwright-report
 .tmp
 .worktrees
 outputs
+.secret
 .env
 .env.*
 .envrc
