@@ -62,6 +62,7 @@
 - `POST /api/missions`, `GET /api/missions`, `GET /api/missions/:id` — 自律ミッションの起動・一覧・追跡
 - `GET /api/agent-stats` — 実行履歴から算出した実績統計（ランクの根拠）
 - `GET /api/market` / `POST /api/recommend` / `POST /api/agent-card/discover` — カタログ・戦略サマリ・Agent Card 取り込み
+- `POST /api/external-agent/delegate` — allowlist済みの公開Agent CardへA2A `message/send`を実行し、task receiptを返す（allowlist未設定時は無効）
 - `GET|POST /api/hires`, `DELETE /api/hires/:agentId` — 雇用管理
 - `GET /api/agent-jobs`, `POST /api/agent-runs`, `GET /api/agent-runs`, `GET /api/agent-runs/:id` — 単体ランの起動・一覧・照会
 - `POST /api/ops-agent/incident-drill` — 模擬インシデントを実ログとして Cloud Logging に注入（SREドリル用、1分1回）
@@ -77,10 +78,14 @@
 | `GOOGLE_CLOUD_LOCATION` | Vertex ロケーション | `asia-northeast1` |
 | `GEMINI_MODEL` | モデル名 | `gemini-3.5-flash` |
 | `OPS_TARGET_SERVICE` / `OPS_TARGET_ALLOWLIST` | ログトリアージ対象の Cloud Run サービス | `agent-guild` |
+| `OPS_EXTERNAL_A2A_ALLOWLIST` | 外部A2A POSTを許可するoriginのカンマ区切りリスト | 空（Card評価のみ） |
+| `OPS_EXTERNAL_A2A_TIMEOUT_MS` | 外部Card/A2A接続のタイムアウト（1000〜15000ms） | `6000` |
 | `OPS_RUN_STORE` | `memory` 指定で Firestore を使わない | project があれば firestore |
 | `PUBLIC_BASE_URL` | 自己プローブ・A2A委任の基準URL | リクエストヘッダーから推定 |
 
 どちらの認証も無い場合、ミッションと8エージェントの実行APIは 503 を返します（UIの名鑑・Agent Card 取り込みは動作）。
+
+外部Agent Cardの実委任は、`OPS_EXTERNAL_A2A_ALLOWLIST` に公開originを設定した場合だけ有効です。外部へ送るのはユーザーの依頼文とskillIdだけで、Authorization・APIキー・ADCトークンは転送しません。allowlist未設定時はAgent Cardの評価のみ実行します。
 
 ## Local Development
 

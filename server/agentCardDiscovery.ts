@@ -8,6 +8,7 @@ type FetchImpl = typeof fetch;
 export type AgentCardDiscoveryResult = AgentCardImportResult & {
   sourceUrl?: string;
   discoveredUrl?: string;
+  a2aEndpoint?: string;
 };
 
 async function defaultResolveHost(hostname: string) {
@@ -92,6 +93,27 @@ async function fetchAgentCardText(
   };
 }
 
+function resolveA2AEndpoint(cardText: string, discoveredUrl: string): string | undefined {
+  let parsedCard: unknown;
+  try {
+    parsedCard = JSON.parse(cardText);
+  } catch {
+    return undefined;
+  }
+  const card = parsedCard && typeof parsedCard === "object" && !Array.isArray(parsedCard) ? (parsedCard as Record<string, unknown>) : {};
+  const cardOrigin = new URL(discoveredUrl).origin;
+  const declared = typeof card.url === "string" && card.url.trim() ? card.url.trim() : "";
+  if (!declared) return new URL("/a2a", discoveredUrl).toString();
+  try {
+    const endpoint = new URL(declared, discoveredUrl);
+    if (!(["http:", "https:"].includes(endpoint.protocol) && !endpoint.username && !endpoint.password && endpoint.origin === cardOrigin)) return undefined;
+    endpoint.hash = "";
+    return endpoint.toString();
+  } catch {
+    return undefined;
+  }
+}
+
 export async function discoverAgentCardFromUrl(
   sourceUrl: string,
   deps: {
@@ -109,6 +131,7 @@ export async function discoverAgentCardFromUrl(
       ...result,
       sourceUrl,
       discoveredUrl: fetched.url,
+      a2aEndpoint: result.status === "accepted" ? resolveA2AEndpoint(fetched.text, fetched.url) : undefined,
       warnings: [...fetched.warnings, ...result.warnings]
     };
   } catch (error) {

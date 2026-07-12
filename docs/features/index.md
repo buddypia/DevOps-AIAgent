@@ -25,7 +25,8 @@ Feature Architect / feature-spec-generator により、現行コードベース�
 | [019-chaos-drill-agent](./019-chaos-drill-agent/) | Chaos Drill Agent | incident-response | outputs/19-chaos-drill-agent | implemented / documented |
 | [020-incident-commander-karaoke](./020-incident-commander-karaoke/) | Incident Commander Karaoke | incident-response | outputs/20-incident-commander-karaoke | implemented / documented |
 | [021-agent-guild-platform](./021-agent-guild-platform/) | Agent Guild プラットフォーム | agent-platform | src + server | implemented / documented |
+| [001-external-agent-delegation](./001-external-agent-delegation/) | 外部Agent Cardの実委任 | agent-orchestration | src + server | done |
 
 - Domain SSOT: [domain-map.json](domain-map.json)
 - 共通パス: project-config.json の paths.features/docs_features は未定義のため、スキル既定値を採用。
-- 仕様生成日時: 2026-07-12T19:12:07+09:00
+- upstream feature registry: 外部Agent Cardの実委任を含む。

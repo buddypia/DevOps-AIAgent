@@ -9,7 +9,8 @@
     {"id":"ai-quality","name":"AI品質","responsibility":"AI評価、モデル回帰、探索的テスト、段階的公開の品質判断を所有する。","keywords":["AI","eval","model","exploratory","dark launch","モデル","評価"],"aliases":["AI Quality"],"out_of_scope":["一般的なCloud Runデプロイ判断は release-governance が所有する"]},
     {"id":"data-operations","name":"データ運用","responsibility":"データパイプライン、Runbook鮮度、データ・プライバシー影響を所有する。","keywords":["data","pipeline","runbook","privacy","データ","Runbook"],"aliases":["Data Operations"],"out_of_scope":["インシデントの指揮は incident-response が所有する"]},
     {"id":"agent-platform","name":"エージェントプラットフォーム","responsibility":"Agent Guild本体のカタログ、推薦、雇用、ミッション実行、実績表示を所有する。","keywords":["marketplace","mission","hire","A2A","エージェント","ミッション"],"aliases":["Agent Platform"],"out_of_scope":["外部Agent Cardの取得安全性は external-integration が所有する"]},
-    {"id":"external-integration","name":"外部連携","responsibility":"外部Agent Cardの取得、URL検証、SSRF防止、評価結果の取り込みを所有する。","keywords":["Agent Card","external","A2A","SSRF","外部連携"],"aliases":["External Integration"],"out_of_scope":["内部エージェントの実行履歴は agent-platform が所有する"]}
+    {"id":"external-integration","name":"外部連携","responsibility":"外部Agent Cardの取得、URL検証、SSRF防止、評価結果の取り込みを所有する。","keywords":["Agent Card","external","A2A","SSRF","外部連携"],"aliases":["External Integration"],"out_of_scope":["内部エージェントの実行履歴は agent-platform が所有する"]},
+    {"id":"agent-orchestration","name":"エージェント編成・委任","responsibility":"Agent CardからAI能力を発見・評価し、A2Aで安全にタスクを委任して結果を検証・統合する。","keywords":["agent card","a2a","agent-to-agent","委任","編成","marketplace","外部エージェント"],"aliases":["Agent Interoperability","Agent Marketplace"],"out_of_scope":["個別エージェント内部の業務ロジック","認証基盤そのもの","外部サービスの破壊的操作"]}
   ],
   "features": [
     {"id":"001-shipguard-ai","title":"ShipGuard AI","domain":"release-governance","src_dir":"outputs/01-shipguard-ai","status":"implemented"},
@@ -32,6 +33,7 @@
     {"id":"018-model-rollback-agent","title":"Model Rollback Agent","domain":"ai-quality","src_dir":"outputs/18-model-rollback-agent","status":"implemented"},
     {"id":"019-chaos-drill-agent","title":"Chaos Drill Agent","domain":"incident-response","src_dir":"outputs/19-chaos-drill-agent","status":"implemented"},
     {"id":"020-incident-commander-karaoke","title":"Incident Commander Karaoke","domain":"incident-response","src_dir":"outputs/20-incident-commander-karaoke","status":"implemented"},
-    {"id":"021-agent-guild-platform","title":"Agent Guild プラットフォーム","domain":"agent-platform","src_dir":"src + server","status":"implemented"}
+    {"id":"021-agent-guild-platform","title":"Agent Guild プラットフォーム","domain":"agent-platform","src_dir":"src + server","status":"implemented"},
+    {"id":"001-external-agent-delegation","title":"外部Agent Cardの実委任","domain":"agent-orchestration","src_dir":null,"status":"done"}
   ]
 }
