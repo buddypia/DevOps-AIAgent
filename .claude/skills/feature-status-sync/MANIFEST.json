@@ -1,0 +1,26 @@
+{
+  "schema_version": 2,
+  "tier": 2,
+  "skill_id": "feature-status-sync",
+  "version": "1.0.0",
+  "description": "対象プロジェクトのCONTEXT.json(SSOT)とindex.mdを同期するスキル。コードの存在有無を検証し、進捗状態を更新する。",
+  "triggers": [
+    "機能状態同期",
+    "ドキュメント・コード同期",
+    "index.md更新",
+    "feature status sync"
+  ],
+  "calls": [],
+  "called_by": [
+    "feature-pilot"
+  ],
+  "inputs": [
+    "<機能ID>（任意）",
+    "--all（全機能スキャン）"
+  ],
+  "outputs": [
+    "CONTEXT.json progress更新 (docs/features/*/CONTEXT.json)",
+    "index.md再生成 (docs/features/*/index.md)"
+  ],
+  "model": "sonnet"
+}

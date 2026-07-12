@@ -2,8 +2,8 @@
 /**
  * wt-run.mjs — Redirect command execution to the active worktree.
  *
- * このスクリプトは、AI セッション中に CWD がメインリポジトリにリセットされた際、
- * 自動的に有効化された worktree を探してその中で検証/チェックコマンドを実行します。
+ * このスクリプトは、AIセッション中にCWDがメインリポジトリにリセットされた際、
+ * 自動的にアクティブなworktreeを見つけてその中で検証/チェックコマンドを実行します。
  */
 
 import { existsSync, readFileSync } from 'node:fs';
@@ -36,7 +36,7 @@ function resolveActiveWorktree(explicitWt) {
     return resolve(REPO_ROOT, explicitWt);
   }
 
-  // 1. CONTEXT.json から活性 worktree を検出
+  // 1. CONTEXT.jsonからアクティブなworktreeを検出
   const ctxPath = join(REPO_ROOT, 'CONTEXT.json');
   if (existsSync(ctxPath)) {
     try {
@@ -49,7 +49,7 @@ function resolveActiveWorktree(explicitWt) {
     }
   }
 
-  // 2. git worktree list から .worktrees/ 配下の worktree を検出
+  // 2. git worktree listから.worktrees/配下のworktreeを検出
   try {
     const stdout = execSync('git worktree list --porcelain', { cwd: REPO_ROOT, encoding: 'utf-8' });
     const lines = stdout.split('\n');
@@ -67,7 +67,7 @@ function resolveActiveWorktree(explicitWt) {
     if (wtPaths.length === 1) {
       return wtPaths[0];
     } else if (wtPaths.length > 1) {
-      console.warn(`[wt-run] 警告: 複数の活性 worktree が発見されました。最初の一つ (${wtPaths[0]}) を使用します。`);
+      console.warn(`[wt-run] 警告: 複数のアクティブなworktreeが見つかりました。最初のもの(${wtPaths[0]})を使用します。`);
       return wtPaths[0];
     }
   } catch {
@@ -87,9 +87,9 @@ if (cmdArgs.length === 0) {
 const targetCwd = resolveActiveWorktree(explicitWt) || REPO_ROOT;
 
 if (targetCwd === REPO_ROOT) {
-  console.warn(`[wt-run] 警告: 有効化された worktree を見つけられませんでした。メインリポジトリのルート (${targetCwd}) から実行します。`);
+  console.warn(`[wt-run] 警告: アクティブなworktreeが見つかりません。メインリポジトリのルート(${targetCwd})で実行します。`);
 } else {
-  console.log(`[wt-run] CWD リダイレクション: ${targetCwd}`);
+  console.log(`[wt-run] CWDリダイレクト: ${targetCwd}`);
 }
 
 const cmdString = cmdArgs.join(' ');

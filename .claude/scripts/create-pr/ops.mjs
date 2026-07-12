@@ -1,30 +1,30 @@
 #!/usr/bin/env node
 
 /**
- * ops.mjs — create-pr 統合実行エンジン (8 コマンド, GitHub Flow, v2 応答契約)
+ * ops.mjs — create-pr統合実行エンジン (8コマンド, GitHub Flow, v2レスポンス契約)
  *
  * コマンド:
- *   Mode A (Staged 隔離):  init / isolate / commit / ship-feature / finalize
+ *   Mode A (Staged隔離):  init / isolate / commit / ship-feature / finalize
  *   Mode B (Worktree):    verify-plan / ship-worktree / cleanup-worktree
  *
  * 出力契約 (v2): stdout JSON 1行
  *   成功: { ok: true,  mode, command, ... }                   (exit 0)
  *   失敗: { ok: false, mode, command, error, hint?, details? } (exit 1)
  *
- *   sync_status 値: synced | fetch_failed | local_changes | ff_failed
+ *   sync_status値: synced | fetch_failed | local_changes | ff_failed
  *
  * Config: .claude/skills/create-pr/config.json
- *   { github_account, base_branch, enforce_ssh_remote? }  (base_branch デフォルト main)
+ *   { github_account, base_branch, enforce_ssh_remote? }  (base_branch デフォルトmain)
  *
- * 鉄則: unstaged/untracked ファイルは実行前後で正確に同一でなければならない。
- *   - worktree 隔離: オリジナル HEAD 不変
- *   - dirty main 時の sync abort: オリジナルの変更に手を加えず同期のみ中断 (自動 stash 未使用)
+ * 鉄則: unstaged/untrackedファイルは実行前後で完全に同一でなければならない。
+ *   - worktree隔離: 元のHEAD不変
+ *   - dirty main時のsync abort: 元の変更に触れず同期のみ中断（自動stash不使用）
  *
- * セキュリティ: すべての外部コマンドは execFileSync 配列引数 → shell 非経由。
+ * セキュリティ: すべての外部コマンドはexecFileSync配列引数 → shell非経由。
  *
- * フック連動: cmdInit が .tmp/create-pr-active フラグを生成 →
- *   commit-guard.mjs / destructive-git-guard.mjs が allowlist モードに転換。
- *   cmdFinalize / cmdCleanupWorktree 終了時にフラグを自動除去。
+ * hook連携: cmdInitが.tmp/create-pr-activeフラグを生成 →
+ *   commit-guard.mjs / destructive-git-guard.mjsがallowlistモードに転換。
+ *   cmdFinalize / cmdCleanupWorktree終了時にフラグを自動削除。
  */
 
 import { execFileSync } from 'node:child_process';
@@ -50,18 +50,18 @@ export { buildFileTree };
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
- * Project root 算出。マルチ worktree 環境で AI が worktree 内部から ops.mjs を
- * 直接呼び出しても main worktree root を回復するように保証。
+ * Project rootを算出。多重worktree環境でAIがworktree内部からops.mjsを
+ * 直接呼び出してもmain worktree rootへ復帰することを保証する。
  *
  * 優先順位:
- *   1. `process.env.CLAUDE_PROJECT_DIR` — 明示 override (テスト / ユーザー指定)。
- *   2. `git rev-parse --git-common-dir` 親 — すべての worktree が同一の main root に回帰。
- *      `.git` ディレクトリは main worktree 内に本体があり、他の worktree は
- *      `.git` ファイルで main の common-dir を指す。親 = main worktree root。
- *   3. `__dirname` 基準 fallback — worktree 内での呼び出し時に worktree ルートに落ちてしまう
- *      罠があるための最終 fallback (従来の動作互換用 — git 外部実行環境)。
+ *   1. `process.env.CLAUDE_PROJECT_DIR` — 明示override（テスト / ユーザー指定）。
+ *   2. `git rev-parse --git-common-dir` の親 — すべてのworktreeが同一main rootへ回帰。
+ *      `.git`ディレクトリはmain worktree内に本体があり、他のworktreeは
+ *      `.git`ファイルでmainのcommon-dirを指す。親 = main worktree root。
+ *   3. `__dirname`ベースのfallback — worktree内で呼び出すとworktree rootに落ちてしまう
+ *      罠があるため最終fallback（過去の動作互換性用 — git外部実行環境）。
  *
- * 回帰: tests/unit/create-pr-ops.test.mjs `resolveProjectRoot` describe block.
+ * リグレッション: tests/unit/create-pr-ops.test.mjs `resolveProjectRoot` describe block。
  */
 export function resolveProjectRoot(cwd = process.cwd()) {
   if (process.env.CLAUDE_PROJECT_DIR) return process.env.CLAUDE_PROJECT_DIR;
@@ -71,8 +71,8 @@ export function resolveProjectRoot(cwd = process.cwd()) {
       encoding: 'utf-8',
       stdio: ['ignore', 'pipe', 'ignore'],
     }).trim();
-    // 空の stdout または '.' のみでは親の推論に意味がない — silent worktree-root
-    // fallback の罠が再現されるため、明示的に fallback へ送り、stderr に痕跡を残す。
+    // 空stdoutまたは'.'のみでは親推論に意味がない — silent worktree-root
+    // fallbackの罠が再現するため明示的にfallbackへ送りstderrに痕跡を残す。
     if (commonDir && commonDir !== '.' && commonDir !== '') {
       return dirname(resolve(cwd, commonDir));
     }
@@ -80,7 +80,7 @@ export function resolveProjectRoot(cwd = process.cwd()) {
       `[ops.mjs] resolveProjectRoot: git common-dir empty (cwd=${cwd}), falling back to __dirname-based path.\n`,
     );
   } catch {
-    // git 外部 / git 未インストール — __dirname fallback へ
+    // git外部 / git未インストール — __dirname fallbackへ
   }
   return resolve(__dirname, '..', '..', '..');
 }
@@ -100,19 +100,19 @@ const BASE_BRANCH = CFG.base_branch || 'main';
 const GH_ACCOUNT = CFG.github_account || null;
 const ENFORCE_SSH = CFG.enforce_ssh_remote === true;
 
-// v2.1: 30s → 30min。ship-feature は MERGEABLE_TIMEOUT_MS=5min の間 polling するため
-// 30s threshold は活発に動作中の ship-feature 直後に他のコマンドが flag を stale と
-// 判断し、同時進入保護を迂回する事故を誘発する。30min は単一ユーザー CLI の
-// 合理的なサイクル上限。
-// export: デグレードテストが import してヘルパーの複製なしで検証。
+// v2.1: 30s → 30min。ship-featureはMERGEABLE_TIMEOUT_MS=5min間pollingするため
+// 30s thresholdだと活発に動作中のship-feature直後に他コマンドがflagをstaleと
+// 判断し、同時進入保護を回避してしまう事故を引き起こす。30minは単一ユーザーCLIの
+// 妥当なサイクル上限。
+// export: リグレッションテストがimportしてhelper複製なしで検証。
 export const ACTIVE_FLAG_STALE_MS = 30 * 60 * 1000;
 const MERGEABLE_TIMEOUT_MS = 300_000;
 const MERGEABLE_POLL_MS = 5_000;
 
 // ═ Shell ═
-// ネットワーク transient エラーパターン — ポート遮断/ホットスポット不安定時の gh・git 呼び出しの *一時的* 失敗。
-// 論理エラー ("already exists" / merge conflict / auth) は含めない — 再試行しても同一の結果。
-// export: デグレードテストがヘルパーの複製なしで直接検証。
+// ネットワークtransientエラーパターン — ポート遮断/ホットスポット不安定時のgh・git呼び出しの*一時的*失敗。
+// 論理エラー("already exists" / merge conflict / auth)は含まない — 再試行しても同じ結果。
+// export: リグレッションテストがhelper複製なしで直接検証。
 const TRANSIENT_ERROR_PATTERNS = [
   /ETIMEDOUT/i,
   /ECONNRESET/i,
@@ -120,8 +120,8 @@ const TRANSIENT_ERROR_PATTERNS = [
   /EAI_AGAIN/i,
   /ENOTFOUND/i,
   /timed out/i,
-  // /timeout/i は意図的に除外 — GitHub API 422 検証エラー ("...timeout: 0" など) を false-transient
-  // として誤って再試行するのを防ぐ。実際の timeout は /timed out/・ETIMEDOUT・/TLS handshake/・以下の Go http client でカバー。
+  // /timeout/i は意図的に除外 — GitHub API 422検証エラー("...timeout: 0"など)をfalse-transient
+  // として誤って再試行してしまう。実際のtimeoutは/timed out/・ETIMEDOUT・/TLS handshake/・下記Go http clientでカバー。
   /Client\.Timeout exceeded/i,
   /TLS handshake/i,
   /connection reset/i,
@@ -145,12 +145,12 @@ function defaultSleepSeconds(sec) {
   try {
     execFileSync('sleep', [String(sec)], { stdio: 'ignore' });
   } catch {
-    /* sleep 失敗は無視 — 再試行を進行 (delay 0 に降格) */
+    /* sleep失敗は無視 — 再試行続行（delay 0に降格） */
   }
 }
 
-// transient ネットワークエラーのみ再試行。論理エラーは即時 throw (再試行は無意味)。
-// opts.sleep 注入によりテストは実際の待機なしで検証。
+// transientネットワークエラーのみ再試行。論理エラーは即座にthrow（再試行は無意味）。
+// opts.sleep注入によりテストは実際の待機なしで検証。
 export function retryTransient(fn, opts = {}) {
   const attempts = Number.isInteger(opts.attempts) && opts.attempts > 0 ? opts.attempts : 3;
   const sleep = typeof opts.sleep === 'function' ? opts.sleep : defaultSleepSeconds;
@@ -162,7 +162,7 @@ export function retryTransient(fn, opts = {}) {
     } catch (e) {
       lastErr = e;
       if (attempt >= attempts || !isTransient(e)) throw e;
-      sleep(Math.min(baseDelaySec * attempt, 8)); // 2s → 4s → 6s (上限 8s)
+      sleep(Math.min(baseDelaySec * attempt, 8)); // 2s → 4s → 6s (上限8s)
     }
   }
   throw lastErr;
@@ -185,8 +185,8 @@ function execOnce(cmd, opts = {}) {
   }
 }
 
-// opts.retry > 1 の時のみ transient 再試行 (ネットワーク呼び出し — gh / git fetch・push)。
-// ローカル呼び出し (git status / rev-parse / make q.check) は retry 未指定 → 即時 fail-fast。
+// opts.retry > 1の時のみtransient再試行（ネットワーク呼び出し — gh / git fetch・push）。
+// ローカル呼び出し（git status / rev-parse / make q.check）はretry未指定 → 即座にfail-fast。
 function exec(cmd, opts = {}) {
   if (opts.retry && opts.retry > 1) {
     return retryTransient(() => execOnce(cmd, opts), { attempts: opts.retry, sleep: opts.sleep });
@@ -197,9 +197,9 @@ function exec(cmd, opts = {}) {
 const git = (args, opts = {}) => exec(['git', ...args], opts);
 
 /**
- * github_account 未設定時は gh CLI のデフォルトログインアカウントをそのまま使用する
- * (config.json _adapt / SKILL.md / transplant-bundles.json が文書化した契約)。
- * 純粋関数に分離 — gh CLI 実行なしでコマンド構成ロジックのみを単体テスト可能。
+ * github_account未設定時はgh CLIのデフォルトログインアカウントをそのまま使用する
+ * (config.json _adapt / SKILL.md / transplant-bundles.jsonが文書化した契約)。
+ * 純粋関数として分離 — gh CLI実行なしでコマンド構成ロジックのみ単体テスト可能。
  */
 export function buildGhTokenCommand(ghAccount) {
   return ghAccount ? ['gh', 'auth', 'token', '-u', ghAccount] : ['gh', 'auth', 'token'];
@@ -209,15 +209,15 @@ let cachedToken = null;
 function ghToken() {
   if (cachedToken) return cachedToken;
   const tokenCmd = buildGhTokenCommand(GH_ACCOUNT);
-  // gh() の env 構成段階で eager 呼び出しされ、exec の retry scope 外であるため直接 retryTransient.
-  // (gh auth token はローカルキーリング参照のため通常はネットワークと無関係だが、最初の gh() 呼び出しの transient ギャップを遮断。)
+  // gh()のenv構成段階でeager呼び出しされexecのretry scope外のため直接retryTransient。
+  // (gh auth tokenはローカルkeyring参照のため通常ネットワーク無関係だが、初回gh()呼び出しのtransientギャップを防止。)
   try {
     cachedToken = retryTransient(() => exec(tokenCmd), { attempts: 3 });
   } catch (e) {
     const err = new Error(
-      `gh 認証トークン照会失敗 (${GH_ACCOUNT ? `アカウント: ${GH_ACCOUNT}` : 'デフォルトログインアカウント'}): ${e.message}`
+      `gh認証トークン取得失敗 (${GH_ACCOUNT ? `アカウント: ${GH_ACCOUNT}` : 'デフォルトログインアカウント'}): ${e.message}`
     );
-    err.details = { hint: `gh auth login 状態を確認、または config.github_account にてアカウントを明示: ${CONFIG_PATH}` };
+    err.details = { hint: `gh auth login状態を確認、またはconfig.github_accountでアカウントを明示: ${CONFIG_PATH}` };
     throw err;
   }
   return cachedToken;
@@ -225,7 +225,7 @@ function ghToken() {
 
 const gh = (args, opts = {}) => exec(['gh', ...args], {
   timeout: 60_000,
-  retry: 3, // すべての gh 呼び出しは api.github.com transient (TLS handshake timeout など) 再試行。opts.retry で override。
+  retry: 3, // すべてのgh呼び出しはapi.github.com transient(TLS handshake timeoutなど)を再試行。opts.retryでoverride。
   ...opts,
   env: { ...process.env, GH_TOKEN: ghToken(), GH_HOST: 'github.com' },
 });
@@ -233,14 +233,14 @@ const gh = (args, opts = {}) => exec(['gh', ...args], {
 function resolveRepo() {
   const url = git(['remote', 'get-url', 'origin']);
   const m = url.match(/[:/]([^:/]+\/[^/]+?)(?:\.git)?$/);
-  if (!m) throw new Error(`origin URL パース失敗: ${url}`);
+  if (!m) throw new Error(`origin URLパース失敗: ${url}`);
   return m[1];
 }
 
 /**
- * `--worktree <p>` 引数を PROJECT_DIR 基準の絶対パスに正規化する。
- * 絶対パス入力はそのまま返却 (false-prepend 回避)。
- * デグレード遮断: tests/unit/create-pr-ops.test.mjs
+ * `--worktree <p>` 引数をPROJECT_DIR基準の絶対パスに正規化する。
+ * 絶対パス入力はそのまま返す（false-prepend回避）。
+ * リグレッション防止: tests/unit/create-pr-ops.test.mjs
  */
 export function resolveWorktreeAbsPath(wtPath) {
   if (!wtPath) return wtPath;
@@ -248,7 +248,7 @@ export function resolveWorktreeAbsPath(wtPath) {
 }
 
 /**
- * `git worktree list --porcelain` 出力から worktree 絶対パスの一覧を抽出。
+ * `git worktree list --porcelain` の出力からworktree絶対パスの一覧を抽出。
  * Pure parser — テスト可能。
  *
  * 入力例:
@@ -260,9 +260,9 @@ export function resolveWorktreeAbsPath(wtPath) {
  *   HEAD def...
  *   branch refs/heads/feature/foo
  *
- * 正確なマッチング (`^worktree (.+)$`) により、将来的な git の他の `worktree` 開始の prefix
- * 拡張 (例: 仮定的な `worktree-config-file ...`) と衝突しないように保護。
- * 空の path は capture group の結果として自動除外。
+ * 正確マッチ（`^worktree (.+)$`）で将来のgitの他の`worktree`始まりprefix
+ * 拡張（例: hypothetical `worktree-config-file ...`）と衝突しないよう保護。
+ * 空のpathはcapture group結果から自動除外。
  *
  * @param {string} porcelainOutput
  * @returns {string[]}
@@ -275,8 +275,8 @@ export function parseWorktreePaths(porcelainOutput) {
   for (const line of porcelainOutput.split(/\r?\n/)) {
     const match = WORKTREE_LINE_RE.exec(line);
     if (match) {
-      // `.trim()` は trailing whitespace 防御用 — git porcelain は trailing space
-      // がないのが正常だが、capture group が吸い込む場合を考慮 (no-op 同等)。
+      // `.trim()` はtrailing whitespace防御用 — git porcelainはtrailing space
+      // がないのが正常だが、capture groupが吸い込む場合に備える（no-op同等）。
       const path = match[1].trim();
       if (path) paths.push(path);
     }
@@ -285,12 +285,12 @@ export function parseWorktreePaths(porcelainOutput) {
 }
 
 /**
- * `git status --porcelain` 出力を dirty/clean に分類する。Pure parser — テスト可能。
+ * `git status --porcelain` の出力をdirty/cleanに分類する。Pure parser — テスト可能。
  *
- * Untracked ファイル (`?? path`) は意図的に除外 — ユーザーの ad-hoc 作業物でありマージ結果と
- * 衝突する変更ではない。マージ結果の ff を防ぐのは tracked file の unstaged/staged 変更。
+ * Untrackedファイル（`?? path`）は意図的に除外 — ユーザーのad-hoc作業物であり、マージ結果と
+ * 衝突する変更ではない。マージ結果のffを妨げるのはtracked fileのunstaged/staged変更。
  *
- * @param {string} porcelain - `git status --porcelain` の stdout
+ * @param {string} porcelain - `git status --porcelain` のstdout
  * @returns {{status: 'clean'|'dirty', dirty_paths?: string[]}}
  */
 export function parsePorcelainStatus(porcelain) {
@@ -300,7 +300,7 @@ export function parsePorcelainStatus(porcelain) {
     .filter((line) => line && !line.startsWith('??'))
     .map((line) => {
       const rest = line.slice(3).trim();
-      // ff merge 影響は rename の new path 側なので、それのみを dirty_paths に報告。
+      // ff mergeの影響はrenameのnew path側なので、それのみdirty_pathsに報告。
       const arrow = rest.indexOf(' -> ');
       return arrow >= 0 ? rest.slice(arrow + 4).trim() : rest;
     })
@@ -309,11 +309,11 @@ export function parsePorcelainStatus(porcelain) {
 }
 
 /**
- * マージ成功後、main repo (PROJECT_DIR) の working tree dirty 状態を検知する。
- * ユーザーが main repo で squash merge 結果と衝突する unstaged 変更を所持していると
- * `git pull --ff-only` 失敗 — AI が該当状態を認知して初めて明示的な reconcile 案内が可能。
+ * マージ成功後、main repo (PROJECT_DIR) のworking tree dirty状態を検知する。
+ * ユーザーがmain repoでsquash merge結果と衝突するunstaged変更を持っている場合、
+ * `git pull --ff-only` が失敗する — AIがこの状態を把握して初めて明示的なreconcile案内が可能。
  *
- * git 呼び出し失敗は fail-open ('unknown') — ship 結果自体に影響なし。
+ * git呼び出し失敗はfail-open ('unknown') — ship結果自体には影響しない。
  *
  * @returns {{status: 'clean'|'dirty'|'unknown', dirty_paths?: string[]}}
  */
@@ -329,8 +329,8 @@ export function detectPostMergeMainStatus(cwd = PROJECT_DIR) {
 // ═ Pure helpers (テスト可能) ═
 
 /**
- * マージされた PR の変更ファイル一覧を収集。gh CLI 呼び出し。
- * 失敗時は空の配列 (中核のマージ結果に影響なし — fail-open)。
+ * マージされたPRの変更ファイル一覧を収集。gh CLI呼び出し。
+ * 失敗時は空配列（核心のマージ結果には影響なし — fail-open）。
  */
 function collectChangedFilesViaPr(prNumber, repo) {
   try {
@@ -340,6 +340,77 @@ function collectChangedFilesViaPr(prNumber, repo) {
     return data.files.map(f => f?.path).filter(p => typeof p === 'string' && p.length > 0);
   } catch {
     return [];
+  }
+}
+
+/**
+ * `/create-pr ship-worktree` post-merge段階でfollowup-debt-tracker.mjsの
+ * `register --pr <num> --json` を呼び出し、登録されたDEBT項目をレスポンスに可視化する。
+ *
+ * R-CM-010 Iron Law整合: silent execute後の「自動登録されたはず」という推定を防止 — 結果を
+ * `count` + `items` で明示的に返し、AIがユーザーに直接報告できるようにする。
+ *
+ * Fail-open（R-CM-033 #10整合）: script不在 / invalid PR / 実行失敗 / stdout
+ * parse失敗すべて `{ error, count: 0, items: [] }` を返す（throwしない）— ship-worktree
+ * のメインフローをブロックしない。
+ *
+ * @param {number} prNumber
+ * @returns {{ error: string | null, count: number, items: Array<object> }}
+ */
+export function registerFollowupDebtFromPr(prNumber) {
+  if (!Number.isInteger(prNumber) || prNumber < 1) {
+    return {
+      error: `followup-debt registration skipped: invalid PR number (${prNumber})`,
+      count: 0,
+      items: [],
+    };
+  }
+  const scriptPath = join(PROJECT_DIR, '.claude', 'scripts', 'followup-debt-tracker.mjs');
+  if (!existsSync(scriptPath)) {
+    return {
+      error: `followup-debt-tracker script not found at ${scriptPath} — skipped`,
+      count: 0,
+      items: [],
+    };
+  }
+
+  let stdout;
+  try {
+    stdout = execFileSync(
+      process.execPath,
+      [scriptPath, 'register', '--pr', String(prNumber), '--json'],
+      {
+        cwd: PROJECT_DIR,
+        encoding: 'utf-8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+        timeout: 10_000,
+        env: process.env,
+      },
+    );
+  } catch (e) {
+    const stderr = (e.stderr || '').toString().trim();
+    const errStdout = (e.stdout || '').toString().trim();
+    const detail = stderr || errStdout || e.message;
+    return {
+      error: `followup-debt registration skipped: ${detail}`,
+      count: 0,
+      items: [],
+    };
+  }
+
+  try {
+    const parsed = JSON.parse((stdout || '').trim());
+    return {
+      error: null,
+      count: typeof parsed.registered === 'number' ? parsed.registered : 0,
+      items: Array.isArray(parsed.items) ? parsed.items : [],
+    };
+  } catch (e) {
+    return {
+      error: `followup-debt stdout parse failed: ${e.message}`,
+      count: 0,
+      items: [],
+    };
   }
 }
 
@@ -362,7 +433,7 @@ function deleteBranchAndStashes(branch) {
 // PLAN.md parser SSOT. Re-exported for legacy tests / callers.
 export const parseUnchecked = parseUncheckedPlanItems;
 
-// AI コンテキストの分岐の明確化
+// AIコンテキスト分岐の明確化
 const STAGED_CMDS = new Set(['init', 'isolate', 'commit', 'ship-feature', 'finalize']);
 const WORKTREE_CMDS = new Set(['verify-plan', 'ship-worktree', 'cleanup-worktree']);
 function inferMode(command) {
@@ -371,7 +442,7 @@ function inferMode(command) {
   return null;
 }
 
-// 同時実行保護: 30秒以内 active flag = 他のセッション進行中
+// 同時実行保護: 30秒以内のactive flag = 別セッション進行中
 function isStaleActiveFlag(flagPath, now = Date.now(), thresholdMs = ACTIVE_FLAG_STALE_MS) {
   if (!existsSync(flagPath)) return true;
   try {
@@ -401,7 +472,7 @@ function requireArg(args, key, { type = 'string' } = {}) {
 
 // ═ State ═
 const readBranch = () => {
-  if (!existsSync(BRANCH_FILE)) throw new Error('セッションなし。isolate を先に実行');
+  if (!existsSync(BRANCH_FILE)) throw new Error('セッションなし。isolateを先に実行してください');
   return readFileSync(BRANCH_FILE, 'utf-8').trim();
 };
 
@@ -419,8 +490,8 @@ function autoCleanup() {
   rmSync(STATE_DIR, { recursive: true, force: true });
 }
 
-// Pre-Ship Review マーカーライフサイクル (R-CM-030)
-// 正常な ship 成功時に即時 unlink、cleanup-worktree 進入時に stale GC にて cancelled フローの累積を防止。
+// Pre-Ship Reviewマーカーのライフサイクル (R-CM-030)
+// 正常ship成功時は即座にunlink、cleanup-worktree進入時にstale GCでcancelledフローの累積を防止。
 const SHIP_REVIEW_MARKER_PREFIX = 'pre-ship-review-confirmed-';
 const SHIP_REVIEW_MARKER_MAX_AGE_MS = 60 * 60 * 1000;
 export function shipReviewMarkerKey(branchOrPath) {
@@ -451,26 +522,26 @@ function gcStaleShipReviewMarkers(maxAgeMs = SHIP_REVIEW_MARKER_MAX_AGE_MS) {
   } catch {}
 }
 
-// SSH remote 検査 (config.enforce_ssh_remote による opt-in)
+// SSH remote検査 (opt-in via config.enforce_ssh_remote)
 function checkSshRemoteIfRequired() {
   if (!ENFORCE_SSH) return;
   const remoteUrl = git(['remote', 'get-url', 'origin']);
   const isSsh = remoteUrl.startsWith('git@') || remoteUrl.startsWith('ssh://');
   if (!isSsh) {
-    const err = new Error('origin が SSH remote ではありません');
+    const err = new Error('originがSSH remoteではありません');
     err.details = {
       remote_url: remoteUrl,
-      hint: 'config.enforce_ssh_remote=true の場合、SSH alias remote が必要。git remote set-url にて切り替え後に再試行してください。',
+      hint: 'config.enforce_ssh_remote=trueの場合、SSH alias remoteが必要です。git remote set-urlで切り替え後に再試行してください。',
     };
     throw err;
   }
 }
 
 /**
- * make ターゲットの存在有無を確認 (`make -n <target>` dry-run — 実際のレシピ実行なしで rule 探索のみ)。
- * Makefile 不在 / ターゲット不在はすべて false。移植されたプロジェクト(brief2dev 専用 `q.ci-mirror` などソフト
- * 参照ターゲット)がそのターゲットを持たない場合を検知し、ハードエラーの代わりに graceful にスキップするためのヘルパー。
- * デグレード: tests/unit/create-pr-ops.test.mjs `makeTargetExists` describe block。
+ * makeターゲットの存在確認（`make -n <target>` dry-run — 実際のレシピ実行なしでrule探索のみ）。
+ * Makefile不在 / ターゲット不在いずれもfalse。移植されたプロジェクト（brief2dev専用`q.ci-mirror`などソフト
+ * 参照ターゲット）がそのターゲットを持たない場合を検知し、ハード失敗の代わりにgraceful skipするためのhelper。
+ * リグレッション: tests/unit/create-pr-ops.test.mjs `makeTargetExists` describe block。
  */
 export function makeTargetExists(target, cwd) {
   try {
@@ -481,19 +552,19 @@ export function makeTargetExists(target, cwd) {
   }
 }
 
-// ═ Mode A: Staged 隔離 ═
+// ═ Mode A: Staged隔離 ═
 
 function cmdInit() {
   if (!isStaleActiveFlag(ACTIVE_FLAG)) {
-    const err = new Error('他の create-pr セッションが進行中です (30秒以内 active flag)。');
-    err.details = { hint: '進行中のセッション終了を待つか、.tmp/create-pr-active を手動で整理した後に再試行してください' };
+    const err = new Error('別のcreate-prセッションが進行中です（30秒以内のactive flag）。');
+    err.details = { hint: '進行中のセッション終了を待つか、.tmp/create-pr-activeを手動で整理してから再試行してください' };
     throw err;
   }
   autoCleanup();
 
-  // CI Mirror Gate (60min stamp freshness)。brief2dev 自体は `make q.ci-mirror` を持つが、
-  // 移植されたプロジェクト (transplant-bundle) はそのターゲットがない場合がある — ソフト参照のためターゲット
-  // 不在時はゲート自体を skip する (ハードエラー禁止、adaptation_notes 整合)。
+  // CI Mirror Gate (60min stamp freshness)。brief2dev自体は`make q.ci-mirror`を持つが、
+  // 移植されたプロジェクト（transplant-bundle）はそのターゲットがない場合がある — ソフト参照のためターゲット
+  // 不在時はゲート自体をskipする（ハード失敗禁止、adaptation_notes整合）。
   const CI_MIRROR_STAMP = join(PROJECT_DIR, '.tmp', 'ci-mirror-passed');
   const STAMP_FRESHNESS_MS = 60 * 60 * 1000;
   let stampValid = false;
@@ -513,7 +584,7 @@ function cmdInit() {
       const stdout = e.stdout || '';
       const stderr = e.stderr || '';
       const err = new Error(
-        `CI ミラー (make q.ci-mirror) 失敗。create-pr スキルで自動修正ループを開始するか、 ` +
+        `CIミラー (make q.ci-mirror) 失敗。create-prスキルで自動修正ループを開始するか、` +
         `手動修正後に再試行してください。\n\n[STDOUT]\n${stdout}\n[STDERR]\n${stderr}`
       );
       err.details = { stdout, stderr };
@@ -522,15 +593,15 @@ function cmdInit() {
   }
 
   const branch = git(['branch', '--show-current']);
-  if (branch !== BASE_BRANCH) throw new Error(`現在のブランチが ${BASE_BRANCH} ではありません: ${branch}`);
+  if (branch !== BASE_BRANCH) throw new Error(`現在のブランチが${BASE_BRANCH}ではありません: ${branch}`);
 
   const stagedFiles = git(['diff', '--cached', '--name-only']).split('\n').filter(Boolean);
-  if (stagedFiles.length === 0) throw new Error('staged ファイルなし');
+  if (stagedFiles.length === 0) throw new Error('stagedファイルなし');
 
   const secretPattern = /\.(env|key|pem|p12|keystore)$|(^|\/)credentials\.json$|service-account/;
   const secrets = stagedFiles.filter(f => secretPattern.test(f));
   if (secrets.length) {
-    const err = new Error(`機密ファイル検知: ${secrets.join(', ')}`);
+    const err = new Error(`機密ファイルを検出: ${secrets.join(', ')}`);
     err.details = { secrets };
     throw err;
   }
@@ -542,7 +613,7 @@ function cmdInit() {
   try {
     git(['fetch', 'origin', BASE_BRANCH], { timeout: 30_000, retry: 3 });
   } catch (e) {
-    warnings.push(`リモート fetch 失敗: ${e.message}。最新性未検証。`);
+    warnings.push(`リモートfetch失敗: ${e.message}。最新性未検証。`);
   }
   try {
     const localSha = git(['rev-parse', 'HEAD']);
@@ -552,19 +623,19 @@ function cmdInit() {
       const behind = parseInt(git(['rev-list', '--count', `HEAD..origin/${BASE_BRANCH}`]) || '0', 10);
       if (ahead > 0) {
         throw new Error(
-          `ローカル ${BASE_BRANCH} が origin/${BASE_BRANCH} より ${ahead} コミット先行しています。` +
-          `先に push/PR 処理した後に再試行してください。(自動 push は意図しないコミット伝播の危険性のため無効化されています)`
+          `ローカル${BASE_BRANCH}がorigin/${BASE_BRANCH}より${ahead}コミット進んでいます。` +
+          `先にpush/PR処理後に再試行してください。（自動pushは意図しないcommit伝播リスクのため無効化されています）`
         );
       }
       if (behind > 0) {
         warnings.push(
-          `ローカル ${BASE_BRANCH} が origin/${BASE_BRANCH} より ${behind} コミット遅れています。` +
-          `finalize が ff-merge で自動同期予定。PR マージ時に衝突の可能性あり。`
+          `ローカル${BASE_BRANCH}がorigin/${BASE_BRANCH}より${behind}コミット遅れています。` +
+          `finalizeがff-mergeで自動同期予定。PRマージ時に競合の可能性。`
         );
       }
     }
   } catch (e) {
-    if (e.message.includes('先行')) throw e;
+    if (e.message.includes('進んでいます')) throw e;
     warnings.push(`最新性比較失敗: ${e.message}`);
   }
 
@@ -578,7 +649,7 @@ function cmdInit() {
 
 function cmdIsolate(args) {
   const branchName = requireArg(args, 'branch');
-  if (!existsSync(PATCH_FILE)) throw new Error('先に init を実行してください');
+  if (!existsSync(PATCH_FILE)) throw new Error('initを先に実行してください');
 
   git(['worktree', 'add', '-b', branchName, WT_DIR, 'HEAD']);
   writeFileSync(BRANCH_FILE, branchName);
@@ -591,7 +662,7 @@ function cmdIsolate(args) {
 function cmdCommit(args) {
   const message = requireArg(args, 'message');
   const files = (typeof args.files === 'string') ? args.files.split(',') : null;
-  if (!existsSync(WT_DIR)) throw new Error('worktree なし。先に isolate を実行してください');
+  if (!existsSync(WT_DIR)) throw new Error('worktreeなし。isolateを先に実行してください');
 
   writeFileSync(MSG_FILE, message);
   const cmdArgs = files
@@ -603,13 +674,13 @@ function cmdCommit(args) {
   return { ok: true, sha: git(['rev-parse', 'HEAD'], { cwd: WT_DIR }).slice(0, 7) };
 }
 
-// べき等 PR 生成: 同一 head の open PR があれば再利用 + title/body アップデート。
-// gh() が transient (TLS timeout など) を再試行するため、list の一時的失敗が空の結果のように見え、
-// 重複 create → "already exists" で停止する罠を遮断。create "already exists" も再検知で復旧。
-// ghFn 注入 (default gh) — デグレードテストが already-exists 復旧シナリオを stub で検証
-// (detectExternalSupersetRisk の gitFn 注入パターンと同一)。
+// 冪等PR生成: 同一headのopen PRがあれば再利用 + title/body更新。
+// gh()がtransient(TLS timeoutなど)を再試行するためlistの一時的失敗が空の結果に見え、
+// 重複create → "already exists"で止まる罠を防止。create "already exists"も再検知で復旧。
+// ghFn注入(default gh) — リグレッションテストがalready-exists復旧シナリオをstubで検証
+// (detectExternalSupersetRiskのgitFn注入パターンと同一)。
 export function getOrCreatePr({ base, head, title, body, repo }, ghFn = gh) {
-  // ship-worktree 単独呼び出し時は STATE_DIR 不在の可能性あり (init 非依存)。べき等 mkdir。
+  // ship-worktree単独呼び出し時はSTATE_DIR不在の可能性がある（init非依存）。冪等mkdir。
   mkdirSync(STATE_DIR, { recursive: true });
   writeFileSync(BODY_FILE, body);
 
@@ -630,23 +701,23 @@ export function getOrCreatePr({ base, head, title, body, repo }, ghFn = gh) {
     return { prNumber: found.prNumber, prUrl: found.prUrl, existing: true };
   };
 
-  // 1) 既存の open PR 検知 (gh transient 再試行含む)。検知自体が persistent 失敗した場合は
-  //    create 段階の "already exists" 分岐で復旧するため、ここでは無視して進行。
+  // 1) 既存のopen PRを検知（gh transient再試行を含む）。検知自体がpersistent失敗する場合は
+  //    create段階の"already exists"分岐で復旧するため、ここでは飲み込んで続行。
   try {
     const found = findExistingPr();
     if (found) return useExisting(found);
   } catch {
-    /* 検知失敗 — create の already-exists 復旧に委譲 */
+    /* 検知失敗 — createのalready-exists復旧に委ねる */
   }
 
-  // 2) 生成。"already exists" = すでに PR が存在 (検知が transient で漏れた) → 再検知復旧。
+  // 2) 生成。"already exists" = すでにPRが存在（検知がtransientで見逃した）→ 再検知で復旧。
   try {
     const url = ghFn([
       'pr', 'create', '--repo', repo, '--base', base, '--head', head,
       '--title', title, '--body-file', BODY_FILE,
     ]);
     const prNumber = parseInt(url.match(/\/pull\/(\d+)/)?.[1] || '0', 10);
-    if (!prNumber) throw new Error(`PR 番号パース失敗: ${url}`);
+    if (!prNumber) throw new Error(`PR番号パース失敗: ${url}`);
     return { prNumber, prUrl: url, existing: false };
   } catch (e) {
     if (/already exists/i.test(String(e && e.message))) {
@@ -654,14 +725,14 @@ export function getOrCreatePr({ base, head, title, body, repo }, ghFn = gh) {
         const recovered = findExistingPr();
         if (recovered) return useExisting(recovered);
       } catch {
-        /* 再検知も失敗 — オリジナルの already-exists エラーで 'PR存在' の事実を伝達 */
+        /* 再検知も失敗 — 元のalready-existsエラーで「PR存在」の事実を伝達 */
       }
     }
     throw e;
   }
 }
 
-// BLOCKED/BEHIND 時に false 返却 (graceful pending)、タイムアウトも false
+// BLOCKED/BEHIND時はfalseを返す（graceful pending）、タイムアウトもfalse
 function waitMergeable(prNumber, repo) {
   let waited = 0;
   while (waited < MERGEABLE_TIMEOUT_MS) {
@@ -687,7 +758,7 @@ function createAndMergePr({ base, head, title, body, deleteBranch = null, noMerg
 
   let { mergeable, state } = waitMergeable(prNumber, repo);
   if (!mergeable && worktreeDir && (state === 'BEHIND' || state === 'DIRTY' || state === 'BLOCKED')) {
-    console.log(`[create-pr] PR #${prNumber} がマージ不可能な状態 (${state}) です。自動同期および再試行を試みます。`);
+    console.log(`[create-pr] PR #${prNumber}がマージ不可能な状態(${state})です。自動同期と再試行を試みます。`);
     try {
       git(['fetch', 'origin', base], { cwd: worktreeDir, timeout: 30_000, retry: 3 });
       let syncSuccess = false;
@@ -696,24 +767,24 @@ function createAndMergePr({ base, head, title, body, deleteBranch = null, noMerg
         console.log(`[create-pr] ローカルマージ成功。`);
         syncSuccess = true;
       } catch (mergeErr) {
-        console.log(`[create-pr] ローカルマージ衝突発生。自動衝突解決を試行中...`);
+        console.log(`[create-pr] ローカルマージで競合発生。自動競合解決を試行中...`);
         const conflictingFiles = git(['diff', '--name-only', '--diff-filter=U'], { cwd: worktreeDir })
           .trim()
           .split('\n')
           .filter(Boolean);
-        
+
         const resolved = tryAutoResolveConflicts(worktreeDir, conflictingFiles);
         if (resolved) {
           const hasMakefile = existsSync(join(worktreeDir, 'Makefile'));
           const validateCmd = hasMakefile ? 'make q.check' : (existsSync(join(worktreeDir, 'package.json')) ? 'npm test' : null);
           if (validateCmd) {
-            console.log(`[create-pr] 自動解決完了。検証ツール (${validateCmd}) を駆動します...`);
+            console.log(`[create-pr] 自動解決完了。検証ツール(${validateCmd})を実行します...`);
             try {
               exec(validateCmd.split(' '), { cwd: worktreeDir });
-              console.log(`[create-pr] 検証通過！`);
+              console.log(`[create-pr] 検証通過!`);
               syncSuccess = true;
             } catch (gateErr) {
-              console.error(`[create-pr] 検証失敗。マージキャンセル。`);
+              console.error(`[create-pr] 検証失敗。マージを取り消します。`);
               try { git(['merge', '--abort'], { cwd: worktreeDir }); } catch {}
             }
           } else {
@@ -727,21 +798,21 @@ function createAndMergePr({ base, head, title, body, deleteBranch = null, noMerg
 
       if (syncSuccess) {
         git(['push', 'origin', head], { cwd: worktreeDir, timeout: 60_000, retry: 3 });
-        console.log(`[create-pr] アップデートされたブランチの push 完了。PR 状態を再確認中...`);
+        console.log(`[create-pr] 更新されたブランチのpush完了。PR状態を再確認中...`);
         const retryResult = waitMergeable(prNumber, repo);
         mergeable = retryResult.mergeable;
         state = retryResult.state;
       }
     } catch (syncErr) {
-      console.error(`[create-pr] 自動同期試行中のエラー: ${syncErr.message}`);
+      console.error(`[create-pr] 自動同期試行中にエラー: ${syncErr.message}`);
     }
   }
 
   if (!mergeable) {
-    // v2.1: warning (string) → warnings (array) 統一。finalize と同一の形式。
+    // v2.1: warning(string) → warnings(array)に統一。finalizeと同じ形式。
     return {
       prNumber, prUrl, merged: false, pending: true, existing,
-      warnings: [`PR #${prNumber} 自動マージ保留 (mergeStateStatus=${state})。CI/レビュー通過後に手動マージまたは再試行してください。`],
+      warnings: [`PR #${prNumber} 自動マージ保留 (mergeStateStatus=${state})。CI/レビュー通過後に手動マージまたは再試行。`],
     };
   }
 
@@ -751,19 +822,23 @@ function createAndMergePr({ base, head, title, body, deleteBranch = null, noMerg
     `/repos/${repo}/pulls/${prNumber}/merge`,
     '-f', `merge_method=squash`,
   ]));
-  if (!resp.merged) throw new Error(`PR #${prNumber} merge 失敗`);
+  if (!resp.merged) throw new Error(`PR #${prNumber} merge失敗`);
 
   if (deleteBranch) {
     try { gh(['api', '--method', 'DELETE', `/repos/${repo}/git/refs/heads/${deleteBranch}`]); } catch {}
   }
 
-  // マージされたファイル一覧 + ツリー (失敗時は silent passthrough — 中核のマージ結果に影響なし)
+  // マージされたファイル一覧 + ツリー（失敗時はsilent passthrough — 核心のマージ結果に影響なし）
   const changed_files = collectChangedFilesViaPr(prNumber, repo);
   const changed_files_tree = buildFileTree(changed_files);
+  const warnings = [];
+  const followupDebt = registerFollowupDebtFromPr(prNumber);
+  if (followupDebt.error) warnings.push(followupDebt.error);
 
   return {
     prNumber, prUrl, sha: resp.sha, merged: true, pending: false, existing,
-    changed_files, changed_files_tree,
+    changed_files, changed_files_tree, warnings,
+    followup_debt_registered: { count: followupDebt.count, items: followupDebt.items },
   };
 }
 
@@ -783,14 +858,14 @@ function cmdShipFeature(args) {
     worktreeDir: WT_DIR,
   });
 
-  // ship 成功時に Pre-Ship Review マーカー整理 (R-CM-030 ライフサイクル)。
-  // ship-feature モードのマーカーキーは 'staged'。
+  // ship成功時にPre-Ship Reviewマーカーを整理（R-CM-030ライフサイクル）。
+  // ship-featureモードのマーカーキーは'staged'。
   if (result.merged) unlinkShipReviewMarker('staged');
 
   return { ok: true, ...result };
 }
 
-// finalize: fail-loud セマンティクス。fetch/stash/ff 失敗は ok:false (R-CM-010 整合)
+// finalize: fail-loud意味論。fetch/stash/ff失敗はok:false (R-CM-010整合)
 function cmdFinalize() {
   const localBranch = existsSync(BRANCH_FILE) ? readFileSync(BRANCH_FILE, 'utf-8').trim() : null;
   if (existsSync(WT_DIR)) {
@@ -809,22 +884,22 @@ function cmdFinalize() {
   } catch (e) {
     cleanupState();
     return {
-      ok: false, error: `同期用 fetch 失敗: ${e.message}`,
-      hint: 'remote 確認 (git remote -v)。ネットワーク復旧後に git fetch + git merge --ff-only を手動実行。',
+      ok: false, error: `同期用fetch失敗: ${e.message}`,
+      hint: 'remoteを確認 (git remote -v)。ネットワーク復旧後にgit fetch + git merge --ff-onlyを手動実行。',
       worktree_cleaned: true, sync_status: 'fetch_failed',
     };
   }
 
-  // dirty main は同期せずに中断する (自動 stash 未使用 — オリジナルの working tree に非接触)。
-  // ユーザーが手動で commit/stash させた後に再試行する。main ローカル sync のみが skip され、
-  // 次の worktree-new の fetch + ff が self-heal する。
+  // dirty mainは同期せず中断する（自動stash不使用 — 元のworking treeに触れない）。
+  // ユーザーが手動でcommit/stashした後に再試行する。mainローカルsyncのみskipされ、
+  // 次のworktree-newのfetch + ffがself-healする。
   const hasChanges = git(['status', '--porcelain']).trim().length > 0;
   if (hasChanges) {
     cleanupState();
     return {
       ok: false,
-      error: 'ローカルの uncommitted 変更事項が存在するため同期を進行できません。',
-      hint: '変更事項を手動で commit するか stash させた後に再度同期してください。',
+      error: 'ローカルにuncommittedな変更が存在するため、同期を進めることができません。',
+      hint: '変更を手動でcommitするかstashした後、再度同期してください。',
       worktree_cleaned: true,
       sync_status: 'local_changes',
     };
@@ -835,7 +910,7 @@ function cmdFinalize() {
     git(['checkout', BASE_BRANCH]);
     git(['merge', '--ff-only', `origin/${BASE_BRANCH}`]);
   } catch (e) {
-    ffFailed = `${BASE_BRANCH} ff-only 失敗: ${e.message}`;
+    ffFailed = `${BASE_BRANCH} ff-only失敗: ${e.message}`;
   }
 
   cleanupState();
@@ -843,7 +918,7 @@ function cmdFinalize() {
   if (ffFailed) {
     return {
       ok: false, error: ffFailed,
-      hint: 'リモートの main がローカルの main の先祖ではありません (non-fast-forward)。git log + 手動 rebase が必要。',
+      hint: 'リモートmainがローカルmainの祖先ではありません (non-fast-forward)。git log + 手動rebaseが必要。',
       sync_status: 'ff_failed',
     };
   }
@@ -853,23 +928,23 @@ function cmdFinalize() {
 // ═ Mode B: Worktree ═
 
 /**
- * R-CM-008 Rule 9 (multi-worktree superset detection).
+ * R-CM-008 Rule 9 (multi-worktree superset detection)。
  *
- * 本 worktree の変更ファイル set と origin/<baseBranch> の最近 24h の commit が
- * タッチしたファイル set の intersection を計算し、他のセッションの PR が本 worktree の
- * 作業を silently superset として吸収した可能性を検知する。
+ * 本worktreeの変更ファイルsetと、origin/<baseBranch>の最近24h commitが
+ * 触れたファイルsetのintersectionを計算し、別セッションのPRが本worktreeの
+ * 作業をsilentlyにsupersetとして吸収した可能性を検知する。
  *
- * Multi-worktree 同時進行 (Claude Code / Codex など) 時、あるセッションが他のセッションの
- * commit を superset として squash merge すると後者の worktree が意味を失う。
- * fetch 直後に detection → warning (block しない — R-CM-031 Reversible default) により
- * ユーザーに認知の機会を提供。
+ * Multi-worktree同時進行（Claude Code / Codexなど）時、あるセッションが別セッションの
+ * commitをsupersetとしてsquash mergeすると、後者のworktreeが意味を失う。
+ * fetch直後のdetection → warning（block X — R-CM-031 Reversible default）で
+ * ユーザーに気づく機会を提供する。
  *
- * fail-open: git コマンド失敗時は null を返却 (R-CM-006 Rule 2)。
+ * fail-open: gitコマンド失敗時はnullを返す（R-CM-006 Rule 2）。
  *
- * @param {string} absWtPath worktree 絶対パス
- * @param {string} baseBranch 比較基準 branch (通常 main)
- * @param {Function} [gitFn=git] git executor (default = モジュール git wrapper). Override in tests only.
- * @returns {Array<{sha,subject,files}> | null} overlap 1+ の時配列、なければ null
+ * @param {string} absWtPath worktreeの絶対パス
+ * @param {string} baseBranch 比較基準branch（通常main）
+ * @param {Function} [gitFn=git] git executor (default = モジュールgit wrapper)。Override in tests only.
+ * @returns {Array<{sha,subject,files}> | null} overlapが1件以上なら配列、なければnull
  */
 export function detectExternalSupersetRisk(absWtPath, baseBranch, gitFn = git) {
   const splitLines = (s) => s.split('\n').map((line) => line.trim()).filter(Boolean);
@@ -879,8 +954,8 @@ export function detectExternalSupersetRisk(absWtPath, baseBranch, gitFn = git) {
     );
     if (myFiles.length === 0) return null;
 
-    // Single `git log --name-only --format="%H %s"` 呼び出しにより N+1 spawn を回避。
-    // 出力: 各 commit block は空の line で区分 — "<sha> <subject>\n<file1>\n<file2>\n\n<sha2>..."。
+    // Single `git log --name-only --format="%H %s"` 呼び出しでN+1 spawnを回避。
+    // 出力: 各commit blockは空行で区切られる — "<sha> <subject>\n<file1>\n<file2>\n\n<sha2>...".
     const logOutput = gitFn(
       ['log', `origin/${baseBranch}`, '--since=24.hours.ago', '--name-only', '--format=%H %s'],
       { cwd: absWtPath },
@@ -916,7 +991,7 @@ export function detectExternalSupersetRisk(absWtPath, baseBranch, gitFn = git) {
 export function tryAutoResolveConflicts(absWtPath, conflictingFiles) {
   if (!conflictingFiles || conflictingFiles.length === 0) return true;
 
-  console.log(`[auto-resolve] 衝突ファイル検知: ${conflictingFiles.join(', ')}`);
+  console.log(`[auto-resolve] 競合ファイルを検出: ${conflictingFiles.join(', ')}`);
 
   const autoResolvablePatterns = [
     /package-lock\.json$/,
@@ -938,7 +1013,7 @@ export function tryAutoResolveConflicts(absWtPath, conflictingFiles) {
   try {
     for (const file of conflictingFiles) {
       if (file.endsWith('package-lock.json') || file.endsWith('pnpm-lock.yaml') || file.endsWith('yarn.lock')) {
-        console.log(`[auto-resolve] ${file} 衝突解決試行: --theirs 選択後にパッケージ再生成`);
+        console.log(`[auto-resolve] ${file} の競合解決を試行: --theirsを選択後にパッケージ再生成`);
         git(['checkout', '--theirs', file], { cwd: absWtPath });
         if (file.endsWith('package-lock.json')) {
           try { exec(['npm', 'install'], { cwd: absWtPath }); } catch {}
@@ -949,7 +1024,7 @@ export function tryAutoResolveConflicts(absWtPath, conflictingFiles) {
         }
         git(['add', file], { cwd: absWtPath });
       } else if (file.includes('PLAN.md') || file.endsWith('.md')) {
-        console.log(`[auto-resolve] ${file} 衝突解決試行: --ours 選択`);
+        console.log(`[auto-resolve] ${file} の競合解決を試行: --oursを選択`);
         git(['checkout', '--ours', file], { cwd: absWtPath });
         git(['add', file], { cwd: absWtPath });
       }
@@ -957,47 +1032,47 @@ export function tryAutoResolveConflicts(absWtPath, conflictingFiles) {
 
     const remaining = git(['diff', '--name-only', '--diff-filter=U'], { cwd: absWtPath }).trim();
     if (remaining.length > 0) {
-      console.log(`[auto-resolve] 未解決の衝突が残っています: ${remaining}`);
+      console.log(`[auto-resolve] 未解決の競合が残っています: ${remaining}`);
       return false;
     }
 
     git(['commit', '--no-edit'], { cwd: absWtPath });
-    console.log(`[auto-resolve] すべての衝突が正常に自動解決され、merge commit が生成されました。`);
+    console.log(`[auto-resolve] すべての競合が正常に自動解決され、merge commitが生成されました。`);
     return true;
   } catch (err) {
-    console.error(`[auto-resolve] 衝突解決中にエラーが発生しました: ${err.message}`);
+    console.error(`[auto-resolve] 競合解決中にエラー発生: ${err.message}`);
     return false;
   }
 }
 
 /**
- * `detectExternalSupersetRisk` の overlaps 配列をユーザー用の warning 文字列にフォーマット。
- * Helper 抽出目的: cmdShipWorktree 統合パス (warning フォーマット + indentation) 単体テスト
- * 可能化 — code-reviewer agent HIGH-2 (PR #296) デグレード遮断。
+ * `detectExternalSupersetRisk` のoverlaps配列をユーザー向けwarning文字列にフォーマット。
+ * Helper抽出目的: cmdShipWorktree統合経路（warningフォーマット + indentation）を単体テスト
+ * 可能化 — code-reviewer agent HIGH-2 (PR #296) リグレッション防止。
  *
  * @param {Array<{sha,subject,files}> | null} overlaps
  * @param {string} baseBranch
- * @returns {string | null} overlaps 1+ の時 warning string、それ以外は null
+ * @returns {string | null} overlapsが1件以上ならwarning string、それ以外null
  */
 export function formatSupersetWarning(overlaps, baseBranch) {
   if (!overlaps || overlaps.length === 0) return null;
   const lines = overlaps
     .map((o) => `  ${o.sha} ${o.subject} (${o.files.join(', ')})`)
     .join('\n');
-  return `multi-worktree superset 危険: origin/${baseBranch} の最近 24h のマージ ${overlaps.length} 件が本 worktree の変更ファイルにタッチしました。本 PR が redundant または silently superset に吸収される可能性 — 変更意図が依然として有効であるか確認の上で進行してください。\n${lines}`;
+  return `multi-worktree superset危険: origin/${baseBranch} の最近24hマージ${overlaps.length}件が本worktreeの変更ファイルに触れました。本PRがredundantまたはsilentlyにsuperset吸収された可能性 — 変更意図が依然有効か確認してから進めてください。\n${lines}`;
 }
 
 /**
- * ship 応答の 5ソース `mergedWarnings` を合成する純粋関数 (DEBT-15 "mergedWarnings
- * spread" の明示対象)。各ソースの null/undefined を防ぎつつフラットな配列に結合する。
- * 順序: result → superset → preservation → runBundle → cleanup (ユーザー露出順序の契約)。
+ * ship応答の5-source `mergedWarnings` を合成する純粋関数（DEBT-15「mergedWarnings
+ * spread」の明示対象）。各sourceのnull/undefinedを防御して平坦配列に結合する。
+ * 順序: result → superset → preservation → runBundle → cleanup（ユーザー露出順序契約）。
  *
  * @param {object} p
- * @param {object} p.result            createAndMergePr 結果 (warnings 保有の可能性あり)
+ * @param {object} p.result            createAndMergePr結果（warnings保有可）
  * @param {string[]} [p.supersetWarnings=[]]
  * @param {string[]} [p.preservationWarnings=[]]
- * @param {object|null} [p.runBundle=null]      warnings 保有の可能性あり
- * @param {object|null} [p.cleanupResult=null]  warnings 保有の可能性あり
+ * @param {object|null} [p.runBundle=null]      warnings保有可
+ * @param {object|null} [p.cleanupResult=null]  warnings保有可
  * @returns {string[]}
  */
 export function mergeShipWarnings({
@@ -1017,48 +1092,48 @@ export function mergeShipWarnings({
 }
 
 /**
- * ship 応答の `cleanup_hint` 分岐のみを分離した純粋関数。cmdShipWorktree の最も
- * 分岐密度の高い sub-logic (nested ternary) を独立したテスト単位に隔離する。
+ * ship応答の`cleanup_hint`分岐のみ分離した純粋関数。cmdShipWorktreeの最も
+ * 分岐密度が高いsub-logic（nested ternary）を独立したテスト単位に隔離する。
  *
- * R-CM-010 Iron Law: AI が cleanup を自動実行したと推測するのを禁止 — hint に明示。
- *   - `--no-cleanup` + merged: 後続の cleanup-worktree 実行案内 (最優先)。
- *   - 委譲された cleanup の main 同期失敗 (fetch/stash/ff): その hint をそのまま伝達
- *     (PR マージは非可逆 — ship は ok:true 維持、sync 状態のみを surface)。
+ * R-CM-010 Iron Law: AIがcleanupを自動実行したと推定するのを禁止 — hintで明示。
+ *   - `--no-cleanup` + merged: 後続のcleanup-worktree実行を案内（最優先）。
+ *   - 委任cleanupのmain同期失敗（fetch/stash/ff）: そのhintをそのまま伝達
+ *     （PRマージは不可逆 — shipはok:true維持、sync状態のみsurface）。
  *   - その他: null。
  *
  * @param {object} p
- * @param {boolean} [p.cleanup=true]   cleanup 要求の有無 (--no-cleanup 反対)
- * @param {boolean} [p.merged=false]   PR マージ成功の有無 (result.merged)
- * @param {string} p.wtPath            オリジナル worktree 引数 (未整理 hint メッセージ用)
- * @param {object|null} [p.cleanupResult=null]  cmdCleanupWorktree 結果
+ * @param {boolean} [p.cleanup=true]   cleanup要求有無（--no-cleanupの反対）
+ * @param {boolean} [p.merged=false]   PRマージ成功有無（result.merged）
+ * @param {string} p.wtPath            元のworktree引数（未整理hintメッセージ用）
+ * @param {object|null} [p.cleanupResult=null]  cmdCleanupWorktree結果
  * @returns {string|null}
  */
 export function composeCleanupHint({ cleanup = true, merged = false, wtPath, cleanupResult = null }) {
   if (!cleanup && merged) {
-    return `worktree 未整理 — 後続実行: node .claude/scripts/create-pr/ops.mjs cleanup-worktree --worktree ${wtPath}`;
+    return `worktree未整理 — 後続実行: node .claude/scripts/create-pr/ops.mjs cleanup-worktree --worktree ${wtPath}`;
   }
   const cr = cleanupResult ?? {};
   return cr.ok === false ? (cr.hint ?? null) : null;
 }
 
 /**
- * cmdShipWorktree の応答組み立てグルー — 5ソース `mergedWarnings` spread + `cleanup_hint`
- * 分岐 + `?? null` フィールドデフォルト値 — を純粋関数に分離。git/gh/fs 呼び出し部と隔離して
- * `formatSupersetWarning` 抽出先例のように単体テスト可能にする (DEBT-15 / DEBT-27)。
+ * cmdShipWorktreeの応答組み立てglue — 5-source `mergedWarnings` spread + `cleanup_hint`
+ * 分岐 + `?? null` フィールドデフォルト値 — を純粋関数として分離。git/gh/fs呼び出し部と隔離して
+ * `formatSupersetWarning`抽出の先例のように単体テスト可能にする（DEBT-15 / DEBT-27）。
  *
- * 動作は cmdShipWorktree インラインバージョンと同一 (pure refactor — 入力のみ受け取って応答を形成)。
+ * 動作はcmdShipWorktreeインライン版と同一である（pure refactor — 入力のみ受けて応答形成）。
  *
  * @param {object} p
- * @param {object} p.result            createAndMergePr 結果 (warnings / merged / ...rest)
- * @param {string[]} [p.supersetWarnings=[]]      R-CM-008 Rule 9 superset 警告
- * @param {string[]} [p.preservationWarnings=[]]  run/output 保存警告
- * @param {object|null} [p.runBundle=null]        preserveWorktreeRunOutputs 結果
- * @param {object|null} [p.cleanupResult=null]    cmdCleanupWorktree 結果
- * @param {boolean} [p.cleanedUp=false]           worktree 整理完了の有無
- * @param {boolean} [p.cleanup=true]              cleanup 要求の有無 (--no-cleanup 反対)
- * @param {string} p.wtPath                       オリジナル worktree 引数 (cleanup_hint メッセージ用)
- * @param {object|null} [p.postMergeMainStatus=null]  main repo dirty 状態
- * @returns {object} ship-worktree 最終応答オブジェクト (ok:true 固定)
+ * @param {object} p.result            createAndMergePr結果（warnings / merged / ...rest）
+ * @param {string[]} [p.supersetWarnings=[]]      R-CM-008 Rule 9 superset警告
+ * @param {string[]} [p.preservationWarnings=[]]  run/output保存警告
+ * @param {object|null} [p.runBundle=null]        preserveWorktreeRunOutputs結果
+ * @param {object|null} [p.cleanupResult=null]    cmdCleanupWorktree結果
+ * @param {boolean} [p.cleanedUp=false]           worktree整理完了有無
+ * @param {boolean} [p.cleanup=true]              cleanup要求有無（--no-cleanupの反対）
+ * @param {string} p.wtPath                       元のworktree引数（cleanup_hintメッセージ用）
+ * @param {object|null} [p.postMergeMainStatus=null]  main repo dirty状態
+ * @returns {object} ship-worktree最終応答オブジェクト（ok:true固定）
  */
 export function composeShipResponse({
   result,
@@ -1106,12 +1181,12 @@ export function composeShipResponse({
   };
 }
 
-// 移植された外部プロジェクト (transplant-bundle 対象) は brief2dev パイプラインを使用しないため
-// 'output' / 'docs/pipeline-log' のような一般的な名前の独自ディレクトリを所持することがある — これを
-// brief2dev run 成果物と誤認して保存ロジックを発動させてはならない。`.brief2dev/` マーカーが
-// 実在するプロジェクト (brief2dev 自体 + そのパイプラインを使用する scaffold 成果物) でのみこの
-// ジェネリック候補を含める。マーカーのないプロジェクトは layout-resolver 基準の動的候補
-// (`.brief2dev/runs` 等、すでに `.brief2dev/` でネームスペース化されたもの) のみが対象。
+// 移植された外部プロジェクト（transplant-bundle対象）はbrief2devパイプラインを使わないため、
+// 'output' / 'docs/pipeline-log' のようなありふれた名前の自前ディレクトリを持つ可能性がある — これを
+// brief2dev runの成果物と誤認して保存ロジックを発動させてはならない。`.brief2dev/`マーカーが
+// 実在するプロジェクト（brief2dev自体 + そのパイプラインを使うscaffold成果物）でのみこの
+// ジェネリック候補を含める。マーカーがないプロジェクトはlayout-resolverベースの動的候補
+// (`.brief2dev/runs`など、すでに`.brief2dev/`でネームスペース化済み)のみを対象とする。
 function runOutputCandidateRelPaths(absWtPath) {
   const pipelineRoot = getPipelineDataRoot();
   const pipelineRootName = basename(pipelineRoot);
@@ -1164,7 +1239,7 @@ export function preserveWorktreeRunOutputs(absWtPath, branch, options = {}) {
     return {
       ok: true,
       skipped: true,
-      warnings: ['保存する run/output 候補がありません。'],
+      warnings: ['保存すべきrun/output候補がありません。'],
       copied_paths: [],
       total_files: 0,
       total_bytes: 0,
@@ -1185,7 +1260,7 @@ export function preserveWorktreeRunOutputs(absWtPath, branch, options = {}) {
   try {
     headSha = git(['rev-parse', 'HEAD'], { cwd: absWtPath });
   } catch {
-    warnings.push('worktree HEAD sha 確認失敗 — manifest.head_sha=null として記録。');
+    warnings.push('worktree HEAD sha確認失敗 — manifest.head_sha=nullとして記録。');
   }
 
   const copied = [];
@@ -1241,21 +1316,21 @@ export function preserveWorktreeRunOutputs(absWtPath, branch, options = {}) {
 function cmdVerifyPlan(args) {
   const wtPath = requireArg(args, 'worktree');
   const planPath = resolveWorktreePlanPath(resolveWorktreeAbsPath(wtPath));
-  if (!existsSync(planPath)) throw new Error(`PLAN.md なし: ${planPath}`);
+  if (!existsSync(planPath)) throw new Error(`PLAN.mdなし: ${planPath}`);
   const content = readFileSync(planPath, 'utf-8');
   const force = args.force === true;
   const unchecked = parseUnchecked(content);
   if (!force && unchecked.length > 0) {
     throw new Error(
-      `PLAN.md に未完了のタスクが ${unchecked.length} 件あります:\n${unchecked.join('\n')}\n\n` +
-      `※ 迂回: --force または項目に (キャンセル済み)/(dropped)/(deferred)/~~取り消し線~~ マーカーを追加`
+      `PLAN.mdに未完了のタスクが${unchecked.length}件あります:\n${unchecked.join('\n')}\n\n` +
+      `※ 回避: --force、または項目に(取消済み)/(dropped)/(deferred)/~~取り消し線~~ マーカーを追加`
     );
   }
   return {
     ok: true,
     message: unchecked.length === 0
-      ? 'すべてのPLANチェックボックスが完了(またはキャンセル/無視)されました'
-      : `--force 迂回により ${unchecked.length} 件の未完了項目を無視`,
+      ? 'すべてのPLANチェックボックスが完了（または取消/無視）済み'
+      : `--force回避で${unchecked.length}件の未完了項目を無視`,
     unchecked_count: unchecked.length,
   };
 }
@@ -1264,56 +1339,56 @@ function cmdShipWorktree(args) {
   const wtPath = requireArg(args, 'worktree');
   const absWtPath = resolveWorktreeAbsPath(wtPath);
   if (!existsSync(absWtPath)) {
-    // マルチ worktree 環境で AI が worktree 内部の cwd から ops.mjs を呼び出すと
-    // 正規化が誤っているケースが度々存在した (PROJECT_DIR fallback の罠)。明確な
-    // 診断メッセージで誤ったパスとともに実際の活性 worktree の一覧を提示する。
+    // 多重worktree環境でAIがworktree内部cwdからops.mjsを呼び出すと
+    // 正規化が誤る場合がしばしばあった（PROJECT_DIR fallbackの罠）。明確な
+    // 診断メッセージで誤ったpathとともに実際のアクティブworktree一覧を提示する。
     let candidates = [];
     try {
       candidates = parseWorktreePaths(git(['worktree', 'list', '--porcelain']));
     } catch {
-      // git 呼び出し失敗 — 単一メッセージで fallback
+      // git呼び出し失敗 — 単一メッセージへfallback
     }
     const candidateBlock = candidates.length > 0
-      ? `\n活性 worktree 候補:\n  - ${candidates.join('\n  - ')}`
+      ? `\nアクティブなworktree候補:\n  - ${candidates.join('\n  - ')}`
       : '';
-    throw new Error(`Worktree なし: ${absWtPath}${candidateBlock}`);
+    throw new Error(`Worktreeなし: ${absWtPath}${candidateBlock}`);
   }
 
-  // PLAN.md 必須検証 (CLAUDE.md "PLAN.md 必須" ポリシー。--force-plan は未完了チェックボックスの迂回用)
+  // PLAN.md必須検証 (CLAUDE.md「PLAN.md必須」ポリシー。--force-planは未完了チェックボックスの回避用)
   // 位置: .tmp/worktree-<safeBranch>/PLAN.md (worktree-plan-path.mjs SSOT)
   const planPath = resolveWorktreePlanPath(absWtPath);
   if (!existsSync(planPath)) {
-    throw new Error(`PLAN.md ファイルが存在しません: ${planPath}。worktree ルートの .tmp/worktree-<branch>/PLAN.md に作成した後に再試行してください。`);
+    throw new Error(`PLAN.mdファイルが存在しません: ${planPath}。worktreeルートの.tmp/worktree-<branch>/PLAN.mdに作成後、再試行してください。`);
   }
   const forcePlan = args['force-plan'] === true;
   if (!forcePlan) {
     const unchecked = parseUnchecked(readFileSync(planPath, 'utf-8'));
     if (unchecked.length > 0) {
       throw new Error(
-        `PLAN.md に未完了のチェックボックスが ${unchecked.length} 件あります。\n` +
-        `※ 迂回: --force-plan フラグまたは項目に (キャンセル済み)/(dropped)/(deferred)/~~取り消し線~~ マーカーを追加`
+        `PLAN.mdに未完了のチェックボックスが${unchecked.length}件あります。\n` +
+        `※ 回避: --force-planフラグ、または項目に(取消済み)/(dropped)/(deferred)/~~取り消し線~~ マーカーを追加`
       );
     }
   }
 
-  // Worktree Commit Requirement: create-pr は dirty worktree を ship しない。
-  // Stop guard と同一の契約により、tracked/untracked の変更ともに先に commit させる。
+  // Worktree Commit Requirement: create-prはdirty worktreeをshipしない。
+  // Stop guardと同じ契約でtracked/untracked変更すべてを先にcommitさせる。
   const status = git(['status', '--porcelain', '--untracked-files=all'], { cwd: absWtPath }).trim();
   if (status.length > 0) {
     const err = new Error(
-      `Worktree にコミットされていない変更事項があります。\n該当の変更をコミットした後に再度お試しください。\n[状態]\n${status}`
+      `Worktreeにコミットされていない変更があります。\nその変更をコミットしてから再試行してください。\n[状態]\n${status}`
     );
     err.details = {
       code: 'commit_required',
       dirty_status: status.split('\n'),
-      hint: 'worktree 内で git status --short を確認し、自身が作成したファイルのみを stage/commit して ship-worktree を再度実行してください。',
+      hint: 'worktree内でgit status --shortを確認後、自分が作成したファイルのみstage/commitしてship-worktreeを再実行してください。',
     };
     throw err;
   }
 
 
-  // Push 前のオリジナル変更事項の自動同期 (Shift-Left Conflict Detection)
-  // + R-CM-008 Rule 9: multi-worktree superset 検知 (fetch 後、merge 前)
+  // Push前に元の変更を自動同期（Shift-Left Conflict Detection）
+  // + R-CM-008 Rule 9: multi-worktree superset検知（fetch後、merge前）
   const supersetWarnings = [];
   try {
     git(['fetch', 'origin', BASE_BRANCH], { cwd: absWtPath, timeout: 30_000, retry: 3 });
@@ -1325,7 +1400,7 @@ function cmdShipWorktree(args) {
     try {
       git(['merge', '--no-edit', `origin/${BASE_BRANCH}`], { cwd: absWtPath });
     } catch (mergeErr) {
-      console.log(`[ship-worktree] オリジナル(${BASE_BRANCH}) マージ中に衝突が検知されました。自動解決を試みます。`);
+      console.log(`[ship-worktree] 元(${BASE_BRANCH})とのマージ中に競合が検出されました。自動解決を試みます。`);
       const conflictingFiles = git(['diff', '--name-only', '--diff-filter=U'], { cwd: absWtPath })
         .trim()
         .split('\n')
@@ -1340,25 +1415,25 @@ function cmdShipWorktree(args) {
       const hasMakefile = existsSync(join(absWtPath, 'Makefile'));
       const validateCmd = hasMakefile ? 'make q.check' : (existsSync(join(absWtPath, 'package.json')) ? 'npm test' : null);
       if (validateCmd) {
-        console.log(`[ship-worktree] 自動解決完了。検証ツール(${validateCmd})を駆動して最終的な整合性を検証します...`);
+        console.log(`[ship-worktree] 自動解決完了。検証ツール(${validateCmd})を実行して最終整合性を検査します...`);
         try {
           exec(validateCmd.split(' '), { cwd: absWtPath });
-          console.log(`[ship-worktree] 検証通過！自動衝突解決が承認されました。`);
+          console.log(`[ship-worktree] 検証通過! 自動競合解決が承認されました。`);
         } catch (gateErr) {
-          console.error(`[ship-worktree] 検証失敗: 自動解決されたコードが品質ゲートを通過しませんでした。マージをキャンセルします。`);
+          console.error(`[ship-worktree] 検証失敗: 自動解決されたコードが品質ゲートを通過できませんでした。マージを取り消します。`);
           try { git(['merge', '--abort'], { cwd: absWtPath }); } catch {}
-          throw new Error(`自動衝突解決後の品質検査(${validateCmd}) 失敗: ${gateErr.message}`);
+          throw new Error(`自動競合解決後の品質検査(${validateCmd})失敗: ${gateErr.message}`);
         }
       } else {
         console.log(`[ship-worktree] 自動解決完了。実行する品質検査ツールがないため検証をスキップします。`);
       }
     }
   } catch (e) {
-    throw new Error(`オリジナル(${BASE_BRANCH})とのマージ中に衝突が発生しました。手動で衝突を解決してコミットした後に再度お試しください。\nエラー: ${e.message}`);
+    throw new Error(`元(${BASE_BRANCH})とのマージ中に競合が発生しました。手動で競合を解決してからコミットし、再試行してください。\nエラー: ${e.message}`);
   }
 
   const branch = git(['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: absWtPath });
-  if (!branch || branch === 'HEAD') throw new Error(`ブランチの把握不可: ${wtPath}`);
+  if (!branch || branch === 'HEAD') throw new Error(`ブランチ特定不可: ${wtPath}`);
 
   git(['push', '-u', 'origin', branch], { cwd: absWtPath, timeout: 60_000, retry: 3 });
 
@@ -1375,12 +1450,12 @@ function cmdShipWorktree(args) {
     worktreeDir: absWtPath,
   });
 
-  // マージ成功時に worktree 全体整理 (デフォルト)。--no-cleanup にて opt-out。
-  // cmdCleanupWorktree に委譲して worktree 除去 + ローカル branch 削除のみならず、
-  // auto-checkpoint stash drop (deleteBranchAndStashes) + CONTEXT.json 整理 +
-  // ローカル main 同期 (fetch + stash-based ff-merge) まで一括遂行する。
-  // 以前はインラインの worktree remove/prune/branch -D のみ実行し、stash・main 同期が
-  // 欠落していたため、ユーザーが cleanup-worktree を別途呼び出す必要があった (整理漏れのギャップ)。
+  // マージ成功時にworktree全体を整理（デフォルト）。--no-cleanupでopt-out。
+  // cmdCleanupWorktreeに委任してworktree削除 + ローカルbranch削除だけでなく、
+  // auto-checkpoint stash drop（deleteBranchAndStashes）+ CONTEXT.json整理 +
+  // ローカルmain同期（fetch + stashベースのff-merge）まで一括実行する。
+  // 以前はインラインでworktree remove/prune/branch -Dのみ実行しており、stash・main同期が
+  // 漏れていたため、ユーザーがcleanup-worktreeを別途呼び出す必要があった（整理漏れギャップ）。
   let cleanedUp = false;
   let cleanupResult = null;
   let runBundle = null;
@@ -1391,26 +1466,26 @@ function cmdShipWorktree(args) {
       runBundle = preserveWorktreeRunOutputs(absWtPath, branch);
     } else if (candidates.length > 0) {
       preservationWarnings.push(
-        `cleanup が ${candidates.map((candidate) => candidate.relPath).join(', ')} 候補を除去します。保存するには ship-worktree --preserve-run を使用してください。`,
+        `cleanupが${candidates.map((candidate) => candidate.relPath).join(', ')}候補を削除します。保存するにはship-worktree --preserve-runを使用してください。`,
       );
     }
     cleanupResult = cmdCleanupWorktree({ worktree: wtPath });
     cleanedUp = cleanupResult.worktree_cleaned === true;
   }
 
-  // ship 成功時に Pre-Ship Review マーカー整理 (R-CM-030 ライフサイクル)。
-  // 委譲された cleanup 時、cmdCleanupWorktree がすでに unlink — ここでは --no-cleanup
-  // パスカバー用 (べき等 — 重複呼び出し安全)。
+  // ship成功時にPre-Ship Reviewマーカーを整理（R-CM-030ライフサイクル）。
+  // 委任cleanup時はcmdCleanupWorktreeがすでにunlink — ここでは--no-cleanup
+  // 経路カバー用（冪等 — 重複呼び出し安全）。
   if (result.merged) unlinkShipReviewMarker(wtPath);
 
-  // マージ成功直後、main repo working tree dirty 状態を報告。
-  // AI は main の unstaged 変更がマージ結果と衝突する可能性があることを認知し、ユーザーに
-  // 明示的な reconcile (git pull --ff-only) を案内しなければならない。
+  // マージ成功直後にmain repoのworking tree dirty有無を報告。
+  // AIはmainのunstaged変更がマージ結果と衝突する可能性を把握し、ユーザーに
+  // 明示的なreconcile（git pull --ff-only）を案内すべきである。
   const post_merge_main_status = result.merged ? detectPostMergeMainStatus() : null;
 
-  // 応答組み立てのグルー (mergedWarnings spread + cleanup_hint 分岐 + ?? null フィールドデフォルト値)
-  // は純粋関数 composeShipResponse に委譲 — git/gh/fs 隔離により単体テスト可能
-  // (DEBT-15 / DEBT-27, `tests/unit/create-pr-ship-response-compose.test.mjs`).
+  // 応答組み立てglue（mergedWarnings spread + cleanup_hint分岐 + ?? nullフィールドデフォルト値）
+  // は純粋関数composeShipResponseに委任 — git/gh/fs隔離により単体テスト可能
+  // (DEBT-15 / DEBT-27, `tests/unit/create-pr-ship-response-compose.test.mjs`)。
   return composeShipResponse({
     result,
     supersetWarnings,
@@ -1429,8 +1504,8 @@ function cmdCleanupWorktree(args) {
   const absWtPath = resolveWorktreeAbsPath(wtPath);
   const warnings = [];
 
-  // 該当の worktree マーカー + stale (>1h) マーカー GC (R-CM-030 ライフサイクル)。
-  // ship-worktree がすでに unlink していてもべき等 — cancelled フローの累積防止が主目的。
+  // 該当worktreeマーカー + stale (>1h) マーカーGC（R-CM-030ライフサイクル）。
+  // ship-worktreeがすでにunlinkしていても冪等 — cancelledフローの累積防止が主目的。
   unlinkShipReviewMarker(wtPath);
   gcStaleShipReviewMarkers();
 
@@ -1442,7 +1517,7 @@ function cmdCleanupWorktree(args) {
   }
   if (branch) deleteBranchAndStashes(branch);
 
-  // CONTEXT.json の worktree 参照整理 (存在する場合のみ)
+  // CONTEXT.jsonのworktree参照を整理（存在する場合のみ）
   const ctxPath = join(PROJECT_DIR, 'CONTEXT.json');
   if (existsSync(ctxPath)) {
     try {
@@ -1452,29 +1527,29 @@ function cmdCleanupWorktree(args) {
         writeFileSync(ctxPath, JSON.stringify(ctx, null, 2) + '\n');
       }
     } catch (e) {
-      warnings.push(`CONTEXT.json アップデート失敗: ${e.message}`);
+      warnings.push(`CONTEXT.json更新失敗: ${e.message}`);
     }
   }
 
-  // main 同期 (finalize と同一のセマンティクス、fail-loud)。dirty main は stash せずに abort。
+  // main同期（finalizeと同一意味論、fail-loud）。dirty mainはstashせずabort。
   try {
     git(['fetch', 'origin', BASE_BRANCH], { cwd: PROJECT_DIR, timeout: 60_000, retry: 3 });
   } catch (e) {
     return {
-      ok: false, error: `${BASE_BRANCH} fetch 失敗: ${e.message}`,
-      hint: 'remote 確認のうえ手動同期', sync_status: 'fetch_failed',
+      ok: false, error: `${BASE_BRANCH} fetch失敗: ${e.message}`,
+      hint: 'remote確認後に手動同期', sync_status: 'fetch_failed',
       worktree_cleaned: true, warnings,
     };
   }
 
-  // dirty main は同期せずに中断する (自動 stash 未使用 — オリジナルの working tree に非接触)。
-  // PR はすでにマージされているため有効であり、main ローカル sync のみが skip される (次の worktree-new で self-heal)。
+  // dirty mainは同期せず中断する（自動stash不使用 — 元のworking treeに触れない）。
+  // PRはすでにマージ済みのため有効であり、mainローカルsyncのみskipされる（次のworktree-new self-heal）。
   const hasChanges = git(['status', '--porcelain'], { cwd: PROJECT_DIR }).trim().length > 0;
   if (hasChanges) {
     return {
       ok: false,
-      error: 'ローカルの uncommitted 変更事項が存在するため同期を進行できません。',
-      hint: '変更事項を手動で commit するか stash させた後に再度同期してください。',
+      error: 'ローカルにuncommittedな変更が存在するため、同期を進めることができません。',
+      hint: '変更を手動でcommitするかstashした後、再度同期してください。',
       worktree_cleaned: true,
       warnings,
       sync_status: 'local_changes',
@@ -1486,13 +1561,13 @@ function cmdCleanupWorktree(args) {
     git(['checkout', BASE_BRANCH], { cwd: PROJECT_DIR });
     git(['merge', '--ff-only', `origin/${BASE_BRANCH}`], { cwd: PROJECT_DIR });
   } catch (e) {
-    ffFailed = `${BASE_BRANCH} ff-only 失敗: ${e.message}`;
+    ffFailed = `${BASE_BRANCH} ff-only失敗: ${e.message}`;
   }
 
   if (ffFailed) {
     return {
       ok: false, error: ffFailed,
-      hint: 'リモートの main がローカルの先祖ではありません。手動 rebase が必要',
+      hint: 'リモートmainがローカルの祖先ではありません。手動rebaseが必要',
       sync_status: 'ff_failed', worktree_cleaned: true, warnings,
     };
   }
@@ -1550,7 +1625,7 @@ function main() {
   }
 }
 
-// v2.1: import 時の main() 自動実行を遮断。デグレードテストが constant のみ import 可能。
+// v2.1: import時のmain()自動実行を防止。リグレッションテストがconstantのみimport可能。
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   main();
 }

@@ -1,0 +1,101 @@
+{
+  "schema_version": 2,
+  "skill_id": "story-decomposer",
+  "tier": 2,
+  "tier_description": "Delivery専門家 - SPEC → User/Job Stories分解 + INVEST検証 + 受け入れ基準",
+  "status": "active",
+  "enforced_protocol": {
+    "version": "2.0",
+    "preflight_required": true,
+    "postflight_required": true,
+    "model_routing_required": true,
+    "evidence_caching_enabled": false
+  },
+  "preflight_checks": [
+    {
+      "id": "PF-001",
+      "description": "対象SPEC.mdの確定",
+      "blocking": true
+    },
+    {
+      "id": "PF-002",
+      "description": "BRIEF.mdペルソナ情報の確認",
+      "blocking": false
+    },
+    {
+      "id": "PF-003",
+      "description": "ストーリー形式の選択 (user/job)",
+      "blocking": true
+    },
+    {
+      "id": "PF-004",
+      "description": "project-config.jsonのパス解決",
+      "blocking": false
+    }
+  ],
+  "postflight_checks": [
+    {
+      "id": "POF-001",
+      "description": "ストーリーを最低3件以上生成",
+      "blocking": true
+    },
+    {
+      "id": "POF-002",
+      "description": "各ストーリーがINVEST基準を通過",
+      "blocking": true
+    },
+    {
+      "id": "POF-003",
+      "description": "各ストーリーに受け入れ基準3件以上 (Given-When-Then)",
+      "blocking": true
+    },
+    {
+      "id": "POF-004",
+      "description": "依存関係グラフの作成",
+      "blocking": true
+    },
+    {
+      "id": "POF-005",
+      "description": "実装順序の提案",
+      "blocking": true
+    }
+  ],
+  "model_routing": {
+    "default_model": "sonnet",
+    "task_specific": {
+      "story_decomposition": "opus",
+      "acceptance_criteria": "sonnet",
+      "invest_validation": "sonnet",
+      "dependency_analysis": "sonnet"
+    },
+    "fallback_chain": ["sonnet", "opus"]
+  },
+  "public_api": {
+    "direct_invocable": true,
+    "trigger_keywords": [
+      "ストーリー分解",
+      "user story",
+      "job story",
+      "バックログ",
+      "story decompose",
+      "ストーリー作成",
+      "受け入れ基準"
+    ],
+    "args_pattern": "[--format <user|job>] [--spec <path>] [--ac-only] <機能名>"
+  },
+  "called_by": ["feature-pilot"],
+  "calls": [],
+  "dependencies": {
+    "required": ["feature-spec-generator"],
+    "optional": ["feature-architect"]
+  },
+  "outputs": [
+    {
+      "type": "report",
+      "path_pattern": "stdout",
+      "format": "markdown",
+      "description": "ストーリー分解レポート"
+    }
+  ],
+  "ssot_files": []
+}

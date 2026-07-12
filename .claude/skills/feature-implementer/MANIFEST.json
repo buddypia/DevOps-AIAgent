@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "tier": 2,
+  "skill_id": "feature-implementer",
+  "version": "1.0.0",
+  "description": "SPEC.mdとScreen文書を入力として、TDD方式でコードを実装する実行者スキル",
+  "triggers": [
+    "実装して",
+    "コード作成",
+    "TDD実装",
+    "FR実装",
+    "feature-implementer"
+  ],
+  "calls": [],
+  "called_by": [
+    "feature-pilot"
+  ],
+  "inputs": [
+    "SPEC.md",
+    "screens/*.md",
+    "CONTEXT.json"
+  ],
+  "outputs": [
+    "src/features/**/*.ts(x)",
+    "tests/unit/features/**/*.test.ts(x)",
+    "CONTEXT.json progressの更新"
+  ],
+  "model": "sonnet",
+  "references": [
+    {
+      "file": "references/implementation-protocol-details.md",
+      "description": "従来の全体実装プロトコルのアーカイブ。コードテンプレート、テスト作成例、エラーハンドリング表、SDD詳細手順が必要な時のみ参照"
+    },
+    {
+      "file": "references/sdd-spec-reviewer-prompt.md",
+      "description": "SDDモード スペック準拠レビュアープロンプト"
+    },
+    {
+      "file": "references/sdd-quality-reviewer-prompt.md",
+      "description": "SDDモード コード品質レビュアープロンプト"
+    },
+    {
+      "file": "references/sdd-implementer-prompt.md",
+      "description": "SDDモード 実装者プロンプト"
+    },
+    {
+      "file": "references/test-coverage-diagram-template.md",
+      "description": "テストカバレッジダイアグラムテンプレート"
+    },
+    {
+      "file": "references/gan-generator-evaluator-pattern.md",
+      "description": "GAN Generator-Evaluator分離パターン。生成-評価分離原則 + 冷徹な評価者設計 + AI-スロップ防止ルーブリック。SDD 2-stageレビュー強化。ECC gan-style-harnessから移植。",
+      "transplant_source": "tp-everything-claude-code-round2-20260402"
+    },
+    {
+      "file": "references/superpowers-controller-verification.md",
+      "description": "feature-implementer SDDモードのcontroller-side verificationとして統合。Superpowers実行ループの直接デプロイは回避。"
+    }
+  ]
+}

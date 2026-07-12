@@ -1,0 +1,24 @@
+{
+  "$comment": "Domain Map SSOTテンプレート。docs/features/domain-map.json にコピーして使用する。ドメイン境界定義（domains）+ 機能帰属レジストリ（features）の単一の真実源。feature-architect が機能作成時に登録し（ファイルがなければこのテンプレートのコピーで初期生成）、feature-status-sync が CONTEXT.json と同期する。feature-pilot の Domain Placement 判定（Phase 0）がこのファイルを必ず参照する。domains[].aliases[] は任意 — DOMAIN-MODEL の bounded_contexts[] の名称をドメイン語彙にマッピングするチャネルであり、1つ以上のドメインが宣言すると domain-boundary-coherence の BC 名称整合チェックが有効化される（未使用の場合は無影響）。",
+  "schema_version": "1.0",
+  "updated_at": null,
+  "domains": [
+    {
+      "id": "example-domain",
+      "name": "サンプルドメイン",
+      "responsibility": "このドメインが所有する責務を1〜2文で記述（例: ユーザー認証、セッション、ワークスペースメンバーシップ）",
+      "keywords": ["auth", "login", "認証"],
+      "aliases": ["Authentication", "Identity"],
+      "out_of_scope": ["決済プラン管理は billing ドメインの所有"]
+    }
+  ],
+  "features": [
+    {
+      "id": "001-example-feature",
+      "title": "サンプル機能",
+      "domain": "example-domain",
+      "src_dir": "example-feature",
+      "status": "planned"
+    }
+  ]
+}

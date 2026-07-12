@@ -61,7 +61,7 @@ export function readWorktreePlanChecklistStatus(worktreePath, branch = null, opt
 
 export function formatPlanChecklistStatus(status) {
   if (!status || status.present === false) return 'PLAN.md なし';
-  if (status.unreadable) return 'PLAN.md 読み取り失敗';
+  if (status.unreadable) return 'PLAN.md 読み込み失敗';
   if (status.complete) return '完了';
   return `未完了 ${status.unchecked_count ?? '?'}件`;
 }

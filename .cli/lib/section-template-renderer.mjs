@@ -3,26 +3,26 @@
  * worktree-plan-template.mjs (8-section PLAN.md) and worktree-ship-report.mjs
  * (11-section Pre-Ship Human Review Panel).
  *
- * 目的 (オプション C — エンジン共有 + データ分離、ユーザー決定): 両テンプレートのレンダリング *ロジック*は
- * 一つの純粋関数として共有しつつ、brief2dev 自身はデータを JS 定数(DEFAULT_*_SECTIONS)として
- * 保持し、ライブ shipping 経路にファイル I/O を追加しない。移植(transplant) 対象の
- * プロジェクトは、同じスキーマの JSON(data/registry/transplant-templates/*.generic.json)を
+ * 目的（オプション C — エンジン共有 + データ分離、ユーザー決定）: 両テンプレートの描画 *ロジック* は
+ * 1つの純粋関数として共有しつつ、brief2dev 自身はデータを JS 定数（DEFAULT_*_SECTIONS）として
+ * 保持し、ライブ shipping 経路にファイル I/O を追加しない。移植（transplant）先の
+ * プロジェクトは同じスキーマの JSON（data/registry/transplant-templates/*.generic.json）を
  * カスタマイズ用の seed として受け取る — brief2dev はその JSON を読まない。
  *
- * 5 つのプリミティブで両テンプレート(8 セクション/11 セクション)の既存出力を 100% 表現する:
- *   - static: 固定テキスト行 ({{var}} 置換に対応)
- *   - checklist_group: `### 副見出し` + `- [ ] item` のリスト
- *   - field_list: `- Label: value` のリスト (value は valueOrDash 処理)
- *   - fenced_block: ```lang\n<content または fallback>\n``` (trim オプション)
- *   - table: header 行 + rows_key 配列を row_template で展開 (空配列時は empty_rows)
+ * 5つのプリミティブで両テンプレート（8セクション/11セクション）の既存出力を100%表現する:
+ *   - static: 固定テキスト行（{{var}} 置換対応）
+ *   - checklist_group: `### 副題` + `- [ ] item` リスト
+ *   - field_list: `- Label: value` リスト（value は valueOrDash 処理）
+ *   - fenced_block: ```lang\n<content または fallback>\n```（trim オプション）
+ *   - table: header 行 + rows_key 配列を row_template で展開（空配列時は empty_rows）
  *
- * heading 行(`section.heading` または `checklist_group.subheading`) の前には、文書の先頭行
- * でない限り常に空行 1 個が自動挿入される — 元の両テンプレートともこの規則一つで全体の
- * blank-line 配置が説明できる。heading か否かは *構造*(どのフィールドから来たか)で判定し、
- * レンダリング後のテキスト内容を正規表現で再推論しない — static ブロックの本文テキストが
- * 偶然 `#` で始まっても(例: "# 参考" のような自由テキスト)、誤検知なくそのままレンダリングされる。
+ * heading 行（`section.heading` または `checklist_group.subheading`）の前には、文書の最初の行で
+ * ない限り常に空行が1つ自動挿入される — 元の両テンプレートともこの1つのルールで全体の
+ * blank-line 配置が説明できる。heading かどうかは *構造*（どのフィールドから来たか）で判定し、
+ * 描画されたテキスト内容を正規表現で再推論することはない — static ブロックの本文テキストが
+ * たまたま `#` で始まっても（例: "# 参考" のような自由テキスト）誤検知なくそのまま描画される。
  *
- * 回帰: tests/unit/section-template-renderer.test.mjs。
+ * 回帰テスト: tests/unit/section-template-renderer.test.mjs。
  */
 
 function interpolate(str, context) {
@@ -76,9 +76,9 @@ const BLOCK_RENDERERS = {
 };
 
 /**
- * block をレンダリングして `rawLines` に push し、heading として扱う行のインデックスを
- * `headingAt` に記録する。`checklist_group` の `subheading` のみが block レベルでの heading
- * 扱いの対象 — 他のブロックタイプは heading を生成しない(構造的な判定であり、テキストの正規表現ではない)。
+ * block を描画して `rawLines` に push し、heading として扱う行のインデックスを
+ * `headingAt` に記録する。`checklist_group` の `subheading` だけが block レベルで heading
+ * 扱いの対象 — 他のブロックタイプは heading を生成しない（構造的判定であり、テキスト正規表現ではない）。
  */
 function appendBlockLines(block, context, rawLines, headingAt) {
   if (!block) return;
@@ -95,7 +95,7 @@ function appendBlockLines(block, context, rawLines, headingAt) {
 }
 
 /**
- * sections 配列を Markdown 文字列にレンダリングする (trailing newline なし — 呼び出し側の責任)。
+ * sections 配列を Markdown 文字列に描画する（trailing newline なし — 呼び出し側の責務）。
  * @param {Array<{heading?: string, blocks?: Array<object>}>} sections
  * @param {Record<string, unknown>} [context]
  * @returns {string}
