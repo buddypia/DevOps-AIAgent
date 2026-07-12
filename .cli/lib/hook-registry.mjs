@@ -694,7 +694,7 @@ export const HOOK_REGISTRY = {
           "module": "./pipeline-memory-injector.mjs",
           "priority": 30,
           "profile": "standard",
-          "description": "세션 시작 시 파이프라인 메모리 주입",
+          "description": "セッション開始時にパイプラインメモリを注入",
           "orchestrated": false,
           "timeout": 10,
           "statusMessage": "Pipeline Memory: injecting session context"
@@ -704,7 +704,7 @@ export const HOOK_REGISTRY = {
           "module": "./inbox-guard.mjs",
           "priority": 35,
           "profile": "standard",
-          "description": "inbox 미처리 항목 감지 + 알림",
+          "description": "inbox 未処理項目の検知 + 通知",
           "orchestrated": false,
           "timeout": 5,
           "commandArgs": "SessionStart"
@@ -714,7 +714,7 @@ export const HOOK_REGISTRY = {
           "module": "./session-integrity-check.mjs",
           "priority": 40,
           "profile": "standard",
-          "description": "에코시스템 교차 파일 일관성 검증",
+          "description": "エコシステム横断ファイル整合性検証",
           "orchestrated": false,
           "timeout": 10,
           "statusMessage": "Ecosystem Integrity: validating cross-file consistency"
@@ -724,7 +724,7 @@ export const HOOK_REGISTRY = {
           "module": "./worktree-system-symlink-guard.mjs",
           "priority": 42,
           "profile": "minimal",
-          "description": "[R-CM-030] worktree 의 .brief2dev/system/ 이 main worktree symlink 인지 검출. 자동 생성 X (Consequential). fail-open.",
+          "description": "[R-CM-030] worktree の .brief2dev/system/ が main worktree の symlink かどうかを検出。自動生成しない (Consequential)。fail-open。",
           "orchestrated": false,
           "timeout": 5,
           "statusMessage": "R-CM-030: checking system_persistent worktree symlink"
@@ -734,7 +734,7 @@ export const HOOK_REGISTRY = {
           "module": "./learnings-injector.mjs",
           "priority": 45,
           "profile": "standard",
-          "description": "[R-CM-020] 세션 시작 시 이전 learnings를 컨텍스트로 주입",
+          "description": "[R-CM-020] セッション開始時に過去の learnings をコンテキストとして注入",
           "orchestrated": false,
           "timeout": 5,
           "statusMessage": "Learnings: injecting past session learnings (gstack Round 11)"
@@ -744,7 +744,7 @@ export const HOOK_REGISTRY = {
           "module": "./compact-context-preserver.mjs",
           "priority": 50,
           "profile": "standard",
-          "description": "compact 직후 첫 세션 시작 시 핵심 컨텍스트 재주입 (source===\"compact\" 한정)",
+          "description": "compact 直後の最初のセッション開始時に主要コンテキストを再注入 (source===\"compact\" 限定)",
           "orchestrated": false,
           "timeout": 15,
           "statusMessage": "Compact Context: re-injecting preserved context after compaction"
@@ -761,7 +761,7 @@ export const HOOK_REGISTRY = {
           "module": "../scripts/session-end.mjs",
           "priority": 30,
           "profile": "none",
-          "description": "세션 정리",
+          "description": "セッション整理",
           "orchestrated": false,
           "profileChecked": false,
           "timeout": 5
@@ -771,7 +771,7 @@ export const HOOK_REGISTRY = {
           "module": "./session-extractor.mjs",
           "priority": 50,
           "profile": "standard",
-          "description": "세션 패턴 분석 + wisdom confidence 업데이트 + instinct 승격",
+          "description": "セッションパターン分析 + wisdom confidence 更新 + instinct 昇格",
           "orchestrated": false,
           "async": true,
           "timeout": 15
@@ -781,7 +781,7 @@ export const HOOK_REGISTRY = {
           "module": "./pipeline-memory-extractor.mjs",
           "priority": 60,
           "profile": "standard",
-          "description": "세션 종료 시 파이프라인 팩트 추출",
+          "description": "セッション終了時にパイプラインファクトを抽出",
           "orchestrated": false,
           "timeout": 10,
           "statusMessage": "Pipeline Memory: extracting session facts"
@@ -791,7 +791,7 @@ export const HOOK_REGISTRY = {
           "module": "./transcript-extractor.mjs",
           "priority": 70,
           "profile": "standard",
-          "description": "Claude Code transcript_path jsonl 을 active run 의 transcript/ 로 복사 (Observatory 채팅 뷰 입력)",
+          "description": "Claude Code の transcript_path jsonl を active run の transcript/ にコピー (Observatory チャットビュー入力)",
           "orchestrated": false,
           "async": true,
           "timeout": 5
@@ -808,7 +808,7 @@ export const HOOK_REGISTRY = {
           "module": "./keyword-router.mjs",
           "priority": 10,
           "profile": "none",
-          "description": "키워드 라우팅 (context 전환 + @agent + NFR/패턴 RAG)",
+          "description": "キーワードルーティング (context 切替 + @agent + NFR/パターン RAG)",
           "orchestrated": false,
           "profileChecked": false,
           "timeout": 10
@@ -818,7 +818,7 @@ export const HOOK_REGISTRY = {
           "module": ".cli/hooks/ownership-context-injector.mjs",
           "priority": 15,
           "profile": "standard",
-          "description": "UserPromptSubmit 시 derived code ownership candidates를 주입하여 NEW/MODIFY routing drift를 줄임",
+          "description": "UserPromptSubmit 時に derived code ownership candidates を注入して NEW/MODIFY routing drift を削減",
           "orchestrated": false,
           "timeout": 5,
           "cliTargets": ["codex"]
@@ -828,7 +828,7 @@ export const HOOK_REGISTRY = {
           "module": "./task-context-injector.mjs",
           "priority": 20,
           "profile": "standard",
-          "description": "작업성 prompt에 최신 태스크/SSOT/검증 계약을 주입하여 AI context drift를 줄임",
+          "description": "作業性 prompt に最新のタスク/SSOT/検証契約を注入して AI context drift を削減",
           "orchestrated": false,
           "timeout": 5
         }
@@ -844,7 +844,7 @@ export const HOOK_REGISTRY = {
           "module": "./subagent-limit-guard.mjs",
           "priority": 10,
           "profile": "standard",
-          "description": "동시 서브에이전트 수 제한 (MAX=5)",
+          "description": "同時サブエージェント数の制限 (MAX=5)",
           "orchestrated": false,
           "timeout": 5,
           "statusMessage": "Subagent Limit: tracking concurrency"
@@ -861,7 +861,7 @@ export const HOOK_REGISTRY = {
           "module": "./subagent-cleanup.mjs",
           "priority": 5,
           "profile": "standard",
-          "description": "서브에이전트 종료 시 활성 목록에서 제거",
+          "description": "サブエージェント終了時に活性リストから除去",
           "orchestrated": false,
           "timeout": 5,
           "statusMessage": "Subagent Cleanup: removing from active agents"
@@ -871,7 +871,7 @@ export const HOOK_REGISTRY = {
           "module": "../scripts/stop-handler.mjs",
           "priority": 10,
           "profile": "none",
-          "description": "ECC instincts 추출 (서브에이전트 종료)",
+          "description": "ECC instincts 抽出 (サブエージェント終了)",
           "orchestrated": false,
           "profileChecked": false,
           "timeout": 15
@@ -899,7 +899,7 @@ export function getHooksForEvent(event, toolName) {
   return matched.sort((a, b) => (a.priority || 50) - (b.priority || 50));
 }
 
-/** 모든 entry 의 평탄화 목록 (id 중복 제거 X — inbox-guard 같은 다중 등록 보존) */
+/** 全 entry の平坦化リスト (id 重複除去なし — inbox-guard のような多重登録を保持) */
 export function flattenRegistry() {
   const out = [];
   for (const [event, groups] of Object.entries(HOOK_REGISTRY)) {
@@ -914,19 +914,19 @@ export function flattenRegistry() {
 }
 
 /**
- * HOOK_REGISTRY 에 등록된 hooks/ 디렉토리 module 파일명 집합 (`./xxx.mjs` → `xxx.mjs`).
+ * HOOK_REGISTRY に登録された hooks/ ディレクトリの module ファイル名集合 (`./xxx.mjs` → `xxx.mjs`).
  *
- * "이 hook 파일이 registry 에 등록되었는가(= 죽은 hook 아님)" 의 SSOT 질의. settings.json 은
- * 이 registry 에서 codegen 되므로 (R-CM-006 Rule 4), registry 등록 = 활성 hook 이다 (orchestrated
- * 여부 무관 — orchestrated hook 은 orchestrator dispatch, 나머지는 settings.json 직접 command).
+ * "この hook ファイルが registry に登録されているか(= 死んだ hook ではないか)" の SSOT 質問。settings.json は
+ * この registry から codegen されるため (R-CM-006 Rule 4)、registry 登録 = 活性 hook である (orchestrated
+ * かどうかは無関係 — orchestrated hook は orchestrator dispatch、それ以外は settings.json の直接 command)。
  *
- * ecosystem-health-guard E1 + ecosystem-integrity-validator EI3 가 공유한다 — 이전에는 E1 이
- * hook-registry.mjs *소스 텍스트를 regex 파싱* 해 `orchestrated:true` 만 인식하고, EI3 는 programmatic
- * 으로 *모든* `./` module 을 인식하여 두 validator 의 registry 인식 로직이 divergent 했다. 본 헬퍼로
- * 단일화하여 drift 를 차단한다. `../scripts/` 모듈은 hooks/ 검사 범위 밖이라 제외.
- * 반환은 basename set — `./X.mjs`(.claude/hooks/) 와 `.cli/hooks/X.mjs`(멀티-CLI 가드 이전 후) 의 basename
- * 을 모두 수집한다(계약 완전성). EI3/E1 의 `.claude/hooks/` disk 검사에는 `.cli/hooks/` basename 이
- * 매칭되지 않아 무영향이며, registry 전체 hook 인식이 필요한 소비자는 완전한 set 을 받는다.
+ * ecosystem-health-guard E1 + ecosystem-integrity-validator EI3 が共有する — 以前は E1 が
+ * hook-registry.mjs *ソーステキストを regex パース* して `orchestrated:true` のみを認識し、EI3 は programmatic
+ * に *すべての* `./` module を認識していたため、両 validator の registry 認識ロジックが divergent していた。本ヘルパーで
+ * 単一化して drift を遮断する。`../scripts/` モジュールは hooks/ 検査範囲外のため除外。
+ * 戻り値は basename set — `./X.mjs`(.claude/hooks/) と `.cli/hooks/X.mjs`(マルチ-CLI ガード移行後) の basename
+ * を両方収集する(契約の完全性)。EI3/E1 の `.claude/hooks/` disk 検査には `.cli/hooks/` basename が
+ * マッチせず無影響であり、registry 全体の hook 認識が必要な消費者は完全な set を受け取る。
  */
 export function collectRegistryHookFiles() {
   const set = new Set();
