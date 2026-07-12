@@ -1,5 +1,7 @@
 import { Activity, CircleAlert, CircleCheck, Database, DollarSign, ShieldCheck } from "lucide-react";
 
+import Callout from "./Callout.js";
+
 import type { EvidenceSummaryView } from "./missionTypes.js";
 
 interface EvidenceProps {
@@ -164,6 +166,12 @@ export default function EvidenceDashboard({ summary }: EvidenceProps) {
           まだ実行履歴がありません。ミッションや個別実行を動かすと、費用・成否・受入結果がここに実データで記録されます。
         </p>
       ) : null}
+
+      <Callout tone="tip" title="この数字の見方">
+        AIの「うまくいきました」という<strong>自己申告ではなく、実行ログの実数</strong>です。目安として、
+        <strong>完了率が高い＝安定して動いている</strong>／<strong>採用率が高い＝所見が検証を通っている</strong>／
+        コストが想定内なら健全、と読めます。下のカードはこの4指標を分解したものです。
+      </Callout>
 
       <div className="evidence-kpis">
         <article className="evidence-kpi evidence-kpi-positive">
