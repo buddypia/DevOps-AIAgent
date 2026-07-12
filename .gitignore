@@ -42,10 +42,10 @@ data/
 raw/
 
 
-# --- brief2dev transplant-bundle (auto-managed block) ---
+# --- Worktree tooling ---
 .worktrees/
 .cache/
 .brief2dev/
-# --- end brief2dev transplant-bundle ---
+# --- end Worktree tooling ---
 
 .secret/

@@ -3,7 +3,7 @@
 PACKAGE_MANAGER ?= npm
 
 help:
-	@echo "a2a-agent-marketplace — 品質ゲート (brief2dev エコシステム由来・日本語化)"
+	@echo "a2a-agent-marketplace — 品質ゲート"
 	@echo "  make q.check               全品質ゲート (typecheck + test) を実行"
 	@echo "  make q.typecheck           型チェックのみ"
 	@echo "  make q.test                テストのみ"
@@ -40,7 +40,7 @@ q.check-architecture:
 	@echo "q.check-architecture PASS"
 
 # ============================================================
-# Worktree isolation (brief2dev エコシステム由来)
+# Worktree isolation
 # ============================================================
 
 ## 新しい worktree を作成 (例: make wt.new BR=feature/<task>)

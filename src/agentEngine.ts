@@ -54,7 +54,7 @@ const TERM_WEIGHTS: Array<{ terms: string[]; weights: Partial<Record<CapabilityK
     weights: { security: 0.75, cloudRun: 0.15, observability: 0.15 }
   },
   {
-    terms: ["brief2dev", "spec", "要件", "企画", "protopedia", "審査"],
+    terms: ["spec", "要件", "企画", "protopedia", "審査"],
     weights: { planning: 0.7, ux: 0.25, testing: 0.15 }
   }
 ];
