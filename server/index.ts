@@ -16,6 +16,7 @@ import { computeAgentStats } from "./agentStats.js";
 import { createMission, executeMission } from "./missionAgent.js";
 import { createGenAiClient, createLogLister, createLoggingEvidenceFetcher, createRun, executeAgentRun, getOpsConfig } from "./opsAgent.js";
 import { createRunStore } from "./runStore.js";
+import { INCIDENT_DRILL_SCENARIOS, toIncidentDrillScenarioView } from "./incidentDrill.js";
 import type { JobContext } from "./agentJobs.js";
 import type { Mission, MissionCatalogEntry } from "./missionAgent.js";
 import type { OpsAgentRun } from "./opsAgent.js";
@@ -667,36 +668,6 @@ app.get("/api/agent-runs/:id", async (req, res) => {
 
 // 模擬インシデント注入 (SREの障害対応ドリル)。本物のログとしてCloud Loggingに載る
 let lastDrillAt = 0;
-const INCIDENT_DRILL_SCENARIOS = [
-  {
-    id: "checkout-latency",
-    label: "決済アップストリーム遅延",
-    summary: "合成チェックアウトのレイテンシスパイクを記録しました。",
-    primarySeverity: "ERROR",
-    primaryMessage: "synthetic checkout latency spike: p95 4800ms, upstream timeout to payments-api",
-    secondarySeverity: "WARNING",
-    secondaryMessage: "retry storm detected: 34 retries/min against /api/recommend"
-  },
-  {
-    id: "queue-backlog",
-    label: "ジョブキュー滞留",
-    summary: "合成ジョブキューの滞留と再試行増加を記録しました。",
-    primarySeverity: "WARNING",
-    primaryMessage: "synthetic queue backlog: 86 pending jobs on agent-dispatch",
-    secondarySeverity: "ERROR",
-    secondaryMessage: "synthetic worker timeout: 7 dispatch attempts exceeded 3000ms"
-  },
-  {
-    id: "logging-delay",
-    label: "ログ配送遅延",
-    summary: "合成ログ配送の遅延と観測欠損を記録しました。",
-    primarySeverity: "ERROR",
-    primaryMessage: "synthetic log delivery delay: Cloud Logging export lag p95 4200ms",
-    secondarySeverity: "WARNING",
-    secondaryMessage: "synthetic observability gap: 12 request traces missing correlation ids"
-  }
-] as const;
-
 app.post("/api/ops-agent/incident-drill", (_req, res) => {
   const now = Date.now();
   if (now - lastDrillAt < 60_000) {
@@ -706,17 +677,18 @@ app.post("/api/ops-agent/incident-drill", (_req, res) => {
   lastDrillAt = now;
   const drillId = randomUUID().slice(0, 8);
   const scenario = INCIDENT_DRILL_SCENARIOS[Math.floor(Math.random() * INCIDENT_DRILL_SCENARIOS.length)];
+  const scenarioView = toIncidentDrillScenarioView(scenario);
   console.log(
-    JSON.stringify({ severity: scenario.primarySeverity, scenarioId: scenario.id, message: `[incident-drill ${drillId}] ${scenario.primaryMessage}` })
+    JSON.stringify({ severity: scenarioView.signals[0].severity, scenarioId: scenario.id, message: `[incident-drill ${drillId}] ${scenarioView.signals[0].message}` })
   );
   console.log(
-    JSON.stringify({ severity: scenario.secondarySeverity, scenarioId: scenario.id, message: `[incident-drill ${drillId}] ${scenario.secondaryMessage}` })
+    JSON.stringify({ severity: scenarioView.signals[1].severity, scenarioId: scenario.id, message: `[incident-drill ${drillId}] ${scenarioView.signals[1].message}` })
   );
   res.json({
     ok: true,
     drillId,
-    scenario: { id: scenario.id, label: scenario.label, severity: scenario.primarySeverity, summary: scenario.summary },
-    note: "合成ログをCloud Loggingへ記録しました。約15秒後にSRE監査で検出できます。"
+    scenario: scenarioView,
+    note: "Cloud Loggingに合成イベントを2件記録しました。約15秒後にSRE監査で検出できます。"
   });
 });
 
