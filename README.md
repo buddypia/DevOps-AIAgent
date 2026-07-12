@@ -39,13 +39,13 @@
 | エージェント | A2A skillId | 実際に触るシステム |
 |---|---|---|
 | Cloud Run SRE | `ops.triage.execute` | Cloud Logging API の実ログをトリアージ |
-| Observability Oracle | `ops.observe.execute` | 実リクエストログから p50/p95・ステータス分布を計測 |
-| Test Forge | `test.contract.execute` | GitHub Actions 実CI + デプロイ済みAPIへのライブ契約プローブ |
-| Security Sentinel | `security.scan.execute` | 実依存パッケージを OSV.dev に照会 + 実HTTPヘッダー監査 |
-| UX Guildmaster | `ux.audit.execute` | 配信中の実HTMLのアクセシビリティ・メタ監査 |
-| A2A Market Broker | `task.delegate.execute` | Agent Card 実取得（SSRFガード）+ 同一オリジンへ実A2A委任 |
-| Gemini Strategist | `gemini.review.execute` | 実 healthz + Firestore の実行実績を証拠に戦略生成 |
-| Brief Cartographer | `brief.analyze` | ブリーフを span 分割し引用接地を強制した要件分解 |
+| 運用観測役 | `ops.observe.execute` | 実リクエストログから p50/p95・ステータス分布を計測 |
+| テスト検証役 | `test.contract.execute` | GitHub Actions 実CI + デプロイ済みAPIへのライブ契約プローブ |
+| セキュリティ監査役 | `security.scan.execute` | 実依存パッケージを OSV.dev に照会 + 実HTTPヘッダー監査 |
+| UX設計役 | `ux.audit.execute` | 配信中の実HTMLのアクセシビリティ・メタ監査 |
+| A2A連携仲介役 | `task.delegate.execute` | Agent Card 実取得（SSRFガード）+ 同一オリジンへ実A2A委任 |
+| Gemini審査参謀 | `gemini.review.execute` | 実 healthz + Firestore の実行実績を証拠に戦略生成 |
+| 企画地図師 | `brief.analyze` | ブリーフを span 分割し引用接地を強制した要件分解 |
 
 ## Web UI
 

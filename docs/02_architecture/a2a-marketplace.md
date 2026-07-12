@@ -284,7 +284,7 @@
 
 - `POST /api/squad-optimizer`: 予算と最大編成数を受け取り、候補編成を総当たりして最適解を返す
 - Coverage gates: A2A marketplace、Gemini、Cloud Run、First-run UX、DevOps feedbackを同時に評価する
-- Budget decision: 140予算では現行3体を維持し、UX Guildmaster追加に必要な+22をstretch squadとして明示する
+- Budget decision: 140予算では現行3体を維持し、UX設計役追加に必要な+22をstretch squadとして明示する
 - Swap plan: keep/add/remove/fundの手順に分け、審査動画で説明できる交換計画にする
 - A2A payload: `squad.optimize` skillとしてoptimizer score、recommended squad、budget gap、swap planを返す
 
@@ -400,7 +400,7 @@
 - `POST /api/impact-case`: 対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性・体験価値の証拠に変換する
 - Metrics: AI能力選定時間、提出証拠づくり、委任の手戻り、公開デモ運用リスク、提出信頼度、体験価値をbefore/afterで返す
 - Personas: 開発リード、Platform/SRE、ハッカソン提出者ごとのpain、workflow win、KPI、proofを返す
-- Workflow: sense -> buy -> delegate -> operate -> submit のbefore/afterを、A2A Market Broker、Contract Desk、Autonomy Ledger、Cloud Run SRE、Gemini Strategistへ割り当てる
+- Workflow: sense -> buy -> delegate -> operate -> submit のbefore/afterを、A2A連携仲介役、Contract Desk、Autonomy Ledger、Cloud Run SRE、Gemini審査参謀へ割り当てる
 - A2A payload: `impact.case` skillとしてimpact score、posture、saved hours、runtime risk、submission confidence、next impact hireを返す
 
 ## Pilot Economics Surface
@@ -473,11 +473,11 @@
 - `POST /api/acceptance-matrix`: 必須技術、審査5項目、公開証拠、提出物を受入表として返す
 - `POST /api/task-board`: `task.delegate` の委任先、目的、検収条件、A2A payload、receiptを返す
 - Release gate: Cloud Run SREが公開継続かrollbackかを判断する
-- Rebuy loop: A2A Market BrokerがObservability Oracle / Test Forge / Security Sentinelの買い足しを推薦する
+- Rebuy loop: A2A連携仲介役が運用観測役 / テスト検証役 / セキュリティ監査役の買い足しを推薦する
 - Runbook: `/api/healthz`、ops drill、Cloud Run describe、Cloud Logging、traffic updateコマンドを提示する
 - A2A payload: `ops.drill` skillとしてseverity、signals、rollbackRecommended、nextOpsAgentを返す
 
-## Observability Oracle Surface
+## 運用観測役 Surface
 
 - `GET /observability-oracle`: Live Evidence、Ops Drill、Pilot Economicsを束ね、AIの継続/復旧判断、買い手価値SLO、次のAI雇用を審査員が直接読めるHTMLで返す
 - `GET /api/observability-oracle`: 同じ運用判断をA2A/自動検証用JSONとして返す
@@ -488,7 +488,7 @@
 
 - `POST /api/proof`: Gemini Proof Lock、Usability Proof Lock、Cloud Run公開、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1つの審査証拠束にまとめる
 - UI: `Run judge proof` ボタンでoverall proof score、Gemini Proof Lock、Usability Proof Lock、8カテゴリスコア、live links、proof runbook、sha256 receiptを表示する
-- Gemini proof: live Gemini response、Gemini Strategist選定、構造化出力、Autonomy判断利用、receipt replay、fallback境界をready/watch/missingで固定する
+- Gemini proof: live Gemini response、Gemini審査参謀選定、構造化出力、Autonomy判断利用、receipt replay、fallback境界をready/watch/missingで固定する
 - Usability proof: single first click、90秒route、proof assets、競合反論の先出し、UX owner予算gap、外部URL watchの正直表示をready/watch/missingで固定する
 - A2A skill: `judge.proof` としてAgent Cardにも公開する
 - Contract proof: `contract.issue` skillとして、AIの購入が成果物と検収条件に接続されていることを示す
