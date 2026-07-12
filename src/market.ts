@@ -335,5 +335,40 @@ export const MARKET_AGENTS: MarketAgent[] = [
     ],
     a2aSkillIds: ["release.gate.execute", "release.canary", "release.rollback.recommend"],
     synergyTags: ["release", "canary", "rollback", "slo", "cloud-run", "devops", "operate"]
+  },
+  {
+    id: "merge-steward",
+    name: "マージ執事",
+    handle: "変更ライフサイクル管理役",
+    stage: "govern",
+    rarity: "legendary",
+    price: 45,
+    headline: "問題をIssueへ固定し、PRの証拠を独立評価して安全な変更だけを届ける",
+    outcome: "Issue、CI、レビュー、変更リスクを1つのreceiptへまとめ、保護条件を満たすPRだけを確認付きでsquash mergeする",
+    color: "#0f766e",
+    accent: "#b7f7d7",
+    capabilities: {
+      autonomy: 94,
+      planning: 84,
+      code: 76,
+      testing: 96,
+      cloudRun: 72,
+      security: 96,
+      observability: 86,
+      ux: 72,
+      mcp: 94,
+      a2a: 96
+    },
+    skills: [
+      { id: "issue-capture", label: "問題のIssue化", proof: "証拠・受入条件・冪等marker付きで作成", score: 94 },
+      { id: "pull-evaluate", label: "PR独立評価", proof: "files・checks・reviews・mergeability・head SHAを検証", score: 98 },
+      { id: "guarded-merge", label: "条件付きマージ", proof: "deterministic gateとSHA再検証後だけsquash merge", score: 97 }
+    ],
+    mcp: [
+      { name: "github-issues", tools: ["preview_issue", "create_issue"], maturity: 91 },
+      { name: "github-pulls", tools: ["read_evidence", "evaluate", "merge_if_ready"], maturity: 94 }
+    ],
+    a2aSkillIds: ["github.lifecycle.evaluate"],
+    synergyTags: ["github", "issue", "pull-request", "review", "merge", "devops", "governance"]
   }
 ];

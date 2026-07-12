@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { AGENT_JOBS, A2A_SKILL_TO_AGENT } from "../server/agentJobs.js";
 import { getOpsConfig } from "../server/opsAgent.js";
@@ -358,5 +358,44 @@ describe("gemini-strategist job", () => {
     expect(ids).toContain("run-stats");
     expect(ids).toContain("criteria-1");
     expect(ids).toContain("brief-1");
+  });
+});
+
+describe("merge-steward job", () => {
+  const job = AGENT_JOBS["merge-steward"];
+
+  it("should expose the deterministic GitHub evaluation as cited evidence", async () => {
+    const ctx = makeCtx({
+      fetchImpl: (async (url: RequestInfo | URL, init?: RequestInit) => {
+        expect(String(url)).toContain("/api/merge-steward/pulls/evaluate");
+        expect(init?.body).toContain('"pullNumber":57');
+        return jsonResponse({
+          ok: true,
+          evaluation: {
+            verdict: "ready",
+            headSha: "abc123def456",
+            checks: { successful: 3, total: 3, pending: 0, failed: 0 },
+            approvals: 1,
+            mergeable: true,
+            highRiskFiles: [],
+            blockers: [],
+            receipt: "f".repeat(64)
+          }
+        });
+      }) as typeof fetch
+    });
+
+    const bundle = await job.collectEvidence(ctx, "57");
+    const byId = new Map(bundle.evidence.map((evidence) => [evidence.id, evidence]));
+    expect(byId.get("merge-verdict")?.message).toContain("verdict=ready");
+    expect(byId.get("merge-checks")?.message).toContain("checks=3/3");
+    expect(byId.get("merge-reviews")?.message).toContain("approvals=1");
+  });
+
+  it("should reject a non-numeric PR without calling GitHub", async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+    const bundle = await job.collectEvidence(makeCtx({ fetchImpl }), "not-a-pr");
+    expect(bundle.evidence[0]?.severity).toBe("ERROR");
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 });

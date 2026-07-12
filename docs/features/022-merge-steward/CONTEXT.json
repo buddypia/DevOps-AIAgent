@@ -19,11 +19,11 @@
     "cross_feature_impact": true
   },
   "quick_resume": {
-    "current_state": "UiApproval",
-    "current_task": "SPECとwireframeを生成し、UI承認待ち",
-    "next_actions": ["UI承認", "TDD実装", "feature-wiring", "final-review"],
-    "blockers": ["UI承認が必要"],
-    "last_updated_at": "2026-07-12T23:05:00+09:00",
+    "current_state": "Done",
+    "current_task": "Merge StewardとRelease Guardian画像を実装し、Deepレビューと品質ゲートを通過",
+    "next_actions": [],
+    "blockers": [],
+    "last_updated_at": "2026-07-13T00:55:00+09:00",
     "last_decision": {
       "summary": "既存PRの評価と条件付きsquash mergeにMVPを限定",
       "at": "2026-07-12T23:05:00+09:00"
@@ -31,24 +31,25 @@
     "current_rationale": "コード生成まで含めると任意コード実行と資格情報委譲が必要になるため、安全に検証可能なGitHub lifecycleへ限定する。",
     "active_constraints": [
       "GitHub tokenをクライアント・ログへ露出しない",
+      "GitHub書き込みは別管理の32文字以上の操作承認コードを必須にする",
       "deterministic gateをAI判定より優先する",
       "branch protectionを迂回しない",
       "マージ直前にhead SHAを再検証する"
     ],
-    "previous_state": "SpecDrafting",
+    "previous_state": "Reviewing",
     "question_count": 0
   },
   "progress": {
-    "percentage": 0,
+    "percentage": 100,
     "fr_total": 5,
-    "fr_completed": 0,
+    "fr_completed": 5,
     "fr_in_progress": 0,
     "details": {
-      "FR-02201": {"status":"pending","weight":1,"files":[]},
-      "FR-02202": {"status":"pending","weight":1,"files":[]},
-      "FR-02203": {"status":"pending","weight":1,"files":[]},
-      "FR-02204": {"status":"pending","weight":1,"files":[]},
-      "FR-02205": {"status":"pending","weight":1,"files":[]}
+      "FR-02201": {"status":"completed","weight":1,"files":["server/mergeSteward.ts","server/index.ts","src/MergeStewardPanel.tsx"],"test_passed":true,"last_verified_at":"2026-07-13T00:55:00+09:00"},
+      "FR-02202": {"status":"completed","weight":1,"files":["server/mergeSteward.ts","tests/mergeSteward.test.ts"],"test_passed":true,"last_verified_at":"2026-07-13T00:55:00+09:00"},
+      "FR-02203": {"status":"completed","weight":1,"files":["server/mergeSteward.ts","server/agentJobs.ts","tests/agentJobs.test.ts"],"test_passed":true,"last_verified_at":"2026-07-13T00:55:00+09:00"},
+      "FR-02204": {"status":"completed","weight":1,"files":["server/mergeSteward.ts","server/index.ts","tests/mergeSteward.test.ts"],"test_passed":true,"last_verified_at":"2026-07-13T00:55:00+09:00"},
+      "FR-02205": {"status":"completed","weight":1,"files":["src/market.ts","src/MergeStewardPanel.tsx","public/assets/agents/merge-steward.png","public/assets/agents/release-guardian.png"],"test_passed":true,"last_verified_at":"2026-07-13T00:55:00+09:00"}
     }
   },
   "architecture": {
@@ -68,6 +69,7 @@
   "constraints": [
     "Vite + React + Express + TypeScript + Zod",
     "GitHub tokenは環境変数/Secret Managerのみ",
+    "OPS_MERGE_STEWARD_ACTION_TOKENはGitHub tokenと分離し、32文字以上",
     "新規DBスキーマなし",
     "既存Amber Circuit UIを維持",
     "高リスクパスは自動マージ禁止"
@@ -76,9 +78,9 @@
     "brief": "docs/features/022-merge-steward/BRIEF.md",
     "brief_format_version": "v2.0",
     "spec": "docs/features/022-merge-steward/SPEC-022-merge-steward.md",
-    "spec_version": "v1.0",
-    "spec_locked_at": null,
-    "spec_validation": {"last_run_at":null,"verdict":null,"blocking_count":0,"warning_count":0},
+    "spec_version": "v1.2",
+    "spec_locked_at": "2026-07-13T00:55:00+09:00",
+    "spec_validation": {"last_run_at":"2026-07-13T00:55:00+09:00","verdict":"passed","blocking_count":0,"warning_count":3},
     "screens": ["docs/features/022-merge-steward/screens/merge-steward.md"],
     "design_assets": [
       "docs/wireframes/feature-022-merge-steward-wireframe.md",
@@ -89,7 +91,7 @@
   },
   "references": {
     "priority_order": ["spec", "screens", "brief"],
-    "current_focus": {"document":"docs/features/022-merge-steward/SPEC-022-merge-steward.md","section":"§2 Functional Requirements","reason":"UI承認後のTDD実装"},
+    "current_focus": {"document":"docs/features/022-merge-steward/SPEC-022-merge-steward.md","section":"§0.8 Safety & Guardrails","reason":"実装済みのGitHub書き込み境界"},
     "documents": {
       "spec": {"path":"docs/features/022-merge-steward/SPEC-022-merge-steward.md","sections_to_read":["§0","§2","§5"],"focus":["safe merge gate","API contract","tests"]},
       "screens": {"paths":["docs/features/022-merge-steward/screens/merge-steward.md"],"focus":["states","confirmation","risk verdict"]}
@@ -128,24 +130,29 @@
   },
   "execution": {
     "lock": {"locked":false,"locked_by":null,"locked_at":null},
-    "active_branch": "feature/merge-steward-spec",
-    "rollback_point": "a34c20f7984c88e7b059132e8056df517866a13e",
+    "active_branch": "feature/merge-steward-impl",
+    "rollback_point": "9d35300e49cd6c531f287dda2f78de9e45103937",
     "worktree": {
-      "branch": "feature/merge-steward-spec",
-      "worktree_path": ".worktrees/feature/merge-steward-spec",
-      "plan_path": ".tmp/worktree-feature__merge-steward-spec/PLAN.md",
-      "status": "ui-approval",
-      "last_updated": "2026-07-12T23:05:00+09:00",
-      "handoff": "ui-approval-gate"
+      "branch": "feature/merge-steward-impl",
+      "worktree_path": ".worktrees/feature/merge-steward-impl",
+      "plan_path": ".tmp/worktree-feature__merge-steward-impl/PLAN.md",
+      "status": "ready-to-ship",
+      "last_updated": "2026-07-13T00:55:00+09:00",
+      "handoff": "create-pr"
     }
   },
   "decisions": [
     {"at":"2026-07-12T23:05:00+09:00","summary":"保守案を採用","rationale":"ユーザー承認済みBRIEFに従い、既存PRの安全評価とマージに限定"},
     {"at":"2026-07-12T23:05:00+09:00","summary":"deterministic gateを最終SSOTにする","rationale":"AIの自己承認や幻覚でマージしないため"}
+    ,{"at":"2026-07-13T00:00:00+09:00","summary":"書き込み用の独立承認トークンと証拠完全性gateを追加","rationale":"公開UIのconfirmフラグだけでは権限付与にならず、100件超の差分を安全と誤判定しないため"}
+    ,{"at":"2026-07-13T00:49:00+09:00","summary":"GitHub保護状態とbase branchをreceipt gateに追加","rationale":"Deepレビューで必須check/reviewとbase retargetの証拠ギャップを検出したため"}
   ],
   "open_questions": [],
   "history": [
-    {"at":"2026-07-12T23:05:00+09:00","from_state":"SpecDrafting","to_state":"UiApproval","triggered_by":"feature-spec-generator + ui-approval-gate","note":"SPEC/Screen/wireframe生成"}
+    {"at":"2026-07-12T23:05:00+09:00","from_state":"SpecDrafting","to_state":"UiApproval","triggered_by":"feature-spec-generator + ui-approval-gate","note":"SPEC/Screen/wireframe生成"},
+    {"at":"2026-07-13T00:00:00+09:00","from_state":"UiApproval","to_state":"Implementing","triggered_by":"user approval + feature-implementer","note":"承認済みUIに従いTDD実装"},
+    {"at":"2026-07-13T00:39:00+09:00","from_state":"Implementing","to_state":"Reviewing","triggered_by":"feature-wiring + final-review","note":"品質ゲート通過後のDeepレビュー"},
+    {"at":"2026-07-13T00:55:00+09:00","from_state":"Reviewing","to_state":"Done","triggered_by":"final-review + feature-status-sync","note":"High指摘を修正し、116 tests/build/architecture通過"}
   ],
   "autonomy_control": {
     "max_questions_per_session": 7,
@@ -175,7 +182,7 @@
     "validated_at": "2026-07-12T23:05:00+09:00"
   },
   "ui_approval": {
-    "status": "in_review",
+    "status": "approved",
     "wireframe_path": "docs/wireframes/feature-022-merge-steward-wireframe.md",
     "svg_paths": {
       "flow": "docs/wireframes/feature-022-merge-steward-flow.svg",
@@ -184,15 +191,15 @@
     "work_type": "NEW_FEATURE",
     "revision_count": 0,
     "revisions": [],
-    "approved_at": null,
+    "approved_at": "2026-07-13T00:00:00+09:00",
     "rejected_reason": null
   },
   "completion_contract": {
     "version": "1.0",
     "work_type": "NEW_FEATURE",
     "source": "BRIEF §7",
-    "last_verified_at": null,
-    "verdict": null,
+    "last_verified_at": "2026-07-13T00:55:00+09:00",
+    "verdict": "passed",
     "items": [
       {"id":"DoD-FS-01","description":"Issue作成の明示確認・重複防止・redaction","verification_type":"machine"},
       {"id":"DoD-FS-02","description":"PR評価の証拠網羅","verification_type":"machine"},
@@ -202,6 +209,6 @@
       {"id":"DoD-FS-06","description":"市場カードと専用画像","verification_type":"machine+human"},
       {"id":"DoD-FS-07","description":"品質ゲートとビルド","verification_type":"machine"}
     ],
-    "summary": {"total":7,"passed":0,"failed":0,"skipped":0,"pass_rate":0}
+    "summary": {"total":7,"passed":7,"failed":0,"skipped":0,"pass_rate":100}
   }
 }

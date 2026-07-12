@@ -43,8 +43,9 @@
 35. `src/security.ts` がSecret Manager、IP allowlist、入力制限、A2A信頼境界、CIを審査用セキュリティ証拠にする
 36. `src/impact.ts` が対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性証拠にする
 37. `src/submissionLaunch.ts` が外部提出URLを受け取り、提出3点、タグ、本文、CI、証拠receiptを最終判定する
-38. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
-39. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
+38. `server/mergeSteward.ts` がGitHub Issue作成とPRのfiles/checks/reviews評価を行い、確定的な安全ゲート通過後だけsquash mergeする
+39. `/api/recommend` が Gemini 3.5 Flash へ勝ち筋、リスク、競合/SWOT文脈を問い合わせる
+40. Cloud Run が UI、API、A2A Agent Card を同一サービスで公開する
 
 ## A2A Surface
 
@@ -92,6 +93,15 @@
   - `demo.receipt`
   - `acceptance.matrix`
   - `judge.snapshot`
+  - `github.lifecycle.evaluate`
+
+## Merge Steward Surface
+
+- `POST /api/merge-steward/issues/preview`: 問題、証拠、受入条件をGitHub Issue本文へ正規化する。GitHubへの書き込みは行わない
+- `POST /api/merge-steward/issues`: 明示確認、専用操作承認コード、本文markerによる重複防止の後だけIssueを作成する
+- `POST /api/merge-steward/pulls/evaluate`: PRの変更ファイル、CI check、GitHub review、mergeability、head SHAを評価し、READY / HUMAN REVIEW / BLOCKEDをreceipt付きで返す
+- `POST /api/merge-steward/pulls/merge`: READYのhash receipt、同一head SHA、明示確認、専用操作承認コードを再検証し、GitHub branch protectionを迂回せずsquash mergeする
+- A2A job: `github.lifecycle.evaluate` はread-only評価のみをmaker/checkerへ公開し、Issue作成とmergeはUIの確認境界に限定する
 
 ## Strategy Surface
 

@@ -1400,6 +1400,340 @@ code {
   color: var(--muted);
 }
 
+/* ---- Merge Steward ------------------------------------------------------ */
+
+.merge-steward {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 18px;
+  padding: 22px;
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.07), transparent 45%),
+    var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.merge-steward-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.merge-steward-head h2 {
+  font-size: 22px;
+}
+
+.merge-steward-head p:last-child {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 4px;
+}
+
+.merge-connection {
+  margin-left: auto;
+  flex: none;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 6px 11px;
+  color: var(--amber);
+  background: var(--panel-2);
+  font: 12px var(--mono);
+}
+
+.merge-connection.is-ready {
+  color: var(--green);
+  border-color: rgba(22, 163, 74, 0.35);
+  background: rgba(22, 163, 74, 0.07);
+}
+
+.merge-policy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(15, 118, 110, 0.24);
+  border-radius: 10px;
+  padding: 9px 12px;
+  color: #0f766e;
+  background: rgba(183, 247, 215, 0.22);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.merge-action-token {
+  display: grid;
+  grid-template-columns: auto minmax(220px, 360px) 1fr;
+  align-items: center;
+  gap: 8px 12px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.merge-action-token span {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.merge-action-token input {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--ink);
+  background: var(--panel);
+  font: inherit;
+}
+
+.merge-action-token small {
+  line-height: 1.5;
+}
+
+.merge-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.merge-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 9px 12px;
+  color: var(--muted);
+  background: transparent;
+  font-weight: 700;
+}
+
+.merge-tabs button.is-active {
+  color: #0f766e;
+  border-bottom-color: #0f766e;
+}
+
+.merge-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 14px;
+}
+
+.merge-form,
+.merge-result {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  background: var(--panel-2);
+}
+
+.merge-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.merge-form label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.merge-form input,
+.merge-form textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 10px;
+  color: var(--ink);
+  background: var(--panel);
+  font: inherit;
+  resize: vertical;
+}
+
+.merge-form-note {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.merge-result {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.merge-result pre {
+  max-height: 280px;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: var(--panel);
+  color: var(--ink);
+  font: 12px/1.6 var(--mono);
+}
+
+.merge-empty {
+  min-height: 180px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.6;
+}
+
+.merge-verdict {
+  align-self: flex-start;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font: 800 12px var(--mono);
+}
+
+.merge-verdict.is-preview {
+  color: var(--blue);
+  background: rgba(14, 116, 144, 0.1);
+}
+
+.merge-verdict.is-ready {
+  color: var(--green);
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.merge-verdict.is-human_review {
+  color: var(--amber);
+  background: rgba(180, 83, 9, 0.1);
+}
+
+.merge-verdict.is-blocked {
+  color: var(--red);
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.merge-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.merge-metrics span {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--muted);
+  background: var(--panel);
+  font-size: 12px;
+}
+
+.merge-metrics strong {
+  color: var(--ink);
+  font-family: var(--mono);
+}
+
+.merge-receipt {
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.merge-blockers {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.merge-blockers li {
+  display: flex;
+  gap: 6px;
+  color: var(--amber);
+  font-size: 12.5px;
+}
+
+.merge-confirm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.merge-confirm p {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.merge-confirm div {
+  display: flex;
+  gap: 8px;
+}
+
+.merge-link,
+.merge-message a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.merge-message {
+  border: 1px solid rgba(220, 38, 38, 0.28);
+  border-radius: 9px;
+  padding: 9px 12px;
+  color: var(--red);
+  background: rgba(220, 38, 38, 0.06);
+  font-size: 13px;
+}
+
+.merge-message.is-success {
+  color: var(--green);
+  border-color: rgba(22, 163, 74, 0.3);
+  background: rgba(22, 163, 74, 0.06);
+}
+
+.spin {
+  animation: merge-spin 0.9s linear infinite;
+}
+
+@keyframes merge-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 760px) {
+  .merge-steward-head {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .merge-connection {
+    margin-left: 0;
+  }
+
+  .merge-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .merge-action-token {
+    grid-template-columns: 1fr;
+  }
+
+  .merge-confirm {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
 .ops-run-list {
   display: flex;
   gap: 8px;
@@ -3951,4 +4285,3 @@ path.is-active {
     stroke-dashoffset: -12;
   }
 }
-

@@ -587,11 +587,78 @@ const releaseGuardian: AgentJobDef = {
 };
 
 // ---------------------------------------------------------------------------
+// ⑩ merge-steward — GitHubのPR証拠をread-onlyで収集し、安全ゲートを独立評価
+// ---------------------------------------------------------------------------
+
+const mergeSteward: AgentJobDef = {
+  agentId: "merge-steward",
+  skillId: "github.lifecycle.evaluate",
+  skillDescription: "既存PRのfiles・checks・reviews・mergeability・head SHAを実取得し、deterministic gateと独立checkerで安全なマージ可否を評価する。書き込みは専用確認APIへ分離する。",
+  title: "GitHub変更ライフサイクル評価",
+  inputKind: "text",
+  inputLabel: "評価するPull Request番号",
+  inputPlaceholder: "57",
+  findingNoun: "マージ判定",
+  runTarget: (_config, input) => `github-pr-${input.trim() || "unknown"}`,
+  emptyNote: "Pull Requestの証拠を取得できませんでした。番号、GitHub設定、API制限を確認してください。",
+  makerRole:
+    "You are a GitHub change lifecycle steward. Use ONLY the cited pull request evidence and deterministic verdict. Explain why the PR is READY, HUMAN REVIEW, or BLOCKED. Never claim that an issue or pull request was merged by this read-only evaluation job.",
+  checkerRole:
+    "You are an INDEPENDENT merge safety reviewer. Refute any READY claim that lacks successful checks, an approving GitHub review, mergeability, unchanged head SHA, or safe changed paths. Never treat AI review as a GitHub approval.",
+  async collectEvidence(ctx, input) {
+    const pullNumber = Number(input.trim());
+    if (!Number.isInteger(pullNumber) || pullNumber <= 0) {
+      return { evidence: [item("merge-input", "PR番号は正の整数で入力してください。", "ERROR", "github")], note: "入力検証で停止" };
+    }
+    try {
+      const evaluated = await fetchJson(ctx.fetchImpl, `${ctx.baseUrl}/api/merge-steward/pulls/evaluate`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ pullNumber })
+      });
+      const evaluation = (evaluated.body as {
+        evaluation?: {
+          verdict?: string;
+          headSha?: string;
+          checks?: { successful?: number; total?: number; pending?: number; failed?: number };
+          approvals?: number;
+          mergeable?: boolean | null;
+          highRiskFiles?: string[];
+          blockers?: string[];
+          receipt?: string;
+        };
+      } | null)?.evaluation;
+      if (!evaluated.ok || !evaluation) {
+        return { evidence: [item("merge-api", `PR評価API失敗: HTTP ${evaluated.status}`, "ERROR", "github")], note: "GitHub証拠の取得に失敗" };
+      }
+      const severity = evaluation.verdict === "ready" ? "INFO" : evaluation.verdict === "human_review" ? "WARNING" : "ERROR";
+      const evidence = [
+        item("merge-verdict", `deterministic verdict=${evaluation.verdict ?? "unknown"} receipt=${evaluation.receipt?.slice(0, 12) ?? "-"}`, severity, "merge-gate"),
+        item(
+          "merge-checks",
+          `checks=${evaluation.checks?.successful ?? 0}/${evaluation.checks?.total ?? 0} pending=${evaluation.checks?.pending ?? 0} failed=${evaluation.checks?.failed ?? 0}`,
+          (evaluation.checks?.failed ?? 0) > 0 ? "ERROR" : (evaluation.checks?.pending ?? 0) > 0 ? "WARNING" : "INFO",
+          "github-actions"
+        ),
+        item("merge-reviews", `GitHub approvals=${evaluation.approvals ?? 0} mergeable=${String(evaluation.mergeable)} head=${evaluation.headSha?.slice(0, 12) ?? "-"}`, (evaluation.approvals ?? 0) > 0 ? "INFO" : "WARNING", "github-review"),
+        item("merge-risk", `high-risk files=${evaluation.highRiskFiles?.length ?? 0}`, (evaluation.highRiskFiles?.length ?? 0) > 0 ? "WARNING" : "INFO", "change-risk")
+      ];
+      for (const [index, blocker] of (evaluation.blockers ?? []).slice(0, 6).entries()) {
+        evidence.push(item(`merge-blocker-${index + 1}`, blocker, "WARNING", "merge-gate"));
+      }
+      return { evidence, note: `PR #${pullNumber} のGitHub証拠とdeterministic gateを収集 (${evidence.length}件)` };
+    } catch (error) {
+      return { evidence: [item("merge-api", `PR評価取得失敗: ${error instanceof Error ? error.message : "unknown"}`, "ERROR", "github")], note: "GitHub証拠の取得に失敗" };
+    }
+  }
+};
+
+// ---------------------------------------------------------------------------
 // レジストリ
 // ---------------------------------------------------------------------------
 
 export const AGENT_JOBS: Record<string, AgentJobDef> = Object.fromEntries(
-  [cloudRunSre, briefCartographer, marketBroker, geminiStrategist, testForge, securitySentinel, uxGuildmaster, observabilityOracle, releaseGuardian].map((job) => [job.agentId, job])
+  [cloudRunSre, briefCartographer, marketBroker, geminiStrategist, testForge, securitySentinel, uxGuildmaster, observabilityOracle, releaseGuardian, mergeSteward].map((job) => [job.agentId, job])
 );
 
 export const A2A_SKILL_TO_AGENT: Record<string, string> = Object.fromEntries(Object.values(AGENT_JOBS).map((job) => [job.skillId, job.agentId]));

@@ -22,6 +22,7 @@
 │ 問題タイトル             │ READY / HUMAN REVIEW / BLOCKED│
 │ 問題・証拠・受入条件     │ checks / reviews / files      │
 │ または PR番号            │ blockers / receipt            │
+│ 実行承認コード（書込時） │                               │
 │ [プレビュー / 評価]      │                               │
 ├──────────────────────────┴───────────────────────────────┤
 │ 書き込み前確認: 実行内容・対象repository・安全境界        │
@@ -57,12 +58,14 @@
 
 - positive integerのPR番号だけを受け付ける。
 - verdictを色だけでなくラベルとアイコンで区別する。
-- checks、reviews、files、mergeability、head SHA、blockersを表示する。
+- checks、reviews、files、mergeability、GitHub merge state、base branch、head SHA、blockersを表示する。
 
 ### Confirmation Bar
 
 - 書き込み直前だけ表示する。
-- 対象repository、操作、head SHA、安全ゲートの最終状態を明示する。
+- サーバーの書き込み連携が設定済みの場合だけ、password形式の「実行承認コード」を表示する。GitHub tokenは入力しない。
+- 実行承認コードはIssue作成/mergeのheaderだけに送信し、成功後にUI stateから消去する。
+- 対象repository、base branch、操作、head SHA、安全ゲートの最終状態を明示する。
 - destructive actionは既存primary CTAと区別し、二重送信を防止する。
 
 ## 5. Event → Logic Mapping
