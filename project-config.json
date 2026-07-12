@@ -4,7 +4,6 @@
   "platform": "web-vite-express",
   "framework": "Vite + React (frontend) / Express (backend)",
   "language": "TypeScript",
-  "migrated_from": "brief2dev ecosystem (curated core, 日本語化)",
   "pipeline_data_root": null,
   "paths": {
     "source_root": "src",

@@ -14,8 +14,8 @@ export const CAPABILITY_LABELS: Record<CapabilityKey, string> = {
 };
 
 export const DEFAULT_PROJECT_BRIEF = [
-  "brief2dev を分析し、Agent GuildのA2A Agent Marketplaceと組み合わせる。",
-  "必要な能力を持つAIエージェントを選び、A2Aで任せ、実行結果を検証する。",
+  "ハッカソンの企画を分析し、Agent-To-Agent Marketplace と組み合わせる。",
+  "必要な能力を持つAIを市場から探し、雇い、A2Aで連携させる。",
   "Gemini 3.5 Flash でプロジェクトの弱点を診断し、Cloud Run へ届ける。",
   "MCP/スキル/DevOps能力を数値化して、編成と実行によるプロジェクト改善が見える体験にする。"
 ].join("\n");
@@ -54,7 +54,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
       { name: "github-issue-drafter", tools: ["create_issue", "link_pr"], maturity: 74 }
     ],
     a2aSkillIds: ["brief.analyze", "project.scope", "judge.pitch", "judge.tour", "demo.receipt"],
-    synergyTags: ["brief2dev", "protopedia", "planning", "a2a"]
+    synergyTags: ["hackathon", "protopedia", "planning", "a2a"]
   },
   {
     id: "market-broker",
@@ -194,7 +194,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
       { name: "playwright-smoke", tools: ["open_page", "capture_trace"], maturity: 70 }
     ],
     a2aSkillIds: ["test.contract", "test.regression", "verify.evidence"],
-    synergyTags: ["testing", "devops", "quality", "brief2dev"]
+    synergyTags: ["testing", "devops", "quality", "hackathon"]
   },
   {
     id: "security-sentinel",

@@ -102,9 +102,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ---
 
-# AI 統治ルール（brief2dev エコシステム由来・日本語化）
+# AI 統治ルール
 
-このプロジェクトには、`brief2dev` エコシステムからコア統治ルールを厳選・日本語化して移行した統治レイヤーが組み込まれている。AI は実装・レビュー・コミットの各段階でこれらを順守すること。
+AI は実装・レビュー・コミットの各段階で、このプロジェクトの統治ルールを順守すること。
 
 ## SSOT（信頼できる唯一の情報源）
 
@@ -129,4 +129,4 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 | `prompt-injection-guard` | PostToolUse Read | 信頼できないファイルの prompt-injection パターンを警告（ブロックはしない） |
 | `edit-error-recovery` | PostToolUse Edit | Edit 失敗時に「まず Read」等の復旧ガイダンスを注入 |
 
-すべてのフックは fail-open（エラー時は素通り）。詳細・移行の経緯は `.claude/ECOSYSTEM-MIGRATION.md` を参照。
+すべてのフックは fail-open（エラー時は素通り）。

@@ -1,6 +1,6 @@
 {
   "schema_version": "2.0.0",
-  "_note": "brief2dev エコシステムのルール群から、本プロジェクト(Vite + React + Express + npm)に適用可能なコア統治ルールを厳選し、日本語化して移行したもの。brief2dev 生成器の内部運用専用ルール(governance-handoff / rule-enforcement-honesty / learnings-protocol / hook-naming / skill-doc-hygiene / pipeline/* 等)は移行対象外。",
+  "_note": "本プロジェクト(Vite + React + Express + npm)向けのコア統治ルール。",
   "active_hooks": [
     "secret-leak-guard",
     "destructive-git-guard",

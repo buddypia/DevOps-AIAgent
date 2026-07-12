@@ -661,16 +661,6 @@ export const HOOK_REGISTRY = {
       "matcher": "*",
       "hooks": [
         {
-          "id": "trunk-start-warning",
-          "module": ".cli/hooks/trunk-start-warning.mjs",
-          "priority": 5,
-          "profile": "minimal",
-          "description": "main ブランチで AI セッション進入時に worktree の案内をコンテキストとして注入 (R-CM-006 Rule 1 整合 — SessionStart はブロック不可)",
-          "orchestrated": false,
-          "timeout": 10,
-          "cliTargets": ["codex", "gemini"]
-        },
-        {
           "id": "ownership-context-injector",
           "module": ".cli/hooks/ownership-context-injector.mjs",
           "priority": 7,

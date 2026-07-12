@@ -70,11 +70,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PROJECT_DIR}/.cli/hooks/trunk-start-warning.mjs\"",
-            "timeout": 10
-          },
-          {
-            "type": "command",
             "command": "node \"${CLAUDE_PROJECT_DIR}/scripts/session-context-primer.mjs\"",
             "timeout": 10
           }
