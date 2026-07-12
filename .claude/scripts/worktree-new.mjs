@@ -269,7 +269,7 @@ export function validateBranch(branch) {
 /**
  * Step 2 helper: main worktree + checked-out base の場合、local base を origin/<base>
  * に fast-forward する。origin 不在時は FF 対象がないため SKIP (local が authoritative)。
- * non-FF divergent / FF 실패는 STOP (result.errors push + false 반환).
+ * non-FF divergent / FF 失敗は STOP (result.errors push + false 返却)。
  *
  * @returns {boolean} true=継続進行、false=STOP (呼び出し側が result を返却)
  */
@@ -277,7 +277,7 @@ export function ffLocalBaseIfPossible({ base, originExists, cwd, gitFn, dryRun, 
   if (!isMainWorktree(cwd, gitFn)) {
     result.warnings.push(
       'invoked from a linked worktree (not main); skipped ff of local main. ' +
-        `worktree は ${originExists ? `origin/${base}` : `local ${base}`} 기준으로 생성됩니다.`,
+        `worktree は ${originExists ? `origin/${base}` : `local ${base}`} 基準で生成されます。`,
     );
     return true;
   }
@@ -295,7 +295,7 @@ export function ffLocalBaseIfPossible({ base, originExists, cwd, gitFn, dryRun, 
   if (currentBranch !== base) {
     result.warnings.push(
       `current branch is "${currentBranch}" (not ${base}); skipped ff of local ${base}. ` +
-        `worktree 자체는 origin/${base} 기준으로 생성됩니다.`,
+        `worktree 自体は origin/${base} 基準で生成されます。`,
     );
     return true;
   }

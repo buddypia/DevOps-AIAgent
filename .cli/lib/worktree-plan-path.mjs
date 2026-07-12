@@ -1,41 +1,41 @@
 /**
- * worktree-plan-path.mjs — worktree PLAN.md 위치 SSOT 헬퍼
+ * worktree-plan-path.mjs — worktree PLAN.md 位置の SSOT ヘルパー
  *
- * Why: PLAN.md 가 worktree 루트에 있으면 한 번 tracked 되는 순간 .gitignore 가
- * 무력화되어 main 으로 머지된다. `.tmp/worktree-<safeBranch>/PLAN.md` 위치는
- * .gitignore 의 `.tmp/` 패턴으로 git tracking 자체가 봉쇄된다.
+ * Why: PLAN.md が worktree ルートにあると、一度 tracked された瞬間に .gitignore が
+ * 無力化され main へマージされてしまう。`.tmp/worktree-<safeBranch>/PLAN.md` の位置は
+ * .gitignore の `.tmp/` パターンにより git tracking 自体が封鎖される。
  *
- * branch namespace 격리로 병렬 worktree 작업 충돌도 자연스럽게 해소된다.
+ * branch namespace の隔離により、並列 worktree 作業の衝突も自然に解消される。
  *
- * Boundary (R-CM-028): 관점 1 (brief2dev 자체) 만 적용. 관점 2 (scaffold 내부
- * feature-pilot 의 CONTEXT.json#execution.worktree.plan_path) 는 별도.
+ * Boundary (R-CM-028): 観点 1 (brief2dev 自体) のみ適用。観点 2 (scaffold 内部の
+ * feature-pilot の CONTEXT.json#execution.worktree.plan_path) は別扱い。
  */
 
 import { basename, join } from 'node:path';
 
 /**
- * branch 명을 파일/디렉토리 안전 키로 변환. `/` → `__`.
- * pre-ship-review-guard.mjs 는 본 함수를 import 한다 (SSOT).
+ * branch 名をファイル/ディレクトリの安全なキーに変換する。`/` → `__`。
+ * pre-ship-review-guard.mjs は本関数を import する (SSOT)。
  */
 export function safeBranchKey(branch) {
   return (branch || 'staged').replace(/[\/\\]/g, '__');
 }
 
-// GitHub Flow branch prefix — `.worktrees/<prefix>__name` escape 변형 reverse 대상.
-// `release/*` `support/*` 는 의도적 미포함 (R-CM-008 Rule 4: brief2dev = GitHub Flow only, git-flow 거부).
-// 사용자 정의 brand prefix 추가 시 본 배열 갱신 + tests/unit/worktree-plan-path.test.mjs 회귀 케이스 추가.
-// worktree-path.mjs#resolveWorktreeRoot 도 본 배열을 import (R-CM-037 2-세그먼트 판정 SSOT 공유).
+// GitHub Flow branch prefix — `.worktrees/<prefix>__name` escape 変形の reverse 対象。
+// `release/*` `support/*` は意図的に未包含 (R-CM-008 Rule 4: brief2dev = GitHub Flow only, git-flow 拒否)。
+// ユーザー定義の brand prefix を追加する際は本配列を更新 + tests/unit/worktree-plan-path.test.mjs に回帰ケースを追加。
+// worktree-path.mjs#resolveWorktreeRoot も本配列を import する (R-CM-037 2-セグメント判定の SSOT 共有)。
 export const KNOWN_BRANCH_PREFIXES = ['feature', 'fix', 'hotfix', 'chore', 'refactor', 'docs', 'test'];
 
 /**
- * single-segment escape 변형 (`feature__foo`) 을 slash 형식 (`feature/foo`) 으로 reverse.
- * KNOWN_BRANCH_PREFIXES 로 시작하지 않으면 null 반환 (정규화 미적용 시그널).
+ * single-segment の escape 変形 (`feature__foo`) を slash 形式 (`feature/foo`) に reverse する。
+ * KNOWN_BRANCH_PREFIXES で始まらない場合は null を返す (正規化を適用しないシグナル)。
  */
 function reverseEscapeIfKnownPrefix(segment) {
   for (const prefix of KNOWN_BRANCH_PREFIXES) {
     if (segment.startsWith(`${prefix}__`)) {
       const suffix = segment.slice(prefix.length + 2);
-      if (!suffix) return null; // `fix__` 빈 suffix — git 가 trailing-slash branch 거부하므로 정규화 skip
+      if (!suffix) return null; // `fix__` の空の suffix — git が trailing-slash の branch を拒否するため正規化を skip
       return `${prefix}/${suffix}`;
     }
   }
@@ -43,18 +43,18 @@ function reverseEscapeIfKnownPrefix(segment) {
 }
 
 /**
- * worktree 절대/상대 경로에서 branch 명을 추론. 두 컨벤션 모두 같은 branch 로 정규화 (R-CM-024).
+ * worktree の絶対/相対パスから branch 名を推論する。両コンベンションとも同じ branch に正規化する (R-CM-024)。
  *
- *   `.worktrees/feature/foo`            → `feature/foo` (slash 보존)
- *   `.worktrees/feature__foo`           → `feature/foo` (escape 변형 reverse, KNOWN_BRANCH_PREFIXES)
+ *   `.worktrees/feature/foo`            → `feature/foo` (slash 保存)
+ *   `.worktrees/feature__foo`           → `feature/foo` (escape 変形の reverse, KNOWN_BRANCH_PREFIXES)
  *   `.worktrees/fix__bar-baz`           → `fix/bar-baz`
  *   `/abs/path/.worktrees/feature/baz`  → `feature/baz`
- *   `.worktrees/random__name`           → `.worktrees/random__name` (알려진 prefix 아님, 정규화 skip)
+ *   `.worktrees/random__name`           → `.worktrees/random__name` (既知の prefix ではない、正規化 skip)
  *   `.worktrees/<single>`               → `.worktrees/<single>` (fallback)
- *   `<a>/<b>`                            → `<a>/<b>` (마지막 2 segments)
+ *   `<a>/<b>`                            → `<a>/<b>` (最後の 2 segments)
  *
- * pre-ship-review-guard.mjs 는 본 함수를 import 한다 (SSOT). worktree-shipping-guard +
- * create-pr/ops.mjs 도 `resolveWorktreePlanPath` 를 통해 본 함수에 의존.
+ * pre-ship-review-guard.mjs は本関数を import する (SSOT)。worktree-shipping-guard +
+ * create-pr/ops.mjs も `resolveWorktreePlanPath` を通じて本関数に依存する。
  */
 export function inferBranchFromWorktreePath(wtPath) {
   if (!wtPath) return null;
@@ -76,28 +76,28 @@ export function inferBranchFromWorktreePath(wtPath) {
 }
 
 /**
- * worktree 안에서의 PLAN.md 상대 경로 (worktree 루트 기준).
- * `.tmp/worktree-<safeBranch>/PLAN.md`.
+ * worktree 内での PLAN.md の相対パス (worktree ルート基準)。
+ * `.tmp/worktree-<safeBranch>/PLAN.md`。
  */
 export function planRelPath(branch) {
   return join('.tmp', `worktree-${safeBranchKey(branch)}`, 'PLAN.md');
 }
 
 /**
- * Pre-Ship Review Panel 컨펌 마커 절대 경로.
- * pre-ship-review-guard.mjs (hook) + mark-pre-ship-confirmed.mjs (CLI) 양쪽에서 import.
- * 양 호출 경로가 동일 키 산출 보장 → marker create/check 정합성 SSOT (R-CM-024).
+ * Pre-Ship Review Panel の確認マーカーの絶対パス。
+ * pre-ship-review-guard.mjs (hook) + mark-pre-ship-confirmed.mjs (CLI) の両方から import される。
+ * 両呼び出し経路が同一キーの算出を保証する → marker create/check の整合性 SSOT (R-CM-024)。
  *
- * @param {string} mainRoot — main project root 절대 경로 (worktree 가 아님)
- * @param {string|null} branch — branch 명 또는 null (ship-feature 모드 = 'staged')
+ * @param {string} mainRoot — main project root の絶対パス (worktree ではない)
+ * @param {string|null} branch — branch 名または null (ship-feature モード = 'staged')
  */
 export function preShipMarkerPath(mainRoot, branch) {
   return join(mainRoot, '.tmp', `pre-ship-review-confirmed-${safeBranchKey(branch)}`);
 }
 
 /**
- * worktree 절대 경로로부터 PLAN.md 절대 경로를 반환.
- * branch 미명시 시 worktree path 에서 추론.
+ * worktree の絶対パスから PLAN.md の絶対パスを返す。
+ * branch が未指定の場合は worktree path から推論する。
  */
 export function resolveWorktreePlanPath(worktreePath, branch = null) {
   const inferred = branch || inferBranchFromWorktreePath(worktreePath) || basename(worktreePath);
@@ -105,15 +105,15 @@ export function resolveWorktreePlanPath(worktreePath, branch = null) {
 }
 
 /**
- * worktree 의 세션 소유권 사이드카 (`.session-owner`) 절대 경로 (R-CM-036).
- * `worktree-owner-tracker` (PostToolUse) 가 생성 시 현재 session_id 를 1줄 기록하고,
- * `worktree-session-owner-guard` (PreToolUse Layer 2) 가 읽어 소유권을 판정한다.
+ * worktree のセッション所有権サイドカー (`.session-owner`) の絶対パス (R-CM-036)。
+ * `worktree-owner-tracker` (PostToolUse) が生成時に現在の session_id を1行記録し、
+ * `worktree-session-owner-guard` (PreToolUse Layer 2) がそれを読んで所有権を判定する。
  *
- * PLAN.md 와 같은 `.tmp/worktree-<safeBranch>/` 디렉토리에 둔다 — `.gitignore` 의
- * `.tmp/` 패턴으로 git tracking 봉쇄 + branch namespace 격리로 병렬 worktree 충돌 해소.
+ * PLAN.md と同じ `.tmp/worktree-<safeBranch>/` ディレクトリに置く — `.gitignore` の
+ * `.tmp/` パターンで git tracking を封鎖 + branch namespace の隔離で並列 worktree の衝突を解消。
  *
- * @param {string} worktreePath — worktree 루트 절대 경로
- * @param {string|null} branch — branch 명 또는 null (worktree path 에서 추론)
+ * @param {string} worktreePath — worktree ルートの絶対パス
+ * @param {string|null} branch — branch 名または null (worktree path から推論)
  */
 export function worktreeOwnerPath(worktreePath, branch = null) {
   const inferred = branch || inferBranchFromWorktreePath(worktreePath) || basename(worktreePath);
@@ -121,11 +121,11 @@ export function worktreeOwnerPath(worktreePath, branch = null) {
 }
 
 /**
- * `git worktree list --porcelain` 출력 파싱.
- * 각 entry: { path, branch } (branch 는 'refs/heads/' 제거된 short name 또는 detached 시 null).
- * 부수효과 없는 본 lib 에 둔다 (hook 모듈 import 시 bottom auto-run 부수실행 회피).
- * worktree-shipping-guard.mjs / worktree-owner-tracker.mjs 가 본 함수를 import (SSOT).
- * `.filter((e) => e.path)` — path 없는 detached/incomplete block 제외 (worktree-shipping-guard 동작 보존).
+ * `git worktree list --porcelain` の出力をパースする。
+ * 各 entry: { path, branch } (branch は 'refs/heads/' を除去した short name、または detached 時は null)。
+ * 副作用のない本 lib に置く (hook モジュールの import 時に bottom auto-run の副作用実行を回避)。
+ * worktree-shipping-guard.mjs / worktree-owner-tracker.mjs が本関数を import する (SSOT)。
+ * `.filter((e) => e.path)` — path のない detached/incomplete block を除外 (worktree-shipping-guard の動作を保存)。
  *
  * @param {string} stdout
  * @returns {Array<{path: string, branch: string|null}>}

@@ -1,47 +1,47 @@
 /**
- * hook-anchors.mjs - Hook 정규식 anchor SSOT
+ * hook-anchors.mjs - Hook 正規表現 anchor の SSOT
  *
- * PreToolUse Bash hook 들이 명령 시작 (`^`) 또는 chain operator (`;` `&&` `||` `|`)
- * 또는 newline (shell 명령 분리자) 직후만 매칭하기 위한 공통 anchor.
+ * PreToolUse Bash hook 群が、命令の開始 (`^`) または chain operator (`;` `&&` `||` `|`)
+ * または newline (shell 命令の分離子) の直後のみをマッチさせるための共通 anchor。
  *
- * 단순 word boundary `\b` 는 진단 코드 / quoted string / heredoc body / grep / echo
- * 안의 trigger string 까지 false-positive 매칭 (PR #493 root cause F1-F5).
+ * 単純な word boundary `\b` は、診断コード / quoted string / heredoc body / grep / echo
+ * の中の trigger string まで false-positive でマッチしてしまう (PR #493 root cause F1-F5)。
  *
- * 본 lib 으로 5 hook (commit-guard / destructive-git-guard / dev-server-guard /
- * pre-ship-review-guard / worktree-policy-guard) 의 anchor inline 18+ 곳을 단일
- * SSOT 로 통합. silent diverge 위험 차단 — 한 hook 의 anchor 만 바뀌어도 다른
- * hook 이 stale 한 cluster 재발 경로 차단.
+ * 本 lib により 5 hook (commit-guard / destructive-git-guard / dev-server-guard /
+ * pre-ship-review-guard / worktree-policy-guard) の anchor inline 18+ 箇所を単一の
+ * SSOT に統合する。silent diverge のリスクを遮断 — ある hook の anchor だけが変わっても他の
+ * hook が stale になる cluster の再発経路を遮断する。
  */
 
 /**
- * 명령 시작 / chain operator / newline / command substitution 직후만 매칭하는 anchor.
+ * 命令の開始 / chain operator / newline / command substitution の直後のみをマッチする anchor。
  *
- * 경계 종류:
- *   - `^`            명령 시작
+ * 境界の種類:
+ *   - `^`            命令の開始
  *   - `[;&|\n]\s*`   chain operator (`;` `&&` `||` `|`) / newline
- *   - `\$\(\s*`      command substitution `$(...)` — inner 명령은 shell 이 실제 실행 (DEBT-79)
- *   - `` `\s* ``     legacy backtick substitution — 동일하게 실제 실행
+ *   - `\$\(\s*`      command substitution `$(...)` — inner の命令は shell が実際に実行する (DEBT-79)
+ *   - `` `\s* ``     legacy backtick substitution — 同様に実際に実行される
  *
- * subshell/backtick 안의 git 명령은 `echo` 의 *리터럴 인자* (실행 안 됨) 와 달리 shell 이
- * 실제 실행하므로 destructive/commit/ship trigger 검사 대상이다 (예: `echo $(git stash clear)`
- * 는 stash clear 가 실제 실행됨). heredoc body (데이터) 는 stripHeredocBodies 가 별도 제거하므로
- * 본 anchor 와 직교. commit -m 본문 안 `$(...)` 는 stripCommitMessageBody 가 먼저 제거.
+ * subshell/backtick 内の git 命令は、`echo` の *リテラル引数* (実行されない) と異なり shell が
+ * 実際に実行するため、destructive/commit/ship trigger の検査対象である (例: `echo $(git stash clear)`
+ * は stash clear が実際に実行される)。heredoc body (データ) は stripHeredocBodies が別途除去するため、
+ * 本 anchor とは直交する。commit -m 本文内の `$(...)` は stripCommitMessageBody が先に除去する。
  *
- * Note: `\\n` JS string literal → RegExp 생성 시 `\n` regex metachar (실제 newline) 해석.
- * 향후 수정자가 `\\n` → `\n` (single backslash) 으로 실수 변경 시 regex 는 literal
- * `\` + `n` 두 문자로 해석되어 newline 매칭 깨짐. JS string escape level 보존 의무.
+ * Note: `\\n` の JS string literal → RegExp 生成時に `\n` regex metachar (実際の newline) として解釈される。
+ * 今後の修正者が `\\n` → `\n` (single backslash) に誤って変更すると、regex は literal な
+ * `\` + `n` の2文字として解釈され newline マッチが壊れる。JS string escape level の保存義務。
  */
 export const CMD_ANCHOR_SRC = '(?:^|[;&|\\n]\\s*|\\$\\(\\s*|`\\s*)';
 
 /**
- * pattern source 앞에 anchor 를 prepend 하여 RegExp 생성.
+ * pattern source の前に anchor を prepend して RegExp を生成する。
  *
- * 사용 예:
+ * 使用例:
  *   anchoredPattern('git\\s+commit\\b', 'i')
  *   → /(?:^|[;&|\n]\s*)git\s+commit\b/i
  *
- * @param {string} patternSrc - anchor 뒤에 붙일 정규식 source (string, RegExp 아님)
- * @param {string} [flags=''] - RegExp flags (i/g 등)
+ * @param {string} patternSrc - anchor の後に付ける正規表現 source (string であり RegExp ではない)
+ * @param {string} [flags=''] - RegExp flags (i/g など)
  * @returns {RegExp}
  */
 export function anchoredPattern(patternSrc, flags = '') {

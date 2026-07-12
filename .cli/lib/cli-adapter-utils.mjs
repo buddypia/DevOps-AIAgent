@@ -1,54 +1,54 @@
 /**
  * cli-adapter-utils.mjs — Multi-CLI Hook Adapter Utilities
  *
- * Codex CLI 와 Antigravity CLI (agy — Google Antigravity) 의 stdin JSON payload 를
- * 본체 hook (Claude Code 형식 `{ tool_name, tool_input, cwd }`) 으로 정규화하고,
- * 본체 결과를 각 CLI 의 wire 형식으로 변환한다.
+ * Codex CLI と Antigravity CLI (agy — Google Antigravity) の stdin JSON payload を
+ * 本体 hook (Claude Code 形式 `{ tool_name, tool_input, cwd }`) に正規化し、
+ * 本体の結果を各 CLI の wire 形式に変換する。
  *
- * 본체 hook 의 `run(data)` 함수는 Claude stdin 형식을 가정하므로, 어댑터는
- * stdin schema 변환 + 본체 run() 호출 + CLI 별 응답 형식 변환만 담당한다.
+ * 本体 hook の `run(data)` 関数は Claude stdin 形式を前提とするため、アダプターは
+ * stdin schema 変換 + 本体 run() 呼び出し + CLI 別の応答形式変換のみを担当する。
  *
- * 본 lib 는 가드 도메인 로직을 포함하지 않는다 (schema/IO 만). 가드 결정은
- * 본체 hook (`.claude/hooks/<name>.mjs`) 의 export 된 순수 함수가 SSOT.
+ * 本 lib はガードのドメインロジックを含まない (schema/IO のみ)。ガードの決定は
+ * 本体 hook (`.claude/hooks/<name>.mjs`) の export された純粋関数が SSOT。
  *
- * Antigravity hook spec 출처 (공식 우선, R-CM-029 Rule 6 — 2026-07-09 재검증):
- *   - **PRIMARY (실측, 최신)**: 설치된 `agy` v1.1.0 바이너리에 임베드된 공식 문서 전문(`# Lifecycle
- *     Hooks (\`hooks.json\`)`, `strings` 추출로 확인) — antigravity.google/docs/hooks 웹페이지는
- *     JS SPA 라 자동 fetch 로 본문을 못 읽고(WebFetch 시도, 2026-07-09), 3rd-party 블로그
- *     (danicat.dev / antigravitylab.net)는 서로 다른 스키마(파일 경로 `.antigravity/settings.json`
- *     vs `.agents/hooks.json`, matcher 이름 `run_shell_command` vs `run_command` 등)를 주장해
- *     신뢰 불가 — 바이너리에 실제 컴파일된 문서 텍스트가 가장 권위 있는 1차 소스.
- *   - 교차검증(경로만): 공식 repo CHANGELOG https://github.com/google-antigravity/antigravity-cli
- *     v1.0.8 — `~/.gemini/config/hooks.json` (글로벌 옵션 경로 존재 자체는 유효).
- *   Antigravity 는 Claude 와 다른 자체 이벤트를 사용한다 — **PreToolUse / PostToolUse / PreInvocation /
- *   PostInvocation / Stop** 5 종뿐 (`SessionStart` 는 공식 이벤트가 아님 — 구현이 잘못 가정했던
- *   부분, 2026-07-09 실측으로 확정). **구조도 이벤트별로 다르다**: PreToolUse/PostToolUse 는
- *   GROUPED(`[{matcher, hooks:[...]}]`), Stop/PreInvocation/PostInvocation 은 FLAT(핸들러 객체를
- *   매처/hooks 래퍼 없이 이벤트 배열에 직접 나열) — 이전 구현은 Stop 에도 GROUPED 를 잘못 적용해
- *   `.claude/hooks.json` 전체가 스키마 부적합으로 사실상 무시됐을 가능성이 높다(codegen 수정:
- *   `.cli/lib/cli-hooks-codegen.mjs` `flatEvents`). stdin(`toolCall.name`/`toolCall.args`)·
- *   stdout(`{decision, reason}`)·tool 이름(`run_command`/`write_to_file`/`replace_file_content`)은
- *   기존 구현이 이미 정확했다(실측 재확인).
- *   (구 구현은 Antigravity 를 Gemini CLI hook(BeforeTool/run_shell)으로 가정했으나 공식 spec 과
- *   불일치하여 이전 PR 에서 교정. legacy Gemini tool alias 는 backwards-compat 로 매핑만 유지.)
+ * Antigravity hook spec の出典 (公式優先、R-CM-029 Rule 6 — 2026-07-09 再検証):
+ *   - **PRIMARY (実測、最新)**: インストール済みの `agy` v1.1.0 バイナリに埋め込まれた公式ドキュメント全文(`# Lifecycle
+ *     Hooks (\`hooks.json\`)`、`strings` 抽出で確認) — antigravity.google/docs/hooks の Web ページは
+ *     JS SPA なので自動 fetch では本文を読めず(WebFetch 試行、2026-07-09)、3rd-party ブログ
+ *     (danicat.dev / antigravitylab.net)は互いに異なるスキーマ(ファイルパス `.antigravity/settings.json`
+ *     vs `.agents/hooks.json`、matcher 名 `run_shell_command` vs `run_command` など)を主張しており
+ *     信頼できない — バイナリに実際にコンパイルされたドキュメントテキストが最も権威ある 1 次ソース。
+ *   - 交差検証(パスのみ): 公式 repo CHANGELOG https://github.com/google-antigravity/antigravity-cli
+ *     v1.0.8 — `~/.gemini/config/hooks.json` (グローバルオプションのパス存在自体は有効)。
+ *   Antigravity は Claude とは異なる独自イベントを使用する — **PreToolUse / PostToolUse / PreInvocation /
+ *   PostInvocation / Stop** の 5 種のみ (`SessionStart` は公式イベントではない — 実装が誤って仮定していた
+ *   部分、2026-07-09 の実測で確定)。**構造もイベントごとに異なる**: PreToolUse/PostToolUse は
+ *   GROUPED(`[{matcher, hooks:[...]}]`)、Stop/PreInvocation/PostInvocation は FLAT(ハンドラオブジェクトを
+ *   matcher/hooks ラッパーなしにイベント配列へ直接列挙) — 以前の実装は Stop にも GROUPED を誤って適用し
+ *   `.claude/hooks.json` 全体がスキーマ不適合で事実上無視されていた可能性が高い(codegen 修正:
+ *   `.cli/lib/cli-hooks-codegen.mjs` `flatEvents`)。stdin(`toolCall.name`/`toolCall.args`)・
+ *   stdout(`{decision, reason}`)・tool 名(`run_command`/`write_to_file`/`replace_file_content`)は
+ *   既存の実装がすでに正確だった(実測で再確認)。
+ *   (旧実装は Antigravity を Gemini CLI hook(BeforeTool/run_shell)と仮定していたが公式 spec と
+ *   不一致だったため以前の PR で修正。legacy Gemini tool alias は backwards-compat としてマッピングのみ維持。)
  *
- * Gemini CLI hook spec 출처 (공식, R-CM-029 Rule 6 — Antigravity 와 별개 제품):
- *   - 공식 문서: https://geminicli.com/docs/hooks/reference/ (이벤트/입출력 스키마 SSOT)
- *   - 공식 tool 이름: https://github.com/google-gemini/gemini-cli/blob/main/docs/reference/tools.md
- *   Gemini CLI 는 `BeforeTool`/`AfterTool`(≈PreToolUse/PostToolUse) + `AfterAgent`(≈Stop) 이벤트를
- *   쓰며, stdin 필드명(`tool_name`/`tool_input`)은 Claude Code 와 동일하다(값만 다름 — 예:
- *   `run_shell_command`). stdout 은 `{decision:"allow"|"deny"("block" alias), reason}` — exit code
- *   0/2 계약도 Claude 와 사실상 동형. Antigravity 와는 별개 제품(별도 hook 계약)이므로 혼동 금지
- *   (구 구현이 Antigravity 를 Gemini 로 오인했던 사고 — 위 주석 참조. 본 PR 에서 진짜 Gemini CLI 를
- *   `GEMINI_TOOL_MAP`/`mapGeminiCliToolName`/`toGeminiWire` 로 신규 추가, legacy alias 는 그대로 유지).
+ * Gemini CLI hook spec の出典 (公式、R-CM-029 Rule 6 — Antigravity とは別製品):
+ *   - 公式ドキュメント: https://geminicli.com/docs/hooks/reference/ (イベント/入出力スキーマの SSOT)
+ *   - 公式 tool 名: https://github.com/google-gemini/gemini-cli/blob/main/docs/reference/tools.md
+ *   Gemini CLI は `BeforeTool`/`AfterTool`(≈PreToolUse/PostToolUse) + `AfterAgent`(≈Stop) イベントを
+ *   使用し、stdin フィールド名(`tool_name`/`tool_input`)は Claude Code と同一である(値のみ異なる — 例:
+ *   `run_shell_command`)。stdout は `{decision:"allow"|"deny"("block" alias), reason}` — exit code
+ *   0/2 の契約も Claude と事実上同型。Antigravity とは別製品(別の hook 契約)なので混同禁止
+ *   (旧実装が Antigravity を Gemini と誤認した事故 — 上記コメント参照。本 PR で本物の Gemini CLI を
+ *   `GEMINI_TOOL_MAP`/`mapGeminiCliToolName`/`toGeminiWire` として新規追加、legacy alias はそのまま維持)。
  *
- * Boundary: 관점 1 (brief2dev 자체) 전용 — R-CM-028.
+ * Boundary: 観点 1 (brief2dev 自体) 専用 — R-CM-028。
  */
 
 const STDIN_DEADLINE_MS = 1500;
 
 /**
- * stdin 에서 JSON 읽기. 타임아웃 또는 parse 실패 시 빈 객체 반환 (fail-open).
+ * stdin から JSON を読み取る。タイムアウトまたは parse 失敗時は空オブジェクトを返す (fail-open)。
  *
  * @returns {Promise<object>}
  */
@@ -76,15 +76,15 @@ export async function readStdinJson() {
 }
 
 /**
- * Antigravity tool 이름 → Claude tool 이름 매핑 표 (table-driven — cyclomatic 최소화).
+ * Antigravity tool 名 → Claude tool 名のマッピング表 (table-driven — cyclomatic を最小化)。
  *
- * 공식 Antigravity tool 이름 (antigravity.google/docs + danicat.dev "Mastering Hooks"):
- *   run_command / write_to_file / replace_file_content / multi_replace_file_content / view_file.
- * legacy Gemini CLI alias (backwards-compat — 구 구현 환경 회귀 방지. UNVERIFIED for Antigravity native):
- *   run_shell / shell / run_shell_command / write_file / replace / multi_replace.
+ * 公式の Antigravity tool 名 (antigravity.google/docs + danicat.dev "Mastering Hooks"):
+ *   run_command / write_to_file / replace_file_content / multi_replace_file_content / view_file。
+ * legacy Gemini CLI alias (backwards-compat — 旧実装環境の回帰防止。Antigravity native については UNVERIFIED):
+ *   run_shell / shell / run_shell_command / write_file / replace / multi_replace。
  */
 const ANTIGRAVITY_TOOL_MAP = {
-  // 공식 Antigravity tool 이름
+  // 公式の Antigravity tool 名
   run_command: 'Bash',
   write_to_file: 'Write',
   replace_file_content: 'Edit',
@@ -100,8 +100,8 @@ const ANTIGRAVITY_TOOL_MAP = {
 };
 
 /**
- * Antigravity 도구 이름을 Claude 형식으로 매핑. 미등록 이름은 그대로 통과
- * (본체 hook 의 tool name 분기에서 패스스루). 빈 값은 Bash default.
+ * Antigravity のツール名を Claude 形式にマッピングする。未登録の名前はそのまま通過
+ * (本体 hook の tool name 分岐でパススルー)。空の値は Bash default。
  */
 export function mapAntigravityToolName(name) {
   if (!name) return 'Bash';
@@ -109,24 +109,24 @@ export function mapAntigravityToolName(name) {
 }
 
 /**
- * Backwards-compat alias. 신규 코드는 mapAntigravityToolName 사용 권장.
+ * Backwards-compat alias。新規コードは mapAntigravityToolName の使用を推奨。
  * (Antigravity rename PR — feature/antigravity-rename-p0-fix)
  *
- * @deprecated 이 이름은 Antigravity 매핑을 가리킨다(과거 오인의 흔적) — 진짜 Gemini CLI 매핑이
- * 아니다. 신규 코드는 `mapGeminiCliToolName` (진짜 Gemini CLI 전용) 을 사용할 것.
+ * @deprecated この名前は Antigravity のマッピングを指す(過去の誤認の痕跡) — 本物の Gemini CLI マッピング
+ * ではない。新規コードは `mapGeminiCliToolName` (本物の Gemini CLI 専用) を使用すること。
  */
 export const mapGeminiToolName = mapAntigravityToolName;
 
 /**
- * Gemini CLI(geminicli.com) 공식 tool 이름 → Claude tool 이름 매핑 표.
+ * Gemini CLI(geminicli.com) 公式の tool 名 → Claude tool 名のマッピング表。
  *
- * 출처(공식, 2026-07-02 확인): https://github.com/google-gemini/gemini-cli/blob/main/docs/reference/tools.md
+ * 出典(公式、2026-07-02 確認): https://github.com/google-gemini/gemini-cli/blob/main/docs/reference/tools.md
  * + https://github.com/google-gemini/gemini-cli/issues/18807 (`.gemini/settings.json` tools.core
- * 식별자 원문) — run_shell_command / read_file / write_file / replace / glob / grep_search /
- * list_directory 확인. `run_shell_command`/`read_file` 은 hooks reference 문서(BeforeTool 예시)에서도
- * 재확인됨. Gemini CLI 에는 Antigravity 의 `multi_replace_file_content` 에 대응하는 별도 tool 이 없다 —
- * `replace` 하나가 단일/복수 편집을 모두 처리하므로 MultiEdit 도 `replace` 로 매핑한다(Codex의
- * apply_patch 가 Write/Edit/MultiEdit 를 흡수하는 것과 유사한 다대일 구조).
+ * 識別子の原文) — run_shell_command / read_file / write_file / replace / glob / grep_search /
+ * list_directory を確認。`run_shell_command`/`read_file` は hooks reference ドキュメント(BeforeTool 例)でも
+ * 再確認済み。Gemini CLI には Antigravity の `multi_replace_file_content` に対応する専用 tool が存在しない —
+ * `replace` 一つが単一/複数編集をすべて処理するため MultiEdit も `replace` にマッピングする(Codex の
+ * apply_patch が Write/Edit/MultiEdit を吸収するのと類似した多対一の構造)。
  */
 const GEMINI_TOOL_MAP = {
   run_shell_command: 'Bash',
@@ -136,9 +136,9 @@ const GEMINI_TOOL_MAP = {
 };
 
 /**
- * Gemini CLI 도구 이름을 Claude 형식으로 매핑. 미등록 이름은 그대로 통과
- * (본체 hook 의 tool name 분기에서 패스스루). 빈 값은 Bash default(Antigravity 와 동일 정책 —
- * 두 CLI 모두 tool 이름이 항상 채워지는 스펙 전제, 방어적 default).
+ * Gemini CLI のツール名を Claude 形式にマッピングする。未登録の名前はそのまま通過
+ * (本体 hook の tool name 分岐でパススルー)。空の値は Bash default(Antigravity と同一ポリシー —
+ * 両 CLI とも tool 名が常に埋まる仕様を前提とした、防御的な default)。
  */
 export function mapGeminiCliToolName(name) {
   if (!name) return 'Bash';
@@ -146,20 +146,20 @@ export function mapGeminiCliToolName(name) {
 }
 
 /**
- * 역방향 매핑 SSOT — Claude tool 이름 → 각 CLI 의 matcher 토큰 (Codex / Antigravity / Gemini).
+ * 逆方向マッピングの SSOT — Claude tool 名 → 各 CLI の matcher トークン (Codex / Antigravity / Gemini)。
  *
- * `ANTIGRAVITY_TOOL_MAP`/`GEMINI_TOOL_MAP` (CLI→Claude) 의 역방향. `scaffold-multi-cli-hook.mjs` 의
- * TOOL_MATCH 와 멀티-CLI 등록 parity 검증(`tests/unit/multi-cli-parity.test.mjs`)이 본 SSOT 를
- * 공유한다 — 중복 제거.
+ * `ANTIGRAVITY_TOOL_MAP`/`GEMINI_TOOL_MAP` (CLI→Claude) の逆方向。`scaffold-multi-cli-hook.mjs` の
+ * TOOL_MATCH とマルチ CLI 登録の parity 検証(`tests/unit/multi-cli-parity.test.mjs`)が本 SSOT を
+ * 共有する — 重複を排除。
  *
- * Codex: 공식 canonical 은 Bash / apply_patch (references/codex-cli-hooks.md). shell / run_shell /
- *   run_shell_command / exec_command 는 brief2dev 관례(기존 .codex/hooks.json)의 방어적 변종(UNVERIFIED).
- *   apply_patch 가 Edit / Write / MultiEdit 를 단일 파일 tool 로 흡수.
- * Antigravity: 공식 tool 이름 run_command / write_to_file / replace_file_content /
- *   multi_replace_file_content / view_file (antigravity.google/docs/hooks — ANTIGRAVITY_TOOL_MAP 역방향).
- * Gemini: 공식 tool 이름 run_shell_command / write_file / replace / read_file
- *   (github.com/google-gemini/gemini-cli docs/reference/tools.md — GEMINI_TOOL_MAP 역방향). MultiEdit 은
- *   Gemini 에 전용 tool 이 없어 `replace` 재사용(위 GEMINI_TOOL_MAP 주석 참조).
+ * Codex: 公式 canonical は Bash / apply_patch (references/codex-cli-hooks.md)。shell / run_shell /
+ *   run_shell_command / exec_command は brief2dev の慣例(既存の .codex/hooks.json)の防御的な変種(UNVERIFIED)。
+ *   apply_patch が Edit / Write / MultiEdit を単一ファイル tool として吸収する。
+ * Antigravity: 公式の tool 名 run_command / write_to_file / replace_file_content /
+ *   multi_replace_file_content / view_file (antigravity.google/docs/hooks — ANTIGRAVITY_TOOL_MAP の逆方向)。
+ * Gemini: 公式の tool 名 run_shell_command / write_file / replace / read_file
+ *   (github.com/google-gemini/gemini-cli docs/reference/tools.md — GEMINI_TOOL_MAP の逆方向)。MultiEdit は
+ *   Gemini に専用 tool がないため `replace` を再利用(上記 GEMINI_TOOL_MAP のコメント参照)。
  */
 export const CLAUDE_TO_CLI_MATCHERS = Object.freeze({
   Bash: {
@@ -178,10 +178,10 @@ export const CLAUDE_TO_CLI_MATCHERS = Object.freeze({
 });
 
 /**
- * Claude tool 이름 배열 → 주어진 CLI 의 matcher 토큰 배열 (순서 보존 dedup).
- * 미등록 Claude tool 은 그대로 통과(방어적 — 본체 matcher 가 비표준 tool 일 때).
+ * Claude tool 名の配列 → 指定した CLI の matcher トークンの配列 (順序を保存した dedup)。
+ * 未登録の Claude tool はそのまま通過(防御的 — 本体 matcher が非標準 tool の場合)。
  *
- * @param {string[]} claudeTools - Claude matcher 의 tool 이름들 (예: ['Edit','Write'])
+ * @param {string[]} claudeTools - Claude matcher の tool 名の配列 (例: ['Edit','Write'])
  * @param {'codex'|'antigravity'} cli
  * @returns {string[]}
  */
@@ -195,17 +195,17 @@ export function cliMatcherTokens(claudeTools, cli) {
 }
 
 /**
- * Codex tool 이름 → Claude tool 이름 정규화 맵 (CLAUDE_TO_CLI_MATCHERS 역인덱싱 — matcher SSOT 단일 원천).
+ * Codex tool 名 → Claude tool 名の正規化マップ (CLAUDE_TO_CLI_MATCHERS の逆インデックス — matcher SSOT の単一原点)。
  *
- * 배경 (drift 차단): codex matcher 는 `CLAUDE_TO_CLI_MATCHERS[*].codex` 의 토큰들 (Bash 의 경우
- * shell / run_shell / run_shell_command / exec_command 방어적 변종 포함) 에 대해 dispatch 를 fire 한다.
- * 그런데 normalizePayload 는 antigravity 만 tool name 을 정규화하고 codex 는 passthrough 였다 — matcher 는
- * 변종을 받는데 normalizer 는 변종을 canonical Bash 로 접지 않아, 본체 guard (tool_name === 'Bash' 분기) 가
- * codex 변종 명령 (예: `run_shell` 의 `git push --force`) 을 인식 못 하고 fail-open 했다. 정규화 맵을
- * matcher SSOT 에서 역derive 하여 matcher ⟺ normalizer 대칭을 구조적으로 보장한다 (둘이 같은 원천에서 파생).
+ * 背景 (drift 遮断): codex matcher は `CLAUDE_TO_CLI_MATCHERS[*].codex` のトークン群 (Bash の場合は
+ * shell / run_shell / run_shell_command / exec_command の防御的変種を含む) に対して dispatch を fire する。
+ * ところが normalizePayload は antigravity のみ tool name を正規化し codex は passthrough だった — matcher は
+ * 変種を受け取るのに normalizer が変種を canonical Bash に畳まないため、本体 guard (tool_name === 'Bash' 分岐) が
+ * codex 変種の命令 (例: `run_shell` の `git push --force`) を認識できず fail-open していた。正規化マップを
+ * matcher SSOT から逆 derive することで matcher ⟺ normalizer の対称性を構造的に保証する (両者が同一の原点から派生)。
  *
- * apply_patch 는 Write / Edit / MultiEdit 3 tool 에 동시 매핑 (ambiguous) 되어 단일 canonical 로 접을 수
- * 없으므로 맵에서 제외 — normalizePayload 가 expandCodexApplyPatch 로 별도 처리한다.
+ * apply_patch は Write / Edit / MultiEdit の 3 tool に同時マッピング (ambiguous) されるため単一 canonical に
+ * 畳めず、マップから除外する — normalizePayload が expandCodexApplyPatch で別途処理する。
  */
 function buildCodexToolNameMap() {
   const map = Object.create(null);
@@ -222,9 +222,9 @@ function buildCodexToolNameMap() {
 const CODEX_TOOL_MAP = buildCodexToolNameMap();
 
 /**
- * Codex 도구 이름을 Claude 형식으로 매핑. 미등록 이름 + 빈 값은 그대로 통과 (본체 hook 의 tool name
- * 분기에서 패스스루). antigravity (빈 값 → Bash default) 와 달리 codex 는 빈 값도 passthrough 하여
- * 기존 동작을 보존한다 — 정규화는 matcher 가 fire 하는 *알려진 토큰* 에만 적용 (over-mapping 회피).
+ * Codex のツール名を Claude 形式にマッピングする。未登録の名前 + 空の値はそのまま通過 (本体 hook の tool name
+ * 分岐でパススルー)。antigravity (空の値 → Bash default) と異なり codex は空の値も passthrough することで
+ * 既存の動作を保存する — 正規化は matcher が fire する *既知のトークン* にのみ適用する (over-mapping を回避)。
  */
 export function mapCodexToolName(name) {
   if (!name) return name;
@@ -232,11 +232,11 @@ export function mapCodexToolName(name) {
 }
 
 /**
- * raw tool 이름 → Claude canonical tool 이름 (CLI 별 정규화 단일 진입점).
- *   - antigravity: mapAntigravityToolName (빈 값 → Bash default + legacy alias 포함)
- *   - codex:       mapCodexToolName (matcher SSOT 역derive, 빈 값 passthrough)
- *   - gemini:      mapGeminiCliToolName (빈 값 → Bash default, 공식 tool 이름 매핑)
- *   - 그 외 (claude 등): passthrough
+ * raw tool 名 → Claude canonical tool 名 (CLI 別正規化の単一エントリポイント)。
+ *   - antigravity: mapAntigravityToolName (空の値 → Bash default + legacy alias を含む)
+ *   - codex:       mapCodexToolName (matcher SSOT からの逆 derive、空の値は passthrough)
+ *   - gemini:      mapGeminiCliToolName (空の値 → Bash default、公式の tool 名マッピング)
+ *   - その他 (claude など): passthrough
  */
 export function normalizeCliToolName(name, cli) {
   if (cli === 'antigravity') return mapAntigravityToolName(name);
@@ -246,8 +246,8 @@ export function normalizeCliToolName(name, cli) {
 }
 
 /**
- * Claude 호환 payload 형식 (`tool_name` 키 보유) 이면 그대로 picking.
- * 부재 시 null 반환 — 호출자가 alternate schema 처리.
+ * Claude 互換の payload 形式 (`tool_name` キーを保持) であればそのまま pick する。
+ * 不在時は null を返す — 呼び出し側が alternate schema を処理する。
  */
 function pickClaudeShape(data) {
   if (!data?.tool_name) return null;
@@ -258,7 +258,7 @@ function pickClaudeShape(data) {
     session_id: data.session_id,
     stop_hook_active: data.stop_hook_active,
     hook_event_name: data.hook_event_name,
-    // PostToolUse 어댑터(worktree-owner-tracker)가 exit_code 게이트에 사용. PreToolUse 는 undefined.
+    // PostToolUse アダプター(worktree-owner-tracker)が exit_code のゲートに使用する。PreToolUse では undefined。
     tool_response: data.tool_response,
   };
 }
@@ -277,85 +277,85 @@ function pickNonToolEventShape(data) {
 }
 
 /**
- * 각 CLI 의 nested/alternate payload 에서 tool name 추출.
- *   - Antigravity: `toolCall.name` (공식)
- *   - Codex:       `tool.name` (nested fallback) 또는 flat `tool_name`
+ * 各 CLI の nested/alternate payload から tool name を抽出する。
+ *   - Antigravity: `toolCall.name` (公式)
+ *   - Codex:       `tool.name` (nested fallback) または flat `tool_name`
  */
 function extractToolName(data) {
   return data?.toolCall?.name || data?.tool?.name || data?.tool_name || '';
 }
 
 /**
- * tool 입력 객체 추출. Antigravity `toolCall.args` / Codex `tool.input` / flat `input` 순.
+ * tool 入力オブジェクトを抽出する。Antigravity `toolCall.args` / Codex `tool.input` / flat `input` の順。
  */
 function extractToolInput(data) {
   return data.toolCall?.args || data.tool?.input || data.input || {};
 }
 
 /**
- * Antigravity `toolCall.args` 의 *명령* 필드 → Claude `tool_input.command` (VERIFIED, additive).
+ * Antigravity `toolCall.args` の *命令* フィールド → Claude `tool_input.command` (VERIFIED、additive)。
  *
- * Antigravity 는 run_command 의 명령 문자열을 `CommandLine` 으로 전달한다 (Gemini 의
- * `tool_input.command` 와 다름) — Galloro 마이그레이션 가이드 + danicat.dev 검증 2026-06-20
- * (hook-specific 출처). 본체 guard(commit-guard / destructive-git-guard 의 `tool_input.command`)가
- * 명령을 읽으므로, 매핑하지 않으면 본체 guard 가 명령을 못 봐 fail-open(git push --force 미차단)한다.
- * 키 존재 기반 additive — 원본 키(`CommandLine`)도 보존하고 Claude 키(`command`)를 미존재 시에만 추가.
+ * Antigravity は run_command の命令文字列を `CommandLine` として渡す (Gemini の
+ * `tool_input.command` とは異なる) — Galloro マイグレーションガイド + danicat.dev による検証 2026-06-20
+ * (hook-specific な出典)。本体 guard(commit-guard / destructive-git-guard の `tool_input.command`)が
+ * 命令を読むため、マッピングしなければ本体 guard が命令を見られず fail-open(git push --force を未遮断)する。
+ * キー存在ベースの additive — 元のキー(`CommandLine`)も保存し、Claude キー(`command`)は不在時のみ追加する。
  */
 const ANTIGRAVITY_ARG_MAP = Object.freeze({ CommandLine: 'command' });
 
 /**
- * Antigravity write/edit tool 의 *file path* 필드명 후보 (방어적 multi-candidate probe).
+ * Antigravity の write/edit tool の *file path* フィールド名候補 (防御的 multi-candidate probe)。
  *
- * 정확한 필드명은 UNVERIFIED — 로컬 `agy` CLI 부재로 `agy inspect` 미확인(DEBT-203/204).
- * 단일 후보(`TargetFile`)만 매핑하면 실제 이름이 조금만 달라도 file guard 가 `file_path` 부재로
- * fail-open(file-edit 벡터 미차단)된다. 후보 집합을 *first-match additive* 매핑하여 — 실제 필드명이
- * 후보 중 무엇이든 — guard 가 경로를 추출하도록 한다 → **fail-open 을 fail-safe 로 전환**(defense-in-depth,
- * DEBT-195 보안 갭 폐쇄). 이는 "TargetFile 이 그 필드다" 라는 *사실 주장이 아니라* 불확실성에 대한
- * 방어다 (R-CM-024 정직성 — 사실 확정 아님). 정확한 이름이 확정되면 본 후보를 단일 검증 매핑으로
- * 좁힐 수 있다(DEBT-203, `agy inspect`).
+ * 正確なフィールド名は UNVERIFIED — ローカルに `agy` CLI が無く `agy inspect` を未確認(DEBT-203/204)。
+ * 単一候補(`TargetFile`)のみをマッピングすると、実際の名前が少しでも異なると file guard が `file_path` 不在で
+ * fail-open(file-edit ベクトルを未遮断)する。候補集合を *first-match additive* にマッピングすることで — 実際の
+ * フィールド名が候補のどれであっても — guard がパスを抽出できるようにする → **fail-open を fail-safe に転換**
+ * (defense-in-depth、DEBT-195 のセキュリティギャップを閉じる)。これは「TargetFile がそのフィールドだ」という
+ * *事実の主張ではなく* 不確実性に対する防御である (R-CM-024 の誠実性 — 事実の確定ではない)。正確な名前が
+ * 確定すれば本候補を単一の検証済みマッピングに絞り込める(DEBT-203、`agy inspect`)。
  *
- * 순서 = 특이성 높은 순(first-match 시 더 구체적 후보 우선). 적용은 Write/Edit/MultiEdit 로 정규화된
- * tool 에만 게이트 — run_command 의 generic `path` 류 args 오탐 회피. write_to_file/replace_file_content
- * 의 args 는 본질적으로 파일-타깃이므로 후보 매칭 오탐 위험 낮음.
+ * 順序 = 特異性の高い順(first-match 時により具体的な候補を優先)。適用は Write/Edit/MultiEdit に正規化された
+ * tool にのみゲートする — run_command の generic な `path` 系 args の誤検知を回避。write_to_file/replace_file_content
+ * の args は本質的にファイルターゲットなので候補マッチの誤検知リスクは低い。
  */
 const ANTIGRAVITY_PATH_FIELD_CANDIDATES = Object.freeze([
-  'TargetFile', // 리버스 엔지니어링 1순위 후보 (Antigravity)
-  'target_file', // snake_case 변종
-  'filePath', // camelCase 변종
-  'absolute_path', // 절대경로 컨벤션 변종
-  'path', // generic — edit-class tool 게이트 하에서만 적용 (오탐 최소)
+  'TargetFile', // リバースエンジニアリングの第 1 候補 (Antigravity)
+  'target_file', // snake_case の変種
+  'filePath', // camelCase の変種
+  'absolute_path', // 絶対パス規約の変種
+  'path', // generic — edit-class tool のゲート下でのみ適用 (誤検知を最小化)
 ]);
 
 /**
- * 각 *정규화* Claude tool 이름의 file-path probe 적격성 (SSOT).
+ * 各 *正規化後* の Claude tool 名の file-path probe 適格性 (SSOT)。
  *
- * `ANTIGRAVITY_TOOL_MAP` 의 모든 정규화 값(Claude 이름)은 여기 분류돼야 한다 — file-edit(write/edit)
- * tool = `true` → 경로 가드가 `file_path` 를 봐야 하므로 probe 대상. command/read tool = `false` →
- * run_command 의 generic path args 오탐 회피 위해 probe 제외.
+ * `ANTIGRAVITY_TOOL_MAP` のすべての正規化値(Claude 名)はここに分類されなければならない — file-edit(write/edit)
+ * tool = `true` → パスガードが `file_path` を見る必要があるので probe 対象。command/read tool = `false` →
+ * run_command の generic な path args の誤検知を回避するため probe から除外。
  *
- * **drift 차단 (2026-06-24 coverage-claim-scope-drift 회고 동형)**: 과거엔 `PATH_PROBE_TOOLS` 가
- * 독립 하드코딩 집합이라, 신규 Antigravity write tool 을 `ANTIGRAVITY_TOOL_MAP` 에 추가하면서 probe
- * 집합 갱신을 누락하면 그 write tool 이 probe 를 못 받아 보안 fail-open 이 재발할 수 있었다 (두 집합의
- * 독립 진화 = 탐지 범위가 보호 대상보다 좁아지는 drift). 본 분류 SSOT 에서 `PATH_PROBE_TOOLS` 를
- * *파생* 하여 그 drift 를 구조적으로 제거하고, `unclassifiedProbeTools()` invariant 가 분류 누락을
- * RED 로 잡는다 (회귀: `tests/unit/cli-adapter-utils.test.mjs`).
+ * **drift 遮断 (2026-06-24 の coverage-claim-scope-drift 回顧と同型)**: 過去は `PATH_PROBE_TOOLS` が
+ * 独立したハードコード集合だったため、新規の Antigravity write tool を `ANTIGRAVITY_TOOL_MAP` に追加した際に probe
+ * 集合の更新を漏らすと、その write tool が probe を受けられずセキュリティ fail-open が再発する可能性があった (二つの集合の
+ * 独立進化 = 検知範囲が保護対象より狭くなる drift)。本分類 SSOT から `PATH_PROBE_TOOLS` を
+ * *派生* させることでその drift を構造的に除去し、`unclassifiedProbeTools()` invariant が分類漏れを
+ * RED で捕捉する (回帰: `tests/unit/cli-adapter-utils.test.mjs`)。
  */
 const TOOL_PATH_DISPOSITION = Object.freeze({
-  Bash: false, // command — generic path args 오탐 회피
-  Read: false, // read-only — 경로 가드 비대상
+  Bash: false, // command — generic な path args の誤検知を回避
+  Read: false, // read-only — パスガードの対象外
   Write: true, // file-edit
   Edit: true, // file-edit
   MultiEdit: true, // file-edit
 });
 
 /**
- * file path probe 대상 tool (Claude *정규화* 이름). `TOOL_PATH_DISPOSITION` 에서 *파생* — 독립
- * 하드코딩 집합이 아니므로 tool-map 분류와 drift 불가(구조적 제거). file-edit 분류 tool 만 포함.
+ * file path probe の対象 tool (Claude の *正規化後* の名前)。`TOOL_PATH_DISPOSITION` から *派生* — 独立した
+ * ハードコード集合ではないため tool-map 分類との drift が起きない(構造的に除去)。file-edit に分類された tool のみを含む。
  *
- * 잔여 (정직 — 본 fix 범위 밖): Antigravity 가 *미래에* `ANTIGRAVITY_TOOL_MAP` *미등록* 쓰기 tool
- * (raw 이름이 어느 Claude tool 로도 정규화 안 됨)을 도입하면 게이트를 못 넘어 probe 미적용 → fail-open
- * 잔존. 이 잔여는 외부-검증불가(이름 spec 부재)라 코드로 닫을 수 없고, 해소 경로는 신규 tool 을
- * `ANTIGRAVITY_TOOL_MAP` 에 등록(→ 정규화되어 자동 probe)하는 것. tripwire 테스트가 명시 문서화.
+ * 残余 (誠実に明示 — 本 fix の範囲外): Antigravity が *将来* `ANTIGRAVITY_TOOL_MAP` に *未登録* の書き込み tool
+ * (raw 名がどの Claude tool にも正規化されない)を導入すると、ゲートを越えられず probe 未適用 → fail-open が
+ * 残存する。この残余は外部検証不能(名前の spec が存在しない)なのでコードでは閉じられず、解消経路は新規 tool を
+ * `ANTIGRAVITY_TOOL_MAP` に登録する(→ 正規化されて自動的に probe される)ことである。tripwire テストが明示的に文書化する。
  */
 const PATH_PROBE_TOOLS = Object.freeze(
   new Set(
@@ -366,12 +366,12 @@ const PATH_PROBE_TOOLS = Object.freeze(
 );
 
 /**
- * 분류 누락(drift) 검출 — `ANTIGRAVITY_TOOL_MAP` 의 정규화 값 중 `TOOL_PATH_DISPOSITION` 미분류 이름 반환.
- * 빈 배열 = drift 없음. 신규 write tool 을 tool-map 에 추가하면서 본 분류를 누락하면 그 이름이 반환되어
- * invariant 테스트가 RED → 보안 fail-open 재발을 구조적으로 차단.
+ * 分類漏れ(drift)の検出 — `ANTIGRAVITY_TOOL_MAP` の正規化値のうち `TOOL_PATH_DISPOSITION` に未分類の名前を返す。
+ * 空配列 = drift なし。新規の write tool を tool-map に追加した際に本分類を漏らすとその名前が返され、
+ * invariant テストが RED → セキュリティ fail-open の再発を構造的に遮断する。
  *
- * @param {Record<string,string>} [toolMap] - 테스트 stub 주입용 (default: 실제 ANTIGRAVITY_TOOL_MAP)
- * @returns {string[]} 미분류 정규화 tool 이름 (중복 제거, 등장 순서)
+ * @param {Record<string,string>} [toolMap] - テスト stub 注入用 (default: 実際の ANTIGRAVITY_TOOL_MAP)
+ * @returns {string[]} 未分類の正規化 tool 名 (重複を排除、出現順)
  */
 export function unclassifiedProbeTools(toolMap = ANTIGRAVITY_TOOL_MAP) {
   if (!toolMap || typeof toolMap !== 'object' || Array.isArray(toolMap)) return [];
@@ -386,7 +386,7 @@ export function unclassifiedProbeTools(toolMap = ANTIGRAVITY_TOOL_MAP) {
 }
 
 /**
- * 후보 필드 중 first non-empty string 값을 반환 (없으면 undefined). 방어적 file path probe 의 코어.
+ * 候補フィールドのうち最初の non-empty string 値を返す (無ければ undefined)。防御的 file path probe のコア。
  */
 function probeAntigravityFilePath(args) {
   for (const cand of ANTIGRAVITY_PATH_FIELD_CANDIDATES) {
@@ -397,31 +397,31 @@ function probeAntigravityFilePath(args) {
 }
 
 /**
- * Antigravity write/edit tool 의 *new content* 필드명 후보 (방어적 multi-candidate probe).
+ * Antigravity の write/edit tool の *new content* フィールド名候補 (防御的 multi-candidate probe)。
  *
- * file_path probe 와 동일 rationale (DEBT-195/203 — `agy inspect` 부재로 정확 필드명 UNVERIFIED).
- * 콘텐츠 스캐너(secret-leak-guard 가 Write 의 `content` / Edit 의 `new_string` 을 읽음)가 Antigravity
- * edit 에서 콘텐츠를 못 봐 fail-open(시크릿 누출 미차단)되는 보안 갭을 fail-safe 로 전환한다. Claude
- * 키(`content`/`new_string`)는 `{...args}` 가 이미 보존하므로(필드명이 그대로일 때), 본 probe 의 가치는
- * *비-Claude 필드명*을 Claude 키로 alias 하는 것. "이 이름이 그 필드다" 라는 사실 주장이 아니라 불확실성
- * 방어다 (R-CM-024). 정확 이름 확정 시 단일 매핑으로 좁힌다.
+ * file_path probe と同じ rationale (DEBT-195/203 — `agy inspect` 不在のため正確なフィールド名は UNVERIFIED)。
+ * コンテンツスキャナ(secret-leak-guard が Write の `content` / Edit の `new_string` を読む)が Antigravity の
+ * edit でコンテンツを見られず fail-open(シークレット漏洩を未遮断)するセキュリティギャップを fail-safe に転換する。Claude
+ * キー(`content`/`new_string`)は `{...args}` がすでに保存するため(フィールド名がそのままのとき)、本 probe の価値は
+ * *非 Claude なフィールド名*を Claude キーへ alias することにある。「この名前がそのフィールドだ」という事実の主張ではなく
+ * 不確実性への防御である (R-CM-024)。正確な名前が確定すれば単一マッピングに絞り込む。
  *
- * 한계 (정직): old_string(Edit 의 변경 전 내용)은 Antigravity edit args 에서 더욱 UNVERIFIED 라 probe 하지
- * 않는다 → old/new 둘 다 필요한 coverage-threshold-guard 는 Antigravity 에서 부분 동작(Codex apply_patch
- * 는 -/+ 라인으로 둘 다 확보되어 완전 동작). secret-leak-guard(new 만 필요)는 본 probe 로 동작.
+ * 限界 (誠実に明示): old_string(Edit の変更前の内容)は Antigravity の edit args においてさらに UNVERIFIED なので probe
+ * しない → old/new の両方が必要な coverage-threshold-guard は Antigravity では部分的に動作(Codex apply_patch
+ * は -/+ 行で両方が確保され完全に動作)。secret-leak-guard(new のみ必要)は本 probe で動作する。
  */
 const ANTIGRAVITY_CONTENT_FIELD_CANDIDATES = Object.freeze([
-  'content', // Claude Write 키 — {...args} 보존하나 명시 (probe 코어 일관)
-  'new_string', // Claude Edit 키 — 동상
-  'Contents', // PascalCase 변종 후보
-  'FileText', // 변종 후보
-  'code', // 변종 후보
-  'text', // generic — edit-class tool 게이트 하에서만 적용
+  'content', // Claude Write のキー — {...args} で保存されるが明示 (probe コアと一貫させる)
+  'new_string', // Claude Edit のキー — 同上
+  'Contents', // PascalCase 変種の候補
+  'FileText', // 変種の候補
+  'code', // 変種の候補
+  'text', // generic — edit-class tool のゲート下でのみ適用
 ]);
 
 /**
- * 후보 필드 중 first non-empty string 값을 반환 (없으면 undefined). 방어적 content probe 의 코어.
- * file_path probe 와 달리 trim 하지 않는다 (whitespace-only 도 콘텐츠로 보존 — 스캐너 입력 충실).
+ * 候補フィールドのうち最初の non-empty string 値を返す (無ければ undefined)。防御的 content probe のコア。
+ * file_path probe と異なり trim しない (whitespace-only もコンテンツとして保存 — スキャナ入力に忠実)。
  */
 function probeAntigravityContent(args) {
   for (const cand of ANTIGRAVITY_CONTENT_FIELD_CANDIDATES) {
@@ -432,29 +432,29 @@ function probeAntigravityContent(args) {
 }
 
 /**
- * Antigravity args → Claude tool_input 정규화 (모두 additive, 원본 키 보존).
- *   1. command: `CommandLine` → `command` (VERIFIED, 키 존재 기반).
- *   2. file_path: write/edit tool 한정 후보 필드 first-match probe (방어적 fail-safe).
- *   3. content/new_string: write/edit tool 한정 콘텐츠 probe (콘텐츠 스캐너 fail-safe, 필드명 UNVERIFIED).
+ * Antigravity args → Claude tool_input の正規化 (すべて additive、元のキーを保存)。
+ *   1. command: `CommandLine` → `command` (VERIFIED、キー存在ベース)。
+ *   2. file_path: write/edit tool に限定した候補フィールドの first-match probe (防御的 fail-safe)。
+ *   3. content/new_string: write/edit tool に限定したコンテンツ probe (コンテンツスキャナの fail-safe、フィールド名は UNVERIFIED)。
  *
  * @param {object} args - raw toolCall.args
- * @param {string} [normalizedToolName] - 정규화된 Claude tool 이름 (probe 게이트용)
+ * @param {string} [normalizedToolName] - 正規化された Claude tool 名 (probe ゲート用)
  * @returns {object}
  */
 function mapAntigravityArgs(args, normalizedToolName) {
   if (!args || typeof args !== 'object') return {};
   const mapped = { ...args };
-  // 1. command (VERIFIED) — 키 존재 시에만, 기존 command 미덮어쓰기
+  // 1. command (VERIFIED) — キー存在時のみ、既存の command は上書きしない
   for (const [agKey, claudeKey] of Object.entries(ANTIGRAVITY_ARG_MAP)) {
     if (agKey in args && !(claudeKey in mapped)) mapped[claudeKey] = args[agKey];
   }
-  // 2·3. file_path + content (방어적 probe) — edit-class tool 한정
+  // 2・3. file_path + content (防御的 probe) — edit-class tool に限定
   if (PATH_PROBE_TOOLS.has(normalizedToolName)) {
     if (!('file_path' in mapped)) {
       const probedPath = probeAntigravityFilePath(args);
       if (probedPath !== undefined) mapped.file_path = probedPath;
     }
-    // content 는 Write 본체가, new_string 은 Edit 본체가 읽으므로 둘 다 채운다(미존재 시) — tool 분기 회피.
+    // content は Write 本体が、new_string は Edit 本体が読むため、両方を埋める(不在時) — tool 分岐を回避。
     const probedContent = probeAntigravityContent(args);
     if (probedContent !== undefined) {
       if (!('content' in mapped)) mapped.content = probedContent;
@@ -465,7 +465,7 @@ function mapAntigravityArgs(args, normalizedToolName) {
 }
 
 /**
- * 호출 cwd 해석. 명시 cwd → session.cwd → Antigravity workspacePaths[0] → process.cwd().
+ * 呼び出しの cwd を解決する。明示 cwd → session.cwd → Antigravity workspacePaths[0] → process.cwd()。
  */
 function resolveCwd(data) {
   if (data.cwd) return data.cwd;
@@ -475,28 +475,28 @@ function resolveCwd(data) {
 }
 
 /**
- * Codex `apply_patch` 명령 문자열을 파싱하여 { op, filePath, newContent, oldContent } 추출.
+ * Codex の `apply_patch` 命令文字列をパースして { op, filePath, newContent, oldContent } を抽出する。
  *
- * Codex 의 파일 편집은 tool_name 이 항상 `apply_patch` 이고 패치 본문은 tool_input.command 에 담긴다
- * (공식: references/codex-cli-hooks.md L464/L473 — "apply_patch use tool_input.command",
- * "hook input still reports tool_name: 'apply_patch'"). 본 함수가 없으면 Edit|Write 를 tool_name 으로
- * 게이트하거나 new_string/old_string/content 를 읽는 본체 가드(secret-leak-guard / coverage-threshold-guard
- * 등)가 Codex apply_patch 에서 PASSTHROUGH(무력)된다 — 실증 확인됨(2026-06-26).
+ * Codex のファイル編集は tool_name が常に `apply_patch` で、パッチ本文は tool_input.command に格納される
+ * (公式: references/codex-cli-hooks.md L464/L473 — "apply_patch use tool_input.command"、
+ * "hook input still reports tool_name: 'apply_patch'")。本関数が無いと、Edit|Write を tool_name で
+ * ゲートしたり new_string/old_string/content を読む本体ガード(secret-leak-guard / coverage-threshold-guard
+ * など)が Codex の apply_patch では PASSTHROUGH(無力化)される — 実証済み(2026-06-26)。
  *
- * apply_patch 포맷 (OpenAI/Codex 표준):
+ * apply_patch フォーマット (OpenAI/Codex 標準):
  *   *** Begin Patch
  *   *** (Add|Update|Delete) File: <path>
  *   @@ <optional context>
  *    unchanged line
- *   -removed line   (→ oldContent, Edit 의 old_string)
- *   +added line     (→ newContent, Edit 의 new_string / Write 의 content)
+ *   -removed line   (→ oldContent、Edit の old_string)
+ *   +added line     (→ newContent、Edit の new_string / Write の content)
  *   *** End Patch
  *
- * 첫 파일의 path 를 file_path 로, 패치 전체의 +/- 라인을 content 로 수집한다(멀티파일 패치 시 첫 파일
- * 경로 + 전체 added/removed — 콘텐츠 스캐너는 과탐(전체 스캔)이 미탐보다 안전. 단일 파일이 일반 케이스).
- * `+++`/`---` diff 헤더는 content 에서 제외(prefix 가 단일 `+`/`-` 가 아님). 인식 불가 시 null 반환(fail-open).
+ * 最初のファイルの path を file_path として、パッチ全体の +/- 行を content として収集する(マルチファイルパッチ時は最初の
+ * ファイルパス + 全体の added/removed — コンテンツスキャナは過検知(全体スキャン)の方が見逃しより安全。単一ファイルが一般的なケース)。
+ * `+++`/`---` の diff ヘッダーは content から除外する(prefix が単一の `+`/`-` ではない)。認識不能時は null を返す(fail-open)。
  *
- * @param {string} command - apply_patch 본문 문자열
+ * @param {string} command - apply_patch 本文の文字列
  * @returns {{op:string, filePath:string, newContent:string, oldContent:string}|null}
  */
 export function parseApplyPatch(command) {
@@ -515,8 +515,8 @@ export function parseApplyPatch(command) {
       }
       continue;
     }
-    // diff 헤더(`+++ b/path` / `--- a/path`)는 항상 마커 뒤 공백을 가진다 → 공백까지 매칭하여
-    // 내용 라인(`+++x` 같이 content 가 `++`로 시작하는 추가 라인)의 오필터(스캔 누락)를 회피한다.
+    // diff ヘッダー(`+++ b/path` / `--- a/path`)は常にマーカーの後に空白を持つ → 空白まで含めてマッチさせ、
+    // 内容行(`+++x` のように content が `++` で始まる追加行)の誤フィルタ(スキャン漏れ)を回避する。
     if (line.startsWith('+++ ') || line.startsWith('--- ')) continue;
     if (line.startsWith('+')) added.push(line.slice(1));
     else if (line.startsWith('-')) removed.push(line.slice(1));
@@ -526,16 +526,16 @@ export function parseApplyPatch(command) {
 }
 
 /**
- * Codex apply_patch payload 를 Claude Edit/Write shape 으로 확장 (tool_name 재매핑 + content 추출).
+ * Codex の apply_patch payload を Claude の Edit/Write shape に拡張する (tool_name の再マッピング + content 抽出)。
  *   - Add File   → Write (tool_input.content = newContent)
- *   - Update File→ Edit  (tool_input.new_string = newContent, old_string = oldContent)
- *   - Delete File→ Edit  (file_path 만; content 없음)
- * 원본 tool_input.command 도 보존(additive). 파싱 불가 시 원본 shape 그대로(fail-open — apply_patch 유지).
+ *   - Update File→ Edit  (tool_input.new_string = newContent、old_string = oldContent)
+ *   - Delete File→ Edit  (file_path のみ; content なし)
+ * 元の tool_input.command も保存する(additive)。パース不能時は元の shape のまま(fail-open — apply_patch を維持)。
  *
- * 부수효과(의도된 개선): file_path 를 채우므로 기존 Codex Edit|Write 포트(worktree-policy-guard /
- * worktree-session-owner-guard)도 그간 file_path 부재로 무력이던 latent 갭이 해소되어 정상 동작한다.
+ * 副作用(意図された改善): file_path を埋めるため、既存の Codex Edit|Write ポート(worktree-policy-guard /
+ * worktree-session-owner-guard)も、これまで file_path 不在で無力だった latent なギャップが解消され正常に動作する。
  *
- * @param {object} shape - pickClaudeShape 결과 (tool_name==='apply_patch')
+ * @param {object} shape - pickClaudeShape の結果 (tool_name==='apply_patch')
  * @returns {object}
  */
 export function expandCodexApplyPatch(shape) {
@@ -553,48 +553,48 @@ export function expandCodexApplyPatch(shape) {
 }
 
 /**
- * 각 CLI 의 stdin payload 를 Claude Code 형식으로 정규화.
+ * 各 CLI の stdin payload を Claude Code 形式に正規化する。
  *
- * Schema (cross-checked 공식 문서):
+ * Schema (公式ドキュメントで cross-check 済み):
  *   - Claude Code:   { tool_name, tool_input: { command, file_path, ... }, cwd, session_id, ... }
- *   - Codex CLI:     동일 schema (flat) + turn_id / permission_mode 확장
+ *   - Codex CLI:     同一 schema (flat) + turn_id / permission_mode の拡張
  *                    (https://developers.openai.com/codex/hooks)
  *   - Antigravity:   { toolCall: { name: 'run_command'|'write_to_file'|..., args: {...} },
  *                    workspacePaths: [...], transcriptPath }
- *                    (https://antigravity.google/docs/hooks, danicat.dev 교차검증)
+ *                    (https://antigravity.google/docs/hooks、danicat.dev で交差検証)
  *
- * Codex 의 `tool.name` (nested) fallback 은 schema drift 안전망 — 현재 사양상 dead path 이나
- * future-proof 로 유지.
+ * Codex の `tool.name` (nested) fallback は schema drift の安全網 — 現在の仕様上は dead path だが
+ * future-proof として維持する。
  *
- * 필드명 매핑: Antigravity `toolCall.args` 의 필드명은 Claude `tool_input` 과 다르다.
- *   - run_command: `CommandLine` → `command` (VERIFIED 2026-06-20 — Galloro 마이그레이션 가이드 +
- *     danicat.dev, hook-specific). `mapAntigravityArgs` 가 additive 매핑하여 본체 guard 가 명령을 읽도록 한다.
- *     매핑 부재 시 본체 guard 는 fail-open(git push --force 미차단) 이었음.
- *   - write_to_file/replace_file_content 의 file path 필드(필드명 UNVERIFIED — `agy` CLI 부재):
- *     `mapAntigravityArgs` 가 write/edit tool 한정 후보 집합(`TargetFile`/`target_file`/`filePath`/
- *     `absolute_path`/`path`)을 first-match additive probe 하여 `file_path` 를 채운다 — 실제 필드명이
- *     후보 중 무엇이든 file guard 가 경로를 추출(fail-open→fail-safe, DEBT-195 보안 갭 폐쇄). 정확한
- *     이름 확정(DEBT-203, `agy inspect`)은 후속 — 확정 시 후보를 단일 검증 매핑으로 좁힌다.
+ * フィールド名マッピング: Antigravity `toolCall.args` のフィールド名は Claude `tool_input` と異なる。
+ *   - run_command: `CommandLine` → `command` (VERIFIED 2026-06-20 — Galloro マイグレーションガイド +
+ *     danicat.dev、hook-specific)。`mapAntigravityArgs` が additive にマッピングして本体 guard が命令を読めるようにする。
+ *     マッピング不在時は本体 guard が fail-open(git push --force を未遮断)だった。
+ *   - write_to_file/replace_file_content の file path フィールド(フィールド名は UNVERIFIED — `agy` CLI 不在):
+ *     `mapAntigravityArgs` が write/edit tool に限定した候補集合(`TargetFile`/`target_file`/`filePath`/
+ *     `absolute_path`/`path`)を first-match additive で probe して `file_path` を埋める — 実際のフィールド名が
+ *     候補のどれであっても file guard がパスを抽出する(fail-open→fail-safe、DEBT-195 のセキュリティギャップを閉じる)。正確な
+ *     名前の確定(DEBT-203、`agy inspect`)は後続 — 確定時に候補を単一の検証済みマッピングに絞り込む。
  *
  * @param {object} data - raw stdin JSON
  * @param {'claude'|'codex'|'antigravity'} cli
- * @returns {object} Claude Code 형식의 정규화된 payload
+ * @returns {object} Claude Code 形式に正規化された payload
  */
 export function normalizePayload(data, cli) {
   if (!data || typeof data !== 'object') return { tool_name: '', tool_input: {} };
 
   const claudeShape = pickClaudeShape(data);
   if (claudeShape) {
-    // Codex 파일 편집은 tool_name='apply_patch' + 패치본문 in tool_input.command — Edit/Write shape 으로 확장
-    // (그렇지 않으면 Edit|Write 게이트/콘텐츠 가드가 무력). 다른 tool/CLI 는 그대로 passthrough.
+    // Codex のファイル編集は tool_name='apply_patch' + パッチ本文が tool_input.command 内 — Edit/Write shape に拡張する
+    // (そうしないと Edit|Write ゲート/コンテンツガードが無力化)。他の tool/CLI はそのまま passthrough。
     if (cli === 'codex' && claudeShape.tool_name === 'apply_patch') {
       return expandCodexApplyPatch(claudeShape);
     }
-    // Codex 변종 tool name (flat shape — shell/run_shell/run_shell_command/exec_command) → canonical Bash.
-    // Gemini BeforeTool/AfterTool payload 도 tool_name 필드명은 Claude 와 동일하지만 값은 공식 Gemini
-    // tool 이름(run_shell_command/write_file/replace/read_file)이라 같은 정규화가 필요하다 — 두 CLI 모두
-    // normalizeCliToolName(matcher SSOT 역derive) 로 canonical Claude 이름으로 접어 본체 guard 의
-    // tool_name==='Bash' 같은 분기가 인식하도록 한다. nested shape 와 동일 처리.
+    // Codex 変種の tool name (flat shape — shell/run_shell/run_shell_command/exec_command) → canonical Bash。
+    // Gemini の BeforeTool/AfterTool payload も tool_name のフィールド名は Claude と同一だが、値は公式 Gemini の
+    // tool 名(run_shell_command/write_file/replace/read_file)なので同じ正規化が必要 — 両 CLI とも
+    // normalizeCliToolName(matcher SSOT からの逆 derive) で canonical な Claude 名に畳み、本体 guard の
+    // tool_name==='Bash' のような分岐が認識できるようにする。nested shape と同一の処理。
     if (cli === 'codex' || cli === 'gemini') {
       const canonical = normalizeCliToolName(claudeShape.tool_name, cli);
       if (canonical !== claudeShape.tool_name) return { ...claudeShape, tool_name: canonical };
@@ -611,12 +611,12 @@ export function normalizePayload(data, cli) {
     tool_name: normalizedName,
     tool_input: toolInput,
     cwd: resolveCwd(data),
-    // Antigravity payload 는 session_id 필드 부재 (검증 2026-06-20: danicat.dev 외 다중 출처 — 세션은
-    // transcriptPath 로 식별). 부재 시 undefined → 소유권 Layer 2 미동작이나 Layer 1(cwd-confinement) 보호.
+    // Antigravity の payload には session_id フィールドが存在しない (検証 2026-06-20: danicat.dev ほか複数の出典 — セッションは
+    // transcriptPath で識別)。不在時は undefined → 所有権 Layer 2 は動作しないが Layer 1(cwd-confinement)で保護。
     session_id: data.session_id || data.session?.id,
     stop_hook_active: data.stop_hook_active,
     hook_event_name: data.hook_event_name,
-    // Antigravity transcriptPath / Claude transcript_path 정규화 (있으면 보존).
+    // Antigravity の transcriptPath / Claude の transcript_path を正規化 (あれば保存)。
     transcript_path: data.transcriptPath || data.transcript_path,
     tool_response: data.tool_response,
     ...pickNonToolEventShape(data),
@@ -624,86 +624,86 @@ export function normalizePayload(data, cli) {
 }
 
 /**
- * 본체 hook 의 Claude 형식 결과를 Antigravity wire 형식 `{ decision, reason }` 으로 변환.
+ * 本体 hook の Claude 形式の結果を Antigravity の wire 形式 `{ decision, reason }` に変換する。
  *
- * Antigravity stdout 계약 (antigravity.google/docs/hooks, danicat.dev):
+ * Antigravity の stdout 契約 (antigravity.google/docs/hooks、danicat.dev):
  *   - PreToolUse/PostToolUse: `{ "decision": "allow"|"deny"|"ask", "reason": "..." }`
- *   - 빈 출력 = passthrough(allow). reason 은 선택.
+ *   - 空の出力 = passthrough(allow)。reason は任意。
  *
- * 변환 규칙:
- *   - 빈 결과 → {} (출력 없음 = allow).
- *   - PreToolUse: Claude `hookSpecificOutput.permissionDecision` (allow|deny|ask) → top-level `decision`.
- *     `permissionDecisionReason` → `reason`.
- *   - Stop: 본체가 `{ decision: 'block', reason }` 반환 (Claude/Codex Stop 호환). Antigravity Stop 의
- *     block honoring 은 UNVERIFIED — `{ decision: 'block', reason }` 그대로 전달 (fail-open: Antigravity 가
- *     인식 못 해도 세션이 진행될 뿐 무해).
- *   - SessionStart 컨텍스트(`hookSpecificOutput.additionalContext`): Antigravity 컨텍스트 주입 메커니즘
- *     UNVERIFIED — 원본 그대로 전달 (side-effect-only 이벤트라 무시돼도 무해).
+ * 変換規則:
+ *   - 空の結果 → {} (出力なし = allow)。
+ *   - PreToolUse: Claude `hookSpecificOutput.permissionDecision` (allow|deny|ask) → top-level の `decision`。
+ *     `permissionDecisionReason` → `reason`。
+ *   - Stop: 本体が `{ decision: 'block', reason }` を返す (Claude/Codex の Stop と互換)。Antigravity の Stop の
+ *     block honoring は UNVERIFIED — `{ decision: 'block', reason }` をそのまま渡す (fail-open: Antigravity が
+ *     認識できなくてもセッションが進むだけで無害)。
+ *   - SessionStart のコンテキスト(`hookSpecificOutput.additionalContext`): Antigravity のコンテキスト注入メカニズムは
+ *     UNVERIFIED — 元のまま渡す (side-effect-only なイベントなので無視されても無害)。
  *
- * @param {object} result - 본체 hook 의 반환값 (HookOutput.deny/passthrough/block/context)
- * @returns {object} Antigravity wire 객체
+ * @param {object} result - 本体 hook の返り値 (HookOutput.deny/passthrough/block/context)
+ * @returns {object} Antigravity の wire オブジェクト
  */
 export function toAntigravityWire(result) {
   if (!result || Object.keys(result).length === 0) return {};
 
   const hso = result.hookSpecificOutput;
-  // PreToolUse: Claude permissionDecision(allow|deny|ask) → Antigravity top-level decision.
+  // PreToolUse: Claude の permissionDecision(allow|deny|ask) → Antigravity の top-level decision。
   if (hso && typeof hso.permissionDecision === 'string') {
     const wire = { decision: hso.permissionDecision };
     const reason = hso.permissionDecisionReason;
     if (reason) wire.reason = reason;
     return wire;
   }
-  // Stop: 본체 {decision:'block', reason}. Antigravity 의 block honoring UNVERIFIED — 그대로 전달.
+  // Stop: 本体の {decision:'block', reason}。Antigravity の block honoring は UNVERIFIED — そのまま渡す。
   if (typeof result.decision === 'string') {
     const wire = { decision: result.decision };
     if (result.reason) wire.reason = result.reason;
     return wire;
   }
-  // SessionStart additionalContext 등 기타 shape — 원본 그대로 (Antigravity 가 무시해도 무해).
+  // SessionStart の additionalContext などその他の shape — 元のまま (Antigravity が無視しても無害)。
   return result;
 }
 
 /**
- * 본체 hook 의 Claude 형식 결과를 Gemini CLI wire 형식 `{ decision, reason }` 으로 변환.
+ * 本体 hook の Claude 形式の結果を Gemini CLI の wire 形式 `{ decision, reason }` に変換する。
  *
- * Gemini CLI stdout 계약 (공식, geminicli.com/docs/hooks/reference/):
- *   - BeforeTool(≈PreToolUse): `{ "decision": "allow"|"deny"("block" alias), "reason": "..." }`.
- *     Claude 의 "ask" 에 대응하는 값은 공식 문서에 없음(allow/deny 이원) — registry 의 모든 hook 이
- *     ask 를 반환하지 않으므로(2026-07-02 확인, `grep -rn "ask" .cli/hooks/` 무결과) 실질 영향 없음.
- *   - AfterAgent(≈Stop): 본체가 `{ decision: 'block', reason }` 반환 — Gemini 는 `continue:false` 로
- *     세션 정지를 표현하므로(공식 문서 §Stop 예시), `decision:'block'` 은 그대로 전달해도 무해
- *     (Gemini 가 인식 못 해도 fail-open — 세션이 계속 진행될 뿐).
- *   - 빈 결과 → {} (출력 없음 = allow, Claude/Antigravity 와 동일 관례).
+ * Gemini CLI の stdout 契約 (公式、geminicli.com/docs/hooks/reference/):
+ *   - BeforeTool(≈PreToolUse): `{ "decision": "allow"|"deny"("block" alias), "reason": "..." }`。
+ *     Claude の "ask" に対応する値は公式ドキュメントに存在しない(allow/deny の二値) — registry のすべての hook が
+ *     ask を返さないため(2026-07-02 確認、`grep -rn "ask" .cli/hooks/` は無結果)実質的な影響はない。
+ *   - AfterAgent(≈Stop): 本体が `{ decision: 'block', reason }` を返す — Gemini は `continue:false` で
+ *     セッションの停止を表現するため(公式ドキュメント §Stop の例)、`decision:'block'` はそのまま渡しても無害
+ *     (Gemini が認識できなくても fail-open — セッションが継続するだけ)。
+ *   - 空の結果 → {} (出力なし = allow、Claude/Antigravity と同一の慣例)。
  *
- * @param {object} result - 본체 hook 의 반환값 (HookOutput.deny/passthrough/block/context)
- * @returns {object} Gemini CLI wire 객체
+ * @param {object} result - 本体 hook の返り値 (HookOutput.deny/passthrough/block/context)
+ * @returns {object} Gemini CLI の wire オブジェクト
  */
 export function toGeminiWire(result) {
   if (!result || Object.keys(result).length === 0) return {};
 
   const hso = result.hookSpecificOutput;
-  // PreToolUse: Claude permissionDecision(allow|deny|ask) → Gemini top-level decision.
-  // "ask" 는 Gemini 공식 값 집합(allow/deny)에 없으나, registry 에 ask 반환 hook 이 없어 미도달 분기.
+  // PreToolUse: Claude の permissionDecision(allow|deny|ask) → Gemini の top-level decision。
+  // "ask" は Gemini の公式な値集合(allow/deny)に無いが、registry に ask を返す hook が無いため到達しない分岐。
   if (hso && typeof hso.permissionDecision === 'string') {
     const wire = { decision: hso.permissionDecision };
     const reason = hso.permissionDecisionReason;
     if (reason) wire.reason = reason;
     return wire;
   }
-  // Stop(AfterAgent): 본체 {decision:'block', reason} 그대로 전달.
+  // Stop(AfterAgent): 本体の {decision:'block', reason} をそのまま渡す。
   if (typeof result.decision === 'string') {
     const wire = { decision: result.decision };
     if (result.reason) wire.reason = result.reason;
     return wire;
   }
-  // SessionStart additionalContext 등 기타 shape — 원본 그대로 (Gemini 가 무시해도 무해).
+  // SessionStart の additionalContext などその他の shape — 元のまま (Gemini が無視しても無害)。
   return result;
 }
 
 /**
- * @deprecated toAntigravityWire 로 대체됨. 기존 호출자 호환을 위해 유지 (deny reason 보강만 수행).
- * Antigravity 의 정식 wire 변환은 toAntigravityWire 사용.
+ * @deprecated toAntigravityWire に置き換えられた。既存の呼び出し側との互換のため維持 (deny reason の補強のみ実行)。
+ * Antigravity の正式な wire 変換は toAntigravityWire を使用すること。
  */
 export function augmentAntigravityDenyReason(result) {
   if (result?.hookSpecificOutput?.permissionDecision !== 'deny') return result;
@@ -714,19 +714,19 @@ export function augmentAntigravityDenyReason(result) {
 }
 
 /**
- * 본체 hook 의 결과 (Claude 형식 JSON) 를 CLI 별 wire 출력으로 변환한다.
+ * 本体 hook の結果 (Claude 形式の JSON) を CLI 別の wire 出力に変換する。
  *
- * Codex hook spec 은 block/deny 에 대해 두 가지 방식을 허용한다:
- *   1. exit 0 + stdout JSON (권장 — 모든 이벤트에서 구조화 응답 유지)
- *   2. exit 2 + stderr reason (legacy/plain-text fallback)
- * 둘을 섞은 `exit 2 + stdout JSON + empty stderr` 는 Stop hook 에서
- * "did not write a continuation prompt to stderr" 런타임 오류를 만든다.
- * 따라서 adapter 는 항상 exit 0 + stdout JSON 을 사용한다.
+ * Codex の hook spec は block/deny に対して二つの方式を許容する:
+ *   1. exit 0 + stdout JSON (推奨 — すべてのイベントで構造化応答を維持)
+ *   2. exit 2 + stderr reason (legacy/plain-text の fallback)
+ * 両者を混ぜた `exit 2 + stdout JSON + empty stderr` は Stop hook で
+ * "did not write a continuation prompt to stderr" というランタイムエラーを起こす。
+ * したがってアダプターは常に exit 0 + stdout JSON を使用する。
  *
- * Antigravity 와 Gemini CLI 는 Claude 의 `hookSpecificOutput.permissionDecision` 대신 top-level
- * `{ decision, reason }` 을 읽으므로 각각 toAntigravityWire / toGeminiWire 로 변환 후 emit 한다.
+ * Antigravity と Gemini CLI は Claude の `hookSpecificOutput.permissionDecision` の代わりに top-level の
+ * `{ decision, reason }` を読むため、それぞれ toAntigravityWire / toGeminiWire で変換してから emit する。
  *
- * @param {object} result - 본체 hook 의 반환값 (HookOutput.deny/passthrough/block/context)
+ * @param {object} result - 本体 hook の返り値 (HookOutput.deny/passthrough/block/context)
  * @param {{ cli: 'codex'|'antigravity'|'gemini', eventName?: string }} opts
  * @returns {{ stdout: string, stderr: string, exitCode: number }}
  */
@@ -743,7 +743,7 @@ export function buildCliEmission(result, opts = {}) {
     return { stdout: JSON.stringify(wire) + '\n', stderr: '', exitCode: 0 };
   }
 
-  // Codex (및 기타): Claude 형식 JSON passthrough + eventName 라벨 재라이팅.
+  // Codex (およびその他): Claude 形式の JSON を passthrough + eventName ラベルの再書き込み。
   let out = result;
   if (opts.eventName && result.hookSpecificOutput) {
     out = {
@@ -763,9 +763,9 @@ export function buildCliEmission(result, opts = {}) {
 }
 
 /**
- * 본체 hook 의 결과 (Claude 형식 JSON) 를 CLI 별로 emit.
+ * 本体 hook の結果 (Claude 形式の JSON) を CLI 別に emit する。
  *
- * @param {object} result - 본체 hook 의 반환값 (HookOutput.deny/passthrough/block/context)
+ * @param {object} result - 本体 hook の返り値 (HookOutput.deny/passthrough/block/context)
  * @param {{ cli: 'codex'|'antigravity'|'gemini', eventName?: string }} opts
  */
 export function emit(result, opts = {}) {
@@ -776,9 +776,9 @@ export function emit(result, opts = {}) {
 }
 
 /**
- * 어댑터의 표준 진입점. 본체 hook 의 run(data) 함수를 호출한다.
+ * アダプターの標準エントリポイント。本体 hook の run(data) 関数を呼び出す。
  *
- * @param {Function} runFn - 본체 hook 의 export 된 run(data) async 함수
+ * @param {Function} runFn - 本体 hook の export された run(data) async 関数
  * @param {{ cli: 'codex'|'antigravity'|'gemini', eventName?: string }} opts
  */
 export async function runAdapter(runFn, opts) {
@@ -790,7 +790,7 @@ export async function runAdapter(runFn, opts) {
     const result = await runFn(normalized);
     emit(result, opts);
   } catch {
-    // fail-open (R-CM-006 Rule 2 정합) — 어댑터 자체 실패가 본체 흐름 차단하지 않음
+    // fail-open (R-CM-006 Rule 2 と整合) — アダプター自体の失敗が本体の流れを遮断しないようにする
     process.exit(0);
   }
 }

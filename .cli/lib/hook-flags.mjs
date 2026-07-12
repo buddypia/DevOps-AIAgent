@@ -1,16 +1,16 @@
 /**
  * hook-flags.mjs — Profile resolver (registry-derived, R-CM-006 Rule 4 Single SSOT)
  *
- * profile 멤버십은 hook-registry.mjs entry 의 `profile` 필드에서 derive 한다.
- * 본 파일은 SSOT 가 아니다.
+ * profile メンバーシップは hook-registry.mjs entry の `profile` フィールドから derive する。
+ * 本ファイルは SSOT ではない。
  *
- * profile 변경:
- *   ❌ 본 파일 편집 금지
- *   ✅ hook-registry.mjs entry 의 `profile` 필드 변경 + regen-hooks-settings.mjs 실행
+ * profile 変更:
+ *   ❌ 本ファイルの編集禁止
+ *   ✅ hook-registry.mjs entry の `profile` フィールド変更 + regen-hooks-settings.mjs 実行
  *
- * 환경변수:
- *   ECC_HOOK_PROFILE   = minimal | standard (기본: standard)
- *   ECC_DISABLED_HOOKS = 쉼표 구분 hookId 목록 (강제 비활성화)
+ * 環境変数:
+ *   ECC_HOOK_PROFILE   = minimal | standard (基本: standard)
+ *   ECC_DISABLED_HOOKS = カンマ区切りの hookId リスト (強制無効化)
  *
  * @see .cli/lib/hook-registry.mjs (Single SSOT)
  * @see .claude/rules/common/hooks.md (R-CM-006 Rule 4)
@@ -63,10 +63,10 @@ export function isHookEnabled(hookId, options) {
   return enabledSet.has(hookId);
 }
 
-/** ecosystem-health-guard E14 호환 — Single SSOT 후엔 derive 라 항상 valid */
+/** ecosystem-health-guard E14 互換 — Single SSOT 後は derive のため常に valid */
 export function validateProfileCoverage(registryHookIds, profileUncheckedIds = []) {
   const profileMap = buildProfileMap();
-  // 2-tier (minimal ⊂ standard). standard 가 전체 프로파일 superset (strict 티어 제거, 2026-06-11).
+  // 2-tier (minimal ⊂ standard). standard が全プロファイルの superset (strict ティア除去, 2026-06-11)。
   const allProfileIds = profileMap.standard;
   const registrySet = new Set(registryHookIds);
   const uncheckedSet = new Set(profileUncheckedIds);

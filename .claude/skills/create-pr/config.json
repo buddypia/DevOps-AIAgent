@@ -1,7 +1,7 @@
 {
   "base_branch": "main",
   "_adapt": {
-    "purpose": "외부 프로젝트 적응 가이드(ops.mjs는 이 파일의 데이터 키만 읽는다 — _adapt는 안내 전용, 코드가 참조하지 않음).",
-    "how": "base_branch를 대상 저장소의 기본 브랜치명(main/master 등)으로 맞추세요. github_account는 한 머신에 여러 GitHub 계정을 gh CLI로 로그인해둔 경우에만 필요한 선택 필드입니다(다중 계정 disambiguation용 `gh auth token -u <account>`). 단일 계정이면 생략하세요 — 생략 시 gh의 기본 로그인 계정을 그대로 사용합니다. 필요해지면 이 파일에 \"github_account\": \"<계정명>\"을 직접 추가하세요."
+    "purpose": "外部プロジェクト適応ガイド(ops.mjs は本ファイルのデータキーのみを読む — _adapt は案内専用、コードは参照しない)。",
+    "how": "base_branch を対象リポジトリの基本ブランチ名(main/master など)に合わせてください。github_account は 1 台のマシンに複数の GitHub アカウントを gh CLI でログインしている場合にのみ必要な選択フィールドです(複数アカウントの disambiguation 用 `gh auth token -u <account>`)。単一アカウントであれば省略してください — 省略時は gh の基本ログインアカウントをそのまま使用します。必要になれば本ファイルに \"github_account\": \"<アカウント名>\" を直接追加してください。"
   }
 }

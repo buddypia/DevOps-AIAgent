@@ -6,7 +6,7 @@
  * AI の git commit / branch 生成 / amend を main での直接作業から保護する。
  *
  * ポリシー (マルチターミナル同時作業環境の保護):
- *   - main で의 直接 commit   → 遮断 (worktree 内でのみ commit 許容)
+ *   - main での直接 commit   → 遮断 (worktree 内でのみ commit 許容)
  *   - git commit --amend     → 常に遮断 (push 衝突 + マルチターミナルの history rewrite 危険性)
  *   - ブランチ生成           → 常に遮断 (worktree add の使用を強制)
  *   - worktree commit        → 許容
@@ -236,8 +236,8 @@ export async function run(data) {
     const branch = safeGit('branch --show-current', projectDir, { timeout: 2000 }) || '';
     const isCreatePrActive = existsSync(STATE_FILE);
     // command-cwd based worktree detection.
-    // Codex/Antigravity dispatcher 는 hook 프로세스를 repo root 에서 실행할 수 있으므로
-    // process.cwd() 대신 payload cwd 를 우선 사용한다.
+    // Codex/Antigravity dispatcher は hook プロセスを repo root で実行できるため、
+    // process.cwd() の代わりに payload cwd を優先使用する。
     const isWorktree = isWorktreeCommandCwd(data);
 
     const result = decide({ command, branch, isCreatePrActive, isWorktree });

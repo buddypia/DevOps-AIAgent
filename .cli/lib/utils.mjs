@@ -1,8 +1,8 @@
 /**
  * Common Utilities Module
  *
- * Hook 스크립트가 공유하는 유틸리티 함수.
- * stdin 읽기, stdout 출력, 안전 체크 등.
+ * Hook スクリプトが共有するユーティリティ関数。
+ * stdin 読み取り、stdout 出力、安全チェックなど。
  */
 
 import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync, renameSync, unlinkSync } from 'fs';
@@ -13,21 +13,21 @@ import { randomBytes } from 'crypto';
 import { isHookEnabled } from './hook-flags.mjs';
 
 // ═══════════════════════════════════════════════════════════════
-// 안전한 JSON 파일 읽기 (중앙화)
+// 安全な JSON ファイル読み取り (中央化)
 //
-// existsSync + readFileSync + JSON.parse + try/catch 패턴이
-// 82회 이상 반복되던 것을 단일 함수로 통합.
+// existsSync + readFileSync + JSON.parse + try/catch パターンが
+// 82回以上繰り返されていたものを単一関数に統合。
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * JSON 파일을 안전하게 읽어 파싱한다.
+ * JSON ファイルを安全に読み取ってパースする。
  *
- * 파일 미존재, 읽기 오류, JSON 파싱 오류 시 defaultValue를 반환한다.
- * throw하지 않으므로 모든 호출부에서 try/catch가 불필요하다.
+ * ファイル未存在、読み取りエラー、JSON パースエラー時は defaultValue を返す。
+ * throw しないため、すべての呼び出し元で try/catch が不要である。
  *
- * @param {string} filePath - 절대 경로
- * @param {*} [defaultValue=null] - 실패 시 반환할 기본값
- * @returns {object|*} 파싱된 JSON 객체 또는 defaultValue
+ * @param {string} filePath - 絶対パス
+ * @param {*} [defaultValue=null] - 失敗時に返すデフォルト値
+ * @returns {object|*} パースされた JSON オブジェクトまたは defaultValue
  */
 export function safeReadJson(filePath, defaultValue = null) {
   try {
@@ -39,15 +39,15 @@ export function safeReadJson(filePath, defaultValue = null) {
 }
 
 /**
- * handoff.confidence 가 object {score, level, ...} 또는 number (legacy) 양식 둘 다
- * 지원하는 score 추출 helper. finite 숫자가 아니면 null 반환.
+ * handoff.confidence が object {score, level, ...} または number (legacy) 形式の両方を
+ * サポートする score 抽出 helper。finite な数値でなければ null を返す。
  *
- * R-CM-026 정합: handoff (skill detail) SSOT 의 confidence 표현이 다양한 양식을
- * 가질 수 있는 boundary 함수. saga-manager.syncStageFromHandoff +
- * stage-output-aggregator.mergeHandoffConfidence 두 진입점에서 공유.
+ * R-CM-026 整合: handoff (skill detail) SSOT の confidence 表現が多様な形式を
+ * 取り得る boundary 関数。saga-manager.syncStageFromHandoff +
+ * stage-output-aggregator.mergeHandoffConfidence の 2 つの進入点で共有。
  *
- * @param {*} conf - handoff.confidence 값 (object|number|undefined|null)
- * @returns {number|null} finite score 또는 null
+ * @param {*} conf - handoff.confidence 値 (object|number|undefined|null)
+ * @returns {number|null} finite な score または null
  */
 export function extractConfidenceScore(conf) {
   const raw =
@@ -60,24 +60,24 @@ export function extractConfidenceScore(conf) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 원자적 파일 쓰기 (중앙화)
+// 原子的ファイル書き込み (中央化)
 //
-// 6곳에서 중복되던 tmp+rename 패턴을 단일 함수로 통합.
-// 모든 상태 관리 모듈(state.mjs, saga-manager.mjs 등)이 이 함수를 사용.
+// 6 箇所で重複していた tmp+rename パターンを単一関数に統合。
+// すべての状態管理モジュール(state.mjs, saga-manager.mjs など)がこの関数を使用。
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * JSON 데이터를 파일에 원자적으로 쓴다 (tmp + rename 패턴).
+ * JSON データをファイルに原子的に書き込む (tmp + rename パターン)。
  *
- * POSIX에서 같은 파일시스템 내 rename은 원자적이므로,
- * 대상 파일과 같은 디렉토리에 tmp 파일을 생성하여 크로스파티션 문제를 방지한다.
+ * POSIX では同一ファイルシステム内の rename は原子的であるため、
+ * 対象ファイルと同じディレクトリに tmp ファイルを生成してクロスパーティション問題を防止する。
  *
- * @param {string} filePath - 대상 파일 절대 경로
- * @param {object|string} data - JSON 직렬화할 객체 또는 이미 직렬화된 문자열
+ * @param {string} filePath - 対象ファイルの絶対パス
+ * @param {object|string} data - JSON シリアライズするオブジェクトまたは既にシリアライズされた文字列
  * @param {object} [options]
- * @param {boolean} [options.ensureDir=true] - 디렉토리 자동 생성 여부
- * @param {number} [options.indent=2] - JSON.stringify indent (data가 문자열이면 무시)
- * @returns {boolean} 성공 여부
+ * @param {boolean} [options.ensureDir=true] - ディレクトリ自動生成の可否
+ * @param {number} [options.indent=2] - JSON.stringify indent (data が文字列なら無視)
+ * @returns {boolean} 成功の可否
  */
 export function atomicWriteJson(filePath, data, options = {}) {
   const { ensureDir = true, indent = 2 } = options;
@@ -92,24 +92,24 @@ export function atomicWriteJson(filePath, data, options = {}) {
     renameSync(tmpPath, filePath);
     return true;
   } catch {
-    // 임시 파일 정리 시도
+    // 一時ファイルの整理を試行
     try { if (existsSync(tmpPath)) unlinkSync(tmpPath); } catch { /* ignore */ }
     return false;
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Git 유틸리티 (중앙화)
+// Git ユーティリティ (中央化)
 // ═══════════════════════════════════════════════════════════════
 
-/** git repo 여부 캐시 (프로세스 생명주기 내 불변) */
+/** git repo か否かのキャッシュ (プロセスライフサイクル内で不変) */
 const _gitRepoCache = new Map();
 
 /**
- * 지정 디렉토리가 git 저장소인지 확인한다.
- * 결과를 캐싱하여 동일 프로세스 내 반복 fork를 방지.
+ * 指定ディレクトリが git リポジトリかどうかを確認する。
+ * 結果をキャッシュして同一プロセス内での反復 fork を防止。
  *
- * @param {string} cwd - 확인할 디렉토리
+ * @param {string} cwd - 確認するディレクトリ
  * @returns {boolean}
  */
 export function isGitRepo(cwd) {
@@ -130,17 +130,17 @@ export function isGitRepo(cwd) {
 }
 
 /**
- * 셸 명령어를 안전하게 실행한다 (중앙화).
+ * シェルコマンドを安全に実行する (中央化)。
  *
- * - stdio를 항상 파이프하여 stderr가 부모 프로세스(Claude Code)로 누출되지 않음
- * - 실패 시 null 반환 (throw 안 함)
- * - 모든 hook 스크립트는 이 함수를 사용해야 함
+ * - stdio を常にパイプして stderr が親プロセス(Claude Code)へ漏出しないようにする
+ * - 失敗時は null を返す (throw しない)
+ * - すべての hook スクリプトはこの関数を使用しなければならない
  *
- * @param {string} cmd - 실행할 명령어
- * @param {string} cwd - 작업 디렉토리
+ * @param {string} cmd - 実行するコマンド
+ * @param {string} cwd - 作業ディレクトリ
  * @param {object} [options]
- * @param {number} [options.timeout=10000] - 타임아웃(ms)
- * @returns {string|null} stdout (trimmed) 또는 null
+ * @param {number} [options.timeout=10000] - タイムアウト(ms)
+ * @returns {string|null} stdout (trimmed) または null
  */
 export function safeExec(cmd, cwd, options = {}) {
   try {
@@ -156,13 +156,13 @@ export function safeExec(cmd, cwd, options = {}) {
 }
 
 /**
- * git 명령어를 안전하게 실행한다.
- * git 저장소가 아니면 즉시 null 반환 (fork 없이).
+ * git コマンドを安全に実行する。
+ * git リポジトリでなければ即座に null を返す (fork なしで)。
  *
- * @param {string} gitArgs - git 서브커맨드 + 인자 (예: "status --porcelain")
- * @param {string} cwd - 작업 디렉토리
+ * @param {string} gitArgs - git サブコマンド + 引数 (例: "status --porcelain")
+ * @param {string} cwd - 作業ディレクトリ
  * @param {object} [options]
- * @param {number} [options.timeout=10000] - 타임아웃(ms)
+ * @param {number} [options.timeout=10000] - タイムアウト(ms)
  * @returns {string|null}
  */
 export function safeGit(gitArgs, cwd, options = {}) {
@@ -171,12 +171,12 @@ export function safeGit(gitArgs, cwd, options = {}) {
 }
 
 /**
- * 프로젝트 루트 디렉토리를 해석한다. (Worktree-aware)
- * 우선순위: CLAUDE_PROJECT_DIR > hookData.cwd > process.cwd()
- * Worktree 내부에서 실행된 경우 (.worktrees/...) 원본 프로젝트 루트로 resolve 한다.
+ * プロジェクトルートディレクトリを解決する。(Worktree-aware)
+ * 優先順位: CLAUDE_PROJECT_DIR > hookData.cwd > process.cwd()
+ * Worktree 内部で実行された場合 (.worktrees/...) 元のプロジェクトルートへ resolve する。
  *
- * @param {object} [hookData] - Hook stdin 데이터 (data.cwd를 포함할 수 있음)
- * @returns {string} 프로젝트 루트의 절대 경로
+ * @param {object} [hookData] - Hook stdin データ (data.cwd を含み得る)
+ * @returns {string} プロジェクトルートの絶対パス
  */
 export function resolveProjectDir(hookData) {
   let dir = process.env.CLAUDE_PROJECT_DIR || hookData?.cwd || process.cwd();
@@ -188,8 +188,8 @@ export function resolveProjectDir(hookData) {
 }
 
 /**
- * stdin에서 JSON 데이터 읽기
- * Claude Code Hooks는 stdin으로 이벤트 데이터를 전달.
+ * stdin から JSON データを読み取る
+ * Claude Code Hooks は stdin でイベントデータを渡す。
  *
  * @returns {Promise<object>}
  */
@@ -207,20 +207,20 @@ export async function readStdin() {
 }
 
 /**
- * stdout으로 JSON 결과 출력
- * Hook 결과는 반드시 stdout JSON으로 전달.
+ * stdout へ JSON 結果を出力
+ * Hook 結果は必ず stdout JSON で渡す。
  *
- * @param {object} data - 출력할 데이터
+ * @param {object} data - 出力するデータ
  */
 export function output(data) {
   console.log(JSON.stringify(data));
 }
 
 /**
- * Context Limit에 의한 Stop 감지
- * Context가 가득 찬 경우 절대 블록하지 않는다 (deadlock 방지)
+ * Context Limit による Stop の検知
+ * Context が満杯の場合は絶対にブロックしない (deadlock 防止)
  *
- * Claude Code Hooks에서는 Stop 입력의 메타데이터로 판단.
+ * Claude Code Hooks では Stop 入力のメタデータで判断。
  */
 export function isContextLimitStop(data) {
   const reason = (data.stop_reason || data.stopReason || '').toLowerCase();
@@ -242,7 +242,7 @@ export function isContextLimitStop(data) {
 }
 
 /**
- * 사용자 취소 감지
+ * ユーザーによるキャンセルの検知
  */
 export function isUserAbort(data) {
   if (data.user_requested || data.userRequested) return true;
@@ -255,9 +255,9 @@ export function isUserAbort(data) {
 }
 
 /**
- * Markdown Plan 파일 체크박스 파싱
- * - [ ] = 미완료, - [x] 또는 - [X] = 완료
- * 코드 블록(```) 내부 무시
+ * Markdown Plan ファイルのチェックボックスをパース
+ * - [ ] = 未完了、- [x] または - [X] = 完了
+ * コードブロック(```) 内部は無視
  *
  * @param {string} planFilePath
  * @returns {{ total: number, completed: number, uncheckedItems: string[] } | null}
@@ -298,13 +298,13 @@ export function parsePlanProgress(planFilePath) {
 }
 
 /**
- * 파이프라인 산출물의 progress를 실제 파일 존재 여부와 교차 검증.
- * 파일이 존재하지만 status가 "pending"인 항목을 불일치로 감지.
+ * パイプライン産出物の progress を実際のファイル存在有無と交差検証。
+ * ファイルが存在するのに status が "pending" である項目を不一致として検知。
  *
- * Stop Hook에서 진행률 갱신 누락을 감지하는 데 사용.
+ * Stop Hook で進捗率の更新漏れを検知するのに使用。
  *
- * @param {string} projectDir - 프로젝트 루트 디렉토리
- * @param {string} contextRelPath - 산출물 JSON 상대 경로
+ * @param {string} projectDir - プロジェクトルートディレクトリ
+ * @param {string} contextRelPath - 産出物 JSON の相対パス
  * @returns {{ mismatches: number, details: Array<{stage: string, status: string, existingCount: number}> }}
  */
 export function validatePipelineProgress(projectDir, contextRelPath) {
@@ -346,9 +346,9 @@ export function validatePipelineProgress(projectDir, contextRelPath) {
 
 
 /**
- * Claude Code Task 시스템에서 미완료 작업 카운트
+ * Claude Code Task システムで未完了タスクをカウント
  *
- * Claude Code의 Task 파일은 ~/.claude/tasks/{sessionId}/에 저장.
+ * Claude Code の Task ファイルは ~/.claude/tasks/{sessionId}/ に保存。
  */
 export function countIncompleteTasks(sessionId) {
   if (!sessionId || typeof sessionId !== 'string') return 0;
@@ -376,18 +376,18 @@ export function countIncompleteTasks(sessionId) {
 }
 
 /**
- * Hook main 함수 안전 래퍼
+ * Hook main 関数の安全ラッパー
  *
- * Node.js 22의 unhandled rejection 방지를 위한 필수 래퍼.
- * 1. 예외 시 deadlock 방지 (빈 JSON 출력으로 passthrough)
- * 2. stderr 출력 없이 빈 JSON(passthrough) 출력
- * 3. stdout 파이프 파손도 안전하게 처리
+ * Node.js 22 の unhandled rejection 防止のための必須ラッパー。
+ * 1. 例外時の deadlock 防止 (空 JSON 出力で passthrough)
+ * 2. stderr 出力なしで空 JSON(passthrough) を出力
+ * 3. stdout パイプ破損も安全に処理
  *
- * 사용법:
+ * 使用法:
  *   import { safeHookMain } from './lib/utils.mjs';
  *   safeHookMain(main);
  *
- * @param {() => Promise<void>} fn - async main 함수
+ * @param {() => Promise<void>} fn - async main 関数
  */
 export function safeHookMain(fn) {
   fn().catch((err) => {
@@ -395,27 +395,27 @@ export function safeHookMain(fn) {
       console.error('[Fail-Loud in Test] Hook execution failed:', err);
       process.exit(1);
     }
-    // NOTE: console.error 사용 금지 — stderr 출력이 Claude Code에 "hook error"로 표시됨
-    try { console.log('{}'); } catch { /* stdout 파이프 파손 시 무시 */ }
+    // NOTE: console.error の使用禁止 — stderr 出力が Claude Code に "hook error" として表示される
+    try { console.log('{}'); } catch { /* stdout パイプ破損時は無視 */ }
   });
 }
 
 /**
- * Hook Profile 기반 안전 래퍼
+ * Hook Profile ベースの安全ラッパー
  *
- * safeHookMain + isHookEnabled 체크를 결합.
- * hookId가 현재 프로파일에서 비활성이면 즉시 passthrough (빈 JSON).
+ * safeHookMain + isHookEnabled チェックを結合。
+ * hookId が現在のプロファイルで非活性なら即座に passthrough (空 JSON)。
  *
- * 사용법:
+ * 使用法:
  *   import { safeHookMainWithProfile } from './lib/utils.mjs';
  *   safeHookMainWithProfile('coverage-threshold-guard', main);
  *
- * @param {string} hookId - 훅 식별자
- * @param {() => Promise<void>} fn - async main 함수
+ * @param {string} hookId - フック識別子
+ * @param {() => Promise<void>} fn - async main 関数
  */
 export function safeHookMainWithProfile(hookId, fn) {
   if (!isHookEnabled(hookId)) {
-    try { console.log('{}'); } catch { /* stdout 파이프 파손 시 무시 */ }
+    try { console.log('{}'); } catch { /* stdout パイプ破損時は無視 */ }
     return;
   }
   safeHookMain(fn);
