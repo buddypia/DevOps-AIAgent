@@ -15,58 +15,20 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/secret-leak-guard.mjs\"",
-            "timeout": 5
-          }
-        ]
-      },
-      {
         "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/destructive-git-guard.mjs\"",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "if": "Bash(git *)",
-            "command": "node \"${CLAUDE_PROJECT_DIR}/.cli/hooks/commit-guard.mjs\"",
-            "timeout": 30
-          },
-          {
-            "type": "command",
-            "if": "Bash(git *)",
-            "command": "node \"${CLAUDE_PROJECT_DIR}/.cli/hooks/destructive-git-guard.mjs\"",
-            "timeout": 30
-          },
-          {
-            "type": "command",
-            "if": "Bash(git *)",
-            "command": "node \"${CLAUDE_PROJECT_DIR}/.cli/hooks/worktree-session-owner-guard.mjs\"",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PROJECT_DIR}/.cli/hooks/pre-ship-review-guard.mjs\"",
-            "timeout": 30
+            "command": "./.claude/hooks/destructive-git-guard.sh"
           }
         ]
       },
       {
-        "matcher": "Edit|Write|MultiEdit",
+        "matcher": "Write|Edit|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PROJECT_DIR}/.cli/hooks/worktree-policy-guard.mjs\""
-          },
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PROJECT_DIR}/.cli/hooks/worktree-session-owner-guard.mjs\""
+            "command": "./.claude/hooks/secret-leak-guard.sh"
           }
         ]
       }
@@ -116,12 +78,9 @@
     ],
     "Stop": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PROJECT_DIR}/.cli/hooks/worktree-shipping-guard.mjs\""
-          }
-        ]
+        "type": "command",
+        "command": "./scripts/autonomous-gate.sh",
+        "timeout": 120
       }
     ]
   }
