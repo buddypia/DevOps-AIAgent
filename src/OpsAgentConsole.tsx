@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Activity, ShieldCheck, Siren } from "lucide-react";
 
 import AgentAvatar from "./AgentAvatar.js";
+import ResultInspector from "./ResultInspector.js";
 
 type AgentJobMeta = {
   agentId: string;
@@ -53,12 +54,25 @@ type OpsRun = {
 };
 
 const PHASE_LABELS: Record<string, string> = {
-  evidence: "①証拠収集",
-  triage: "②maker分析",
-  gate: "③引用ゲート",
-  review: "④独立checker",
-  decide: "⑤判定・記録",
+  evidence: "①ログ収集",
+  triage: "②一次分析",
+  gate: "③根拠の照合",
+  review: "④再確認",
+  decide: "⑤結果を記録",
   error: "エラー"
+};
+
+const CHECKER_LABELS: Record<RunFinding["checker"]["verdict"], string> = {
+  confirmed: "確認できた",
+  refuted: "裏付けなし",
+  uncertain: "追加確認が必要"
+};
+
+const SEVERITY_LABELS: Record<RunFinding["severity"], string> = {
+  critical: "最優先",
+  high: "高",
+  medium: "中",
+  low: "低"
 };
 
 const HEALTH_LABELS: Record<string, string> = {
@@ -175,7 +189,11 @@ export default function OpsAgentConsole({ refreshSignal, onRunSettled }: OpsAgen
       });
       const body = (await response.json()) as { runId?: string; error?: string; message?: string };
       if (!response.ok) {
-        setMessage(body.message ?? body.error ?? "実行に失敗しました。");
+        setMessage(
+          response.status === 503
+            ? "分析サービスが準備されていません。管理者はGemini APIキーまたはVertex ADCを設定してください。"
+            : body.message ?? body.error ?? "調査を開始できませんでした。"
+        );
         return;
       }
       if (body.runId) setSelectedRunId(body.runId);
@@ -185,32 +203,20 @@ export default function OpsAgentConsole({ refreshSignal, onRunSettled }: OpsAgen
     }
   }
 
-  async function handleDrill() {
-    setBusy(true);
-    try {
-      const response = await fetch("/api/ops-agent/incident-drill", { method: "POST" });
-      const body = (await response.json()) as { note?: string; message?: string };
-      setMessage(body.note ?? body.message ?? "");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   const acceptedTotal = runs.reduce((sum, run) => sum + run.findings.filter((f) => f.accepted).length, 0);
   const costTotal = runs.reduce((sum, run) => sum + (run.usage?.estimatedCostUsd ?? 0), 0);
   const costPerAccepted = acceptedTotal > 0 ? costTotal / acceptedTotal : null;
   const selectedRunJob = selectedRun ? jobByAgent.get(selectedRun.agentId) : null;
-  const findingNoun = selectedRunJob?.findingNoun ?? "所見";
 
   return (
     <div className="ops-console">
       <div className="ops-console-head">
         <div>
-          <h3>
-            <Activity size={16} /> 8体すべて、本物のシステムに対して実行
+            <h3>
+            <Activity size={16} /> 個別の調査を実行
           </h3>
           <p className="ops-console-sub">
-            全エージェント共通の実パイプライン: 実証拠の収集 → Gemini maker → 引用ゲート(証拠ID照合) → 独立checker → Firestore記録。レート制限・時間予算のハードストップ付き。
+            実際のログを集め、一次分析と再確認を通して、根拠のある結果にまとめます。
           </p>
         </div>
       </div>
@@ -234,7 +240,7 @@ export default function OpsAgentConsole({ refreshSignal, onRunSettled }: OpsAgen
       {selectedJob ? (
         <div className="ops-job-panel">
           <p className="ops-job-title">
-            <strong>{selectedJob.name}</strong>（{selectedJob.handle}） — {selectedJob.title}
+            <strong>{selectedJob.name}</strong>（{selectedJob.handle}） - {selectedJob.title}
           </p>
           {selectedJob.inputKind !== "none" ? (
             <label className="ops-job-input">
@@ -257,18 +263,13 @@ export default function OpsAgentConsole({ refreshSignal, onRunSettled }: OpsAgen
           ) : null}
           <div className="ops-console-actions">
             <button type="button" className={`btn-hire${hired ? " is-active" : ""}`} onClick={handleToggleHire} disabled={busy}>
-              {hired ? "解雇" : "雇う (契約を保存)"}
+              {hired ? "無効にする" : "この調査役を有効にする"}
             </button>
             <button type="button" className="btn-primary" onClick={handleExecute} disabled={busy || !hired}>
-              実行する
+              調査を開始
             </button>
-            {selectedJob.agentId === "cloud-run-sre" ? (
-              <button type="button" className="btn-secondary" onClick={handleDrill} disabled={busy} title="実ログとしてERROR/WARNINGを注入するSREドリル">
-                模擬インシデント注入
-              </button>
-            ) : null}
           </div>
-          {!hired ? <p className="ops-console-hint">「雇う」で契約がサーバーに保存され、実行が解放されます。</p> : null}
+          {!hired ? <p className="ops-console-hint">調査役を有効にすると、対象への調査を開始できます。</p> : null}
         </div>
       ) : null}
 
@@ -277,19 +278,19 @@ export default function OpsAgentConsole({ refreshSignal, onRunSettled }: OpsAgen
       <div className="ops-metrics">
         <div className="ops-metric">
           <span className="ops-metric-value">{runs.length}</span>
-          <span className="ops-metric-label">ラン数</span>
+          <span className="ops-metric-label">調査回数</span>
         </div>
         <div className="ops-metric">
           <span className="ops-metric-value">{acceptedTotal}</span>
-          <span className="ops-metric-label">受入所見</span>
+          <span className="ops-metric-label">採用した指摘</span>
         </div>
         <div className="ops-metric">
           <span className="ops-metric-value">${costTotal.toFixed(4)}</span>
           <span className="ops-metric-label">概算コスト</span>
         </div>
         <div className="ops-metric">
-          <span className="ops-metric-value">{costPerAccepted === null ? "—" : `$${costPerAccepted.toFixed(4)}`}</span>
-          <span className="ops-metric-label">受入1件あたり</span>
+          <span className="ops-metric-value">{costPerAccepted === null ? "未計測" : `$${costPerAccepted.toFixed(4)}`}</span>
+          <span className="ops-metric-label">採用1件あたり</span>
         </div>
       </div>
 
@@ -305,14 +306,14 @@ export default function OpsAgentConsole({ refreshSignal, onRunSettled }: OpsAgen
               <StatusBadge status={run.status} />
               <span>{jobByAgent.get(run.agentId)?.name ?? run.agentId}</span>
               <span className="ops-run-chip-meta">
-                {new Date(run.startedAt).toLocaleTimeString("ja-JP")}・{run.trigger === "a2a" ? "A2A" : run.trigger === "mission" ? "Mission" : "Web"}・
-                {run.findings.filter((f) => f.accepted).length}件受入
+                {new Date(run.startedAt).toLocaleTimeString("ja-JP")}・{run.trigger === "a2a" ? "外部連携" : run.trigger === "mission" ? "まとめて調査" : "画面"}・
+                {run.findings.filter((f) => f.accepted).length}件採用
               </span>
             </button>
           ))}
         </div>
       ) : (
-        <p className="ops-console-hint">まだランがありません。エージェントを雇用して「実行する」を押すと、実証拠の収集が始まります。</p>
+        <p className="ops-console-hint">まだ調査履歴がありません。調査役を有効にして「調査を開始」を押してください。</p>
       )}
 
       {selectedRun ? (
@@ -323,7 +324,7 @@ export default function OpsAgentConsole({ refreshSignal, onRunSettled }: OpsAgen
               {selectedRunJob?.name ?? selectedRun.agentId} / 対象 {selectedRun.targetService}: {HEALTH_LABELS[selectedRun.serviceHealth]}
             </span>
             <span className="ops-run-meta">
-              実証拠 {selectedRun.evidenceCount} 件 / {selectedRun.model} ({selectedRun.mode}) / トークン {selectedRun.usage.totalTokens} (~$
+              ログ {selectedRun.evidenceCount} 件 / {selectedRun.model} ({selectedRun.mode}) / トークン {selectedRun.usage.totalTokens} (~$
               {selectedRun.usage.estimatedCostUsd})
             </span>
           </div>
@@ -344,18 +345,18 @@ export default function OpsAgentConsole({ refreshSignal, onRunSettled }: OpsAgen
               {selectedRun.findings.map((finding, index) => (
                 <div key={`${finding.title}-${index}`} className={`ops-finding${finding.accepted ? "" : " is-rejected"}`}>
                   <div className="ops-finding-head">
-                    <span className={`ops-severity ops-severity-${finding.severity}`}>{finding.severity}</span>
+                    <span className={`ops-severity ops-severity-${finding.severity}`}>{SEVERITY_LABELS[finding.severity]}</span>
                     <strong>{finding.title}</strong>
                     <span className={`ops-verdict ops-verdict-${finding.checker.verdict}`}>
-                      <ShieldCheck size={12} /> checker: {finding.checker.verdict}
+                      <ShieldCheck size={12} /> 再確認: {CHECKER_LABELS[finding.checker.verdict]}
                     </span>
                     {finding.gate.citationsValid ? null : <span className="ops-verdict ops-verdict-refuted">引用ゲート棄却</span>}
-                    <span className="ops-accepted">{finding.accepted ? `${findingNoun}受入` : "棄却"}</span>
+                    <span className="ops-accepted">{finding.accepted ? "採用" : "対象外"}</span>
                   </div>
                   <p className="ops-run-text">根拠: {finding.hypothesis}</p>
                   <p className="ops-run-text">推奨: {finding.recommendedAction}</p>
                   <p className="ops-citations">
-                    引用証拠: {finding.citedLogIds.map((logId) => (
+                    根拠ログ: {finding.citedLogIds.map((logId) => (
                       <code key={logId}>{logId}</code>
                     ))}
                   </p>
@@ -367,26 +368,33 @@ export default function OpsAgentConsole({ refreshSignal, onRunSettled }: OpsAgen
           {selectedRun.escalations.length > 0 ? (
             <div className="ops-escalations">
               <p className="ops-escalations-title">
-                <Siren size={14} /> 人間承認待ちエスカレーション（エージェントは破壊的操作を自動実行しない）
+                <Siren size={14} /> 人の確認が必要な項目（変更操作は自動で行いません）
               </p>
               {selectedRun.escalations.map((escalation, index) => (
                 <p key={`${escalation.title}-${index}`} className="ops-run-text">
-                  [{escalation.severity}] {escalation.title} — {escalation.recommendedAction}
+                  [{escalation.severity}] {escalation.title} - {escalation.recommendedAction}
                 </p>
               ))}
             </div>
           ) : null}
 
-          {selectedRun.evidenceSample.length > 0 ? (
-            <details className="ops-evidence">
-              <summary>証拠サンプル（redaction適用済み・{selectedRun.evidenceSample.length}件表示）</summary>
-              {selectedRun.evidenceSample.map((evidence) => (
-                <p key={evidence.id} className="ops-evidence-row">
-                  <code>{evidence.id}</code> {evidence.severity} {evidence.message}
-                </p>
-              ))}
-            </details>
-          ) : null}
+          <ResultInspector
+            data={selectedRun}
+            logs={[
+              ...selectedRun.phases.map((phase) => ({
+                at: phase.at,
+                label: PHASE_LABELS[phase.phase] ?? phase.phase,
+                detail: phase.detail,
+                tone: phase.status === "error" ? ("error" as const) : ("default" as const)
+              })),
+              ...selectedRun.evidenceSample.map((evidence) => ({
+                at: evidence.timestamp,
+                label: `${evidence.severity}ログ / ${evidence.id}`,
+                detail: evidence.message,
+                tone: evidence.severity === "ERROR" || evidence.severity === "CRITICAL" ? ("error" as const) : ("default" as const)
+              }))
+            ]}
+          />
         </div>
       ) : null}
     </div>

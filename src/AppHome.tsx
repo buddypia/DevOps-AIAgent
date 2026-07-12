@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, ExternalLink, Network } from "lucide-react";
+import { CheckCircle2, ExternalLink, FileCheck2, FlaskConical, Network, Target, Workflow } from "lucide-react";
 
 import AgentRoster from "./AgentRoster.js";
+import IncidentDrillPanel from "./IncidentDrillPanel.js";
 import MissionControl from "./MissionControl.js";
 import OpsAgentConsole from "./OpsAgentConsole.js";
 import { MAX_CUSTOM_AGENTS } from "./customAgent.js";
@@ -113,17 +114,17 @@ export default function AppHome() {
           </span>
           <div>
             <p className="brand-name">Agent Guild</p>
-            <p className="brand-tag">A2A Agent Marketplace / Mission Control</p>
+            <p className="brand-tag">運用調査チーム / 実行結果ビュー</p>
           </div>
         </div>
         <div className="top-status">
           {health ? (
             <>
               <span className="status-pill">
-                <CheckCircle2 size={13} /> Gemini {health.geminiMode ?? "none"}
+                <CheckCircle2 size={13} /> 分析: Gemini {health.geminiMode === "none" ? "ローカル動作" : health.geminiMode ?? "未接続"}
               </span>
-              <span className="status-pill">store: {health.opsAgent?.runStore ?? "-"}</span>
-              <span className="status-pill">{health.opsAgent?.executableAgents ?? 8}体 実行可能</span>
+              <span className="status-pill">履歴保存: {health.opsAgent?.runStore ?? "-"}</span>
+              <span className="status-pill">調査役 {health.opsAgent?.executableAgents ?? 8}件</span>
             </>
           ) : null}
           <a className="status-pill status-link" href="/.well-known/agent-card.json" target="_blank" rel="noreferrer">
@@ -134,13 +135,21 @@ export default function AppHome() {
 
       <section className="hero-copy">
         <div className="hero-text">
+          <p className="hero-kicker">運用調査コンソール</p>
           <h1>
-            目標を渡す。<span className="hero-accent">AIギルド</span>が実働する。
+            散らばった運用情報を、<span className="hero-accent">判断できる形</span>に。
           </h1>
           <p>
-            Geminiオーケストレーターが専門エージェントを自律選抜し、実ログ・実CI・実脆弱性DB・実HTMLに対して本当に実行。
-            引用ゲートと独立checkerを通過した結果だけが、あなたへのレポートになる。
+            Cloud Run、CI、ログ、配信中の画面を調べ、何が起きているかと次の対応を根拠つきで整理します。
           </p>
+          <div className="hero-actions">
+            <a className="btn-primary" href="#mission-control">
+              <Target size={16} /> 調査を始める
+            </a>
+            <a className="btn-secondary" href="#safe-demo">
+              <FlaskConical size={16} /> 安全なデモを見る
+            </a>
+          </div>
         </div>
         <img
           className="hero-image"
@@ -153,30 +162,64 @@ export default function AppHome() {
         />
       </section>
 
-      <MissionControl agents={agentsById} onMissionSettled={handleActivitySettled} />
+      <section className="how-it-works" aria-labelledby="how-it-works-title">
+        <div className="section-head compact-head">
+          <p className="section-kicker">この画面で起きること</p>
+          <h2 id="how-it-works-title">目的を入力すると、調査から結果まで進みます</h2>
+          <p>画面上では、調査の進み具合・見つかったこと・その根拠を順番に確認できます。</p>
+        </div>
+        <div className="process-rail">
+          <div className="process-step">
+            <Target size={18} />
+            <div><strong>1. 目的を入力</strong><span>何を確認したいかを書く</span></div>
+          </div>
+          <div className="process-connector" aria-hidden="true" />
+          <div className="process-step">
+            <Workflow size={18} />
+            <div><strong>2. 調査を分担</strong><span>内容に合う調査役が動く</span></div>
+          </div>
+          <div className="process-connector" aria-hidden="true" />
+          <div className="process-step">
+            <FileCheck2 size={18} />
+            <div><strong>3. 根拠を確認</strong><span>ログと対応案を照らし合わせる</span></div>
+          </div>
+        </div>
+      </section>
 
-      <section aria-label="ギルド名鑑">
+      <section id="mission-control" className="surface-section" aria-labelledby="mission-control-title">
         <div className="section-head">
-          <h2>ギルド名鑑</h2>
-          <p>能力値の演出はなし — 数字とランクはすべて、Firestoreに記録された実行履歴から自動算出された実績。</p>
+          <p className="section-kicker">まとめて調査</p>
+          <h2 id="mission-control-title">確認したいことを入力する</h2>
+          <p>Cloud Run、CI、依存パッケージ、配信中のHTMLなど、実際の対象を順に確認します。</p>
+        </div>
+        <MissionControl agents={agentsById} onMissionSettled={handleActivitySettled} />
+      </section>
+
+      <IncidentDrillPanel />
+
+      <section aria-label="調査役一覧">
+        <div className="section-head">
+          <h2>調査役一覧</h2>
+          <p>表示している数字は、実行履歴から計算した実績です。</p>
         </div>
         <AgentRoster agents={agents} stats={stats} hiredIds={hiredIds} busy={hireBusy} onToggleHire={handleToggleHire} />
       </section>
 
-      <section aria-label="手動実行コンソール">
+      <section aria-label="個別調査">
         <div className="section-head">
-          <h2>手動実行コンソール</h2>
-          <p>1体ずつ指名して実行し、実証拠の収集 → Gemini maker → 引用ゲート → 独立checker → 受入判定の全過程を追跡する。</p>
+          <p className="section-kicker">個別実行</p>
+          <h2>調査役を個別に使う</h2>
+          <p>調査役を選び、入力した対象について、ログ・判断・対応案を確認します。</p>
         </div>
         <OpsAgentConsole refreshSignal={refreshSignal} onRunSettled={handleActivitySettled} />
       </section>
 
-      <section className="network" aria-label="A2Aネットワーク">
+      <section className="network" aria-label="外部エージェント連携">
         <div className="section-head">
           <h2>
-            <Network size={18} /> A2Aネットワーク
+            <Network size={18} /> 外部エージェント連携
           </h2>
-          <p>このギルド自身もA2Aエージェント。外部エージェントのAgent Cardを検証付きで取り込み、A2A委任の相手として評価できる。</p>
+          <p>外部エージェントのAgent Cardを読み込み、対応できる仕事と連携条件を確認します。</p>
         </div>
         <div className="import-row">
           <input
@@ -193,7 +236,7 @@ export default function AppHome() {
         {cardResult ? (
           cardResult.status === "accepted" ? (
             <p className="import-ok">
-              <CheckCircle2 size={14} /> {cardResult.agent.name} を検証して取り込みました（評価のみ・実行対象は自ギルドの8体）。
+              <CheckCircle2 size={14} /> {cardResult.agent.name} の情報を確認しました（この画面では評価のみ）。
             </p>
           ) : (
             <p className="import-error">{cardResult.error}</p>
@@ -203,7 +246,7 @@ export default function AppHome() {
           <ul className="imported-list">
             {importedAgents.map((agent) => (
               <li key={agent.id}>
-                <strong>{agent.name}</strong> — {agent.headline} <span className="imported-tag">外部 / A2Aスキル {agent.a2aSkillIds.length}件</span>
+                <strong>{agent.name}</strong> - {agent.headline} <span className="imported-tag">外部 / A2Aスキル {agent.a2aSkillIds.length}件</span>
               </li>
             ))}
           </ul>
@@ -221,7 +264,7 @@ export default function AppHome() {
           <a href="/api/agent-stats" target="_blank" rel="noreferrer">
             実績API <ExternalLink size={11} />
           </a>
-          <span className="proof-note">Cloud Run + Firestore + Cloud Logging + Gemini で稼働中</span>
+          <span className="proof-note">Cloud Run / Firestore / Cloud Logging / Gemini</span>
         </div>
       </section>
     </main>

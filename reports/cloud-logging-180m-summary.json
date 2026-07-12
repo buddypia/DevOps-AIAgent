@@ -1,0 +1,43 @@
+{
+  "project": "sixth-oath-502008-u3",
+  "service": "a2a-agent-marketplace",
+  "window": {
+    "start": "2026-07-11T10:02:38Z",
+    "end": "2026-07-11T13:02:37Z"
+  },
+  "entries": 1413,
+  "httpRequests": 1398,
+  "severity": {
+    "INFO": 1404,
+    "ERROR": 0,
+    "WARNING": 0
+  },
+  "httpStatus": {
+    "200": 28,
+    "304": 1370
+  },
+  "latencySeconds": {
+    "p50": 0.025833059,
+    "p95": 0.053255352,
+    "max": 1.327278665
+  },
+  "topRequestPath": {
+    "path": "/api/missions/c4cb4849-9b13-41ea-9952-0607fc19ad23",
+    "count": 1340
+  },
+  "past72hWarningError": [
+    {
+      "timestamp": "2026-07-10T11:36:54.188268Z",
+      "severity": "ERROR",
+      "insertId": "6a50d9560002df6c04e2c351",
+      "message": "[incident-drill e7a12eb6] synthetic checkout latency spike: p95 4800ms, upstream timeout to payments-api"
+    },
+    {
+      "timestamp": "2026-07-10T11:36:54.188329Z",
+      "severity": "WARNING",
+      "insertId": "6a50d9560002dfa9231472c1",
+      "message": "[incident-drill e7a12eb6] retry storm detected: 34 retries/min against /api/recommend"
+    }
+  ],
+  "retrieval": "gcloud logging read 'resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"a2a-agent-marketplace\"' --project=sixth-oath-502008-u3 --limit=5000 --order=asc --format=json"
+}

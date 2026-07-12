@@ -11,3 +11,8 @@ playwright-report
 .tmp
 .worktrees
 outputs
+.env
+.env.*
+.envrc
+.envrc.*
+.direnv
