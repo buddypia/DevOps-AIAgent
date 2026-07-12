@@ -46,7 +46,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
     },
     skills: [
       { id: "brief-slicing", label: "要件スライス", proof: "BRIEF/CONTEXT/SPECへ分離", score: 96 },
-      { id: "judge-story", label: "審査軸ストーリー", proof: "5項目を1本の体験価値へ接続", score: 91 },
+      { id: "judge-story", label: "価値ストーリー", proof: "課題から価値までを1本の体験に接続", score: 91 },
       { id: "scope-pruning", label: "過剰機能の剪定", proof: "MVPと提出物を分離", score: 82 }
     ],
     mcp: [
@@ -128,13 +128,13 @@ export const MARKET_AGENTS: MarketAgent[] = [
   },
   {
     id: "gemini-strategist",
-    name: "Gemini審査参謀",
-    handle: "審査突破参謀",
+    name: "Gemini戦略参謀",
+    handle: "戦略参謀",
     stage: "plan",
     rarity: "legendary",
     price: 44,
     headline: "調査内容を要約し、優先度と対応案を整理する",
-    outcome: "審査軸に沿う一貫したプロダクトメッセージを生成",
+    outcome: "対応方針に沿う一貫したプロダクトメッセージを生成",
     color: "#3d405b",
     accent: "#81b29a",
     capabilities: {
@@ -151,7 +151,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
     },
     skills: [
       { id: "flash-critique", label: "高速批評", proof: "Gemini 3.5 Flash API", score: 96 },
-      { id: "pitch-refine", label: "ピッチ生成", proof: "30秒説明と審査員向け論点", score: 93 },
+      { id: "pitch-refine", label: "ピッチ生成", proof: "30秒説明と意思決定者向け論点", score: 93 },
       { id: "risk-tradeoff", label: "リスク整理", proof: "実用性/実装力の穴を検出", score: 88 }
     ],
     mcp: [
@@ -169,7 +169,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
     rarity: "rare",
     price: 27,
     headline: "API契約と実行結果をテストで確認する",
-    outcome: "壊れていないだけでなく、審査で説明できる検証証跡を残す",
+    outcome: "壊れていないだけでなく、あとから説明できる検証証跡を残す",
     color: "#6d597a",
     accent: "#ffc8dd",
     capabilities: {
@@ -204,7 +204,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
     rarity: "rare",
     price: 29,
     headline: "APIキー、公開URL、提出物の安全境界を守る",
-    outcome: "公開デモで漏洩しない設定と、審査員へ説明できるガードレールを用意",
+    outcome: "公開環境で漏洩しない設定と、関係者へ説明できるガードレールを用意",
     color: "#8f2d56",
     accent: "#ffb3c1",
     capabilities: {
@@ -257,7 +257,7 @@ export const MARKET_AGENTS: MarketAgent[] = [
     skills: [
       { id: "market-readable", label: "市場可視化", proof: "価格/レアリティ/能力バー", score: 98 },
       { id: "game-loop", label: "実行ループ", proof: "選ぶ→任せる→計画更新", score: 92 },
-      { id: "dense-ui", label: "審査用密度", proof: "1画面で価値・技術・運用を見せる", score: 88 }
+      { id: "dense-ui", label: "情報密度", proof: "1画面で価値・技術・運用を見せる", score: 88 }
     ],
     mcp: [
       { name: "design-lint", tools: ["check_contrast", "inspect_layout"], maturity: 76 },

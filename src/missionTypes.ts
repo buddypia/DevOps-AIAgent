@@ -67,3 +67,19 @@ export type AgentTrackRecordView = {
   lastRunAt: string | null;
   rank: "S" | "A" | "B" | "C" | "-";
 };
+
+// サーバー server/agentStats.ts の EvidenceSummary 型のクライアント側ミラー
+export type EvidenceSummaryView = {
+  totalAgents: number;
+  executedAgents: number;
+  sampleRuns: number;
+  completedRuns: number;
+  failedRuns: number;
+  totalFindings: number;
+  acceptedFindings: number;
+  confirmedFindings: number;
+  totalCostUsd: number;
+  totalTokens: number;
+  acceptRate: number | null;
+  lastRunAt: string | null;
+};
