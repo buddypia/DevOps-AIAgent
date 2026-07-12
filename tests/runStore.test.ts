@@ -8,7 +8,7 @@ function makeRun(startedAt: string): OpsAgentRun {
   const config = { ...getOpsConfig({} as NodeJS.ProcessEnv), project: "test-project" };
   const genAi = createGenAiClient(config);
   if (!genAi) throw new Error("test setup: genAi unavailable");
-  const run = createRun("cloud-run-sre", "a2a-agent-marketplace", "web", { config, genAi });
+  const run = createRun("cloud-run-sre", "agent-guild", "web", { config, genAi });
   run.startedAt = startedAt;
   return run;
 }

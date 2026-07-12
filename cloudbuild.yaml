@@ -1,6 +1,6 @@
 substitutions:
   _REGION: asia-northeast1
-  _SERVICE: a2a-agent-marketplace
+  _SERVICE: agent-guild
   _REPOSITORY: cloud-run-source-deploy
   _RUNTIME_SA: agent-market-runtime
 

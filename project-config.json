@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "project_name": "a2a-agent-marketplace",
+  "project_name": "agent-guild",
   "platform": "web-vite-express",
   "framework": "Vite + React (frontend) / Express (backend)",
   "language": "TypeScript",

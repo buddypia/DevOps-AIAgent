@@ -1,8 +1,8 @@
-# Agent-To-Agent Marketplace Submission Pack
+# Agent Guild Submission Pack — A2A Agent Marketplace for DevOps Mission Control
 
 ## Title
 
-Agent-To-Agent Marketplace
+Agent Guild
 
 ## Tags
 
@@ -15,7 +15,7 @@ Agent-To-Agent Marketplace
 
 ## One-liner
 
-必要なAI能力を市場から探し、雇い、A2Aで委任し、Cloud Run運用と提出証跡まで閉じるエージェント調達ワークベンチ。
+必要なAIエージェントを選び、A2Aで任せ、Cloud Run運用と提出証跡まで閉じるDevOpsミッションコントロール。
 
 ## Story
 
@@ -31,11 +31,11 @@ AIエージェント開発では、エージェントを作る前に「どの能
 
 ### 3. プロダクトの特徴
 
-- Project Briefを入力すると、必要能力を抽出し、AIエージェント市場から候補を推薦する
-- 各エージェントを価格、能力値、MCP成熟度、A2Aスキルで比較できる
+- Project Briefを入力すると、必要能力を抽出し、Agent GuildのA2A Agent Marketplaceから候補を推薦する
+- 各エージェントを能力、実績、MCP成熟度、A2Aスキルで比較できる
 - Contract Deskで、選択したAIの成果物、受入条件、SLA、検証コマンドを発行する
 - Agent Task Boardで、選択したAIごとのA2A仕事票、受入条件、証拠URL、検証キューを発行する
-- Winning Strategyで競合分析、SWOT、審査5項目、MVP proof、次に雇うべきAIを表示する
+- Winning Strategyで競合分析、SWOT、審査5項目、MVP proof、次に任せるべきAIを表示する
 - Market Intel Boardで、Gemini Enterprise、Google ADK、A2A、Copilot Studio、OpenAI Agents SDK、LangGraph、CrewAI、Dify、AgentOps、Cloud Runの公式ソース付き比較、Source Freshness Lock、差別化仮説、審査回答を表示する
 - Moat Stress Testで、ADK、A2A Marketplace、Copilot Studio、OpenAI Agents SDK、LangGraph、CrewAI、Dify、AgentOpsからの反論を先に受け、証拠付き回答と録画順を表示する
 - MVP Auditで、必須技術、審査5項目、DevOps証拠、提出3点をpass/watch/failで監査し、外部未発行URLを合格扱いにしない
@@ -51,7 +51,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - User Pilot Labで、開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証する
 - Squad Optimizerで、予算内のAI編成を総当たりし、現行維持、交換、追加予算ギャップを判断する
 - Live Evidence Monitorで、Cloud Run、Agent Card、A2A、Squad Optimizer、GitHub Actions CIを公開環境からライブ検証する
-- 運用観測役で、Live Evidence、Ops Drill、Pilot Economicsをつなぎ、運用観測を継続/復旧判断、買い手価値、次のAI雇用へ変換し、Acceptance Matrix / Prize Strategy / Win Gap Radarの実用性証拠に接続する
+- 運用観測役で、Live Evidence、Ops Drill、Pilot Economicsをつなぎ、運用観測を継続/復旧判断、買い手価値、次のAI投入へ変換し、Acceptance Matrix / Prize Strategy / Win Gap Radarの実用性証拠に接続する
 - External Evidence Verifierで、公開GitHub、Cloud Run、ProtoPedia作品URL、動画URLが審査員から開けるかを検証する
 - Release Drift Guardで、公開Cloud Runが最新Agent Card、Winner Release Lock / Winner GET Proof / Finalist Release Drift / Criteria Duel のsignal tags、Acceptance Matrix、A2A artifactを返しているかを検査する
 - Deploy Recoveryで、release drift、gcloud認証、Cloud Build、required Agent Card signal tags、公開再検証を復旧コマンドに変換する
@@ -65,7 +65,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Pilot Economicsで、導入費用、回収日数、価格レーン、買い手の反論、Pilot Evidence Lockを投資判断の証拠にする
 - Submission Launch Gateで、ProtoPedia作品URLと動画URLを入力し、提出3点、タグ、本文、CI、証拠receipt、Final Submit Lockを最終判定する
 - Mission Controlで、AIが弱点を検出し、A2A委任、検証runbook、提出パックを生成した証跡を見せる
-- Ops Drillで、Cloud Run公開デモの稼働シグナルから継続・ロールバック・追加雇用を判断する
+- Ops Drillで、Cloud Run公開デモの稼働シグナルから継続・ロールバック・追加投入を判断する
 - Judge Proofで、Gemini Proof Lock、Usability Proof Lock、Cloud Run、A2A、競合/SWOT、Mission、Ops、GitHub Actions CI、提出URLを1クリックの証拠束にし、sha256 receiptで照合できるようにする
 - Pitch Directorで、30秒動画の録画順、読み上げ台詞、字幕、証拠リンク、提出残リスクを生成する
 - Judge Drillで、審査5項目と主要競合への厳しい質問、回答、60秒回答パス、証拠リンク、デモで開く画面を生成する
@@ -81,7 +81,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 
 ## System Architecture
 
-![Agent-To-Agent Marketplace architecture](/assets/a2a-marketplace-architecture.svg)
+![Agent Guild — A2A Agent Marketplace architecture](/assets/a2a-marketplace-architecture.svg)
 
 ```text
 React UI
@@ -132,7 +132,7 @@ React UI
 | 14-16s | Competitive BattlecardのCriteria Duel、Objection Replay、Competitive Proof Lockで「既存ツールでよくない？」へのsource、SWOT、proof routeを30秒順に出す |
 | 16-18s | Market IntelのSource Freshness Lockで、公式ソースURLが今も到達可能かを見せる |
 | 18-20s | Live Evidence Monitorで公開Cloud Run、Agent Card、A2A、Optimizer、CIの5 probesを見せる |
-| 20-22s | 運用観測役で公開証拠、継続/復旧判断、買い手価値SLO、次のAI雇用を見せる |
+| 20-22s | 運用観測役で公開証拠、継続/復旧判断、買い手価値SLO、次のAI投入を見せる |
 | 22-23s | Release Drift Guardで提出URLが最新skill surfaceとWinner/Finalist release signalsを返すか、古いrevisionならdeploy-driftかを見せる |
 | 23-24s | Deploy Recoveryでgcloud認証、Cloud Build、公開再検証コマンドを見せる |
 | 24-25s | Judge Demo Receiptでstamp、外部URLwatch、sha256 digestを控える |
@@ -211,7 +211,7 @@ DRY_RUN=1 PROJECT_ID=$(gcloud config get-value project) REPO=buddypia/DevOps-AIA
 PROJECT_ID=$(gcloud config get-value project) REPO=buddypia/DevOps-AIAgent ./scripts/bootstrap_github_actions_deploy.sh
 gh workflow run deploy-cloud-run.yml --ref main \
   -f region=asia-northeast1 \
-  -f service=a2a-agent-marketplace \
+  -f service=agent-guild \
   -f repository=cloud-run-source-deploy \
   -f gemini_secret=gemini-api-key-a2a-marketplace \
   -f target_url=https://a2a-agent-marketplace-nxbw7of6cq-an.a.run.app
