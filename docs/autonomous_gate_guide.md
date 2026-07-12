@@ -16,9 +16,9 @@
 
 このスクリプトを実行すると、自動的に以下の処理が行われます：
 1. `scripts/autonomous-gate.sh` に実行権限を付与。
-2. Codex / Antigravity 向けの設定ファイル `hooks.json` および `.codex/hooks.json` を生成/既存ファイルとマージ。
-3. Claude Code 向けの設定ファイル `.claude/settings.json` を生成/既存ファイルとマージ。
-4. セキュリティガードレールスクリプト（シークレット漏洩防止、破壊的gitコマンドのブロック）を `.claude/hooks/` に配備。
+2. Claude Code 向けの設定ファイル `.claude/settings.json` を生成/既存ファイルとマージ（`.claude/hooks/{destructive-git-guard,secret-leak-guard}.mjs` を参照）。
+
+Codex / Antigravity 向けの `.codex/hooks.json` / `.claude/hooks.json` は git-worktree-isolation バンドルの managed 資産としてリポジトリに既に含まれているため、本スクリプトでは生成・上書きしない（過去に誤ったスキーマで上書きし Codex CLI のパースエラーを起こしたインシデントを踏まえた対応）。
 
 ---
 
@@ -46,9 +46,9 @@
 
 ## 🔒 セキュリティガードレール (PreToolUse)
 
-* **シークレット漏洩ガード (`secret-leak-guard.sh`)**:
-  `write_to_file` やファイル置換ツールで書き込まれる内容に、Google Cloud APIキー (`AIzaSy...`) や Slackトークン (`xoxb...`)、RSA秘密鍵などのシークレットが含まれている場合、ツール実行前に即座に遮断 (`decision: deny`) します。
-* **破壊的 Git 操作ガード (`destructive-git-guard.sh`)**:
+* **シークレット漏洩ガード (`secret-leak-guard.mjs`)**:
+  `write_to_file` やファイル置換ツールで書き込まれる内容に、Google Cloud APIキー (`AIzaSy...`) や Slackトークン (`xoxb...`)、RSA秘密鍵などのシークレットが含まれている場合、ツール実行前に即座に遮断 (`permissionDecision: deny`) します。
+* **破壊的 Git 操作ガード (`destructive-git-guard.mjs`)**:
   `git push --force` や `git reset --hard`、`git clean -fd` などの破壊的 git 操作コマンドが実行されようとした場合、実行前に即座に遮断します。
 
 ---
