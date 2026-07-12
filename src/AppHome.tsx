@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, ExternalLink, FileCheck2, FlaskConical, Network, Target, Workflow } from "lucide-react";
 
 import AgentRoster from "./AgentRoster.js";
+import EvidenceDashboard from "./EvidenceDashboard.js";
 import IncidentDrillPanel from "./IncidentDrillPanel.js";
 import MissionControl from "./MissionControl.js";
 import OpsAgentConsole from "./OpsAgentConsole.js";
@@ -161,6 +162,8 @@ export default function AppHome() {
           fetchPriority="high"
         />
       </section>
+
+      <EvidenceDashboard />
 
       <section className="how-it-works" aria-labelledby="how-it-works-title">
         <div className="section-head compact-head">
