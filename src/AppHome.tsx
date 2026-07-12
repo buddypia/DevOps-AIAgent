@@ -126,7 +126,7 @@ export default function AppHome() {
                 <CheckCircle2 size={13} /> 分析: Gemini {health.geminiMode === "none" ? "ローカル動作" : health.geminiMode ?? "未接続"}
               </span>
               <span className="status-pill">履歴保存: {health.opsAgent?.runStore ?? "-"}</span>
-              <span className="status-pill">調査役 {health.opsAgent?.executableAgents ?? 8}件</span>
+              <span className="status-pill">調査役 {health.opsAgent?.executableAgents ?? 9}件</span>
             </>
           ) : null}
           <a className="status-pill status-link" href="/.well-known/agent-card.json" target="_blank" rel="noreferrer">

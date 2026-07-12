@@ -511,11 +511,87 @@ const observabilityOracle: AgentJobDef = {
 };
 
 // ---------------------------------------------------------------------------
+// ⑨ release-guardian — CI・healthz・revision別実リクエストで人のリリース判断を支える
+// ---------------------------------------------------------------------------
+
+const releaseGuardian: AgentJobDef = {
+  agentId: "release-guardian",
+  skillId: "release.gate.execute",
+  skillDescription: "実healthz、GitHub Actionsの直近CI、Cloud Run revision別リクエストログを引用し、カナリア継続・停止・復旧の判断材料を生成する。トラフィック変更は実行せず人の承認へ委ねる。",
+  title: "リリース安全判定",
+  inputKind: "service",
+  inputLabel: "対象Cloud Runサービス (allowlist内)",
+  inputPlaceholder: "agent-guild",
+  findingNoun: "リリース判定",
+  runTarget: (config, input) => resolveTarget(config, input || undefined).service,
+  emptyNote: "リリース判断に必要な稼働証拠を取得できませんでした。CI、healthz、Cloud Loggingを確認してください。",
+  makerRole:
+    "You are a Cloud Run release gate agent. Use ONLY the cited CI, health, and revision-request evidence. Decide whether to continue, hold, or recommend rollback. Never claim that traffic was changed. Every traffic change recommendation must explicitly require human approval.",
+  checkerRole:
+    "You are an INDEPENDENT release safety reviewer. Refute any decision that lacks cited evidence or claims an unexecuted traffic change. Confirm only recommendations that keep Cloud Run traffic changes behind human approval.",
+  async collectEvidence(ctx, input) {
+    const target = resolveTarget(ctx.config, input || undefined);
+    const evidence: LogEvidence[] = [];
+
+    try {
+      const health = await fetchJson(ctx.fetchImpl, `${ctx.baseUrl}/api/healthz`);
+      const body = health.body as { ok?: boolean; geminiMode?: string } | null;
+      evidence.push(item("release-health", `GET /api/healthz -> HTTP ${health.status} ok=${body?.ok ?? false} gemini=${body?.geminiMode ?? "unknown"}`, health.ok && body?.ok ? "INFO" : "ERROR", "live-health"));
+    } catch (error) {
+      evidence.push(item("release-health", `healthz取得失敗: ${error instanceof Error ? error.message : "unknown"}`, "ERROR", "live-health"));
+    }
+
+    try {
+      const ci = await fetchJson(ctx.fetchImpl, `https://api.github.com/repos/${GITHUB_REPO}/actions/runs?per_page=1`, {
+        headers: { accept: "application/vnd.github+json", "user-agent": "agent-market-release-guardian" }
+      });
+      const latest = (ci.body as { workflow_runs?: Array<{ id: number; name?: string; status?: string; conclusion?: string | null; head_sha?: string }> } | null)?.workflow_runs?.[0];
+      if (latest) {
+        const conclusion = latest.conclusion ?? latest.status ?? "unknown";
+        evidence.push(item("release-ci", `直近CI: ${latest.name ?? "workflow"} #${latest.id} ${conclusion} sha=${latest.head_sha?.slice(0, 12) ?? "unknown"}`, conclusion === "success" ? "INFO" : "WARNING", "github-actions"));
+      } else {
+        evidence.push(item("release-ci", `直近CIを取得できませんでした (HTTP ${ci.status})`, "WARNING", "github-actions"));
+      }
+    } catch (error) {
+      evidence.push(item("release-ci", `GitHub Actions取得失敗: ${error instanceof Error ? error.message : "unknown"}`, "WARNING", "github-actions"));
+    }
+
+    if (!ctx.listLogEntries) {
+      evidence.push(item("release-logs", "Cloud Logging未構成のため、revision別リクエスト証拠は未取得", "WARNING", target.service));
+    } else {
+      const since = new Date(Date.now() - ctx.config.lookbackMinutes * 60_000).toISOString();
+      const filter = `resource.type="cloud_run_revision" AND resource.labels.service_name="${target.service}" AND logName="projects/${target.project}/logs/run.googleapis.com%2Frequests" AND timestamp>="${since}"`;
+      try {
+        const entries = await ctx.listLogEntries(target.project, filter, 100);
+        const requests = entries.filter((entry) => entry.httpRequest);
+        if (requests.length === 0) {
+          evidence.push(item("release-logs", `直近${ctx.config.lookbackMinutes}分のCloud Runリクエストログは0件`, "WARNING", target.service));
+        } else {
+          const revisionCounts = new Map<string, number>();
+          const failures = requests.filter((entry) => (entry.httpRequest?.status ?? 0) >= 500).length;
+          for (const entry of requests) {
+            const revision = entry.resource?.labels?.revision_name ?? "unknown-revision";
+            revisionCounts.set(revision, (revisionCounts.get(revision) ?? 0) + 1);
+          }
+          evidence.push(item("release-traffic", `観測リクエスト ${requests.length}件、${revisionCounts.size} revision: ${[...revisionCounts.entries()].map(([revision, count]) => `${revision}=${count}`).join(" ")}`, revisionCounts.size > 1 ? "NOTICE" : "INFO", target.service));
+          evidence.push(item("release-errors", `revision別観測窓の5xx=${failures}/${requests.length}`, failures > 0 ? "WARNING" : "INFO", target.service));
+        }
+      } catch (error) {
+        evidence.push(item("release-logs", `Cloud Logging取得失敗: ${error instanceof Error ? error.message : "unknown"}`, "WARNING", target.service));
+      }
+    }
+
+    evidence.push(item("release-action", "安全境界: 本エージェントはCloud Runのトラフィックを変更しません。継続・停止・ロールバックは、引用済み証拠を確認した人の承認後に実行してください。", "NOTICE", "policy"));
+    return { evidence, windowMinutes: ctx.config.lookbackMinutes, note: `healthz・直近CI・Cloud Loggingを収集し、${target.service} のリリース判断を人へ提示 (${evidence.length}件の証拠)` };
+  }
+};
+
+// ---------------------------------------------------------------------------
 // レジストリ
 // ---------------------------------------------------------------------------
 
 export const AGENT_JOBS: Record<string, AgentJobDef> = Object.fromEntries(
-  [cloudRunSre, briefCartographer, marketBroker, geminiStrategist, testForge, securitySentinel, uxGuildmaster, observabilityOracle].map((job) => [job.agentId, job])
+  [cloudRunSre, briefCartographer, marketBroker, geminiStrategist, testForge, securitySentinel, uxGuildmaster, observabilityOracle, releaseGuardian].map((job) => [job.agentId, job])
 );
 
 export const A2A_SKILL_TO_AGENT: Record<string, string> = Object.fromEntries(Object.values(AGENT_JOBS).map((job) => [job.skillId, job.agentId]));
