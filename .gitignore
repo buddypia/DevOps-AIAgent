@@ -46,7 +46,6 @@ raw/
 .worktrees/
 .cache/
 .brief2dev/
-.claude/state/
 # --- end Worktree tooling ---
 
 .secret/

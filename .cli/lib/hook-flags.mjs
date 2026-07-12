@@ -1,19 +1,19 @@
 /**
- * hook-flags.mjs — Profile resolver（registry-derived、R-CM-006 Rule 4 Single SSOT）
+ * hook-flags.mjs — Profile resolver (registry-derived, R-CM-006 Rule 4 Single SSOT)
  *
- * profile のメンバーシップは hook-registry.mjs entry の `profile` フィールドから derive する。
+ * profile メンバーシップは hook-registry.mjs entry の `profile` フィールドから derive する。
  * 本ファイルは SSOT ではない。
  *
- * profile 変更手順:
+ * profile 変更:
  *   ❌ 本ファイルの編集禁止
- *   ✅ hook-registry.mjs entry の `profile` フィールドを変更 + regen-hooks-settings.mjs を実行
+ *   ✅ hook-registry.mjs entry の `profile` フィールド変更 + regen-hooks-settings.mjs 実行
  *
  * 環境変数:
- *   ECC_HOOK_PROFILE   = minimal | standard（デフォルト: standard）
- *   ECC_DISABLED_HOOKS = カンマ区切りの hookId 一覧（強制無効化）
+ *   ECC_HOOK_PROFILE   = minimal | standard (基本: standard)
+ *   ECC_DISABLED_HOOKS = カンマ区切りの hookId リスト (強制無効化)
  *
- * @see .cli/lib/hook-registry.mjs（Single SSOT）
- * @see .claude/rules/common/hooks.md（R-CM-006 Rule 4）
+ * @see .cli/lib/hook-registry.mjs (Single SSOT)
+ * @see .claude/rules/common/hooks.md (R-CM-006 Rule 4)
  */
 import { flattenRegistry } from './hook-registry.mjs';
 
@@ -63,10 +63,10 @@ export function isHookEnabled(hookId, options) {
   return enabledSet.has(hookId);
 }
 
-/** ecosystem-health-guard E14 互換 — Single SSOT 化後は derive のため常に valid */
+/** ecosystem-health-guard E14 互換 — Single SSOT 後は derive のため常に valid */
 export function validateProfileCoverage(registryHookIds, profileUncheckedIds = []) {
   const profileMap = buildProfileMap();
-  // 2-tier（minimal ⊂ standard）。standard が全プロファイルの superset（strict tier は削除、2026-06-11）。
+  // 2-tier (minimal ⊂ standard). standard が全プロファイルの superset (strict ティア除去, 2026-06-11)。
   const allProfileIds = profileMap.standard;
   const registrySet = new Set(registryHookIds);
   const uncheckedSet = new Set(profileUncheckedIds);

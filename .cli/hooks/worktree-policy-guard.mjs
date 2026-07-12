@@ -3,17 +3,17 @@
 /**
  * worktree-policy-guard.mjs - PreToolUse Edit|Write Hook
  *
- * main ブランチへの直接作業を Tier ベースのホワイトリストで遮断する。
+ * main ブランチの直接作業を Tier 基準のホワイトリストで遮断する。
  *
  * ポリシー SSOT: .claude/config/worktree-policy.json
  *
  * 動作:
- *   - branch != main → passthrough (worktree 内での作業時は自動通過)
+ *   - branch != main → passthrough (worktree 内で作業時は自動通過)
  *   - hotfix/* / hotfix-* branch → passthrough (escape hatch)
  *   - main + Tier 1 (allowed) → passthrough
  *   - main + Tier 2 (worktree smoke test 推奨) → allowWithWarning
- *   - main + Tier 3 (それ以外) → deny
- *   - error または ポリシーファイル不在 → passthrough (自己遮断回避、R-CM-006 Rule 2)
+ *   - main + Tier 3 (その他) → deny
+ *   - error またはポリシーファイル不在 → passthrough (自己遮断の回避、R-CM-006 Rule 2)
  *
  * Reference パターン: destructive-git-guard.mjs
  */
@@ -31,15 +31,15 @@ import { HookOutput } from '../lib/hook-output.mjs';
 import { extractApplyPatchFilePaths } from '../lib/apply-patch-paths.mjs';
 
 /**
- * glob パターン → RegExp 変換 (minimatch 依存回避)。
+ * glob パターン → RegExp 変換 (minimatch 依存関係の回避)。
  *   `**`  → `.*`           (任意のパスセグメント)
  *   `*`   → `[^/]+`        (単一セグメントワイルドカード)
- *   その他の正規表現メタ文字はエスケープする。
+ *   その他正規表現メタ文字はエスケープ。
  */
 export function matchesGlob(relPath, pattern) {
-  // `*` も正規表現メタ文字なので、あわせて escape した後の変換順序:
-  //   1. 正規表現メタ文字 ( `*` を含む ) を escape → `*` → `\*`
-  //   2. `\*\*` → `@@GLOBSTAR@@` (任意パスマッチング holder)
+  // `*` も正規表現メタ文字のため一緒に escape 後、変換順序:
+  //   1. 正規表現メタ文字 ( `*` 含む ) escape → `*` → `\*`
+  //   2. `\*\*` → `@@GLOBSTAR@@` (任意のパスマッチング holder)
   //   3. `\*` → `[^/]+` (単一セグメント)
   //   4. `@@GLOBSTAR@@` → `.*`
   const regStr = pattern
@@ -62,13 +62,13 @@ export function classifyTier(relPath, policy) {
 
 /**
  * Edit/Write/MultiEdit の file_path 抽出 + 正規化。
- *   - 相対パス → projectDir と join (絶対パスを保証)
- *   - 空 string / 未対応 tool → 空配列
- *   - NotebookEdit / Read など他のツール → 空配列 (意図的な非適用 — `.ipynb` ファイルは本 hook の検証対象外)
+ *   - 相対パス → projectDir と join (絶対パス保証)
+ *   - 空の string / 未サポート tool → 空配列
+ *   - NotebookEdit / Read など他のツール → 空配列 (意図的な未適用 — `.ipynb` ファイルは本 hook 検証外)
  */
 export function extractFilePaths(toolName, toolInput, projectDir = '') {
   if (!toolInput) return [];
-  // Codex は編集時、常に tool_name="apply_patch" + tool_input.command (パッチ本文) を送信する。
+  // Codex は編集時に常に tool_name="apply_patch" + tool_input.command (パッチ本文) を送信。
   if (toolName === 'apply_patch') {
     return extractApplyPatchFilePaths(toolInput.command, projectDir);
   }
@@ -80,9 +80,9 @@ export function extractFilePaths(toolName, toolInput, projectDir = '') {
 }
 
 /**
- * ポリシーオブジェクトが使用可能な形式か検証する。
- *   - tiers 不在 / 両パターン配列とも不在 → unusable (run() で fail-open passthrough)
- *   - corrupt JSON が空オブジェクト `{}` としてパースされた場合の自己遮断事故回避用
+ * ポリシーオブジェクトが使用可能な形態であるか検証。
+ *   - tiers 不在 / 両パターン配列ともに不在 → unusable (run() で fail-open passthrough)
+ *   - corrupt JSON が空のオブジェクト `{}` としてパースされた場合の自己遮断事故の回避用
  */
 export function isPolicyUsable(policy) {
   if (!policy || !policy.tiers) return false;
@@ -92,15 +92,15 @@ export function isPolicyUsable(policy) {
 }
 
 /**
- * ファイルが .worktrees/ 配下かどうかを判定する。
+ * ファイルが .worktrees/ 配下であるか判定。
  *
  * cwd-based branch detection (`git branch --show-current` from main repo cwd) の
- * 限界 — main repo cwd で hook が実行され branch="main" と認識されるが
+ * 限界 — main repo cwd で hook が実行され branch="main" と認識されるが、
  * 実際の編集対象ファイルは別の worktree 内 (`.worktrees/<name>/...`) にある場合、
- * worktree の実際の branch は main ではないため、本 hook の遮断対象ではない。
+ * worktree の実際の branch は main ではないため本 hook の遮断対象ではない。
  *
- * 本 helper は file-path-based の追加検出 — relPath が `.worktrees/` で始まる場合、
- * 定義上 worktree 内のファイルとみなし、tier 判定を skip して passthrough 処理する。
+ * 本 helper は file-path-based の追加検出 — relPath が `.worktrees/` で始まれば、
+ * 定義上 worktree 内のファイルと見なし tier 判定 skip + passthrough 処理する。
  *
  * @param {string} relPath - projectDir 基準で正規化された相対パス
  * @returns {boolean}
@@ -115,10 +115,10 @@ export function isEscapeHatch(branch, policy) {
 }
 
 /**
- * 現在の branch が worktree ポリシーの保護対象(直接編集の遮断対象)かどうかを判定する。
- * policy.protected_branches が指定されていればそれを、なければ default ['main', 'master'] を使用する。
- * 外部移植プロジェクトが master をデフォルトとしていてもガードが動作するようにする (worktree-new の
- * base 自動検知と整合 — ハードコードされた 'main' という前提が master repo で no-op になっていた落とし穴を解消)。
+ * 現在の branch が worktree ポリシーの保護対象 (直接編集遮断) であるか判定。
+ * policy.protected_branches が明示されていればそれを、なければデフォルト ['main', 'master'] を使用。
+ * 外部移植プロジェクトが master 基本であってもガードが動作するようにする (worktree-new の
+ * base 自動検知と整合 — ハードコーディングの 'main' 想定が master repo で no-op になっていた罠を解消)。
  */
 export function isProtectedBranch(branch, policy) {
   const list =
@@ -130,18 +130,18 @@ export function isProtectedBranch(branch, policy) {
 
 function buildDenyMessage(relPath, branch = 'main') {
   return (
-    `[Worktree Policy] ${branch} ブランチへの直接編集を遮断: ${relPath}\n\n` +
+    `[Worktree Policy] ${branch} ブランチ直接編集遮断: ${relPath}\n\n` +
     `このファイルは worktree で作業する必要があります。\n` +
-    `  → worktree 作成 (標準エントリポイント、fetch + ff + 最新 base 基準):\n` +
+    `  → worktree 生成 (標準エントリーポイント、fetch + ff + 最新の base 基準):\n` +
     `      make wt.new BR=feature/<task>\n` +
     `      # または: node .claude/scripts/worktree-new.mjs --branch feature/<task>\n` +
-    `  → 非常口: hotfix/* branch では全ての遮断が免除されます\n` +
+    `  → 非常口: hotfix/* branch ではすべての遮断を免除\n` +
     `ポリシー SSOT: .claude/config/worktree-policy.json`
   );
 }
 
 /**
- * Orchestrator 互換エントリポイント。
+ * Orchestrator 互換エントリーポイント。
  */
 export async function run(data) {
   try {
@@ -160,7 +160,7 @@ export async function run(data) {
     );
     if (!isPolicyUsable(policy)) return HookOutput.passthrough();
 
-    // 保護対象 branch (default main+master, policy.protected_branches で再定義可能) 以外は通過。
+    // 保護 branch (default main+master, policy.protected_branches で再定義) 以外は通過。
     if (!isProtectedBranch(branch, policy)) return HookOutput.passthrough();
 
     if (isEscapeHatch(branch, policy)) return HookOutput.passthrough();
@@ -170,13 +170,13 @@ export async function run(data) {
 
     for (const filePath of filePaths) {
       const relPath = relative(projectDir, filePath).replace(/\\/g, '/');
-      // 外部 path (project root 外、例: /tmp/foo, /var/...) は免除。
-      // ユーザー報告「shell 停止」root cause F4 — relPath が `..` で始まる場合は定義上
-      // プロジェクト外部であるため worktree ポリシーの適用対象ではない (false-positive を回避)。
+      // 外部パス (project root 外、例: /tmp/foo, /var/...) 免除。
+      // ユーザー報告 "shell 停止" root cause F4 — relPath が `..` で始まれば定義上
+      // プロジェクト外部なため worktree ポリシーの適用対象ではない (false-positive 遮断)。
       if (relPath.startsWith('..')) continue;
-      // .worktrees/ 配下のファイルは定義上、別の worktree の branch (main ではない)。
-      // hook の cwd-based branch 検出は main repo しか見ないため、worktree 内での作業が
-      // main と誤判定される落とし穴を回避。file-path-based detection で補強。
+      // .worktrees/ 配下のファイルは定義上、個別 worktree の branch (main ではない)。
+      // hook の cwd-based branch 検出は main repo のみを見るため、worktree 内の作業が
+      // main と誤認される罠を回避。file-path-based detection で補強。
       if (isWorktreeRelPath(relPath)) continue;
       const tier = classifyTier(relPath, policy);
       if (tier === 1) continue;

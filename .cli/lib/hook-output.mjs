@@ -6,25 +6,25 @@
  *
  * API スペック参照:
  * - PreToolUse: hookSpecificOutput.permissionDecision ("deny"/"allow"/"ask")
- * - PostToolUse: 最上位 decision ("block") または hookSpecificOutput.additionalContext
- * - Stop/SubagentStop: 最上位 decision ("block") + reason
- * - UserPromptSubmit: 最上位 decision ("block") + reason
+ * - PostToolUse: 最上位の decision ("block") または hookSpecificOutput.additionalContext
+ * - Stop/SubagentStop: 最上位の decision ("block") + reason
+ * - UserPromptSubmit: 最上位の decision ("block") + reason
  *
- * 使い方:
+ * 使用法:
  *   import { output } from './utils.mjs';
  *   import { HookOutput } from './hook-output.mjs';
  *   return output(HookOutput.deny('理由'));
  */
 
 // ═══════════════════════════════════════════════════════════════
-// PreToolUse 出力（permissionDecision ベース）
+// PreToolUse 出力 (permissionDecision ベース)
 // ═══════════════════════════════════════════════════════════════
 
 /**
  * PreToolUse: ツール呼び出しを拒否する。
- * reason は Claude にフィードバックとして渡される。
+ * reason は Claude へフィードバックとして伝達される。
  *
- * @param {string} reason - 拒否理由（Claude が読んで対応する）
+ * @param {string} reason - 拒否理由 (Claude が読んで対応する)
  * @returns {object} Hook output JSON
  */
 export function deny(reason) {
@@ -39,10 +39,10 @@ export function deny(reason) {
 
 /**
  * PreToolUse: ツール呼び出しを許可しつつ警告メッセージを表示する。
- * reason はユーザーにのみ表示される（Claude には非表示）。（備考: Claude 0.2.x 以降は permissionDecisionReason が Claude に伝わる場合がある）
+ * reason はユーザーにのみ表示される (Claude には非公開)。(備考: Claude 0.2.x 以降は permissionDecisionReason が Claude に伝達される場合がある)
  *
- * @param {string} reason - 警告メッセージ（ユーザーが読む）
- * @param {string} [contextBlock] - 任意の追加コンテキスト。reason に統合して渡される。
+ * @param {string} reason - 警告メッセージ (ユーザーが読む)
+ * @param {string} [contextBlock] - 任意の追加コンテキスト。reason にマージされて伝達される。
  * @returns {object} Hook output JSON
  */
 export function allowWithWarning(reason, contextBlock) {
@@ -58,10 +58,10 @@ export function allowWithWarning(reason, contextBlock) {
 
 /**
  * PreToolUse: ツール呼び出しを許可しつつ入力を修正する。
- * 入力パラメータを自動補正する場合に使用（例: model routing）。
+ * 入力パラメータを自動補正する際に使用 (例: model routing)。
  *
- * @param {string} reason - 修正理由（ユーザーに表示）
- * @param {object} updatedInput - 修正後の tool_input オブジェクト全体
+ * @param {string} reason - 修正理由 (ユーザーに表示)
+ * @param {object} updatedInput - 修正された tool_input 全体オブジェクト
  * @returns {object} Hook output JSON
  */
 export function allowWithUpdatedInput(reason, updatedInput) {
@@ -76,14 +76,14 @@ export function allowWithUpdatedInput(reason, updatedInput) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Stop / SubagentStop 出力（decision ベース）
+// Stop / SubagentStop 出力 (decision ベース)
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Stop: セッション終了をブロックする。
- * reason は Claude に渡され、継続するよう指示する。
+ * Stop: セッション終了を遮断する。
+ * reason は Claude に伝達され、続行するよう指示する。
  *
- * @param {string} reason - ブロック理由（Claude が読んで対応する）
+ * @param {string} reason - 遮断理由 (Claude が読んで対応する)
  * @returns {object} Hook output JSON
  */
 export function block(reason) {
@@ -91,18 +91,18 @@ export function block(reason) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// コンテキスト注入（PostToolUse, PostToolBatch, UserPromptSubmit, SessionStart で使用）
+// コンテキスト注入 (PostToolUse, PostToolBatch, UserPromptSubmit, SessionStart で使用)
 // ═══════════════════════════════════════════════════════════════
 
 /**
  * Claude に追加コンテキストを注入する。
- * ブロックせずに情報メッセージを伝える。
+ * 遮断せず情報メッセージを伝達する。
  *
  * 対応イベント: PostToolUse, PostToolBatch, UserPromptSubmit, SessionStart
- * 非対応: Stop, SubagentStop（decision ベースのみ対応 — block() または passthrough() を使用）
- *         PreToolUse（permissionDecision ベース — deny()/allowWithWarning() を使用）
- *         PreCompact（Claude Code spec 上 hookSpecificOutput.additionalContext 非対応 —
- *                     compact 後にコンテキスト保存が必要なら SessionStart hook で source==='compact' 分岐を使用）
+ * 非対応: Stop, SubagentStop (decision ベースのみ対応 — block() または passthrough() を使用)
+ *         PreToolUse (permissionDecision ベース — deny()/allowWithWarning() を使用)
+ *         PreCompact (Claude Code spec 上 hookSpecificOutput.additionalContext は非対応 —
+ *                     compact 後にコンテキスト保存が必要な場合は SessionStart hook で source==='compact' 分岐を使用)
  *
  * @param {string} message - 注入するコンテキストメッセージ
  * @param {string} [hookEventName] - イベント名。明示的な引数 > CLAUDE_HOOK_EVENT_NAME > PostToolUse。
@@ -119,11 +119,11 @@ export function context(message, hookEventName) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// パススルー（すべてのイベントで使用可能）
+// パススルー (すべてのイベントで使用可能)
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * 何もせず通過させる。
+ * 何も行わずに通過する。
  * @returns {object} 空オブジェクト
  */
 export function passthrough() {
@@ -131,14 +131,14 @@ export function passthrough() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// イベントタイプ別ファクトリ（型安全 — 有効な出力のみ公開）
+// イベントタイプ別ファクトリ (型安全 — 有効な出力のみ公開)
 // ═══════════════════════════════════════════════════════════════
 
 /**
  * Stop/SubagentStop 専用の出力セット。
  * block() または passthrough() のみ有効。
  *
- * 使い方:
+ * 使用法:
  *   const H = HookOutput.forStop();
  *   return output(H.block('理由'));
  *   return output(H.passthrough());
@@ -184,7 +184,7 @@ export function forUserPromptSubmit() {
  * context(), passthrough() のみ有効。
  *
  * 注意: PreCompact は hookSpecificOutput.additionalContext を spec 上非対応。
- * compact 後にコンテキスト保存が必要なら SessionStart hook で source==='compact' 分岐を使用。
+ * compact 後にコンテキスト保存が必要な場合は SessionStart hook で source==='compact' 分岐を使用する。
  */
 export function forSession(hookEventName = process.env.CLAUDE_HOOK_EVENT_NAME || 'SessionStart') {
   return {
@@ -198,14 +198,14 @@ export function forSession(hookEventName = process.env.CLAUDE_HOOK_EVENT_NAME ||
 // ═══════════════════════════════════════════════════════════════
 
 export const HookOutput = {
-  // 個別関数（レガシー互換 — 新規コードではファクトリ使用を推奨）
+  // 個別関数 (レガシー互換 — 新規コードはファクトリの使用を推奨)
   deny,
   allowWithWarning,
   allowWithUpdatedInput,
   block,
   context,
   passthrough,
-  // イベントタイプ別ファクトリ（推奨）
+  // イベントタイプ別ファクトリ (推奨)
   forStop,
   forPreToolUse,
   forPostToolUse,

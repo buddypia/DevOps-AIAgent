@@ -67,10 +67,10 @@ export function parseNameStatusRows(nameStatusText) {
 }
 
 /**
- * brief2dev 自身が使う11セクションの Pre-Ship Human Review Panel の基本構造
- *（JS 定数 — オプション C、ライブ経路ファイル I/O なし）。移植用カスタマイズ可能版:
+ * brief2dev 自身が使用する 11 セクションの Pre-Ship Human Review Panel 基本構造
+ * (JS 定数 — オプション C、ライブパスのファイル I/O なし)。移植用 customizable 版:
  * data/registry/transplant-templates/pre-ship-review-panel.generic.json
- *（brief2dev はこの JSON を読まない — 対象プロジェクトが直接編集/wiring する）。
+ * (brief2dev はこの JSON を読まない — 対象プロジェクトが直接編集/wiring する)。
  */
 export const DEFAULT_REVIEW_SECTIONS = [
   {
@@ -79,12 +79,12 @@ export const DEFAULT_REVIEW_SECTIONS = [
       {
         type: 'static',
         lines: [
-          '以下の worktree 作業が完了した状態です。',
+          '次の worktree 作業が完了した状態です。',
           '内容を確認し、merge / cleanup を進めてよいか承認してください。',
           '選択してください:',
-          '- 承認して進める',
+          '- 承認して進行',
           '- 修正が必要',
-          '- 中止',
+          '- 中断',
         ],
       },
     ],
@@ -142,7 +142,7 @@ export const DEFAULT_REVIEW_SECTIONS = [
     ],
   },
   {
-    heading: '## 5. 修正・追加されたファイル',
+    heading: '## 5. 修正 / 追加されたファイル',
     blocks: [
       {
         type: 'fenced_block',
@@ -199,7 +199,7 @@ export const DEFAULT_REVIEW_SECTIONS = [
     blocks: [{ type: 'static', lines: ['- なし / あり:', '- 次に必要な作業:'] }],
   },
   {
-    heading: '## 11. セッション内の問題点と改善点',
+    heading: '## 11. セッション内の問題点および改善点',
     blocks: [{ type: 'static', lines: ['- 問題点:', '- 改善案:', '- 次回作業時の注意事項:'] }],
   },
 ];
@@ -207,7 +207,7 @@ export const DEFAULT_REVIEW_SECTIONS = [
 /**
  * @param {object} params
  * @param {Array<object>} [params.sections] — 未指定時は `DEFAULT_REVIEW_SECTIONS` を使用
- *   （既存の関数シグネチャ/戻り値は無変更）。
+ *   (既存の関数シグネチャ/戻り値は無変更)。
  */
 export function buildPreShipApprovalReview({
   worktreePath,
@@ -301,7 +301,7 @@ export function buildPostApprovalCompletionReport({
     '```',
     '',
     '## 4. 残りの対応',
-    `- 残作業: ${result.pending ? 'CI/レビュー通過後に merge を再試行または手動確認' : 'なし'}`,
+    `- 残作業: ${result.pending ? 'CI/レビュー通過後に merge 再試行または手動確認' : 'なし'}`,
     `- 手動対応が必要な項目: ${cr.ok === false ? valueOrDash(cr.hint) : 'なし'}`,
     `- 次セッションへの引き継ぎ事項: ${postMergeMainStatus?.status === 'dirty' ? `main dirty 状態の確認が必要 (${postMergeMainStatus.dirty_paths?.join(', ') || 'paths unknown'})` : 'なし'}`,
     '',
