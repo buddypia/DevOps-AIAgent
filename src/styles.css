@@ -3219,6 +3219,160 @@ textarea:focus-visible {
   margin-top: 7px;
 }
 
+/* ---- Visibility pass ----------------------------------------------------
+   Keep the warm operations palette, but make supporting text, state badges,
+   and primary actions readable on the light surfaces. --------------------- */
+
+:root {
+  --muted: #765633;
+  --line: #efcf9f;
+  --line-strong: #e6b871;
+  --accent: #b45309;
+  --accent-dim: #fff0d2;
+}
+
+.top-status .status-pill {
+  color: #6e4b2c;
+  border-color: var(--line-strong);
+  background: #ffffff;
+}
+
+.top-status .status-link {
+  color: #9a3412;
+}
+
+.btn-primary,
+.btn-demo {
+  color: #ffffff;
+  background: #9a3412;
+  border-color: #9a3412;
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-demo:hover:not(:disabled) {
+  background: #7c2d12;
+  border-color: #7c2d12;
+}
+
+.mc-history-chip {
+  color: #4a3418;
+  border-color: var(--line);
+  background: #ffffff;
+}
+
+.mc-history-chip:hover,
+.mc-history-chip.is-active {
+  color: #352312;
+  border-color: #c97825;
+  background: #fff7e8;
+}
+
+.mc-history-goal {
+  color: #4a3418;
+}
+
+.mc-history-time,
+.mc-live-meta {
+  color: #765633;
+}
+
+.mc-status-planning,
+.mc-status-stale {
+  color: #7a4b00;
+  background: #fff1c9;
+}
+
+.mc-status-running {
+  color: #8a3d00;
+  background: #ffe1b2;
+}
+
+.mc-status-completed {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.mc-status-failed {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.mc-stale-notice {
+  color: #70430d;
+  background: #fff7df;
+  border-color: #dba64b;
+}
+
+.mc-goal-input::placeholder,
+.ops-job-input textarea::placeholder,
+.ops-job-input input::placeholder,
+.import-input::placeholder {
+  color: #866844;
+}
+
+.drill-panel {
+  border-color: #e6b871;
+  background: linear-gradient(135deg, #fff6e6, #ffffff 66%);
+}
+
+.drill-panel-head h2 {
+  color: #352312;
+}
+
+.drill-what-changes {
+  border-color: #edc487;
+  background: #fff3dc;
+}
+
+.drill-change-card {
+  border-color: #edc487;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.drill-change-card.is-focus {
+  border-color: #70aeb7;
+  background: #eaf5f5;
+}
+
+.drill-change-arrow {
+  color: #8b6337;
+}
+
+.drill-safety-note {
+  border-color: #e6b871;
+  background: #ffffff;
+}
+
+.drill-action {
+  border-color: #e7cda7;
+}
+
+.drill-step,
+.drill-signals {
+  border-color: #e6b871;
+}
+
+.drill-step strong,
+.drill-action > strong,
+.drill-change-card > strong {
+  color: #4a3418;
+}
+
+.drill-step p,
+.drill-action small,
+.drill-lede,
+.drill-change-card > p,
+.drill-what-changes-head > p,
+.drill-safety-note small {
+  color: #765633;
+}
+
+.btn-primary:focus-visible,
+.btn-demo:focus-visible,
+.mc-history-chip:focus-visible {
+  outline-color: #9a3412;
+}
+
 .evidence-source {
   display: inline-flex;
   align-items: flex-start;
