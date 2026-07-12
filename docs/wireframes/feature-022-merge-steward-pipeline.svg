@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="180" viewBox="0 0 1120 180" role="img" aria-labelledby="title desc">
+  <title id="title">Merge Steward pipeline</title>
+  <desc id="desc">Architect and spec are complete, UI approval is current, readiness, implementation, and quality are pending.</desc>
+  <rect width="1120" height="180" rx="24" fill="#fffaf3"/>
+  <g font-family="Arial, sans-serif" font-size="16" font-weight="700" text-anchor="middle">
+    <path d="M175 90H215M365 90H405M555 90H595M745 90H785M935 90H975" stroke="#f3c78d" stroke-width="5"/>
+    <g fill="#16a34a"><rect x="25" y="52" width="150" height="76" rx="18"/><rect x="215" y="52" width="150" height="76" rx="18"/></g>
+    <rect x="405" y="45" width="150" height="90" rx="18" fill="#f59e0b" stroke="#b45309" stroke-width="4"/>
+    <g fill="#fef3e2" stroke="#f3c78d" stroke-width="2"><rect x="595" y="52" width="150" height="76" rx="18"/><rect x="785" y="52" width="150" height="76" rx="18"/><rect x="975" y="52" width="120" height="76" rx="18"/></g>
+    <g fill="#fff"><text x="100" y="96">architect ✓</text><text x="290" y="96">spec ✓</text><text x="480" y="96">UI 承認</text></g>
+    <g fill="#a8875f"><text x="670" y="96">readiness</text><text x="860" y="96">implement</text><text x="1035" y="96">quality</text></g>
+  </g>
+</svg>
