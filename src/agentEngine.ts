@@ -24,6 +24,8 @@ const BASE_WEIGHTS: Record<CapabilityKey, number> = {
   a2a: 1.15
 };
 
+const DEVOPS_TERMS = ["sre", "devops", "canary", "release", "rollout", "rollback", "slo", "error budget", "mttr", "dora", "障害", "復旧", "ロールバック", "運用", "監視", "カナリア", "リリース"];
+
 const TERM_WEIGHTS: Array<{ terms: string[]; weights: Partial<Record<CapabilityKey, number>> }> = [
   {
     terms: ["a2a", "agent-to-agent", "agent card", "連携", "委任", "marketplace", "市場"],
@@ -36,6 +38,10 @@ const TERM_WEIGHTS: Array<{ terms: string[]; weights: Partial<Record<CapabilityK
   {
     terms: ["cloud run", "gcp", "google cloud", "deploy", "デプロイ", "本番"],
     weights: { cloudRun: 0.75, observability: 0.35, security: 0.2 }
+  },
+  {
+    terms: DEVOPS_TERMS,
+    weights: { autonomy: 0.35, testing: 0.55, cloudRun: 0.75, security: 0.25, observability: 0.75 }
   },
   {
     terms: ["gemini", "flash", "api", "生成", "分析"],
@@ -115,17 +121,33 @@ function synergyScore(agent: MarketAgent, selected: MarketAgent[], profile: Proj
   return clamp(tagOverlap * 5 + termOverlap * 7 + agent.a2aSkillIds.length * 1.5, 0, 24);
 }
 
+function devopsEfficiencyScore(agent: MarketAgent) {
+  const releaseSafety = agent.capabilities.cloudRun * 0.4 + agent.capabilities.testing * 0.3 + agent.capabilities.observability * 0.3;
+  const incidentRecovery = agent.capabilities.autonomy * 0.35 + agent.capabilities.observability * 0.4 + agent.capabilities.security * 0.25;
+  const evidenceCoverage = agent.capabilities.testing * 0.35 + agent.capabilities.mcp * 0.25 + agent.capabilities.a2a * 0.4;
+  return clamp(releaseSafety * 0.45 + incidentRecovery * 0.35 + evidenceCoverage * 0.2 - agent.price * 0.2);
+}
+
+function hasDevOpsIntent(profile: ProjectProfile) {
+  return profile.matchedTerms.some((term) => DEVOPS_TERMS.includes(term.toLowerCase()));
+}
+
 export function rankAgents(brief: string, selectedIds: string[] = [], agentCatalog: MarketAgent[] = MARKET_AGENTS): AgentFit[] {
   const profile = profileProject(brief);
   const selected = agentCatalog.filter((agent) => selectedIds.includes(agent.id));
+  const operationalWeight = hasDevOpsIntent(profile) ? 0.45 : 0.12;
   return agentCatalog.map((agent) => {
     const fitScore = agentBaseFit(agent, profile);
+    const operationalScore = devopsEfficiencyScore(agent);
     const synergy = synergyScore(agent, selected, profile);
     const matchedSkills = skillMatches(agent, profile);
-    const valueScore = clamp(fitScore + synergy + matchedSkills.length * 3 - agent.price * 0.12);
+    const valueScore = clamp(
+      fitScore * (1 - operationalWeight) + operationalScore * operationalWeight + synergy * 0.6 + matchedSkills.length * 2 - agent.price * 0.1
+    );
     return {
       agent,
       fitScore: Math.round(fitScore),
+      devopsEfficiencyScore: Math.round(operationalScore),
       synergyScore: Math.round(synergy),
       valueScore: Math.round(valueScore),
       matchedSkills

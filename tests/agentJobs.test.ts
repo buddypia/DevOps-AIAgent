@@ -297,6 +297,53 @@ describe("observability-oracle job", () => {
   });
 });
 
+describe("release-guardian job", () => {
+  const job = AGENT_JOBS["release-guardian"];
+
+  it("should use live health, CI, and revision-tagged request logs as release-gate evidence", async () => {
+    const entries: RawLogEntry[] = [
+      {
+        httpRequest: { status: 200, latency: "0.100s", requestUrl: "https://x/api/healthz" },
+        resource: { labels: { revision_name: "agent-guild-00011", service_name: "agent-guild" } }
+      },
+      {
+        httpRequest: { status: 500, latency: "1.400s", requestUrl: "https://x/a2a" },
+        resource: { labels: { revision_name: "agent-guild-00012", service_name: "agent-guild" } }
+      }
+    ];
+    const ctx = makeCtx({
+      fetchImpl: (async (url: RequestInfo | URL) => {
+        const href = String(url);
+        if (href.includes("api.github.com")) {
+          return jsonResponse({ workflow_runs: [{ id: 333, status: "completed", conclusion: "success", name: "CI", head_sha: "abc123" }] });
+        }
+        if (href.endsWith("/api/healthz")) return jsonResponse({ ok: true, geminiMode: "vertex" });
+        throw new Error(`unexpected fetch: ${href}`);
+      }) as typeof fetch,
+      listLogEntries: async () => entries
+    });
+
+    const bundle = await job.collectEvidence(ctx, "agent-guild");
+    const byId = new Map(bundle.evidence.map((evidence) => [evidence.id, evidence]));
+    expect(byId.get("release-health")?.message).toContain("ok=true");
+    expect(byId.get("release-ci")?.message).toContain("success");
+    expect(byId.get("release-traffic")?.message).toContain("2 revision");
+    expect(byId.get("release-errors")?.message).toContain("5xx=1/2");
+    expect(byId.get("release-action")?.message).toContain("人の承認");
+  });
+
+  it("should retain a safe recommendation boundary when Cloud Logging is unavailable", async () => {
+    const ctx = makeCtx({
+      fetchImpl: (async () => jsonResponse({ ok: true, workflow_runs: [] })) as typeof fetch,
+      listLogEntries: null
+    });
+
+    const bundle = await job.collectEvidence(ctx, "");
+    expect(bundle.evidence.find((evidence) => evidence.id === "release-logs")?.severity).toBe("WARNING");
+    expect(bundle.evidence.find((evidence) => evidence.id === "release-action")?.message).toContain("人の承認");
+  });
+});
+
 describe("gemini-strategist job", () => {
   const job = AGENT_JOBS["gemini-strategist"];
 

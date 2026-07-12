@@ -52,6 +52,7 @@ export type ProjectProfile = {
 export type AgentFit = {
   agent: MarketAgent;
   fitScore: number;
+  devopsEfficiencyScore: number;
   synergyScore: number;
   valueScore: number;
   matchedSkills: string[];

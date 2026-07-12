@@ -300,5 +300,40 @@ export const MARKET_AGENTS: MarketAgent[] = [
     ],
     a2aSkillIds: ["ops.observe", "feedback.rank", "market.rebuy"],
     synergyTags: ["operate", "observability", "cloud-run", "devops"]
+  },
+  {
+    id: "release-guardian",
+    name: "リリース守護者",
+    handle: "段階配送の番人",
+    stage: "deploy",
+    rarity: "legendary",
+    price: 42,
+    headline: "実稼働の兆候を根拠に、カナリア継続・停止・復旧を人へ判断させる",
+    outcome: "Cloud Runのリリース失敗を早く止め、復旧判断に必要なCI・ヘルス・ログ証拠を揃える",
+    color: "#075985",
+    accent: "#a5f3fc",
+    capabilities: {
+      autonomy: 95,
+      planning: 78,
+      code: 72,
+      testing: 94,
+      cloudRun: 98,
+      security: 88,
+      observability: 98,
+      ux: 54,
+      mcp: 90,
+      a2a: 96
+    },
+    skills: [
+      { id: "release-gate", label: "リリース安全ゲート", proof: "CI・healthz・Cloud Loggingを引用して判定", score: 98 },
+      { id: "canary-hold", label: "カナリア停止判断", proof: "revision別の実リクエストと5xxを監視", score: 96 },
+      { id: "rollback-recommend", label: "復旧推薦", proof: "トラフィック変更は人の承認後に限定", score: 94 }
+    ],
+    mcp: [
+      { name: "cloud-logging", tools: ["read_request_logs", "group_revisions"], maturity: 92 },
+      { name: "github-actions", tools: ["read_latest_run", "check_conclusion"], maturity: 88 }
+    ],
+    a2aSkillIds: ["release.gate.execute", "release.canary", "release.rollback.recommend"],
+    synergyTags: ["release", "canary", "rollback", "slo", "cloud-run", "devops", "operate"]
   }
 ];

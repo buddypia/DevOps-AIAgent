@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { profileProject, recommendSquad, scoreSquad } from "../src/agentEngine";
+import { profileProject, rankAgents, recommendSquad, scoreSquad } from "../src/agentEngine";
 import { DEFAULT_PROJECT_BRIEF, MARKET_AGENTS } from "../src/market";
 
 describe("agent marketplace engine", () => {
@@ -27,5 +27,15 @@ describe("agent marketplace engine", () => {
     expect(score.total).toBeGreaterThan(0);
     expect(score.total).toBeLessThanOrEqual(100);
     expect(Object.values(score).every((value) => value >= 0 && value <= 100)).toBe(true);
+  });
+
+  test("prioritizes release safety for an SRE/DevOps brief", () => {
+    const ranked = rankAgents("Cloud Run の canary release を SLO とエラーバジェットで監視し、MTTRと変更失敗率を下げたい");
+
+    expect(ranked[0]?.agent.id).toBe("release-guardian");
+    expect(ranked[0]?.devopsEfficiencyScore).toBeGreaterThan(80);
+    expect(ranked.find((fit) => fit.agent.id === "release-guardian")?.valueScore).toBeGreaterThan(
+      ranked.find((fit) => fit.agent.id === "cloud-run-sre")?.valueScore ?? 0
+    );
   });
 });

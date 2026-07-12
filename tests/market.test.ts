@@ -12,7 +12,8 @@ describe("market agent display names", () => {
       { id: "test-forge", name: "テスト検証役" },
       { id: "security-sentinel", name: "セキュリティ監査役" },
       { id: "ux-guildmaster", name: "UX設計役" },
-      { id: "observability-oracle", name: "運用観測役" }
+      { id: "observability-oracle", name: "運用観測役" },
+      { id: "release-guardian", name: "リリース守護者" }
     ]);
   });
 });

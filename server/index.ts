@@ -245,7 +245,7 @@ function publicBaseUrl(req: express.Request) {
 }
 
 function agentCard(baseUrl: string) {
-  // 実行可能スキルのみを公開する: AGENT_JOBS の8スキルは /a2a message/send で実実行される
+  // 実行可能スキルのみを公開する: AGENT_JOBS の各スキルは /a2a message/send で実実行される
   const executableSkills = Object.values(AGENT_JOBS).map((job) => ({
     id: job.skillId,
     name: job.title,
@@ -735,7 +735,7 @@ app.post("/a2a", async (req, res) => {
     return;
   }
 
-  // A2A実タスク: 登録スキルへの委任 = 雇用契約 + 実実行 (8エージェント対応)
+  // A2A実タスク: 登録スキルへの委任 = 雇用契約 + 実実行
   const dispatchAgentId = A2A_SKILL_TO_AGENT[skillId] ?? (/ops\.triage/i.test(String(text)) ? OPS_AGENT_ID : null);
   if (dispatchAgentId) {
     await runStore.saveHire(dispatchAgentId).catch(() => null);
@@ -749,7 +749,7 @@ app.post("/a2a", async (req, res) => {
   }
 
   // 登録スキル外のmessage/send: 市場推薦(ローカル能力モデル)で応答し、実実行スキルの一覧を案内する
-  const recommendation = recommendSquad(String(text), ["market-broker", "gemini-strategist", "cloud-run-sre"], 140);
+  const recommendation = recommendSquad(String(text), ["market-broker", "gemini-strategist", "release-guardian"], 140);
 
   res.json({
     jsonrpc: "2.0",
