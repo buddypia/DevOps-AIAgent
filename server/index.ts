@@ -13,7 +13,7 @@ import { SUBMISSION_PROOF } from "../src/submission.js";
 import type { GeminiRecommendation } from "../src/types.js";
 
 import { AGENT_JOBS, A2A_SKILL_TO_AGENT, createDefaultReadTextFile } from "./agentJobs.js";
-import { computeAgentStats } from "./agentStats.js";
+import { computeAgentStats, computeEvidenceSummary } from "./agentStats.js";
 import { createMission, executeMission } from "./missionAgent.js";
 import { createGenAiClient, createLogLister, createLoggingEvidenceFetcher, createRun, executeAgentRun, getOpsConfig } from "./opsAgent.js";
 import { createRunStore } from "./runStore.js";
@@ -635,7 +635,13 @@ app.get("/api/missions/:id", async (req, res) => {
 app.get("/api/agent-stats", async (_req, res) => {
   try {
     const runs = await runStore.listRuns(50);
-    res.json({ stats: computeAgentStats(runs, Object.keys(AGENT_JOBS)), sampleRuns: runs.length, backend: runStore.backend });
+    const agentIds = Object.keys(AGENT_JOBS);
+    res.json({
+      stats: computeAgentStats(runs, agentIds),
+      summary: computeEvidenceSummary(runs, agentIds),
+      sampleRuns: runs.length,
+      backend: runStore.backend
+    });
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : "agent stats failed" });
   }

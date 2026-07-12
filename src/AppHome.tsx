@@ -12,7 +12,7 @@ import { SUBMISSION_PROOF } from "./submission.js";
 
 import type { AgentCardImportResult } from "./customAgent.js";
 import type { AgentIdentity } from "./MissionControl.js";
-import type { AgentTrackRecordView } from "./missionTypes.js";
+import type { AgentTrackRecordView, EvidenceSummaryView } from "./missionTypes.js";
 import type { MarketAgent } from "./types.js";
 
 type HealthInfo = {
@@ -38,6 +38,7 @@ type ExternalDelegationResponse =
 export default function AppHome() {
   const [agents, setAgents] = useState<AgentIdentity[]>([]);
   const [stats, setStats] = useState<Map<string, AgentTrackRecordView>>(new Map());
+  const [evidence, setEvidence] = useState<EvidenceSummaryView | null>(null);
   const [hiredIds, setHiredIds] = useState<Set<string>>(new Set());
   const [health, setHealth] = useState<HealthInfo | null>(null);
   const [refreshSignal, setRefreshSignal] = useState(0);
@@ -68,9 +69,10 @@ export default function AppHome() {
   const refreshRecords = useCallback(async () => {
     try {
       const [statsRes, hiresRes] = await Promise.all([fetch("/api/agent-stats"), fetch("/api/hires")]);
-      const statsBody = (await statsRes.json()) as { stats?: AgentTrackRecordView[] };
+      const statsBody = (await statsRes.json()) as { stats?: AgentTrackRecordView[]; summary?: EvidenceSummaryView };
       const hiresBody = (await hiresRes.json()) as { hires?: Array<{ agentId: string }> };
       setStats(new Map((statsBody.stats ?? []).map((record) => [record.agentId, record])));
+      setEvidence(statsBody.summary ?? null);
       setHiredIds(new Set((hiresBody.hires ?? []).map((hire) => hire.agentId)));
     } catch {
       // 統計取得失敗は次のrefreshで回復
@@ -191,11 +193,11 @@ export default function AppHome() {
         </div>
         <RosterHighlights agents={agents} stats={stats} />
         <div className="bento-kpi-row">
-          <EvidenceKpiHighlights />
+          <EvidenceKpiHighlights summary={evidence} />
         </div>
       </div>
 
-      <EvidenceDashboard />
+      <EvidenceDashboard summary={evidence} />
 
       <section className="how-it-works" aria-labelledby="how-it-works-title">
         <div className="section-head compact-head">

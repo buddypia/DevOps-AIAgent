@@ -3692,6 +3692,17 @@ textarea:focus-visible {
   color: var(--amber) !important;
 }
 
+.evidence-empty {
+  margin: 14px 0 4px;
+  padding: 13px 16px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+  background: var(--panel-2);
+}
+
 .evidence-method {
   border: 1px dashed var(--line-strong);
   border-radius: 10px;
