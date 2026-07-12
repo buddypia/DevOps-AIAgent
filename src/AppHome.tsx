@@ -151,9 +151,7 @@ export default function AppHome() {
     <main className="app-shell">
       <header className="top-bar">
         <div className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            ◆
-          </span>
+          <img className="brand-mark" src="/assets/agent-guild-icon.png" alt="" width="38" height="38" />
           <div>
             <p className="brand-name">Agent Guild</p>
             <p className="brand-tag">A2A Agent Marketplace / DevOps Mission Control</p>
