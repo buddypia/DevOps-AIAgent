@@ -1,0 +1,471 @@
+{
+  "schema_version": 8,
+  "feature_id": "001-shipguard-ai",
+  "title": "ShipGuard AI",
+  "feature_type": "ui_feature",
+  "domain": "release-governance",
+  "characteristics": {
+    "involves_new_api": false,
+    "involves_external_api": true,
+    "db_schema_change": false,
+    "multi_screen": false,
+    "ai_ml_integration": true,
+    "security_sensitive": false,
+    "realtime_processing": false,
+    "offline_capability": false,
+    "payment_billing": false,
+    "pii_handling": false,
+    "novel_domain": true,
+    "cross_feature_impact": false
+  },
+  "quick_resume": {
+    "current_state": "SpecDrafting",
+    "current_task": "SPEC.md と screens/ を生成済み。Readiness Gate 待ち",
+    "next_actions": [
+      "Readiness Gate 実行",
+      "対象コードとSPECの差分確認",
+      "未実行の品質ゲートを実行"
+    ],
+    "blockers": [],
+    "last_updated_at": "2026-07-12T19:12:07+09:00",
+    "last_decision": {
+      "summary": "現行コードの実体をfeatureとして登録し、実装済み仕様として文書化した",
+      "at": "2026-07-12T19:12:07+09:00"
+    },
+    "current_rationale": "全機能を漏れなく追跡できるよう、既存コード・API・テスト・インフラを1機能1コンテキストへ固定する。",
+    "active_constraints": [
+      "project-config.json のデフォルトパスを使用",
+      "秘密情報は環境変数/Secret Manager",
+      "AIは人間承認前提"
+    ],
+    "previous_state": "Briefing",
+    "question_count": 1
+  },
+  "progress": {
+    "percentage": 100,
+    "fr_total": 4,
+    "fr_completed": 4,
+    "fr_in_progress": 0,
+    "details": {
+      "FR-00101": {
+        "status": "completed",
+        "weight": 1,
+        "files": [
+          "outputs/01-shipguard-ai/src/server.ts",
+          "outputs/01-shipguard-ai/src/main.ts"
+        ]
+      },
+      "FR-00102": {
+        "status": "completed",
+        "weight": 1,
+        "files": [
+          "outputs/01-shipguard-ai/src/server.ts",
+          "outputs/01-shipguard-ai/src/main.ts"
+        ]
+      },
+      "FR-00103": {
+        "status": "completed",
+        "weight": 1,
+        "files": [
+          "outputs/01-shipguard-ai/src/server.ts",
+          "outputs/01-shipguard-ai/src/main.ts"
+        ]
+      },
+      "FR-00104": {
+        "status": "completed",
+        "weight": 1,
+        "files": [
+          "outputs/01-shipguard-ai/src/server.ts",
+          "outputs/01-shipguard-ai/src/main.ts"
+        ]
+      }
+    }
+  },
+  "competitive_data": {
+    "comp_ids": [],
+    "gap_severity": null,
+    "is_industry_standard": false,
+    "app_count": 0,
+    "linked_at": null
+  },
+  "architecture": {
+    "domain_model": null,
+    "adr": null,
+    "system_design": null,
+    "discovery_gate": null,
+    "discovery_rationale": "既存実装の仕様化であり、新規DB/境界変更なし"
+  },
+  "why": "ShipGuard AIでrelease verdict・CI failure clustering・Cloud Run regression signalsを根拠付きで判断し、DevOps運用の初動と説明責任を短縮するため。",
+  "success_criteria": [
+    "入力から構造化結果までを再現できる",
+    "AI接続失敗時もfallbackで主線を確認できる",
+    "判断根拠と人間の最終確認点が表示される"
+  ],
+  "constraints": [
+    "Vite + Express + TypeScript + Zod",
+    "Cloud Run対応",
+    "Gemini APIは環境変数設定",
+    "新規DBスキーマなし",
+    "日本語UI/既存デザイン維持"
+  ],
+  "artifacts": {
+    "brief": "docs/features/001-shipguard-ai/BRIEF.md",
+    "brief_format_version": "v2.0",
+    "spec": "docs/features/001-shipguard-ai/SPEC-001-shipguard-ai.md",
+    "spec_version": "v1.0",
+    "spec_locked_at": null,
+    "spec_validation": {
+      "last_run_at": null,
+      "verdict": null,
+      "blocking_count": 0,
+      "warning_count": 0
+    },
+    "screens": [
+      "docs/features/001-shipguard-ai/screens/analysis.md"
+    ],
+    "design_assets": null,
+    "index": "docs/features/001-shipguard-ai/index.md"
+  },
+  "references": {
+    "priority_order": [
+      "spec",
+      "screens",
+      "brief"
+    ],
+    "current_focus": {
+      "document": "docs/features/001-shipguard-ai/SPEC-001-shipguard-ai.md",
+      "section": "§2 Functional Requirements",
+      "reason": "実装と要件の追跡"
+    },
+    "documents": {
+      "spec": {
+        "path": "docs/features/001-shipguard-ai/SPEC-001-shipguard-ai.md",
+        "sections_to_read": [
+          "§0",
+          "§2",
+          "§5"
+        ],
+        "focus": [
+          "target files",
+          "API",
+          "tests"
+        ]
+      },
+      "screens": {
+        "paths": [
+          "docs/features/001-shipguard-ai/screens/analysis.md"
+        ],
+        "focus": [
+          "states",
+          "interactions",
+          "API mapping"
+        ]
+      }
+    },
+    "related_specs": [],
+    "related_code": {
+      "types": [
+        "outputs/01-shipguard-ai/src/project.ts",
+        "outputs/01-shipguard-ai/src/agent.ts"
+      ],
+      "hooks": [],
+      "api": [
+        "outputs/01-shipguard-ai/src/server.ts"
+      ],
+      "components": [
+        "outputs/01-shipguard-ai/src/main.ts"
+      ]
+    },
+    "api_routes": [
+      "GET /api/health",
+      "GET /api/ready",
+      "GET /api/version",
+      "GET /api/project",
+      "POST /api/analyze",
+      "POST /api/events"
+    ],
+    "dependencies": {
+      "features": [],
+      "packages": [
+        "@google/genai",
+        "express",
+        "zod"
+      ]
+    },
+    "research_links": {
+      "research_ids": [],
+      "id_format": "R-YYYYMMDD-NNN",
+      "comp_ids": []
+    }
+  },
+  "execution": {
+    "lock": {
+      "locked": false,
+      "locked_by": null,
+      "locked_at": null
+    },
+    "active_branch": "feature/feature-architect-all",
+    "rollback_point": null,
+    "worktree": {
+      "branch": "feature/feature-architect-all",
+      "worktree_path": ".worktrees/feature/feature-architect-all",
+      "plan_path": null,
+      "status": "documented",
+      "last_updated": "2026-07-12T19:12:07+09:00",
+      "handoff": "Readiness Gate"
+    }
+  },
+  "decisions": [
+    {
+      "at": "2026-07-12T19:12:07+09:00",
+      "summary": "既存コードを新規機能ではなく実装済み機能として仕様化",
+      "rationale": "outputsの20独立アプリとrootの実装/API/test/infraが現行機能のSSOTだから"
+    },
+    {
+      "at": "2026-07-12T19:12:07+09:00",
+      "summary": "各UI機能にscreen docを生成",
+      "rationale": "feature_type=ui_featureで画面状態とAPI導線を追跡可能にするため"
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q1",
+      "question": "Gemini live modeとfallbackの本番比率をどう設定するか",
+      "status": "open",
+      "type": "question",
+      "impact": "コスト・品質・ready判定",
+      "resolution": null
+    }
+  ],
+  "history": [
+    {
+      "at": "2026-07-12T19:12:07+09:00",
+      "from_state": "Briefing",
+      "to_state": "SpecDrafting",
+      "triggered_by": "feature-architect",
+      "note": "BRIEF → CONTEXT → feature-spec-generator handoff"
+    }
+  ],
+  "autonomy_control": {
+    "max_questions_per_session": 7,
+    "auto_stop_conditions": [
+      "高リスクのセキュリティ/PII変更",
+      "DB migration",
+      "外部サービス契約の未確認"
+    ],
+    "current_autonomy_level": "supervised",
+    "risk_level": "medium",
+    "risk_factors": [
+      "external AI/API",
+      "operational decision"
+    ],
+    "claude_md_checked": true,
+    "claude_md_version": "project rules present"
+  },
+  "esp_execution_log": {
+    "schema_version": 1,
+    "summary": {
+      "total_esp_calls": 2,
+      "preflight_completed": 2,
+      "postflight_completed": 0,
+      "violations": 0,
+      "compliance_rate": 1
+    },
+    "executions": [
+      {
+        "skill": "feature-architect",
+        "esp_version": "v1.0",
+        "started_at": "2026-07-12T19:12:07+09:00",
+        "preflight": {
+          "completed": true,
+          "completed_at": "2026-07-12T19:12:07+09:00",
+          "all_passed": true,
+          "blocking_items": []
+        },
+        "postflight": {
+          "completed": false,
+          "completed_at": null,
+          "all_passed": null,
+          "failed_items": []
+        },
+        "model_routing": {
+          "task_calls": 0,
+          "with_model_param": 0,
+          "compliance": null
+        },
+        "evidence_used": [
+          "project-config.json",
+          "README.md",
+          "source tree",
+          "tests",
+          "outputs README"
+        ],
+        "ended_at": "2026-07-12T19:12:07+09:00",
+        "status": "completed"
+      },
+      {
+        "skill": "feature-spec-generator",
+        "esp_version": "v1.0",
+        "started_at": "2026-07-12T19:12:07+09:00",
+        "preflight": {
+          "completed": true,
+          "completed_at": "2026-07-12T19:12:07+09:00",
+          "all_passed": true,
+          "blocking_items": []
+        },
+        "postflight": {
+          "completed": false,
+          "completed_at": null,
+          "all_passed": null,
+          "failed_items": []
+        },
+        "model_routing": {
+          "task_calls": 0,
+          "with_model_param": 0,
+          "compliance": null
+        },
+        "evidence_used": [
+          "BRIEF.md",
+          "CONTEXT.json",
+          "existing implementation"
+        ],
+        "ended_at": "2026-07-12T19:12:07+09:00",
+        "status": "completed"
+      }
+    ],
+    "violations_history": []
+  },
+  "traceability": {
+    "user_story_to_fr": [
+      {
+        "user_story_id": "US-01",
+        "fr_ids": [
+          "FR-00101",
+          "FR-00102"
+        ]
+      },
+      {
+        "user_story_id": "US-02",
+        "fr_ids": [
+          "FR-00103",
+          "FR-00104"
+        ]
+      }
+    ],
+    "bdd_to_fr": [
+      {
+        "bdd_id": "AC-01",
+        "fr_ids": [
+          "FR-00101"
+        ]
+      },
+      {
+        "bdd_id": "AC-02",
+        "fr_ids": [
+          "FR-00102"
+        ]
+      },
+      {
+        "bdd_id": "AC-03",
+        "fr_ids": [
+          "FR-00103"
+        ]
+      },
+      {
+        "bdd_id": "AC-04",
+        "fr_ids": [
+          "FR-00104"
+        ]
+      }
+    ],
+    "unmapped_user_stories": [],
+    "unmapped_bdd_scenarios": [],
+    "validated_at": "2026-07-12T19:12:07+09:00"
+  },
+  "brief_context": {
+    "core_goal": "ShipGuard AIでrelease verdictを判断可能にする",
+    "user_value": "根拠付きの運用判断と次アクション",
+    "business_metrics": [
+      "analysis completion",
+      "accepted finding rate",
+      "feedback usefulness"
+    ],
+    "user_story": "運用担当者として、ShipGuard AIに対象の証拠を渡したいので、release verdictを短時間で整理したい",
+    "priority_label": "P1"
+  },
+  "priority": {
+    "level": "P1",
+    "rationale": "ハッカソンのAI中心価値と提出要件に直結"
+  },
+  "completion_contract": {
+    "version": "1.0",
+    "work_type": "DOCUMENT_EXISTING_FEATURE",
+    "source": "BRIEF §7",
+    "last_verified_at": null,
+    "verdict": "Conditional Go",
+    "items": [
+      {
+        "id": "DoD-FS-01",
+        "description": "入力・AI/fallback・構造化結果を確認",
+        "verification_type": "machine"
+      },
+      {
+        "id": "DoD-FS-02",
+        "description": "UI状態と判断根拠を確認",
+        "verification_type": "human"
+      },
+      {
+        "id": "DoD-FS-03",
+        "description": "Cloud Run/Terraform/readinessを確認",
+        "verification_type": "machine"
+      },
+      {
+        "id": "DoD-FS-04",
+        "description": "品質ゲート結果を記録",
+        "verification_type": "machine"
+      }
+    ],
+    "summary": {
+      "total": 4,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 4,
+      "pass_rate": null
+    }
+  },
+  "completion_summary": {
+    "produces": {
+      "types": [
+        "ProjectPayload / Analysis"
+      ],
+      "exports": [
+        "outputs/01-shipguard-ai/src/project.ts",
+        "outputs/01-shipguard-ai/src/agent.ts"
+      ],
+      "api_endpoints": [
+        "GET /api/health",
+        "GET /api/ready",
+        "GET /api/version",
+        "GET /api/project",
+        "POST /api/analyze",
+        "POST /api/events"
+      ],
+      "patterns_established": [
+        "Zod input validation",
+        "Gemini + deterministic fallback",
+        "Cloud Run health/readiness/version",
+        "structured evidence UI"
+      ]
+    },
+    "consumes": {
+      "from_features": []
+    },
+    "files_created": [
+      "docs/features/001-shipguard-ai/BRIEF.md",
+      "docs/features/001-shipguard-ai/CONTEXT.json",
+      "docs/features/001-shipguard-ai/SPEC-001-shipguard-ai.md"
+    ],
+    "generated_at": "2026-07-12T19:12:07+09:00",
+    "generated_by": "feature-architect + feature-spec-generator"
+  }
+}
