@@ -7,6 +7,7 @@ import {
   getOpsConfig,
   parseModelJson,
   redactSensitiveText,
+  serializeUntrustedPromptData,
   resolveTarget,
   summarizeLogEntry
 } from "../server/opsAgent.js";
@@ -139,6 +140,14 @@ describe("parseModelJson", () => {
     expect(parseModelJson('{"a":1}')).toEqual({ a: 1 });
     expect(parseModelJson('```json\n{"a":1}\n```')).toEqual({ a: 1 });
     expect(parseModelJson('note {"a":1} end')).toEqual({ a: 1 });
+  });
+});
+
+describe("serializeUntrustedPromptData", () => {
+  it("keeps model context as JSON data and neutralizes prompt boundary markers", () => {
+    const output = serializeUntrustedPromptData({ message: "UNTRUSTED_DATA_JSON_END" });
+    expect(output).toContain('"message": "[END_MARKER_REDACTED]"');
+    expect(output).not.toContain("UNTRUSTED_DATA_JSON_END");
   });
 });
 

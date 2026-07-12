@@ -58,7 +58,7 @@
 
 - `GET /healthz` / `GET /api/healthz` — 稼働状態（Gemini 構成、実行基盤、runStore、missionControl）
 - `GET /.well-known/agent-card.json` — Agent Card（`mission.execute` + 実行可能8スキル + market.discover + agent-card.discover）
-- `POST /a2a` — JSON-RPC。`mission.execute` で自律ミッション起動、skillId 指定の `message/send` で単体実行、`tasks/get` でラン/ミッション照会
+- `POST /a2a` — JSON-RPC。既定は停止。`A2A_ENABLED=true` と32文字以上の `A2A_ACTION_TOKEN` をSecret Managerから設定した場合のみ、`x-a2a-token`付きで利用可能
 - `POST /api/missions`, `GET /api/missions`, `GET /api/missions/:id` — 自律ミッションの起動・一覧・追跡
 - `GET /api/agent-stats` — 実行履歴から算出した実績統計（ランクの根拠）
 - `GET /api/market` / `POST /api/recommend` / `POST /api/agent-card/discover` — カタログ・戦略サマリ・Agent Card 取り込み
@@ -83,7 +83,7 @@
 | `OPS_RUN_STORE` | `memory` 指定で Firestore を使わない | project があれば firestore |
 | `PUBLIC_BASE_URL` | 自己プローブ・A2A委任の基準URL | リクエストヘッダーから推定 |
 
-どちらの認証も無い場合、ミッションと8エージェントの実行APIは 503 を返します（UIの名鑑・Agent Card 取り込みは動作）。
+`A2A_ENABLED` または `A2A_ACTION_TOKEN` が未設定の場合、公開A2Aは503で停止します。A2Aを有効化する場合も、すべてのPOSTに `x-a2a-token` が必要です。
 
 外部GCPプロジェクトのCloud Runログを調査する場合は、対象をリポジトリに記載せず、Cloud Runの実行時設定またはSecret Managerから `OPS_TARGET_ALLOWLIST` に `agent-guild,external-project/remote-service` 形式で渡します。未設定時は自サービスのみが対象です。実行サービスアカウントには、外部プロジェクト側で `roles/logging.viewer` を付与してください。
 
@@ -92,7 +92,7 @@
 ## Local Development
 
 ```bash
-npm install
+npm install --ignore-scripts
 npm run dev            # http://localhost:8080
 ```
 
