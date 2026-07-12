@@ -30,7 +30,7 @@
 - **Google Cloud**: Cloud Run デプロイ（`Dockerfile` / `cloudbuild.yaml` / `/api/healthz`）、Cloud Logging、Firestore
 - **AI**: Gemini `gemini-3.5-flash`（APIキー or Vertex AI + ADC）。エージェントポートレート/ヒーロー画像も Gemini 画像生成モデルで作成（`scripts/generate_agent_art.mjs`）
 - **A2A**: `/.well-known/agent-card.json` と `/a2a` JSON-RPC 互換エンドポイント。`mission.execute` で自律ミッションを外部エージェントから起動可能、`tasks/get` でラン/ミッションを追跡
-- **DevOps**: GitHub Actions CI（typecheck / test / build / architecture check）+ 手動デプロイ / 公開検証ワークフロー
+- **DevOps**: GitHub Actions CI（typecheck / test / build / architecture check）+ 公開検証ワークフロー。デプロイはローカルから `gcloud builds submit --config=cloudbuild.yaml`（`docs/infra.md` 参照。GCP認証情報をpublicリポジトリのCI上に置かないための方針）
 
 ## 実行可能な8エージェント
 
