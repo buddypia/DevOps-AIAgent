@@ -25,6 +25,15 @@
 - PR タイトルは Conventional Commits 形式（`feat:` / `fix:` / `docs:` / `refactor:` / `test:` / `chore:`）。
 - `gh pr create` を `--body` なしで実行するとテンプレートが自動適用される。本文を用意する場合もテンプレート構成を踏襲する。
 
+## セッション/タスク開始時のコンテキスト確認（必須）
+
+マルチターミナル並行運用（Codex CLI / Claude Code）が前提のため、状態誤読・二重作業を防ぐ。Codex CLI・Claude Code 双方で必須。
+
+- **provenance 検証**: `git status` の staged/modified を user の未コミット WIP と断定する前に、必ず `git diff HEAD -- <file>` で確認する。local main が origin/main より遅延していると、未pull の upstream commit が「未コミット変更」として現れる（損失ではない）。証拠なしに「WIP消失 / データ損失」等を主張しない（R-CM-010）。
+- **二重作業の回避**: PR を作る作業の前に `gh pr list --state open` と `git worktree list` で、別セッションが同一タスクを進行中でないか確認する。同一タスクの重複を検知したら着手前にユーザーへ確認する。
+- **git deny 制約**: 本 repo は `git restore` / `git reset` / `git rebase` / `git clean` / `git checkout .` / force push を deny する（`.claude/settings.json` の `permissions.deny`）。index 調整が必要でも `git restore`/`git reset` を試さず、worktree フロー（`make wt.new BR=...`）を使う。
+- **自動提示**: Claude Code では SessionStart フック `scripts/session-context-primer.mjs` が上記の現在値（main 同期状況 / active worktree / open PR / deny 一覧）を毎回自動注入する。Codex CLI では本節に従い手動で確認する。
+
 ---
 
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.

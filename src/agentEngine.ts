@@ -199,7 +199,7 @@ export function recommendSquad(brief: string, selectedIds: string[] = [], budget
   const budgetUsed = selected.reduce((sum, agent) => sum + agent.price, 0);
   const before = emptyScore();
   const after = scoreSquad(selected);
-  const topAgent = ranked[0]?.agent.name ?? "A2A Market Broker";
+  const topAgent = ranked[0]?.agent.name ?? "A2A連携仲介役";
   const bestWeakness = (Object.entries(after) as Array<[keyof SquadScore, number]>)
     .filter(([key]) => key !== "total")
     .sort((a, b) => a[1] - b[1])[0]?.[0] ?? "delivery";
@@ -233,7 +233,7 @@ export function recommendSquad(brief: string, selectedIds: string[] = [], budget
 }
 
 export function localGeminiRecommendation(recommendation: Recommendation, reason: string): GeminiRecommendation {
-  const names = recommendation.selected.map((agent) => agent.name).join("、") || "A2A Market Broker";
+  const names = recommendation.selected.map((agent) => agent.name).join("、") || "A2A連携仲介役";
   return {
     source: "local-fallback",
     model: "gemini-3.5-flash",

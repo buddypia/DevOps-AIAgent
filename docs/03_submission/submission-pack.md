@@ -51,7 +51,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - User Pilot Labで、開発リード、Platform/SRE、提出者が最初の3分で価値へ到達できるかを検証する
 - Squad Optimizerで、予算内のAI編成を総当たりし、現行維持、交換、追加予算ギャップを判断する
 - Live Evidence Monitorで、Cloud Run、Agent Card、A2A、Squad Optimizer、GitHub Actions CIを公開環境からライブ検証する
-- Observability Oracleで、Live Evidence、Ops Drill、Pilot Economicsをつなぎ、運用観測を継続/復旧判断、買い手価値、次のAI雇用へ変換し、Acceptance Matrix / Prize Strategy / Win Gap Radarの実用性証拠に接続する
+- 運用観測役で、Live Evidence、Ops Drill、Pilot Economicsをつなぎ、運用観測を継続/復旧判断、買い手価値、次のAI雇用へ変換し、Acceptance Matrix / Prize Strategy / Win Gap Radarの実用性証拠に接続する
 - External Evidence Verifierで、公開GitHub、Cloud Run、ProtoPedia作品URL、動画URLが審査員から開けるかを検証する
 - Release Drift Guardで、公開Cloud Runが最新Agent Card、Winner Release Lock / Winner GET Proof / Finalist Release Drift / Criteria Duel のsignal tags、Acceptance Matrix、A2A artifactを返しているかを検査する
 - Deploy Recoveryで、release drift、gcloud認証、Cloud Build、required Agent Card signal tags、公開再検証を復旧コマンドに変換する
@@ -60,7 +60,7 @@ AIエージェント開発では、エージェントを作る前に「どの能
 - Autonomy Ledgerで、市場探索、判断、契約、A2A委任、検証、運用、提出を検収可能なAI自律性台帳として見せる
 - Autonomy Snapshotで、AI中心性、A2A委任、検証コマンド、receiptをGETで直接開ける審査証拠として見せる
 - Agent Task Boardで、`task.delegate` を目的、検収条件、proof URL付きのA2A `message/send` payloadとして見せる
-- Security Sentinel Reviewで、Secret Manager、IP allowlist、Zod入力制限、A2A信頼境界、CIを審査員向け安全性証拠にする
+- セキュリティ監査役 Reviewで、Secret Manager、IP allowlist、Zod入力制限、A2A信頼境界、CIを審査員向け安全性証拠にする
 - Impact Caseで、対象ユーザー、時間短縮、提出信頼度、運用リスク、導入計画を実用性・体験価値の証拠にする
 - Pilot Economicsで、導入費用、回収日数、価格レーン、買い手の反論、Pilot Evidence Lockを投資判断の証拠にする
 - Submission Launch Gateで、ProtoPedia作品URLと動画URLを入力し、提出3点、タグ、本文、CI、証拠receipt、Final Submit Lockを最終判定する
@@ -102,7 +102,7 @@ React UI
   -> Judge Demo Receipt sha256 demo seal
   -> Judge Acceptance Matrix acceptance rows
   -> Autonomy Ledger agent centrality audit
-  -> Security Sentinel Review
+  -> セキュリティ監査役 Review
   -> Impact Case
   -> Pilot Economics
   -> Submission Launch Gate
@@ -132,12 +132,12 @@ React UI
 | 14-16s | Competitive BattlecardのCriteria Duel、Objection Replay、Competitive Proof Lockで「既存ツールでよくない？」へのsource、SWOT、proof routeを30秒順に出す |
 | 16-18s | Market IntelのSource Freshness Lockで、公式ソースURLが今も到達可能かを見せる |
 | 18-20s | Live Evidence Monitorで公開Cloud Run、Agent Card、A2A、Optimizer、CIの5 probesを見せる |
-| 20-22s | Observability Oracleで公開証拠、継続/復旧判断、買い手価値SLO、次のAI雇用を見せる |
+| 20-22s | 運用観測役で公開証拠、継続/復旧判断、買い手価値SLO、次のAI雇用を見せる |
 | 22-23s | Release Drift Guardで提出URLが最新skill surfaceとWinner/Finalist release signalsを返すか、古いrevisionならdeploy-driftかを見せる |
 | 23-24s | Deploy Recoveryでgcloud認証、Cloud Build、公開再検証コマンドを見せる |
 | 24-25s | Judge Demo Receiptでstamp、外部URLwatch、sha256 digestを控える |
 | 25-26s | Judge Acceptance Matrixで必須技術、審査5項目、公開証拠、提出物のaccepted/watchを見せる |
-| 26-27s | Security Sentinel Review、Impact Case、Pilot Economics、Submission Launch Gate、Judge Proofで安全境界、実用性KPI、payback、外部URL、Gemini/Cloud Run/A2A/CI/DevOpsの証拠束を見せる |
+| 26-27s | セキュリティ監査役 Review、Impact Case、Pilot Economics、Submission Launch Gate、Judge Proofで安全境界、実用性KPI、payback、外部URL、Gemini/Cloud Run/A2A/CI/DevOpsの証拠束を見せる |
 | 27-28s | Submission DossierでProtoPedia本文、競合反論、買い手価値、提出リンク、録画順、最終チェックを見せる |
 | 28-29s | Marketplace、Winning Strategy、Mission、Opsで必要能力、SWOT、A2A委任、運用判断を見せる |
 | 29-30s | Cloud Run URL、GitHub Actions、Agent Card、構成図で締める |
@@ -331,7 +331,7 @@ curl -s https://api.github.com/repos/buddypia/DevOps-AIAgent/actions/workflows/c
 - System architecture diagram: `public/assets/a2a-marketplace-architecture.svg`
 - Architecture Pack API: `POST /api/architecture-pack`
 - Gemini Proof Lock: run `POST /api/proof` and confirm `geminiProofLock.readiness` is `gemini-live` on Cloud Run before final submission
-- Usability Proof Lock: run `POST /api/proof` and confirm `usabilityProofLock.readiness` is `usability-budget-watch` or `usability-locked`; if it is `usability-budget-watch`, explain the +22 UX Guildmaster gap with Squad Optimizer
+- Usability Proof Lock: run `POST /api/proof` and confirm `usabilityProofLock.readiness` is `usability-budget-watch` or `usability-locked`; if it is `usability-budget-watch`, explain the +22 UX設計役 gap with Squad Optimizer
 - Pilot Value Snapshot: open `GET /pilot-value` before judging and confirm practical value, first-run UX, buyer objections, and payback days are visible in one page
 - Final Submit Lock: open `GET /submission-launch`, run `GET /api/submission-launch`, and run `POST /api/submission-launch` with real URLs; confirm `finalSubmitLock.readiness` is `findy-form-sealed`; before real URLs exist it should remain `external-url-watch`, not submit-ready
 - Judge Rehearsal API: `POST /api/judge-rehearsal`
