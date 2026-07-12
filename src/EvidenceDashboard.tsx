@@ -7,10 +7,37 @@ const COST_ROWS = [
 ] as const;
 
 const COST_MAX = Math.max(...COST_ROWS.map((row) => row.value));
+const COST_TOTAL_USD = COST_ROWS[COST_ROWS.length - 1].value;
 const REQUEST_TOTAL = 1398;
 const HTTP_200 = 28;
 const HTTP_304 = 1370;
 const POLLING_REQUESTS = 1340;
+
+// Bento Grid（トップの状態サマリー）用。詳細パネルと同じ実測値を共有する。
+export function EvidenceKpiHighlights() {
+  const pollingRate = (POLLING_REQUESTS / REQUEST_TOTAL) * 100;
+
+  return (
+    <>
+      <article className="bento-kpi is-positive">
+        <p className="bento-kpi-label">実行証拠</p>
+        <strong className="bento-kpi-value">8 / 8</strong>
+      </article>
+      <article className="bento-kpi is-positive">
+        <p className="bento-kpi-label">直近エラー率</p>
+        <strong className="bento-kpi-value">0%</strong>
+      </article>
+      <article className="bento-kpi">
+        <p className="bento-kpi-label">AI利用見積り</p>
+        <strong className="bento-kpi-value">{formatUsd(COST_TOTAL_USD)}</strong>
+      </article>
+      <article className="bento-kpi is-warning">
+        <p className="bento-kpi-label">要修正シグナル</p>
+        <strong className="bento-kpi-value">{pollingRate.toFixed(1)}%</strong>
+      </article>
+    </>
+  );
+}
 
 function formatUsd(value: number) {
   return `$${value.toFixed(6)}`;
